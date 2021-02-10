@@ -21,7 +21,6 @@ namespace bc {
 		bool visualize = false, createBin = false, useBetty = true, getCoords = true;
 		std::vector<cv::Vec3b> colors;
 		Component **included;
-		uchar* matrix;
 		float curbright;
 		point curpix;
 		int wid;

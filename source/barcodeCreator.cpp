@@ -238,17 +238,12 @@ bc::Hole* bc::barcodeCreator::getHole(const bc::point& p)
 
 void bc::barcodeCreator::setInclude(int x, int y, bc::Component* comp)
 {
-
     included[wid * y + x] = comp;
-    if (createBin)
-        matrix[wid * y + x] = curbright;
 }
 
 void bc::barcodeCreator::setInclude(const bc::point& p, bc::Component* comp)
 {
     included[wid * p.y + p.x] = comp;
-    if (createBin)
-        matrix[wid * p.y + p.x] = curbright;
 }
 
 bc::Hole* bc::barcodeCreator::tryAttach(Hole* main, Hole* add, point p)
@@ -559,12 +554,6 @@ void bc::barcodeCreator::init(const cv::Mat& src, const  ProcType& type, cv::Mat
 	memset(included, 0, totalSize * sizeof( Component *));
 
 
-	if (createBin)
-	{
-		matrix = new uchar[totalSize];
-		memset(matrix, 0, totalSize);
-	}
-
 	//от 255 до 0
 	sortedArr = sort(img, type);
 	memset(b, 0, 256 * sizeof(b[0]));
@@ -729,11 +718,7 @@ void bc::barcodeCreator::clearIncluded()
 		delete[] included;
 		included = nullptr;
 	}
-	if (createBin)
-	{
-		memset(matrix, 0, totalSize * sizeof(matrix[0]));
-		delete[] matrix;
-	}
+
 }
 
 bc::barcodeCreator::~barcodeCreator()
@@ -811,7 +796,7 @@ bc::Baritem* bc::barcodeCreator::getBarcode()
 
 			pmap *map = (createBin || getCoords) ? c->coords : nullptr;
 			bc::bline *line = new bc::bline(c->start, c->end - c->start, map);
-			BarNode *bnode;
+			BarNode *bnode = nullptr;
 			if (createGraph)
 			{
 				bnode = new BarNode(line);
