@@ -413,4 +413,3 @@ void bc::barcodeRGB::relen()
     barG->relen();
     barB->relen();
 }
-

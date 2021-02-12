@@ -2,6 +2,7 @@
 
 #include "barcodeCreator.h"
 #include "component.h"
+#include <assert.h>
 
 bc::Component::Component(point pix, bc::barcodeCreator *factory)
 {

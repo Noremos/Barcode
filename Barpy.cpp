@@ -1,6 +1,5 @@
 #ifdef _PYD
-#include <boost/python.hpp>
-#include "boost/python/numpy.hpp"
+INCLUDE_PY
 
 #include "barcodeCreator.h"
 
@@ -163,36 +162,36 @@ BOOST_PYTHON_MODULE(barpy)
 }
 #endif // _PYD
 
-template<> 
-PyObject* type_into_python<pmap>::convert(pmap const& map)
-{
-	//auto d = t.date();
-	//auto tod = t.time_of_day();
-	//auto usec = tod.total_microseconds() % 1000000;
-	//return PyDateTime_FromDateAndTime(d.year(), d.month(), d.day(), tod.hours(), tod.minutes(), tod.seconds(), usec);
-	return nullptr;
-}
- 
-
-template<>
-PyObject* type_into_python<std::vector<bc::bline>>::convert(std::vector<bc::bline> const& bar)
-{
-	bp::object get_iter = bp::iterator<std::vector<bc::bline> >();
-	bp::object iter = get_iter(bar);
-	bp::list l(iter);
-	//return PyObject_New(bp::list, &l);
-
-	//bp::PyDateTime_FromDateAndTime
-	//PyObject_vec
-	//PyObject* py_object = new PyObject();
-	//py_object.
-	//bp::handle<> handle(py_object);
-	//bp::object* o =new object(bar);
-	//return o;//new list(bar)
-	//bp::list* barlest = new list();
-	//for (auto line : bar)
-	//	barlest.append(line);
-	//return barlest;
-	return nullptr;
-}
+//template<> 
+//PyObject* type_into_python<pmap>::convert(pmap const& map)
+//{
+//	//auto d = t.date();
+//	//auto tod = t.time_of_day();
+//	//auto usec = tod.total_microseconds() % 1000000;
+//	//return PyDateTime_FromDateAndTime(d.year(), d.month(), d.day(), tod.hours(), tod.minutes(), tod.seconds(), usec);
+//	return nullptr;
+//}
+// 
+//
+//template<>
+//PyObject* type_into_python<std::vector<bc::bline>>::convert(std::vector<bc::bline> const& bar)
+//{
+//	bp::object get_iter = bp::iterator<std::vector<bc::bline> >();
+//	bp::object iter = get_iter(bar);
+//	bp::list l(iter);
+//	//return PyObject_New(bp::list, &l);
+//
+//	//bp::PyDateTime_FromDateAndTime
+//	//PyObject_vec
+//	//PyObject* py_object = new PyObject();
+//	//py_object.
+//	//bp::handle<> handle(py_object);
+//	//bp::object* o =new object(bar);
+//	//return o;//new list(bar)
+//	//bp::list* barlest = new list();
+//	//for (auto line : bar)
+//	//	barlest.append(line);
+//	//return barlest;
+//	return nullptr;
+//}
 

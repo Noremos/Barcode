@@ -1,22 +1,11 @@
 #pragma once
+
+#include "presets.h"
+INCLUDE_CV
+
 #include <unordered_map>
-#include <opencv2/opencv.hpp>
 
-#ifdef _WINDLL
-#  define EXPORT __declspec(dllexport)
-#elif _STL
-#  define EXPORT __declspec(dllimport)
-#else
-# define EXPORT
-#endif
 
-#ifdef _PYD
-#include <boost/python.hpp>
-#include "boost/python/numpy.hpp"
-using namespace boost::python;
-namespace bp = boost::python;
-namespace bn = boost::python::numpy;
-#endif // _PYD
 namespace bc {
 
 
@@ -28,7 +17,13 @@ struct EXPORT point
     point(int x, int y);
     void init(int x, int y);
     void init(int p[2]);
-    cv::Point cvPoint();
+
+#ifdef USE_OPENCV
+    inline cv::Point bc::point::cvPoint()
+    {
+        return cv::Point(x, y);
+    }
+#endif // USE_OPENCV
 
 
     point operator+(int* xy)

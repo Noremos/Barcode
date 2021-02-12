@@ -6,21 +6,26 @@
 
 
 
-
 namespace bc {
+
+	typedef bc::BarImg<uchar> bcBarImg;
 
 	class EXPORT barcodeCreator
 	{
 	public:
 		std::vector<Component*> components;
-		bc::BarNode *graphRoot;
+		bc::BarNode* graphRoot;
 	private:
+#ifdef USE_OPENCV
+		std::vector<cv::Vec3b> colors;
+#endif
+
 		bool reverse = false;
 		bool createGraph = true;
 		int b[256];
 		bool visualize = false, createBin = false, useBetty = true, getCoords = true;
-		std::vector<cv::Vec3b> colors;
-		Component **included;
+
+		Component** included;
 		float curbright;
 		point curpix;
 		int wid;
@@ -69,26 +74,26 @@ namespace bc {
 		bool checkCloserB0();
 		bool checkCloserB1();
 
-		static point* sort(const cv::Mat &arr,const ProcType& type);
+		static point* sort(const bcBarImg& arr, const ProcType& type);
 
 		void clearIncluded();
 
 		void draw(std::string name = "test");
 		void VISULA_DEBUG(int y, int i);
 		void VISULA_DEBUG_COMP(int y, int i);
-		void init(const cv::Mat& src, const ProcType &type, cv::Mat& img);
+		void init(const bcBarImg& src, const ProcType& type, bcBarImg& img);
 
-        void processHole(cv::Mat& img, int* retBty, Barcontainer* item = nullptr);
-		void processHole255to0(cv::Mat& img, int* retBty, Barcontainer* item = nullptr);
+		void processHole(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
+		void processHole255to0(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
 
-		void processComp(cv::Mat& img, int* retBty, Barcontainer* item = nullptr);
-		void ProcessFullPrepair(cv::Mat& img, int *retBty, Barcontainer* item = nullptr);
-		void ProcessPrepComp(cv::Mat& img, int *retBty, int step, Barcontainer* item = nullptr);
-		void processComp255to0(cv::Mat& img, int* retBty, Barcontainer* item = nullptr);
+		void processComp(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
+		void ProcessFullPrepair(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
+		void ProcessPrepComp(bcBarImg& img, int* retBty, int step, Barcontainer* item = nullptr);
+		void processComp255to0(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
 		void addItemToCont(bc::Barcontainer* item);
 		bc::Baritem* getBarcode();
-		void processTypeF(const barstruct& str, cv::Mat& img, Barcontainer* item = nullptr);
-		void processFULL(const barstruct& str, cv::Mat& img, bc::Barcontainer* item);
+		void processTypeF(const barstruct& str, bcBarImg& img, Barcontainer* item = nullptr);
+		void processFULL(const barstruct& str, bcBarImg& img, bc::Barcontainer* item);
 	public:
 		barcodeCreator();
 
@@ -109,20 +114,20 @@ namespace bc {
 			createGraph = val;
 		}
 
-		bc::Barcontainer* createBarcode(cv::Mat img, const std::vector<barstruct>& structure);
+		bc::Barcontainer* createBarcode(bcBarImg& img, const std::vector<barstruct>& structure);
 
-		bc::Barcontainer* createSLbarcode(const cv::Mat& src, uchar foneStart, uchar foneEnd, Barcontainer* cont = nullptr);
+		bc::Barcontainer* createSLbarcode(const bcBarImg& src, uchar foneStart, uchar foneEnd, Barcontainer* cont = nullptr);
 
-		bc::Barcontainer* createSLbarcode(const cv::Mat& src, uchar foneStart, uchar foneEnd, bool createRGBbar);
+		bc::Barcontainer* createSLbarcode(const bcBarImg& src, uchar foneStart, uchar foneEnd, bool createRGBbar);
 #ifdef _PYD
 		bc::Barcontainer* createBarcode(bn::ndarray& img, bp::list& structure);
 #endif // _PYD
 
-		bc::Barcontainer* searchHoles(float *img, int wid, int hei);
+		bc::Barcontainer* searchHoles(float* img, int wid, int hei);
 
 		virtual ~barcodeCreator();
 
-		void Prepair(cv::Mat, int step);
+		void Prepair(bcBarImg&, int step);
 		uchar GetStep() const;
 		void SetStep(const uchar value);
 	};

@@ -71,10 +71,11 @@
     <ClInclude Include="include\barcode.h" />
     <ClInclude Include="include\barcodeCreator.h" />
     <ClInclude Include="include\barcontainer.h" />
+    <ClInclude Include="include\barImg.h" />
     <ClInclude Include="include\Component.h" />
     <ClInclude Include="include\Hole.h" />
     <ClInclude Include="include\point.h" />
-    <ClInclude Include="source\Source.h" />
+    <ClInclude Include="include\presets.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="barconstructor.cpp" />
@@ -82,9 +83,15 @@
     <ClCompile Include="source\barcode.cpp" />
     <ClCompile Include="source\barcodeCreator.cpp" />
     <ClCompile Include="source\barcontainer.cpp" />
+    <ClCompile Include="source\barImg.cpp" />
     <ClCompile Include="source\Component.cpp" />
     <ClCompile Include="source\Hole.cpp" />
-    <ClCompile Include="source\Source.cpp" />
+    <ClCompile Include="source\Source.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 37|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='dll|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="source\point.cpp" />
   </ItemGroup>
   <ItemGroup>

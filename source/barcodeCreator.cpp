@@ -1,11 +1,13 @@
 #include "barcodeCreator.h"
 #include <stack>
 #include <string>
-
-//#define VDEBUG
+#include <assert.h>
+#include <algorithm>
 
 void bc::barcodeCreator::draw(std::string name)
 {
+#ifdef USE_OPENCV
+
 	int wd = wid * 10;
 	int hi = hei * 10;
 	cv::Mat img(hi, wd, CV_8UC3, cv::Scalar(255, 255, 255));
@@ -27,10 +29,10 @@ void bc::barcodeCreator::draw(std::string name)
 		}
 
 	for (size_t i = 0; i < totalSize; i++) {
-//		Hole *phole = dynamic_cast<Hole *>(included[i]);
-//		if (phole == nullptr)
-//			continue;
-		Component *comp = included[i];
+		//		Hole *phole = dynamic_cast<Hole *>(included[i]);
+		//		if (phole == nullptr)
+		//			continue;
+		Component* comp = included[i];
 		if (comp == nullptr)
 			continue;
 		int x = i % wid;
@@ -40,18 +42,18 @@ void bc::barcodeCreator::draw(std::string name)
 		cv::Vec3b col;
 
 		cv::Point p(x, y);
-//		if (!phole->isValid)
-//		{
-//			marc = cv::MARKER_DIAMOND;
-//			col = cv::Vec3b(0, 0, 255);
-//		}
-//		else if (phole->getIsOutside())
-//		{
-//			col = cv::Vec3b(0, 0, 10);
-//			tic = 2;
-//			marc = cv::MARKER_CROSS;
-//		}
-//		else
+		//		if (!phole->isValid)
+		//		{
+		//			marc = cv::MARKER_DIAMOND;
+		//			col = cv::Vec3b(0, 0, 255);
+		//		}
+		//		else if (phole->getIsOutside())
+		//		{
+		//			col = cv::Vec3b(0, 0, 10);
+		//			tic = 2;
+		//			marc = cv::MARKER_CROSS;
+		//		}
+		//		else
 		{
 			col = colors[comp->num % size];
 			marc = cv::MARKER_TILTED_CROSS;
@@ -85,6 +87,7 @@ void bc::barcodeCreator::draw(std::string name)
 		float ad = (float)corHei / hi;
 		cv::resizeWindow(name, (int)(wd * ad), corHei);
 	}
+#endif // USE_OPENCV
 }
 
 //#define CREATE_NEW
@@ -95,11 +98,11 @@ inline bc::Component* bc::barcodeCreator::attach(Component* main, Component* sec
 	// ***************************************************
 	if (main->coords->size() < second->coords->size()) //свапаем, если у первого меньше элементов. Нужно для производиельности
 	{
-		Component *temp = main;
+		Component* temp = main;
 		main = second;
 		second = temp;
 	}
-//	if (second->coords->size()<100)
+	//	if (second->coords->size()<100)
 	{
 		second->setParrent(main);
 		second->kill();
@@ -108,7 +111,7 @@ inline bc::Component* bc::barcodeCreator::attach(Component* main, Component* sec
 	}
 #endif
 #ifdef CREATE_NEW
-//	else
+	//	else
 	{
 		//	for (auto it = second->coords->begin(); it != second->coords->end(); ++it)
 		//		main->add(it->first);
@@ -116,7 +119,7 @@ inline bc::Component* bc::barcodeCreator::attach(Component* main, Component* sec
 		//	second->coords->clear();
 		// ***********************************
 
-		Component *newOne = new Component(this, true);
+		Component* newOne = new Component(this, true);
 		main->setParrent(newOne);
 		second->setParrent(newOne);
 		main->kill();
@@ -145,7 +148,7 @@ inline bool bc::barcodeCreator::checkCloserB0()
 			{
 				first = getComp(curPoint);
 				first->add(curpix);
-                //setInclude(midP, first);//n--nt обяз нужно
+				//setInclude(midP, first);//n--nt обяз нужно
 			}
 			else// соединяет несколько разных компоненты
 			{
@@ -164,7 +167,7 @@ inline bool bc::barcodeCreator::checkCloserB0()
 		//lastB += 1;
 
 		connected = new Component(curpix, this);
-        //setInclude(midP.x, midP.y, connected);
+		//setInclude(midP.x, midP.y, connected);
 		return true;
 	}
 
@@ -226,24 +229,24 @@ bc::Hole* bc::barcodeCreator::getHole(int x, int y)
 	if (x < 0 || y < 0 || x >= wid || y >= hei)
 		return nullptr;
 
-    auto itr = included[wid * y + x];
-    return dynamic_cast<Hole*>(itr->getMaxParrent() ? itr->getMaxParrent() : itr);
+	auto itr = included[wid * y + x];
+	return dynamic_cast<Hole*>(itr->getMaxParrent() ? itr->getMaxParrent() : itr);
 }
 
 bc::Hole* bc::barcodeCreator::getHole(const bc::point& p)
 {
-    auto itr = included[wid * p.y + p.x];
-    return dynamic_cast<Hole*>(itr->getMaxParrent() ? itr->getMaxParrent() : itr);
+	auto itr = included[wid * p.y + p.x];
+	return dynamic_cast<Hole*>(itr->getMaxParrent() ? itr->getMaxParrent() : itr);
 }
 
 void bc::barcodeCreator::setInclude(int x, int y, bc::Component* comp)
 {
-    included[wid * y + x] = comp;
+	included[wid * y + x] = comp;
 }
 
 void bc::barcodeCreator::setInclude(const bc::point& p, bc::Component* comp)
 {
-    included[wid * p.y + p.x] = comp;
+	included[wid * p.y + p.x] = comp;
 }
 
 bc::Hole* bc::barcodeCreator::tryAttach(Hole* main, Hole* add, point p)
@@ -285,14 +288,14 @@ inline bool bc::barcodeCreator::checkCloserB1()
 		if (isContain(p1))
 		{
 			if (isContain(curpix + poss[i + 1]))
-				p2 = curpix+ poss[i + 1];
+				p2 = curpix + poss[i + 1];
 			else if (i % 2 == 0 && isContain(curpix + poss[i + 2]))
 				p2 = curpix + poss[i + 2];
 			else
 				continue;//если не нашли. Проверяем только потелнциальные дыры
 
-            Hole* h1 = getHole(p1);
-            Hole* h2 = getHole(p2);
+			Hole* h1 = getHole(p1);
+			Hole* h2 = getHole(p2);
 			//все проверки на out в самом конце
 			//вариант 1 - они принадлежат одному объекту. Не валидные могут содержать только одну компоненту, значит, этот объект валидный
 			if (h1 == h2 && h1->isValid)
@@ -368,7 +371,7 @@ inline bool bc::barcodeCreator::checkCloserB1()
 		if (isContain(curp))
 		{
 			//получена дыра
-            Hole* h_t = getHole(curp);
+			Hole* h_t = getHole(curp);
 			if (h_t == hr)
 				continue;
 
@@ -376,7 +379,7 @@ inline bool bc::barcodeCreator::checkCloserB1()
 
 			point next = curpix + poss[(i % 8) + 1];
 			if (isContain(next))
-                h2 = getHole(next);
+				h2 = getHole(next);
 			if (h2 == hr || h2 == h_t)
 				h2 = nullptr;
 
@@ -430,52 +433,53 @@ inline bool bc::barcodeCreator::checkCloserB1()
 //********************************************************************************
 
 
-inline bc::point* bc::barcodeCreator::sort(const cv::Mat& arr,const ProcType& type)
+inline bc::point* bc::barcodeCreator::sort(const bcBarImg& arr, const ProcType& type)
 {
-	cv::Mat mask = arr;
-// bc::ProcType::experement:
-	//distanceTransform(nimg, nimg, cv::DIST_L2, 3);
-	// nimg.convertTo(nimg, CV_8UC1);
-	//	int b = mask.type();
-	//	for (int i = 0; i < arr.rows; ++i) {
-	//		for (int j = 0; j < arr.cols; ++j) {
-	//						int cou = 0;
-	//						uchar mins[4];
-	//						if (i > 0)
-	//							mins[cou++] = arr.at<uchar>(i - 1, j);
-	//						if (i < arr.rows - 1)
-	//							mins[cou++] = arr.at<uchar>(i + 1, j);
-	//						if (j > 0)
-	//							mins[cou++] = arr.at<uchar>(i, j - 1);
-	//						if (j < arr.cols - 1)
-	//							mins[cou++] = arr.at<uchar>(i, j + 1);
+	bcBarImg mask(1,1);
+	mask.assignCopyOf(arr);
+	// bc::ProcType::experement:
+		//distanceTransform(nimg, nimg, cv::DIST_L2, 3);
+		// nimg.convertTo(nimg, CV_8UC1);
+		//	int b = mask.type();
+		//	for (int i = 0; i < arr.rows; ++i) {
+		//		for (int j = 0; j < arr.cols; ++j) {
+		//						int cou = 0;
+		//						uchar mins[4];
+		//						if (i > 0)
+		//							mins[cou++] = arr.at<uchar>(i - 1, j);
+		//						if (i < arr.rows - 1)
+		//							mins[cou++] = arr.at<uchar>(i + 1, j);
+		//						if (j > 0)
+		//							mins[cou++] = arr.at<uchar>(i, j - 1);
+		//						if (j < arr.cols - 1)
+		//							mins[cou++] = arr.at<uchar>(i, j + 1);
 
-	//						uchar min = 255;
-	//			uchar center = arr.at<uchar>(i, j);
-	//						for (int i = 0; i < cou; ++i) {
-	//							if (abs(center - mins[i]) < min)
-	//								min = center - mins[i];
-	//						}
-	//						mask.at<uchar>(i, j) = (uchar)(min);
+		//						uchar min = 255;
+		//			uchar center = arr.at<uchar>(i, j);
+		//						for (int i = 0; i < cou; ++i) {
+		//							if (abs(center - mins[i]) < min)
+		//								min = center - mins[i];
+		//						}
+		//						mask.at<uchar>(i, j) = (uchar)(min);
 
-	////			if (center > 127)
-	////				center = 255 - center;
-	////			mask.at<uchar>(i, j) = center;
-	////			//			int st0 = MAX(i - 1, 0);
-	////			int st1 = MAX(j - 1, 0);
-	////			int ed0 = MIN(i + 1,arr.rows - 1);
-	////			int ed1 = MIN(j + 1,arr.cols - 1);
-	//			//            double min, max;
-	//			//            cv::Mat zone = (*arr)(cv::Range(st0, ed0), cv::Range(st1, ed1));
-	//			//            cv::minMaxLoc(zone, &min, &max);
-	//			//            nimg.at<uchar>(i, j) = (uchar)( 255 -  max - min);
+		////			if (center > 127)
+		////				center = 255 - center;
+		////			mask.at<uchar>(i, j) = center;
+		////			//			int st0 = MAX(i - 1, 0);
+		////			int st1 = MAX(j - 1, 0);
+		////			int ed0 = MIN(i + 1,arr.rows - 1);
+		////			int ed1 = MIN(j + 1,arr.cols - 1);
+		//			//            double min, max;
+		//			//            BarImg zone = (*arr)(cv::Range(st0, ed0), cv::Range(st1, ed1));
+		//			//            cv::minMaxLoc(zone, &min, &max);
+		//			//            nimg.at<uchar>(i, j) = (uchar)( 255 -  max - min);
 
-	//		}
-	//	}
+		//		}
+		//	}
 
-	//cv::namedWindow("ret", cv::WINDOW_NORMAL);
-	//cv::imshow("ret", mask);
-	//cv::waitKey(0);
+		//cv::namedWindow("ret", cv::WINDOW_NORMAL);
+		//cv::imshow("ret", mask);
+		//cv::waitKey(0);
 
 	int hist[256];//256
 	int offs[256];//256
@@ -485,38 +489,38 @@ inline bc::point* bc::barcodeCreator::sort(const cv::Mat& arr,const ProcType& ty
 		offs[i] = 0;
 	}
 
-	for (int i = 0; i <arr.cols; ++i)//wid
+	for (int i = 0; i < arr.wid(); ++i)//wid
 	{
-		for (int j = 0; j <arr.rows; ++j)//hei
+		for (int j = 0; j < arr.hei(); ++j)//hei
 		{
-			auto p = mask.at<uchar>((int)j, (int)i);
+			auto p = mask.get(i, j);
 			++hist[p];//можно vector, но хз
 		}
 	}
 
-    for (size_t i = 1; i < 256; ++i)
+	for (size_t i = 1; i < 256; ++i)
 	{
 		hist[i] += hist[i - 1];
-        offs[i] = hist[i - 1];
-    }
+		offs[i] = hist[i - 1];
+	}
 
-	point* data = new point[(size_t)mask.cols * (size_t)mask.rows];//256
-	for (int i = 0; i < mask.cols; ++i)//wid
+	point* data = new point[(size_t)mask.length()];//256
+	for (int i = 0; i < mask.wid(); ++i)//wid
 	{
-		for (int j = 0; j < mask.rows; ++j)//hei
+		for (int j = 0; j < mask.hei(); ++j)//hei
 		{
-//			if (mask.channels()== 3)
-//			{
-//				auto p = mask.at<cv::Vec3b>((int)j, (int)i);
-//				data[offs[p]++] = point((int)i, (int)j);
-//			}else
+			//			if (mask.channels()== 3)
+			//			{
+			//				auto p = mask.at<cv::Vec3b>((int)j, (int)i);
+			//				data[offs[p]++] = point((int)i, (int)j);
+			//			}else
 			{
-				auto p = mask.at<uchar>((int)j, (int)i);
-				data[offs[p]++] = point((int)i, (int)j);
+				auto p = mask.get(i, j);
+				data[offs[p]++] = point(i, j);
 			}
-        }
-    }
-	size_t total = (size_t) mask.cols * (size_t) mask.rows;
+		}
+	}
+	size_t total = (size_t)mask.length();
 	if (type == bc::ProcType::f255t0)
 	{
 		for (int i = 0, ts = total / 2; i < ts; ++i)
@@ -535,23 +539,23 @@ bc::barcodeCreator::barcodeCreator()
 	lastB = 0;
 }
 
-void bc::barcodeCreator::init(const cv::Mat& src, const  ProcType& type, cv::Mat& img)
+void bc::barcodeCreator::init(const bcBarImg& src, const  ProcType& type, bcBarImg& img)
 {
-	if (src.channels() != 1)
-		cv::cvtColor(src, img, cv::COLOR_BGR2GRAY);
-	else
-		img = src;
+	//if (src.channels() != 1)
+	//	cvtColor(src, img);
+	//else
+	//	img = src;
 
 	if (type == bc::ProcType::f255t0)
 	{
-		img = 255 - img;
+		img = (uchar)255 - img;
 	}
 
-	wid = img.cols;
-	hei = img.rows;
-	totalSize = img.cols * img.rows;
-	included = new Component *[totalSize];
-	memset(included, 0, totalSize * sizeof( Component *));
+	wid = img.wid();
+	hei = img.hei();
+	totalSize = img.length();
+	included = new Component * [totalSize];
+	memset(included, 0, totalSize * sizeof(Component*));
 
 
 	//от 255 до 0
@@ -560,6 +564,7 @@ void bc::barcodeCreator::init(const cv::Mat& src, const  ProcType& type, cv::Mat
 
 	lastB = 0;
 	visualize = true;
+#ifdef USE_OPENCV
 
 	if (colors.size() == 0 && visualize)
 	{
@@ -568,10 +573,11 @@ void bc::barcodeCreator::init(const cv::Mat& src, const  ProcType& type, cv::Mat
 				for (int r = 0; r < 255; r += 50)
 					colors.push_back(cv::Vec3b(b, g, r));
 	}
+#endif // USE_OPENCV
 }
 //#include <QDebug>
 
-void bc::barcodeCreator::processHole(cv::Mat& img, int* retBty, Barcontainer* item)
+void bc::barcodeCreator::processHole(bcBarImg& img, int* retBty, Barcontainer* item)
 {
 	size_t len = totalSize - 1;
 	reverse = false;
@@ -579,10 +585,10 @@ void bc::barcodeCreator::processHole(cv::Mat& img, int* retBty, Barcontainer* it
 	for (size_t i = 0; i < totalSize; ++i)
 	{
 		curpix = sortedArr[i];
-		curbright = img.at<uchar>(curpix.cvPoint());
+		curbright = img.get(curpix);
 
-	/*	if (i == 25)
-			qDebug() << "";*/
+		/*	if (i == 25)
+				qDebug() << "";*/
 #ifdef VDEBUG
 		VISULA_DEBUG(totalSize, i);
 #else
@@ -591,7 +597,7 @@ void bc::barcodeCreator::processHole(cv::Mat& img, int* retBty, Barcontainer* it
 
 		if (i != len)
 		{
-			uchar scnd = img.at<uchar>(sortedArr[i + 1].cvPoint());
+			uchar scnd = img.get(sortedArr[i + 1]);
 			if (curbright != scnd) //идет от 0 до 255. если перешагиваем больше чем 1, тогда устанавливаем значения все
 			{
 				for (int k = curbright; k < scnd; ++k) {
@@ -613,15 +619,15 @@ void bc::barcodeCreator::processHole(cv::Mat& img, int* retBty, Barcontainer* it
 	lastB = 0;
 }
 
-void bc::barcodeCreator::processComp(cv::Mat& img, int* retBty, bc::Barcontainer* item)
+void bc::barcodeCreator::processComp(bcBarImg& img, int* retBty, bc::Barcontainer* item)
 {
-    //cv::imshow("res", img);
-    //cv::waitKey(0);
+	//cv::imshow("res", img);
+	//cv::waitKey(0);
 	size_t len = totalSize - 1;
 	// reverse = false;
 	for (size_t i = 0; i < totalSize; ++i) {
 		curpix = sortedArr[i];
-		curbright = img.at<uchar>(curpix.cvPoint());
+		curbright = img.get(curpix);
 #ifdef VDEBUG
 		VISULA_DEBUG_COMP(totalSize, i);
 #else
@@ -630,7 +636,7 @@ void bc::barcodeCreator::processComp(cv::Mat& img, int* retBty, bc::Barcontainer
 
 		if (i != len)
 		{
-			uchar scnd = img.at<uchar>(sortedArr[i + 1].cvPoint());
+			uchar scnd = img.get(sortedArr[i + 1]);
 			if (curbright != scnd) //идет от 0 до 255. если перешагиваем больше чем 1, тогда устанавливаем значения все
 			{
 				for (int k = curbright; k < scnd; ++k)
@@ -642,16 +648,16 @@ void bc::barcodeCreator::processComp(cv::Mat& img, int* retBty, bc::Barcontainer
 		}
 	}
 
-//    curbright = 255;
+	//    curbright = 255;
 	assert(((void)"ALARM! B0 is not one", lastB == 1));
-    for (auto *c : components)
-    {
-        if (c->isAlive())
-        {
-            c->kill();
-            break;
-        }
-    }
+	for (auto* c : components)
+	{
+		if (c->isAlive())
+		{
+			c->kill();
+			break;
+		}
+	}
 	addItemToCont(item);
 	clearIncluded();
 	lastB = 0;
@@ -682,23 +688,26 @@ void bc::barcodeCreator::addItemToCont(bc::Barcontainer* container)
 void bc::barcodeCreator::VISULA_DEBUG(int y, int i)
 {
 	checkCloserB1();
-
+#ifdef USE_OPENCV
 	if (visualize)
 	{
 		draw("main");
 		cv::waitKey(0);
 	}
+#endif // DEBUG
 }
 
 void bc::barcodeCreator::VISULA_DEBUG_COMP(int y, int i)
 {
 	visualize = true;
 	checkCloserB0();
+#ifdef USE_OPENCV
 	if (visualize)
 	{
 		draw("main");
 		cv::waitKey(0);
 	}
+#endif // DEBUG
 }
 
 void bc::barcodeCreator::clearIncluded()
@@ -713,7 +722,7 @@ void bc::barcodeCreator::clearIncluded()
 	components.clear();
 
 	if (included != nullptr)
-    {
+	{
 		memset(included, 0, totalSize * sizeof(included[0]));
 		delete[] included;
 		included = nullptr;
@@ -724,7 +733,9 @@ void bc::barcodeCreator::clearIncluded()
 bc::barcodeCreator::~barcodeCreator()
 {
 	clearIncluded();
+#ifdef USE_OPENCV
 	colors.clear();
+#endif // USE_OPENCV
 }
 
 bool compareLines(const bc::bline* i1, const bc::bline* i2)
@@ -738,90 +749,91 @@ bool compareLines(const bc::bline* i1, const bc::bline* i2)
 
 struct GraphVer
 {
-    GraphVer()
-    {
+	GraphVer()
+	{
 	}
-	GraphVer(bc::Component *comp)
-    {
-        this->comp = comp;
-//		this->node = node;
-    }
-//	bc::BarNode *node;
-    bc::Component *comp = nullptr;
-    GraphVer *parent = nullptr;
-    //bc::Component *comp;
-    std::vector<GraphVer *> childrens;
+	GraphVer(bc::Component* comp)
+	{
+		this->comp = comp;
+		//		this->node = node;
+	}
+	//	bc::BarNode *node;
+	bc::Component* comp = nullptr;
+	GraphVer* parent = nullptr;
+	//bc::Component *comp;
+	std::vector<GraphVer*> childrens;
 };
 
-void reverseCom(GraphVer *root)
+void reverseCom(GraphVer* root)
 {
-    for (auto *c : root->childrens)
-        reverseCom(c);
+	for (auto* c : root->childrens)
+		reverseCom(c);
 
 	if (root->parent)
-    {
-		auto &rootCoords = (*root->comp->coords);
-//		auto &rootSubCoords = root->comp->subCoords;
+	{
+		auto& rootCoords = (*root->comp->coords);
+		//		auto &rootSubCoords = root->comp->subCoords;
 		auto& rootParrentCoords = (*root->parent->comp->coords);
 		for (int i = 0, total = rootCoords.size(); i < total; ++i)
-        {
-			auto &ccod = rootCoords[i];
+		{
+			auto& ccod = rootCoords[i];
 			rootParrentCoords.push_back(ppair(ccod.first, root->parent->comp->end - root->comp->end));
 
-//			ccod = rootSubCoords[i];
-//			rootParrentCoords.push_back(
-//				std::pair(ccod.first, root->parent->comp->end - root->comp->end));
+			//			ccod = rootSubCoords[i];
+			//			rootParrentCoords.push_back(
+			//				std::pair(ccod.first, root->parent->comp->end - root->comp->end));
 
 
-			// root->parent->comp->coords->push_back(std::pair((*root->comp->coords)[i].first,(*root->comp->coords)[i].end -  root->comp->end));
-//            root->parent->comp->coords->push_back(std::pair((*root->comp->coords)[i].first,(*root->comp->coords)[i].second -  root->comp->end));
-        }
-    }
+						// root->parent->comp->coords->push_back(std::pair((*root->comp->coords)[i].first,(*root->comp->coords)[i].end -  root->comp->end));
+			//            root->parent->comp->coords->push_back(std::pair((*root->comp->coords)[i].first,(*root->comp->coords)[i].second -  root->comp->end));
+		}
+	}
 }
 
 bc::Baritem* bc::barcodeCreator::getBarcode()
 {
 	Baritem* lines = new Baritem();
-	std::unordered_map<Component *, GraphVer> vers;
+	std::unordered_map<Component*, GraphVer> vers;
 
-	std::unordered_map<Component *, BarNode *> graph;
+	std::unordered_map<Component*, BarNode*> graph;
 
-    if (!this->useBetty)
+	if (!this->useBetty)
 	{
-		GraphVer *root = nullptr;
+		GraphVer* root = nullptr;
 		for (Component* c : components)
 		{
 			if (c == nullptr)
 				continue;
 
-			pmap *map = (createBin || getCoords) ? c->coords : nullptr;
-			bc::bline *line = new bc::bline(c->start, c->end - c->start, map);
-			BarNode *bnode = nullptr;
+			pmap* map = (createBin || getCoords) ? c->coords : nullptr;
+			bc::bline* line = new bc::bline(c->start, c->end - c->start, map);
+			BarNode* bnode = nullptr;
 			if (createGraph)
 			{
 				bnode = new BarNode(line);
-				graph.insert(std::pair<Component *, BarNode *>(c, bnode));
+				graph.insert(std::pair<Component*, BarNode*>(c, bnode));
 			}
 
 			if (createBin)// || getCoords
 			{
-				GraphVer *vchld, *vparnt;
+				GraphVer* vchld, * vparnt;
 
 				if (vers.find(c) == vers.end())
-					vers.insert(std::pair<Component *, GraphVer>(c, GraphVer(c)));
+					vers.insert(std::pair<Component*, GraphVer>(c, GraphVer(c)));
 
 				vchld = &vers[c];
 
 				if (c->parent)
 				{
 					if (vers.find(c->parent) == vers.end())
-						vers.insert(std::pair<Component *, GraphVer>(c->parent, GraphVer(c->parent)));
+						vers.insert(std::pair<Component*, GraphVer>(c->parent, GraphVer(c->parent)));
 
 					vparnt = &vers[c->parent];
 
 					vchld->parent = vparnt;
 					vparnt->childrens.push_back(vchld);
-				} else
+				}
+				else
 				{
 					root = vchld;
 					graphRoot = bnode;
@@ -838,7 +850,7 @@ bc::Baritem* bc::barcodeCreator::getBarcode()
 
 		if (createGraph)
 		{
-			for (Component *c : components)
+			for (Component* c : components)
 			{
 				if (c == nullptr)
 					continue;
@@ -850,14 +862,14 @@ bc::Baritem* bc::barcodeCreator::getBarcode()
 			lines->rootNode = graphRoot;
 			graphRoot = nullptr;
 		}
-//        if (reverse)
-//        {
-//            for (Component* c : components)
-//            {
-//                for (int i = 0, total = c->coords->size(); i < total; ++i)
-//                    (*c->coords)[i].second = 255 - (*c->coords)[i].second;
-//            }
-//        }
+		//        if (reverse)
+		//        {
+		//            for (Component* c : components)
+		//            {
+		//                for (int i = 0, total = c->coords->size(); i < total; ++i)
+		//                    (*c->coords)[i].second = 255 - (*c->coords)[i].second;
+		//            }
+		//        }
 	}
 	else
 	{
@@ -899,9 +911,9 @@ bc::Baritem* bc::barcodeCreator::getBarcode()
 	return lines;
 }
 
-void bc::barcodeCreator::processTypeF(const bc::barstruct& str, cv::Mat& src, Barcontainer* item)
+void bc::barcodeCreator::processTypeF(const bc::barstruct& str, bcBarImg& src, Barcontainer* item)
 {
-	cv::Mat img;
+	bcBarImg img(1,1);
 	init(src, str.proctype, img);
 
 	switch (str.comtype)
@@ -922,18 +934,17 @@ void bc::barcodeCreator::processTypeF(const bc::barstruct& str, cv::Mat& src, Ba
 		break;
 	}
 
-
 	delete[] sortedArr;
 }
 
-void bc::barcodeCreator::processFULL(const bc::barstruct& str, cv::Mat& src, bc::Barcontainer* item)
+void bc::barcodeCreator::processFULL(const bc::barstruct& str, bcBarImg& src, bc::Barcontainer* item)
 {
 	bool rgb = (src.channels() == 3);
 
 	if (str.coltype == ColorType::rgb || (str.coltype == ColorType::native && rgb)) {
 		if (src.channels() == 3) {
-			std::vector<cv::Mat> bgr;
-			cv::split(src, bgr);
+			std::vector<bcBarImg> bgr;
+			//split(src, bgr);!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			processTypeF(str, bgr[0], item);
 			processTypeF(str, bgr[1], item);
 			processTypeF(str, bgr[2], item);
@@ -949,7 +960,7 @@ void bc::barcodeCreator::processFULL(const bc::barstruct& str, cv::Mat& src, bc:
 		processTypeF(str, src, item);
 }
 
-bc::Barcontainer* bc::barcodeCreator::createBarcode(cv::Mat src, const std::vector<bc::barstruct>& structure)
+bc::Barcontainer* bc::barcodeCreator::createBarcode(bcBarImg& src, const std::vector<bc::barstruct>& structure)
 {
 	Barcontainer* cont = new Barcontainer();
 
@@ -965,17 +976,17 @@ bc::Barcontainer* bc::barcodeCreator::createBarcode(cv::Mat src, const std::vect
 }
 
 #ifdef _PYD
-#include <boost/python.hpp>
-#include <boost/python/numpy.hpp>
-#include <Python.h>
+INCLUDE_PY
 bc::Barcontainer* bc::barcodeCreator::createBarcode(bn::ndarray& img, bp::list& structure)
 {
 	auto shape = img.get_shape();
 	//img.
+	BarImg* image;
 	int type = CV_8UC1;
 	if (img.get_nd() == 3 && shape[2] == 3)
-		type = CV_8UC3;
-	cv::Mat image(shape[0], shape[1], type, img.get_data());
+		image = &BarImg<bcVec3b>(shape[0], shape[1], img.get_data());
+	else if FLOAT
+		BarImg image(shape[0], shape[1], img.get_data());
 
 	//cv::imshow("test", image);
 	//cv::waitKey(0);
@@ -989,25 +1000,25 @@ bc::Barcontainer* bc::barcodeCreator::createBarcode(bn::ndarray& img, bp::list& 
 #endif
 
 
-bc::Barcontainer* bc::barcodeCreator::createSLbarcode(const cv::Mat& src, uchar foneStart, uchar foneEnd, Barcontainer* cont)
+bc::Barcontainer* bc::barcodeCreator::createSLbarcode(const bcBarImg& src, uchar foneStart, uchar foneEnd, Barcontainer* cont)
 {
-	cv::Mat img;
+	bcBarImg img(1,1);
 	init(src, bc::ProcType::f0t255, img);
 	if (cont == nullptr)
 		cont = new Barcontainer();
 
 	const size_t len = totalSize - 1;
 	size_t foneStartI = 0;
-	foneStart = MAX(foneStart, img.at<uchar>(sortedArr[0].cvPoint()));
-	foneStart = MIN(foneStart, img.at<uchar>(sortedArr[len].cvPoint()));
+	foneStart = MAX(foneStart, img.get(sortedArr[0]));
+	foneStart = MIN(foneStart, img.get(sortedArr[len]));
 
 	size_t foneEndI = 0;
-	foneEnd = MAX(foneEnd, img.at<uchar>(sortedArr[0].cvPoint()));
-	foneEnd = MIN(foneEnd, img.at<uchar>(sortedArr[len].cvPoint()));
+	foneEnd = MAX(foneEnd, img.get(sortedArr[0]));
+	foneEnd = MIN(foneEnd, img.get(sortedArr[len]));
 
 	for (size_t i = 0; i < totalSize; ++i)
 	{
-		curbright = img.at<uchar>(sortedArr[i].cvPoint());
+		curbright = img.get(sortedArr[i]);
 		if (foneStart == 0 && curbright >= foneStart) {
 			foneStartI = i;
 			break;
@@ -1030,7 +1041,7 @@ bc::Barcontainer* bc::barcodeCreator::createSLbarcode(const cv::Mat& src, uchar 
 		sortedArr[off] = temp;
 	}
 	off = len;
-    processHole(img, b, cont);
+	processHole(img, b, cont);
 
 	delete[] sortedArr;
 	delete[] included;
@@ -1038,14 +1049,14 @@ bc::Barcontainer* bc::barcodeCreator::createSLbarcode(const cv::Mat& src, uchar 
 	return cont;
 }
 
-bc::Barcontainer* bc::barcodeCreator::createSLbarcode(const cv::Mat& src, uchar foneStart, uchar foneEnd, bool createRGBbar)
+bc::Barcontainer* bc::barcodeCreator::createSLbarcode(const bcBarImg& src, uchar foneStart, uchar foneEnd, bool createRGBbar)
 {
 	Barcontainer* cont = new Barcontainer();
 	if (!createRGBbar)
 		return createSLbarcode(src, foneStart, foneEnd, cont);
 	if (src.channels() == 3) {
-		std::vector<cv::Mat>  bgr;
-		cv::split(src, bgr);
+		std::vector<bcBarImg>  bgr;
+		//split(src, bgr);
 		Barbase* b = createSLbarcode(bgr[0], foneStart, foneEnd, cont);
 		Barbase* g = createSLbarcode(bgr[1], foneStart, foneEnd, cont);
 		Barbase* r = createSLbarcode(bgr[2], foneStart, foneEnd, cont);
@@ -1064,7 +1075,6 @@ bc::Barcontainer* bc::barcodeCreator::createSLbarcode(const cv::Mat& src, uchar 
 
 // ***************************************************
 
-using cv::Mat;
 
 uchar dif(uchar a, uchar b)
 {
@@ -1074,18 +1084,18 @@ uchar dif(uchar a, uchar b)
 		return b - a;
 }
 
-void bc::barcodeCreator::Prepair(Mat mat, int step)
+void bc::barcodeCreator::Prepair(bcBarImg& mat, int step)
 {
 	int N = 4;
 	//	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };//эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
-	static char poss[5][2] = {{-1, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, 0}}; //эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
-	for (int c = 0; c < mat.cols; ++c)//x //wid
+	static char poss[5][2] = { {-1, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, 0} }; //эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
+	for (int c = 0; c < mat.wid(); ++c)//x //wid
 	{
-		for (int r = 0; r < mat.rows; ++r)//y //hei
+		for (int r = 0; r < mat.hei(); ++r)//y //hei
 		{
-			this->curbright = mat.at<uchar>(r, c);
+			this->curbright = mat.get(r, c);
 			this->curpix = point(c, r);
-			Component *mainC = getComp(c, r);
+			Component* mainC = getComp(c, r);
 			for (int off = 0; off < N; ++off)
 			{
 				point p(c + poss[off][0], r + poss[off][1]);
@@ -1093,11 +1103,11 @@ void bc::barcodeCreator::Prepair(Mat mat, int step)
 				if (p.x < 0 || p.y < 0 || p.x >= wid || p.y >= hei)
 					continue;
 
-				Component *subC = getComp(p);
+				Component* subC = getComp(p);
 				if (subC == mainC && mainC != nullptr)
 					continue;
 
-				uchar val = mat.at<uchar>(p.cvPoint());
+				uchar val = mat.get(p);
 
 				if (dif(val, curbright) <= step)
 				{
@@ -1140,7 +1150,7 @@ void bc::barcodeCreator::SetStep(const uchar value)
 }
 
 
-void bc::barcodeCreator::ProcessFullPrepair(cv::Mat &img, int *retBty, bc::Barcontainer *item)
+void bc::barcodeCreator::ProcessFullPrepair(bcBarImg& img, int* retBty, bc::Barcontainer* item)
 {
 	for (int i = 0; i < 256; ++i)
 	{
@@ -1148,7 +1158,7 @@ void bc::barcodeCreator::ProcessFullPrepair(cv::Mat &img, int *retBty, bc::Barco
 		retBty[i] = this->lastB;
 	}
 
-	for (auto *c : components)
+	for (auto* c : components)
 	{
 		if (c->isAlive())
 		{
@@ -1161,7 +1171,7 @@ void bc::barcodeCreator::ProcessFullPrepair(cv::Mat &img, int *retBty, bc::Barco
 	lastB = 0;
 }
 
-void bc::barcodeCreator::ProcessPrepComp(cv::Mat &img, int *retBty, int step, bc::Barcontainer *item)
+void bc::barcodeCreator::ProcessPrepComp(bcBarImg& img, int* retBty, int step, bc::Barcontainer* item)
 {
 	Prepair(img, step);
 	processComp(img, retBty, item);
@@ -1171,11 +1181,11 @@ struct tripl
 {
 	int x, y;
 	float val;
-	tripl(int x, int y, float val): x(x), y(y), val(val)
+	tripl(int x, int y, float val) : x(x), y(y), val(val)
 	{
 
 	}
-	tripl(): x(-1), y(-1), val(-9999)
+	tripl() : x(-1), y(-1), val(-9999)
 	{
 
 	}
@@ -1193,9 +1203,9 @@ inline tripl* floatSort(const float* arr, int wid, int hei)
 		float p = arr[i];
 		data[k++] = tripl(i % wid, i / wid, p);
 	}
-	std::sort(data, data + total, [](tripl& a, tripl& b){
+	std::sort(data, data + total, [](tripl& a, tripl& b) {
 		return a.val > b.val;
-	});
+		});
 	return data;
 }
 
@@ -1206,7 +1216,7 @@ bc::Barcontainer* bc::barcodeCreator::searchHoles(float* img, int wid, int hei)
 	totalSize = wid * hei;
 	included = new Component * [totalSize];
 	memset(included, 0, totalSize * sizeof(Component*));
-	
+
 	createBin = false;
 	createGraph = false;
 	getCoords = true;
@@ -1218,7 +1228,7 @@ bc::Barcontainer* bc::barcodeCreator::searchHoles(float* img, int wid, int hei)
 
 	for (size_t i = 0; i < totalSize; ++i)
 	{
-		auto &val = arr[i];
+		auto& val = arr[i];
 		curpix = point(val.x, val.y);
 		curbright = val.val;
 #ifdef VDEBUG

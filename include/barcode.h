@@ -1,8 +1,8 @@
 #ifndef BARCODE_H
 #define BARCODE_H
 #include <vector>
-#include <opencv2/opencv.hpp>
 #include "point.h"
+#include "barImg.h"
 
 #ifdef _WINDLL
 #  define EXPORT __declspec(dllexport)
@@ -15,9 +15,26 @@
 using uchar = unsigned char;
 namespace bc {
 
+struct BarRect
+{
+    int _x, _y, _wid, _hei;
+public:
+    BarRect(int x, int y, int width, int height)
+    {
+        _x = x;
+        _y = y;
+        _wid = width;
+        _hei = height;
+    }
+};
+
+
 struct EXPORT bline
 {
     //    cv::Mat binmat;
+#ifdef USE_OPENCV
+
+
     cv::Mat getMat(const cv::Size& s)
     {
         cv::Mat m = cv::Mat::zeros(s.height, s.width, CV_8UC1);
@@ -32,9 +49,71 @@ struct EXPORT bline
         mat.forEach<uchar>([m = matr](uchar &pixel, const int *pos) -> void {
             m->push_back(ppair(bc::point(pos[0], pos[1]), pixel)); });
     }
+    cv::Rect getRect()
+    {
+        pmap& points = (*matr);
+        int l, r, t, d;
+        r = l = points[0].first.x;
+        t = d = points[0].first.y;
+        for (int j = 0; j < points.size(); ++j)
+        {
+            if (l > points[j].first.x)
+                l = points[j].first.x;
+            if (r < points[j].first.x)
+                r = points[j].first.x;
+
+            if (t > points[j].first.y)
+                t = points[j].first.y;
+            if (d < points[j].first.y)
+                d = points[j].first.y;
+        }
+        return cv::Rect(l, t, r - l + 1, d - t + 1);
+    }
+#endif // USE_OPENCV
+    
+    bc::BarImg<uchar> getBarImg(const int wid, int hei)
+    {
+        BarImg<uchar> bc(wid, hei);
+        for (auto it = matr->begin(); it != matr->end(); ++it) {
+            bc.set(it->first.y, it->first.x, it->second);
+        }
+        return bc;
+    }
+    void setFromBarImg(bc::BarImg<uchar>& mat)
+    {
+        matr->clear();
+        size_t pos = 0;
+        for (auto& pixel : mat)
+        {
+            matr->push_back(ppair(mat.getPointAt(pos), pixel));
+            ++pos;
+        }
+    }
+
+    BarRect getRect()
+    {
+        pmap& points = (*matr);
+        int l, r, t, d;
+        r = l = points[0].first.x;
+        t = d = points[0].first.y;
+        for (int j = 0; j < points.size(); ++j)
+        {
+            if (l > points[j].first.x)
+                l = points[j].first.x;
+            if (r < points[j].first.x)
+                r = points[j].first.x;
+
+            if (t > points[j].first.y)
+                t = points[j].first.y;
+            if (d < points[j].first.y)
+                d = points[j].first.y;
+        }
+        return BarRect(l, t, r - l + 1, d - t + 1);
+    }
+
     pmap* matr = nullptr;
-	float start;
-	float len;
+    float start;
+    float len;
     //    bline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
     //    bline(uchar _start, uchar _len, cv::Mat _mat) :  start(_start), len(_len)
     //    {
@@ -60,26 +139,7 @@ struct EXPORT bline
         }
         return temp;
     }
-	cv::Rect getRect()
-	{
-		pmap &points = (*matr);
-		int l, r, t, d;
-		r = l = points[0].first.x;
-		t = d = points[0].first.y;
-		for (int j = 0; j < points.size(); ++j)
-		{
-			if (l > points[j].first.x)
-				l = points[j].first.x;
-			if (r < points[j].first.x)
-				r = points[j].first.x;
-
-			if (t > points[j].first.y)
-				t = points[j].first.y;
-			if (d < points[j].first.y)
-				d = points[j].first.y;
-		}
-		return cv::Rect(l, t, r - l + 1, d - t + 1);
-	}
+	
 
 
 #ifdef _PYD
