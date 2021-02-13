@@ -1,41 +1,49 @@
 #include "barcontainer.h"
 
-bc::Baritem::Baritem() {}
 
-bc::Baritem::Baritem(const bc::Baritem& obj)
+template<class T>
+bc::Baritem<T>::Baritem() {}
+
+template<class T>
+bc::Baritem<T>::Baritem(const bc::Baritem<T>& obj)
 {
 	bar.insert(bar.begin(), obj.bar.begin(), obj.bar.end());
 }
 
-void bc::Baritem::add(uchar st, uchar len)
+template<class T>
+void bc::Baritem<T>::add(T st, T len)
 {
-	bar.push_back(new bline(st, len));
+	bar.push_back(new bline<T>(st, len));
 }
 
 //void bc::Baritem::add(uchar st, uchar len, cv::Mat binmat)
 //{
 //    bar.push_back(bline(st, len, binmat));
 //}
-void bc::Baritem::add(uchar st, uchar len, pmap* binmat)
+template<class T>
+void bc::Baritem<T>::add(T st, T len, pmap<T>* binmat)
 {
-	bar.push_back(new bline(st, len, binmat));
+	bar.push_back(new bline<T>(st, len, binmat));
 }
 
-void bc::Baritem::add(bc::bline* line)
+template<class T>
+void bc::Baritem<T>::add(bc::bline<T>* line)
 {
 	bar.push_back(line);
 }
 
-int bc::Baritem::sum() const
+template<class T>
+double bc::Baritem<T>::sum() const
 {
 	int sum = 0;
-	for (const bline* l : bar)
+	for (const bline<T>* l : bar)
 		sum += l->len;
 
 	return sum;
 }
 
-bc::Baritem* bc::Baritem::clone() const
+template<class T>
+bc::Baritem<T>* bc::Baritem<T>::clone() const
 {
 	Baritem* nb = new Baritem();
 	nb->bar.insert(nb->bar.begin(), bar.begin(), bar.end());
@@ -45,17 +53,19 @@ bc::Baritem* bc::Baritem::clone() const
 	return nb;
 }
 
-uchar bc::Baritem::maxLen() const
+template<class T>
+T bc::Baritem<T>::maxLen() const
 {
-	uchar max = 0;
-	for (const bline* l : bar)
+	T max = 0;
+	for (const bline<T>* l : bar)
 		if (l->len > max)
 			max = l->len;
 
 	return max;
 }
 
-void bc::Baritem::relen()
+template<class T>
+void bc::Baritem<T>::relen()
 {
 	if (bar.size() == 0)
 		return;
@@ -72,12 +82,13 @@ void bc::Baritem::relen()
 	//std::for_each(arr.begin(), arr.end(), [mini](bline &n) {return n.start - uchar(mini); });
 }
 
-void bc::Baritem::removePorog(const uchar porog)
+template<class T>
+void bc::Baritem<T>::removePorog(const T porog)
 {
 	if (porog == 0)
 		return;
-	Baritem res;
-	for (bline* line : bar) {
+	Baritem<T> res;
+	for (bline<T>* line : bar) {
 		if (line->len >= porog)
 			res.bar.push_back(line);
 		else
@@ -87,7 +98,8 @@ void bc::Baritem::removePorog(const uchar porog)
 	bar.insert(bar.begin(), res.bar.begin(), res.bar.end());
 }
 
-void bc::Baritem::preprocessBar(const int& porog, bool normalize)
+template<class T>
+void bc::Baritem<T>::preprocessBar(const int& porog, bool normalize)
 {
 	if (porog > 0)
 		this->removePorog((uchar)roundf((porog * float(this->maxLen()) / 100.f)));
@@ -98,11 +110,11 @@ void bc::Baritem::preprocessBar(const int& porog, bool normalize)
 
 
 
-
-float bc::Baritem::compireCTML(const bc::Barbase* bc) const
+template<class T>
+float bc::Baritem<T>::compireCTML(const bc::Barbase* bc) const
 {
-	Baritem* Y = dynamic_cast<const Baritem*>(bc)->clone();
-	Baritem* X = clone();
+	Baritem<T>* Y = dynamic_cast<const Baritem<T>*>(bc)->clone();
+	Baritem<T>* X = clone();
 	if (X->bar.size() == 0 || Y->bar.size() == 0)
 		return 0;
 	float sum = (float)(X->sum() + Y->sum());
@@ -141,10 +153,11 @@ float bc::Baritem::compireCTML(const bc::Barbase* bc) const
 	return tsum / sum;
 }
 
-float bc::Baritem::compireCTS(const bc::Barbase* bc) const
+template<class T>
+float bc::Baritem<T>::compireCTS(const bc::Barbase* bc) const
 {
-	Baritem* Y = dynamic_cast<const Baritem*>(bc)->clone();
-	Baritem* X = clone();
+	Baritem<T>* Y = dynamic_cast<const Baritem<T>*>(bc)->clone();
+	Baritem<T>* X = clone();
 	if (X->bar.size() == 0 || Y->bar.size() == 0)
 		return 0;
 	float sum = (float)(X->sum() + Y->sum());
@@ -188,37 +201,41 @@ float bc::Baritem::compireCTS(const bc::Barbase* bc) const
 	return tsum / sum;
 }
 
-bc::Baritem::~Baritem()
+template<class T>
+bc::Baritem<T>::~Baritem()
 {
 	bar.clear();
 }
 
 //=======================barcontainer=====================
 
-bc::Barcontainer::Barcontainer()
+template<class T>
+bc::Barcontainer<T>::Barcontainer()
 {
 }
 
-int bc::Barcontainer::sum() const
+template<class T>
+double bc::Barcontainer<T>::sum() const
 {
 	int sm = 0;
-	for (const Baritem* it : items)
+	for (const Baritem<T>* it : items)
 		sm += it->sum();
 
 	return sm;
 }
 
-void bc::Barcontainer::relen()
+template<class T>
+void bc::Barcontainer<T>::relen()
 {
 	for (Baritem* it : items)
 		it->relen();
 }
 
-
-uchar bc::Barcontainer::maxLen() const
+template<class T>
+T bc::Barcontainer<T>::maxLen() const
 {
-	uchar mx = 0;
-	for (const Baritem* it : items) {
+	T mx = 0;
+	for (const Baritem<T>* it : items) {
 		uchar curm = it->maxLen();
 		if (curm > mx)
 			mx = curm;
@@ -227,13 +244,14 @@ uchar bc::Barcontainer::maxLen() const
 	return mx;
 }
 
-
-size_t bc::Barcontainer::count()
+template<class T>
+size_t bc::Barcontainer<T>::count()
 {
 	return items.size();
 }
 
-bc::Baritem* bc::Barcontainer::get(int i)
+template<class T>
+bc::Baritem<T>* bc::Barcontainer<T>::get(int i)
 {
 	if (items.size() == 0)
 		return nullptr;
@@ -261,7 +279,8 @@ bc::Baritem* bc::Barcontainer::get(int i)
 //    return items[i];
 //}
 
-bc::Baritem* bc::Barcontainer::lastItem()
+template<class T>
+bc::Baritem<T>* bc::Barcontainer<T>::lastItem()
 {
 	if (items.size() == 0)
 		return nullptr;
@@ -269,35 +288,39 @@ bc::Baritem* bc::Barcontainer::lastItem()
 	return items[items.size() - 1];
 }
 
-void bc::Barcontainer::addItem(bc::Baritem* item)
+template<class T>
+void bc::Barcontainer<T>::addItem(bc::Baritem<T>* item)
 {
 	items.push_back(item);
 }
 
-void bc::Barcontainer::removePorog(const uchar porog)
+template<class T>
+void bc::Barcontainer<T>::removePorog(const T porog)
 {
-	for (Baritem* it : items)
+	for (Baritem<T>* it : items)
 		it->removePorog(porog);
 }
 
-void bc::Barcontainer::preprocessBar(const int& porog, bool normalize)
+template<class T>
+void bc::Barcontainer<T>::preprocessBar(const T& porog, bool normalize)
 {
 	for (Baritem* it : items)
 		it->preprocessBar(porog, normalize);
 }
 
-bc::Barbase* bc::Barcontainer::clone() const
+template<class T>
+bc::Barbase* bc::Barcontainer<T>::clone() const
 {
-	Barcontainer* newBar = new Barcontainer();
+	Barcontainer* newBar = new Barcontainer<T>();
 
-	for (Baritem* it : items)
-		newBar->items.push_back(new Baritem(*it));
+	for (Baritem<T>* it : items)
+		newBar->items.push_back(new Baritem<T>(*it));
 
 	return newBar;
 }
 
-
-float bc::Barcontainer::compireCTML(const bc::Barbase* bc) const
+template<class T>
+float bc::Barcontainer<T>::compireCTML(const bc::Barbase* bc) const
 {
 	const Barcontainer* bcr = dynamic_cast<const Barcontainer*>(bc);
 	float res = 0;
@@ -310,28 +333,33 @@ float bc::Barcontainer::compireCTML(const bc::Barbase* bc) const
 	return res;
 }
 
-float bc::Barcontainer::compireCTS(const bc::Barbase* bc) const
+template<class T>
+float bc::Barcontainer<T>::compireCTS(const bc::Barbase* bc) const
 {
 	float res = 0;
 	float s = sum();
-	for (Baritem* it : items)
+	for (Baritem<T>* it : items)
 		res += bc->compireCTS(it) * it->sum() / s;
 
 	return res;
 }
-bc::Barcontainer::~Barcontainer()
+
+template<class T>
+bc::Barcontainer<T>::~Barcontainer()
 {
 	for (size_t i = 0; i < items.size(); ++i)
 		delete items[i];
 }
 
 #ifdef _PYD
-float bc::Barcontainer::cmpCTML(const Barcontainer* bc) const
+template<class T>
+float bc::Barcontainer<T>::cmpCTML(const Barcontainer<T>* bc) const
 {
 	return compireCTML((const Baritem*)bc);
 }
 
-float bc::Barcontainer::cmpCTS(Barcontainer const* bc) const
+template<class T>
+float bc::Barcontainer<T>::cmpCTS(Barcontainer<T> const* bc) const
 {
 	return compireCTS((const Baritem*)bc);
 }

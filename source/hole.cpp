@@ -1,14 +1,15 @@
 #include "hole.h"
 #include "barcodeCreator.h"
 
-bc::Hole::Hole(point p1, barcodeCreator *factory) :Component(factory)
+template<class T>
+bc::Hole<T>::Hole(point p1, barcodeCreator<T> *factory) :Component<T>(factory)
 {
     isValid = false;
     add(p1);
 }
 
-
-bc::Hole::Hole(point p1, point p2, point p3, barcodeCreator *factory) : Component(factory)
+template<class T>
+bc::Hole<T>::Hole(point p1, point p2, point p3, barcodeCreator<T> *factory) : Component<T>(factory)
 {
     isValid = true;
 //    zeorStart = p1;
@@ -19,43 +20,48 @@ bc::Hole::Hole(point p1, point p2, point p3, barcodeCreator *factory) : Componen
     add(p3);
 }
 
-
-bc::Hole::~Hole()
+template<class T>
+bc::Hole<T>::~Hole()
 {
 }
 
-bool bc::Hole::getIsOutside() const
+template<class T>
+bool bc::Hole<T>::getIsOutside() const
 {
     return isOutside;
 }
 
-void bc::Hole::setShadowOutside(bool outside)
+template<class T>
+void bc::Hole<T>::setShadowOutside(bool outside)
 {
     isOutside = outside;
 }
 
-void bc::Hole::setOutside()
+template<class T>
+void bc::Hole<T>::setOutside()
 {
     if (!isOutside) {
         isOutside = true;
         if (isValid)
         {
-            end = factory->curbright;
-            --factory->lastB;
+            this->end = this->factory->curbright;
+            --this->factory->lastB;
         }
     }
 }
 
-void bc::Hole::kill()
+template<class T>
+void bc::Hole<T>::kill()
 {
     if(!isOutside && isValid)
     {
-        end = factory->curbright;
-        --factory->lastB;
+        this->end = this->factory->curbright;
+        --this->factory->lastB;
     }
 }
 
-bool bc::Hole::tryAdd(const point &p)
+template<class T>
+bool bc::Hole<T>::tryAdd(const point &p)
 {
     if (isValid == false)
     {
@@ -67,8 +73,8 @@ bool bc::Hole::tryAdd(const point &p)
     for (size_t i = 0; i < 8; ++i)
     {
         //Она соединяется только с соседними ближйми ребрами
-        if (isContain((point)p + poss[i]) &&
-                (isContain((point)p + poss[i + 1]) || (i % 2 == 0 && isContain((point)p + poss[i + 2])))
+        if (this->isContain((point)p + poss[i]) &&
+                (this->isContain((point)p + poss[i + 1]) || (i % 2 == 0 && this->isContain((point)p + poss[i + 2])))
            )//есть ли нужное ребро
         {
             this->add(p);
@@ -78,39 +84,40 @@ bool bc::Hole::tryAdd(const point &p)
     return false;
 }
 
-
-inline void bc::Hole::add(const point& p)
+template<class T>
+inline void bc::Hole<T>::add(const point& p)
 {
     bool outDo = isOutside;
-    coords->push_back(ppair(p,factory->curbright));
-    factory->setInclude(p, this);
+    this->coords->push_back(ppair<T>(p, this->factory->curbright));
+    this->factory->setInclude(p, this);
 //    setB(p);
 
     if (!isOutside)//ребро должно быть на границе
     {
-        if ((p.x == 0 || p.x ==factory->wid-1) &&
-                (isContain(p.x, p.y - 1) || isContain(p.x, p.y + 1)))
+        if ((p.x == 0 || p.x == this->factory->wid-1) &&
+                (this->isContain(p.x, p.y - 1) || this->isContain(p.x, p.y + 1)))
         {
             isOutside = true;
         }
-        else if ((p.y == 0 || p.y == factory->hei-1) &&
-                 (isContain(p.x - 1, p.y) || isContain(p.x + 1, p.y)))
+        else if ((p.y == 0 || p.y == this->factory->hei-1) &&
+                 (this->isContain(p.x - 1, p.y) || this->isContain(p.x + 1, p.y)))
         {
             isOutside = true;
         }
 
         if (isOutside != outDo)
         {
-            --factory->lastB;
-            end = factory->curbright;
+            --this->factory->lastB;
+            this->end = this->factory->curbright;
         }
     }
 //    ++size;
 }
 
-bool bc::Hole::checkValid(point p)
+template<class T>
+bool bc::Hole<T>::checkValid(point p)
 {
-    if (coords->size() < 3)
+    if (this->coords->size() < 3)
         return false;
 
     if (isValid)
@@ -123,7 +130,7 @@ bool bc::Hole::checkValid(point p)
     for (size_t i = 0; i < 8; ++i)
     {
         //Она соединяется только с соседними ближйми ребрами
-        if (isContain(p + poss[i]) && (isContain(p + poss[i + 1]) || isContain(p + poss[i + 1])))//есть ли нужное ребро
+        if (this->isContain(p + poss[i]) && (this->isContain(p + poss[i + 1]) || this->isContain(p + poss[i + 1])))//есть ли нужное ребро
         {
             isValid = true;
             return true;
@@ -134,31 +141,32 @@ bool bc::Hole::checkValid(point p)
 
 
 //явяется ли точка точкой соединения двух дыр - рис1
-bool bc::Hole::findCross(point p, bc::Hole* hole)
+template<class T>
+bool bc::Hole<T>::findCross(point p, bc::Hole<T>* hole)
 {
     static char poss[5][2] = { { -1,0 },{ 0,-1 },{ 1,0 },{ 0,1 },{ -1,0 } };
     static char poss2[5][2] = { { -1,-1 },{ 1,-1 },{ 1,1 },{ -1,1 } };
     //static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 }};
-    if (isContain(p) && hole->isContain(p))
+    if (this->isContain(p) && hole->isContain(p))
     {
         //ВАЖНО! Две дыры можно соединить если у ниъ есть 2 общие точки. Если мы знаем одну, то вторая должна быть четко над/под/слева/справа от предыдужей.
         //При дургом расопложении дыры не соединятся
         for (size_t i = 0; i < 4; ++i)
         {
-            if (isContain(p + poss[i]) && hole->isContain(p + poss[i]))//если есть ребро, оразующиееся из разных дыр
+            if (this->isContain(p + poss[i]) && hole->isContain(p + poss[i]))//если есть ребро, оразующиееся из разных дыр
                 return true;
 
             //************cdoc 15**************
-            if (isContain(p + poss[i]) && hole->isContain(p + poss[i + 1]))//если есть ребро, оразующиееся из разных дыр
+            if (this->isContain(p + poss[i]) && hole->isContain(p + poss[i + 1]))//если есть ребро, оразующиееся из разных дыр
                 return true;
-            if (isContain(p + poss[i + 1]) && hole->isContain(p + poss[i]))//если есть ребро, оразующиееся из разных дыр
+            if (this->isContain(p + poss[i + 1]) && hole->isContain(p + poss[i]))//если есть ребро, оразующиееся из разных дыр
                 return true;
             //*********************************
         }
         //**********CDOC 590**************
         for (size_t i = 0; i < 4; ++i)
         {
-            if (isContain(p + poss2[i]) && hole->isContain(p + poss2[i]))//если есть ребро, оразующиееся из разных дыр
+            if (this->isContain(p + poss2[i]) && hole->isContain(p + poss2[i]))//если есть ребро, оразующиееся из разных дыр
                 return true;
         }
         //********************************

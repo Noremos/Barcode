@@ -28,7 +28,7 @@ public:
     }
 };
 
-
+template<class T>
 struct EXPORT bline
 {
     //    cv::Mat binmat;
@@ -71,28 +71,25 @@ struct EXPORT bline
     }
 #endif // USE_OPENCV
     
-    bc::BarImg<uchar> getBarImg(const int wid, int hei)
+    bc::BarImg<T> getBarImg(const int wid, int hei)
     {
-        BarImg<uchar> bc(wid, hei);
+        BarImg<T> bc(wid, hei);
         for (auto it = matr->begin(); it != matr->end(); ++it) {
             bc.set(it->first.y, it->first.x, it->second);
         }
         return bc;
     }
-    void setFromBarImg(bc::BarImg<uchar>& mat)
+    void setFromBarImg(const bc::BarImg<T>& mat)
     {
         matr->clear();
         size_t pos = 0;
-        for (auto& pixel : mat)
-        {
-            matr->push_back(ppair(mat.getPointAt(pos), pixel));
-            ++pos;
-        }
+        for (size_t i = 0; i < mat.getLiner(); i++)
+            matr->push_back(ppair<T>(mat.getPointAt(i), mat.getLiner(i)));
     }
 
     BarRect getRect()
     {
-        pmap& points = (*matr);
+        pmap<T>& points = (*matr);
         int l, r, t, d;
         r = l = points[0].first.x;
         t = d = points[0].first.y;
@@ -111,17 +108,17 @@ struct EXPORT bline
         return BarRect(l, t, r - l + 1, d - t + 1);
     }
 
-    pmap* matr = nullptr;
-    float start;
-    float len;
+    pmap<T>* matr = nullptr;
+    T start;
+    T len;
     //    bline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
     //    bline(uchar _start, uchar _len, cv::Mat _mat) :  start(_start), len(_len)
     //    {
     //        binmat = _mat;
     //    }
     bline() : start(0), len(0), matr(nullptr) {}
-	bline(float _start, float _len) : matr(nullptr), start(_start), len(_len) {}
-	bline(float _start, float _len, pmap *_mat) : start(_start), len(_len) {
+	bline(T _start, T _len) : matr(nullptr), start(_start), len(_len) {}
+	bline(T _start, T _len, pmap<T> *_mat) : start(_start), len(_len) {
 		matr = _mat;
 	}
     ~bline()
@@ -134,7 +131,7 @@ struct EXPORT bline
         auto temp = new bline(start, len, nullptr);
         if (matr != nullptr)
         {
-            temp->matr = new pmap();
+            temp->matr = new pmap<T>();
             temp->matr->insert(temp->matr->begin(), matr->begin(),matr->end());
         }
         return temp;

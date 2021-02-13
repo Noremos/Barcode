@@ -1,18 +1,21 @@
 #ifndef BARCONTAINER_H
 #define BARCONTAINER_H
+
 #include "barcode.h"
 #include "point.h"
+
 namespace bc {
 
+template<class T>
 struct BarNode
 {
 	BarNode() {}
-	BarNode(bc::bline *comp) { this->comp = comp; }
-	bc::bline *comp = nullptr;
-	BarNode *parent = nullptr;
+	BarNode(bc::bline<T> *comp) { this->comp = comp; }
+	bc::bline<T> *comp = nullptr;
+	BarNode<T> *parent = nullptr;
 	//bc::Component *comp;
-	std::vector<BarNode *> childrens;
-	void setParrent(BarNode *node)
+	std::vector<BarNode<T> *> childrens;
+	void setParrent(BarNode<T> *node)
 	{
 		node->childrens.push_back(this);
 		this->parent = node;
@@ -26,35 +29,38 @@ struct BarNode
 	}
 };
 
-class EXPORT Baritem:public Barbase
+template<class T>
+class EXPORT Baritem: public Barbase
 {
 public:
 
     Baritem();
-    Baritem(const Baritem &obj);
+    Baritem(const Baritem<T> &obj);
 //    cv::Mat binmap;
-    void add(uchar st, uchar len);
+    void add(T st, T len);
 //    void add(uchar st, uchar len, cv::Mat binmat);
-	void add(uchar st, uchar len, pmap *binmat);
-	void add(bline *line);
+	void add(T st, T len, pmap<T> *binmat);
+	void add(bline<T> *line);
 
-    int sum() const;
+    double sum() const;
     void relen();
-    uchar maxLen() const;
-    Baritem *clone() const;
+    T maxLen() const;
+    Baritem<T> *clone() const;
 
-    void removePorog(uchar const porog);
+
+    // remove lines than less then passed value
+    void removePorog(T const porog);
     void preprocessBar(int const &porog, bool normalize);
     float compireCTML(const Barbase *bc) const;
     float compireCTS(Barbase const *bc) const;
     //    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 	~Baritem();
 
-	bc::BarNode* rootNode;
+	bc::BarNode<T>* rootNode;
 
-	uchar getMax()
+	T getMax()
 	{
-		uchar max = 0;
+		T max = 0;
 		for (auto &b : this->bar)
 		{
 			if (b->start + b->len > max)
@@ -63,7 +69,7 @@ public:
 		return max;
 	}
 
-    std::vector<bc::bline*> bar;
+    std::vector<bc::bline<T>*> bar;
 
 #ifdef _PYD
     bp::list getBar()
@@ -80,23 +86,25 @@ public:
 };
 
 //template<size_t N>
+template<class T>
 class EXPORT Barcontainer : public Barbase
 {
-    std::vector<Baritem*> items;
+    std::vector<Baritem<T>*> items;
 public:
     Barcontainer();
 
-    int sum() const;
+    double sum() const;
     void relen();
     Barbase *clone() const;
-    uchar maxLen() const;
+    T maxLen() const;
     size_t count();
     //    Baritem *operator [](int i);
-        Baritem *get(int i);
-    Baritem *lastItem();
-    void addItem(Baritem* item);
-    void removePorog(uchar const porog);
-    void preprocessBar(int const &porog, bool normalize);
+    Baritem<T> *get(int i);
+    Baritem<T> *lastItem();
+    void addItem(Baritem<T>* item);
+    // remove lines than less then passed value
+    void removePorog(T const porog);
+    void preprocessBar(T const &porog, bool normalize);
 
     float compireCTML(const Barbase *bc) const;
     float compireCTS(Barbase const *bc) const;

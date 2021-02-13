@@ -4,7 +4,8 @@
 #include "component.h"
 #include <assert.h>
 
-bc::Component::Component(point pix, bc::barcodeCreator *factory)
+template<class T>
+bc::Component<T>::Component(point pix, bc::barcodeCreator<T> *factory)
 {
     coords = new pmap();
     this->factory = factory;
@@ -12,13 +13,15 @@ bc::Component::Component(point pix, bc::barcodeCreator *factory)
     factory->components.push_back(this);
     num = factory->components.size();
     start = factory->curbright;
-    end = 0;
-    factory->lastB++;
+    end = factory->curbright;
+
+	factory->lastB++;
 
 	add(pix);
 }
 
-bc::Component::Component(bc::barcodeCreator *factory, bool create)
+template<class T>
+bc::Component<T>::Component(bc::barcodeCreator<T> *factory, bool create)
 {
 	coords = new pmap();
     this->factory = factory;
@@ -26,24 +29,28 @@ bc::Component::Component(bc::barcodeCreator *factory, bool create)
     factory->components.push_back(this);
     num = factory->components.size();
     start = factory->curbright;
-	end = 0;
+	end = factory->curbright;
+
 	if (create)
 		factory->lastB++;
 //    binmap.create(factory->hei, factory->wid, CV_16SC1);
 //    binmap.setTo(-1);
 }
 
-bool bc::Component::isContain(int x, int y)
+template<class T>
+bool bc::Component<T>::isContain(int x, int y)
 {
     return factory->getComp(x,y) == this;
 }
 
-bool bc::Component::isContain(point p)
+template<class T>
+bool bc::Component<T>::isContain(point p)
 {
     return factory->getComp(p) == this;
 }
 
-inline void bc::Component::add(const point &p)
+template<class T>
+inline void bc::Component<T>::add(const point &p)
 {
 	if (lived)
 	{
@@ -58,10 +65,11 @@ inline void bc::Component::add(const point &p)
 		++this->parent->getMaxParrent()->totalCount;
 	}
     factory->setInclude(p, this);
-    coords->push_back(ppair(p, factory->curbright));
+    coords->push_back(ppair<T>(p, factory->curbright));
 }
 
-void bc::Component::kill()
+template<class T>
+void bc::Component<T>::kill()
 {
     lived = false;
 	if (end < factory->curbright)
@@ -75,15 +83,16 @@ void bc::Component::kill()
 	}
 }
 
-void bc::Component::setParrent(bc::Component *parnt)
+template<class T>
+void bc::Component<T>::setParrent(bc::Component<T> *parnt)
 {
 	assert(parent == nullptr);
 	this->parent = parnt;
 	this->parent->totalCount += totalCount;
-
 }
 
-bc::Component::~Component()
+template<class T>
+bc::Component<T>::~Component()
 {
 	factory->components[num - 1] = nullptr;
 	if (!factory->createBin && !factory->getCoords)

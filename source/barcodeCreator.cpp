@@ -4,7 +4,12 @@
 #include <assert.h>
 #include <algorithm>
 
-void bc::barcodeCreator::draw(std::string name)
+using namespace bc;
+
+
+
+template<class T>
+void barcodeCreator<T>::draw(std::string name)
 {
 #ifdef USE_OPENCV
 
@@ -32,7 +37,7 @@ void bc::barcodeCreator::draw(std::string name)
 		//		Hole *phole = dynamic_cast<Hole *>(included[i]);
 		//		if (phole == nullptr)
 		//			continue;
-		Component* comp = included[i];
+		COMPP comp = included[i];
 		if (comp == nullptr)
 			continue;
 		int x = i % wid;
@@ -92,13 +97,15 @@ void bc::barcodeCreator::draw(std::string name)
 
 //#define CREATE_NEW
 //Образовала новый?
-inline bc::Component* bc::barcodeCreator::attach(Component* main, Component* second)
+
+template<class T>
+inline COMPP barcodeCreator<T>::attach(COMPP main, COMPP second)
 {
 #ifndef CREATE_NEW
 	// ***************************************************
 	if (main->coords->size() < second->coords->size()) //свапаем, если у первого меньше элементов. Нужно для производиельности
 	{
-		Component* temp = main;
+		COMPP temp = main;
 		main = second;
 		second = temp;
 	}
@@ -119,7 +126,7 @@ inline bc::Component* bc::barcodeCreator::attach(Component* main, Component* sec
 		//	second->coords->clear();
 		// ***********************************
 
-		Component* newOne = new Component(this, true);
+		COMPP newOne = new Component(this, true);
 		main->setParrent(newOne);
 		second->setParrent(newOne);
 		main->kill();
@@ -130,10 +137,11 @@ inline bc::Component* bc::barcodeCreator::attach(Component* main, Component* sec
 }
 
 //****************************************B0**************************************
-inline bool bc::barcodeCreator::checkCloserB0()
+template<class T>
+inline bool barcodeCreator<T>::checkCloserB0()
 {
-	Component* first = nullptr;
-	Component* connected;// = new rebro(x, y); //included[{(int)i, (int)j}];
+	COMPP first = nullptr;
+	COMPP connected;// = new rebro(x, y); //included[{(int)i, (int)j}];
 	//TODO выделять паять заранее
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
 
@@ -176,12 +184,14 @@ inline bool bc::barcodeCreator::checkCloserB0()
 //********************************************************************************
 
 
-int bc::barcodeCreator::GETPOFF(const bc::point& p) const {
+template<class T>
+int barcodeCreator<T>::GETPOFF(const point& p) const {
 	return wid * p.y + p.x;
 }
 
 
-bool bc::barcodeCreator::isContain(int x, int y) const
+template<class T>
+bool barcodeCreator<T>::isContain(int x, int y) const
 {
 	if (x < 0 || y < 0 || x >= wid || y >= hei)
 		return false;
@@ -189,8 +199,8 @@ bool bc::barcodeCreator::isContain(int x, int y) const
 	return included[wid * y + x] != nullptr;
 }
 
-
-bool bc::barcodeCreator::isContain(const bc::point& p, bool valid) const
+template<class T>
+bool barcodeCreator<T>::isContain(const point& p, bool valid) const
 {
 	if (p.x < 0 || p.y < 0 || p.x >= wid || p.y >= hei)
 		return false;
@@ -198,7 +208,8 @@ bool bc::barcodeCreator::isContain(const bc::point& p, bool valid) const
 	return (included[wid * p.y + p.x] != nullptr && ((Hole*)included[wid * p.y + p.x])->isValid == valid);
 }
 
-bool bc::barcodeCreator::isContain(const bc::point& p) const
+template<class T>
+bool barcodeCreator<T>::isContain(const point& p) const
 {
 	if (p.x < 0 || p.y < 0 || p.x >= wid || p.y >= hei)
 		return false;
@@ -206,7 +217,8 @@ bool bc::barcodeCreator::isContain(const bc::point& p) const
 	return included[wid * p.y + p.x] != nullptr;
 }
 
-bc::Component* bc::barcodeCreator::getComp(int x, int y)
+template<class T>
+COMPP barcodeCreator<T>::getComp(int x, int y)
 {
 	if (x < 0 || y < 0 || x >= wid || y >= hei)
 		return nullptr;
@@ -215,7 +227,8 @@ bc::Component* bc::barcodeCreator::getComp(int x, int y)
 	return itr ? (itr->getMaxParrent() ? itr->getMaxParrent() : itr) : nullptr;
 }
 
-bc::Component* bc::barcodeCreator::getComp(const bc::point& p)
+template<class T>
+COMPP barcodeCreator<T>::getComp(const point& p)
 {
 	if (p.x < 0 || p.y < 0 || p.x >= wid || p.y >= hei)
 		return nullptr;
@@ -224,7 +237,8 @@ bc::Component* bc::barcodeCreator::getComp(const bc::point& p)
 	return itr ? (itr->getMaxParrent() ? itr->getMaxParrent() : itr) : nullptr;
 }
 
-bc::Hole* bc::barcodeCreator::getHole(int x, int y)
+template<class T>
+HOLEP barcodeCreator<T>::getHole(int x, int y)
 {
 	if (x < 0 || y < 0 || x >= wid || y >= hei)
 		return nullptr;
@@ -233,23 +247,27 @@ bc::Hole* bc::barcodeCreator::getHole(int x, int y)
 	return dynamic_cast<Hole*>(itr->getMaxParrent() ? itr->getMaxParrent() : itr);
 }
 
-bc::Hole* bc::barcodeCreator::getHole(const bc::point& p)
+template<class T>
+HOLEP barcodeCreator<T>::getHole(const point& p)
 {
 	auto itr = included[wid * p.y + p.x];
-	return dynamic_cast<Hole*>(itr->getMaxParrent() ? itr->getMaxParrent() : itr);
+	return dynamic_cast<HOLEP*>(itr->getMaxParrent() ? itr->getMaxParrent() : itr);
 }
 
-void bc::barcodeCreator::setInclude(int x, int y, bc::Component* comp)
+template<class T>
+void barcodeCreator<T>::setInclude(int x, int y, COMPP comp)
 {
 	included[wid * y + x] = comp;
 }
 
-void bc::barcodeCreator::setInclude(const bc::point& p, bc::Component* comp)
+template<class T>
+void barcodeCreator<T>::setInclude(const point& p, COMPP comp)
 {
 	included[wid * p.y + p.x] = comp;
 }
 
-bc::Hole* bc::barcodeCreator::tryAttach(Hole* main, Hole* add, point p)
+template<class T>
+HOLEP barcodeCreator<T>::tryAttach(HOLEP main, HOLEP add, point p)
 {
 	if (main != add && main->findCross(p, add))
 	{
@@ -274,7 +292,9 @@ bc::Hole* bc::barcodeCreator::tryAttach(Hole* main, Hole* add, point p)
 }
 
 //****************************************B1**************************************
-inline bool bc::barcodeCreator::checkCloserB1()
+
+template<class T>
+inline bool barcodeCreator<T>::checkCloserB1()
 {
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };//эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
 	Hole* hr = nullptr;
@@ -433,11 +453,12 @@ inline bool bc::barcodeCreator::checkCloserB1()
 //********************************************************************************
 
 
-inline bc::point* bc::barcodeCreator::sort(const bcBarImg& arr, const ProcType& type)
+template<class T>
+inline point* barcodeCreator<T>::sort(const bcBarImg& arr, const ProcType& type)
 {
 	bcBarImg mask(1,1);
 	mask.assignCopyOf(arr);
-	// bc::ProcType::experement:
+	// ProcType::experement:
 		//distanceTransform(nimg, nimg, cv::DIST_L2, 3);
 		// nimg.convertTo(nimg, CV_8UC1);
 		//	int b = mask.type();
@@ -521,7 +542,7 @@ inline bc::point* bc::barcodeCreator::sort(const bcBarImg& arr, const ProcType& 
 		}
 	}
 	size_t total = (size_t)mask.length();
-	if (type == bc::ProcType::f255t0)
+	if (type == ProcType::f255t0)
 	{
 		for (int i = 0, ts = total / 2; i < ts; ++i)
 		{
@@ -534,19 +555,21 @@ inline bc::point* bc::barcodeCreator::sort(const bcBarImg& arr, const ProcType& 
 }
 
 
-bc::barcodeCreator::barcodeCreator()
+template<class T>
+barcodeCreator<T>::barcodeCreator()
 {
 	lastB = 0;
 }
 
-void bc::barcodeCreator::init(const bcBarImg& src, const  ProcType& type, bcBarImg& img)
+template<class T>
+void barcodeCreator<T>::init(const bcBarImg& src, const  ProcType& type, bcBarImg& img)
 {
 	//if (src.channels() != 1)
 	//	cvtColor(src, img);
 	//else
 	//	img = src;
 
-	if (type == bc::ProcType::f255t0)
+	if (type == ProcType::f255t0)
 	{
 		img = (uchar)255 - img;
 	}
@@ -555,7 +578,7 @@ void bc::barcodeCreator::init(const bcBarImg& src, const  ProcType& type, bcBarI
 	hei = img.hei();
 	totalSize = img.length();
 	included = new Component * [totalSize];
-	memset(included, 0, totalSize * sizeof(Component*));
+	memset(included, 0, totalSize * sizeof(COMPP));
 
 
 	//от 255 до 0
@@ -577,7 +600,8 @@ void bc::barcodeCreator::init(const bcBarImg& src, const  ProcType& type, bcBarI
 }
 //#include <QDebug>
 
-void bc::barcodeCreator::processHole(bcBarImg& img, int* retBty, Barcontainer* item)
+template<class T>
+void barcodeCreator<T>::processHole(bcBarImg& img, int* retBty, Barcontainer<T>* item)
 {
 	size_t len = totalSize - 1;
 	reverse = false;
@@ -619,7 +643,8 @@ void bc::barcodeCreator::processHole(bcBarImg& img, int* retBty, Barcontainer* i
 	lastB = 0;
 }
 
-void bc::barcodeCreator::processComp(bcBarImg& img, int* retBty, bc::Barcontainer* item)
+template<class T>
+void barcodeCreator<T>::processComp(bcBarImg& img, int* retBty, Barcontainer<T>* item)
 {
 	//cv::imshow("res", img);
 	//cv::waitKey(0);
@@ -629,7 +654,7 @@ void bc::barcodeCreator::processComp(bcBarImg& img, int* retBty, bc::Barcontaine
 		curpix = sortedArr[i];
 		curbright = img.get(curpix);
 #ifdef VDEBUG
-		VISULA_DEBUG_COMP(totalSize, i);
+		VISULA_DEBUG_COMPP(totalSize, i);
 #else
 		checkCloserB0();
 #endif
@@ -677,7 +702,8 @@ struct Operator
 	}
 };
 
-void bc::barcodeCreator::addItemToCont(bc::Barcontainer* container)
+template<class T>
+void barcodeCreator<T>::addItemToCont(Barcontainer<T>* container)
 {
 	if (container != nullptr)
 	{
@@ -685,7 +711,8 @@ void bc::barcodeCreator::addItemToCont(bc::Barcontainer* container)
 	}
 }
 
-void bc::barcodeCreator::VISULA_DEBUG(int y, int i)
+template<class T>
+void barcodeCreator<T>::VISULA_DEBUG(int y, int i)
 {
 	checkCloserB1();
 #ifdef USE_OPENCV
@@ -697,7 +724,8 @@ void bc::barcodeCreator::VISULA_DEBUG(int y, int i)
 #endif // DEBUG
 }
 
-void bc::barcodeCreator::VISULA_DEBUG_COMP(int y, int i)
+template<class T>
+void barcodeCreator<T>::VISULA_DEBUG_COMP(int y, int i)
 {
 	visualize = true;
 	checkCloserB0();
@@ -710,9 +738,10 @@ void bc::barcodeCreator::VISULA_DEBUG_COMP(int y, int i)
 #endif // DEBUG
 }
 
-void bc::barcodeCreator::clearIncluded()
+template<class T>
+void barcodeCreator<T>::clearIncluded()
 {
-	for (Component* c : components)
+	for (COMPP c : components)
 	{
 		if (c != nullptr)
 		{
@@ -730,7 +759,8 @@ void bc::barcodeCreator::clearIncluded()
 
 }
 
-bc::barcodeCreator::~barcodeCreator()
+template<class T>
+barcodeCreator<T>::~barcodeCreator()
 {
 	clearIncluded();
 #ifdef USE_OPENCV
@@ -738,7 +768,8 @@ bc::barcodeCreator::~barcodeCreator()
 #endif // USE_OPENCV
 }
 
-bool compareLines(const bc::bline* i1, const bc::bline* i2)
+template<class T>
+bool compareLines(const bline<T>* i1, const bline<T>* i2)
 {
 	if (i1->len == i2->len)
 		return i1->start > i2->start;
@@ -746,25 +777,26 @@ bool compareLines(const bc::bline* i1, const bc::bline* i2)
 	return (i1->len > i2->len);
 }
 
-
+template<class T>
 struct GraphVer
 {
 	GraphVer()
 	{
 	}
-	GraphVer(bc::Component* comp)
+	GraphVer(COMPP comp)
 	{
 		this->comp = comp;
 		//		this->node = node;
 	}
-	//	bc::BarNode *node;
-	bc::Component* comp = nullptr;
+	//	BarNode *node;
+	COMPP comp = nullptr;
 	GraphVer* parent = nullptr;
-	//bc::Component *comp;
+	//Component *comp;
 	std::vector<GraphVer*> childrens;
 };
 
-void reverseCom(GraphVer* root)
+template<class T>
+void reverseCom(GraphVer<T>* root)
 {
 	for (auto* c : root->childrens)
 		reverseCom(c);
@@ -777,7 +809,7 @@ void reverseCom(GraphVer* root)
 		for (int i = 0, total = rootCoords.size(); i < total; ++i)
 		{
 			auto& ccod = rootCoords[i];
-			rootParrentCoords.push_back(ppair(ccod.first, root->parent->comp->end - root->comp->end));
+			rootParrentCoords.push_back(ppair<T>(ccod.first, root->parent->comp->end - root->comp->end));
 
 			//			ccod = rootSubCoords[i];
 			//			rootParrentCoords.push_back(
@@ -790,43 +822,44 @@ void reverseCom(GraphVer* root)
 	}
 }
 
-bc::Baritem* bc::barcodeCreator::getBarcode()
+template<class T>
+Baritem<T>* barcodeCreator<T>::getBarcode()
 {
 	Baritem* lines = new Baritem();
-	std::unordered_map<Component*, GraphVer> vers;
+	std::unordered_map<COMPP, GraphVer> vers;
 
-	std::unordered_map<Component*, BarNode*> graph;
+	std::unordered_map<COMPP, BarNode*> graph;
 
 	if (!this->useBetty)
 	{
-		GraphVer* root = nullptr;
-		for (Component* c : components)
+		GraphVer<T>* root = nullptr;
+		for (COMPP c : components)
 		{
 			if (c == nullptr)
 				continue;
 
 			pmap* map = (createBin || getCoords) ? c->coords : nullptr;
-			bc::bline* line = new bc::bline(c->start, c->end - c->start, map);
+			bline* line = new bline(c->start, c->end - c->start, map);
 			BarNode* bnode = nullptr;
 			if (createGraph)
 			{
 				bnode = new BarNode(line);
-				graph.insert(std::pair<Component*, BarNode*>(c, bnode));
+				graph.insert(std::pair<COMPP, BarNode*>(c, bnode));
 			}
 
 			if (createBin)// || getCoords
 			{
-				GraphVer* vchld, * vparnt;
+				GraphVer<T>* vchld, * vparnt;
 
 				if (vers.find(c) == vers.end())
-					vers.insert(std::pair<Component*, GraphVer>(c, GraphVer(c)));
+					vers.insert(std::pair<COMPP, GraphVer>(c, GraphVer(c)));
 
 				vchld = &vers[c];
 
 				if (c->parent)
 				{
 					if (vers.find(c->parent) == vers.end())
-						vers.insert(std::pair<Component*, GraphVer>(c->parent, GraphVer(c->parent)));
+						vers.insert(std::pair<COMPP, GraphVer>(c->parent, GraphVer(c->parent)));
 
 					vparnt = &vers[c->parent];
 
@@ -850,7 +883,7 @@ bc::Baritem* bc::barcodeCreator::getBarcode()
 
 		if (createGraph)
 		{
-			for (Component* c : components)
+			for (COMPP c : components)
 			{
 				if (c == nullptr)
 					continue;
@@ -864,7 +897,7 @@ bc::Baritem* bc::barcodeCreator::getBarcode()
 		}
 		//        if (reverse)
 		//        {
-		//            for (Component* c : components)
+		//            for (COMPP c : components)
 		//            {
 		//                for (int i = 0, total = c->coords->size(); i < total; ++i)
 		//                    (*c->coords)[i].second = 255 - (*c->coords)[i].second;
@@ -911,23 +944,24 @@ bc::Baritem* bc::barcodeCreator::getBarcode()
 	return lines;
 }
 
-void bc::barcodeCreator::processTypeF(const bc::barstruct& str, bcBarImg& src, Barcontainer* item)
+template<class T>
+void barcodeCreator<T>::processTypeF(const barstruct& str, bcBarImg& src, Barcontainer<T>* item)
 {
 	bcBarImg img(1,1);
 	init(src, str.proctype, img);
 
 	switch (str.comtype)
 	{
-	case  bc::ComponentType::Component:
+	case  ComponentType::Component:
 		processComp(img, b, item);
 		break;
-	case  bc::ComponentType::Hole:
+	case  ComponentType::Hole:
 		processHole(img, b, item);
 		break;
-	case  bc::ComponentType::FullPrepair:
+	case  ComponentType::FullPrepair:
 		ProcessFullPrepair(img, b, item);
 		break;
-	case  bc::ComponentType::PrepairComp:
+	case  ComponentType::PrepairComp:
 		ProcessPrepComp(img, b, settStep, item);
 		break;
 	default:
@@ -937,7 +971,8 @@ void bc::barcodeCreator::processTypeF(const bc::barstruct& str, bcBarImg& src, B
 	delete[] sortedArr;
 }
 
-void bc::barcodeCreator::processFULL(const bc::barstruct& str, bcBarImg& src, bc::Barcontainer* item)
+template<class T>
+void barcodeCreator<T>::processFULL(const barstruct& str, bcBarImg& src, Barcontainer<T>* item)
 {
 	bool rgb = (src.channels() == 3);
 
@@ -960,7 +995,8 @@ void bc::barcodeCreator::processFULL(const bc::barstruct& str, bcBarImg& src, bc
 		processTypeF(str, src, item);
 }
 
-bc::Barcontainer* bc::barcodeCreator::createBarcode(bcBarImg& src, const std::vector<bc::barstruct>& structure)
+template<class T>
+Barcontainer<T>* barcodeCreator<T>::createBarcode(bcBarImg& src, const std::vector<barstruct>& structure)
 {
 	Barcontainer* cont = new Barcontainer();
 
@@ -977,7 +1013,7 @@ bc::Barcontainer* bc::barcodeCreator::createBarcode(bcBarImg& src, const std::ve
 
 #ifdef _PYD
 INCLUDE_PY
-bc::Barcontainer* bc::barcodeCreator::createBarcode(bn::ndarray& img, bp::list& structure)
+Barcontainer* barcodeCreator<T>::createBarcode(bn::ndarray& img, bp::list& structure)
 {
 	auto shape = img.get_shape();
 	//img.
@@ -991,19 +1027,20 @@ bc::Barcontainer* bc::barcodeCreator::createBarcode(bn::ndarray& img, bp::list& 
 	//cv::imshow("test", image);
 	//cv::waitKey(0);
 
-	std::vector<bc::barstruct> cstruct;
+	std::vector<barstruct> cstruct;
 	for (int i = 0; i < len(structure); ++i)
-		cstruct.push_back(boost::python::extract<bc::barstruct>(structure[i]));
+		cstruct.push_back(boost::python::extract<barstruct>(structure[i]));
 
 	return createBarcode(image, cstruct);
 }
 #endif
 
 
-bc::Barcontainer* bc::barcodeCreator::createSLbarcode(const bcBarImg& src, uchar foneStart, uchar foneEnd, Barcontainer* cont)
+template<class T>
+Barcontainer<T>* barcodeCreator<T>::createSLbarcode(const bcBarImg& src, T foneStart, T foneEnd, Barcontainer<T>* cont)
 {
 	bcBarImg img(1,1);
-	init(src, bc::ProcType::f0t255, img);
+	init(src, ProcType::f0t255, img);
 	if (cont == nullptr)
 		cont = new Barcontainer();
 
@@ -1049,7 +1086,8 @@ bc::Barcontainer* bc::barcodeCreator::createSLbarcode(const bcBarImg& src, uchar
 	return cont;
 }
 
-bc::Barcontainer* bc::barcodeCreator::createSLbarcode(const bcBarImg& src, uchar foneStart, uchar foneEnd, bool createRGBbar)
+template<class T>
+Barcontainer<T>* barcodeCreator<T>::createSLbarcode(const bcBarImg& src, T foneStart, T foneEnd, bool createRGBbar)
 {
 	Barcontainer* cont = new Barcontainer();
 	if (!createRGBbar)
@@ -1084,7 +1122,8 @@ uchar dif(uchar a, uchar b)
 		return b - a;
 }
 
-void bc::barcodeCreator::Prepair(bcBarImg& mat, int step)
+template<class T>
+void barcodeCreator<T>::Prepair(bcBarImg& mat, int step)
 {
 	int N = 4;
 	//	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };//эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
@@ -1095,7 +1134,7 @@ void bc::barcodeCreator::Prepair(bcBarImg& mat, int step)
 		{
 			this->curbright = mat.get(r, c);
 			this->curpix = point(c, r);
-			Component* mainC = getComp(c, r);
+			COMPP mainC = getComp(c, r);
 			for (int off = 0; off < N; ++off)
 			{
 				point p(c + poss[off][0], r + poss[off][1]);
@@ -1103,7 +1142,7 @@ void bc::barcodeCreator::Prepair(bcBarImg& mat, int step)
 				if (p.x < 0 || p.y < 0 || p.x >= wid || p.y >= hei)
 					continue;
 
-				Component* subC = getComp(p);
+				COMPP subC = getComp(p);
 				if (subC == mainC && mainC != nullptr)
 					continue;
 
@@ -1139,18 +1178,21 @@ void bc::barcodeCreator::Prepair(bcBarImg& mat, int step)
 	}
 }
 
-uchar bc::barcodeCreator::GetStep() const
+template<class T>
+uchar barcodeCreator<T>::GetStep() const
 {
 	return settStep;
 }
 
-void bc::barcodeCreator::SetStep(const uchar value)
+template<class T>
+void barcodeCreator<T>::SetStep(const uchar value)
 {
 	settStep = value;
 }
 
 
-void bc::barcodeCreator::ProcessFullPrepair(bcBarImg& img, int* retBty, bc::Barcontainer* item)
+template<class T>
+void barcodeCreator<T>::ProcessFullPrepair(bcBarImg& img, int* retBty, Barcontainer<T>* item)
 {
 	for (int i = 0; i < 256; ++i)
 	{
@@ -1171,7 +1213,8 @@ void bc::barcodeCreator::ProcessFullPrepair(bcBarImg& img, int* retBty, bc::Barc
 	lastB = 0;
 }
 
-void bc::barcodeCreator::ProcessPrepComp(bcBarImg& img, int* retBty, int step, bc::Barcontainer* item)
+template<class T>
+void barcodeCreator<T>::ProcessPrepComp(bcBarImg& img, int* retBty, int step, Barcontainer<T>* item)
 {
 	Prepair(img, step);
 	processComp(img, retBty, item);
@@ -1209,13 +1252,14 @@ inline tripl* floatSort(const float* arr, int wid, int hei)
 	return data;
 }
 
-bc::Barcontainer* bc::barcodeCreator::searchHoles(float* img, int wid, int hei)
+template<class T>
+Barcontainer<T>* barcodeCreator<T>::searchHoles(float* img, int wid, int hei)
 {
 	this->wid = wid;
 	this->hei = hei;
-	totalSize = wid * hei;
+	totalSize = static_cast<size_t>(wid) * hei;
 	included = new Component * [totalSize];
-	memset(included, 0, totalSize * sizeof(Component*));
+	memset(included, 0, totalSize * sizeof(COMPP));
 
 	createBin = false;
 	createGraph = false;
@@ -1232,7 +1276,7 @@ bc::Barcontainer* bc::barcodeCreator::searchHoles(float* img, int wid, int hei)
 		curpix = point(val.x, val.y);
 		curbright = val.val;
 #ifdef VDEBUG
-		VISULA_DEBUG_COMP(totalSize, i);
+		VISULA_DEBUG_COMPP(totalSize, i);
 #else
 		checkCloserB0();
 #endif
@@ -1249,7 +1293,7 @@ bc::Barcontainer* bc::barcodeCreator::searchHoles(float* img, int wid, int hei)
 		}
 	}
 
-	Barcontainer* item = new Barcontainer();
+	Barcontainer<T>* item = new Barcontainer<T>();
 
 	addItemToCont(item);
 	clearIncluded();

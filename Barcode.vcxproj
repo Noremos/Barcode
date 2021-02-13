@@ -67,9 +67,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="barconstructor.h" />
     <ClInclude Include="include\barcode.h" />
     <ClInclude Include="include\barcodeCreator.h" />
+    <ClInclude Include="include\barconstructor.h" />
     <ClInclude Include="include\barcontainer.h" />
     <ClInclude Include="include\barImg.h" />
     <ClInclude Include="include\Component.h" />
@@ -78,10 +78,10 @@
     <ClInclude Include="include\presets.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="barconstructor.cpp" />
     <ClCompile Include="Barpy.cpp" />
     <ClCompile Include="source\barcode.cpp" />
     <ClCompile Include="source\barcodeCreator.cpp" />
+    <ClCompile Include="source\barconstructor.cpp" />
     <ClCompile Include="source\barcontainer.cpp" />
     <ClCompile Include="source\barImg.cpp" />
     <ClCompile Include="source\Component.cpp" />

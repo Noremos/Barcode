@@ -2,19 +2,22 @@
 #include "hole.h"
 #include "barcode.h"
 #include "barcontainer.h"
-#include "../barconstructor.h"
+#include "barconstructor.h"
 
 
+#define COMPP Component<T>*
+#define HOLEP Hole<T>*
 
 namespace bc {
-
-	typedef bc::BarImg<uchar> bcBarImg;
-
+	 
+	template<class T>
 	class EXPORT barcodeCreator
 	{
+		typedef bc::BarImg<T> bcBarImg;
+
 	public:
-		std::vector<Component*> components;
-		bc::BarNode* graphRoot;
+		std::vector<COMPP*> components;
+		bc::BarNode<T>* graphRoot;
 	private:
 #ifdef USE_OPENCV
 		std::vector<cv::Vec3b> colors;
@@ -25,15 +28,15 @@ namespace bc {
 		int b[256];
 		bool visualize = false, createBin = false, useBetty = true, getCoords = true;
 
-		Component** included;
-		float curbright;
+		bc::Component<T>** included;
+		T curbright;
 		point curpix;
 		int wid;
 		int hei;
 		int lastB;
 		uchar settStep = 1;
-		friend class Component;
-		friend class Hole;
+		friend class Component<T>;
+		friend class Hole<T>;
 
 		size_t totalSize = 0;
 		point* sortedArr;
@@ -59,17 +62,17 @@ namespace bc {
 
 		bool isContain(const point& p) const;
 
-		void setInclude(int x, int y, Component* comp);
-		void setInclude(const point& p, Component* comp);
+		void setInclude(int x, int y, COMPP comp);
+		void setInclude(const point& p, COMPP comp);
 
-		Component* getComp(int x, int y);
-		Component* getComp(const point& p);
+		COMPP getComp(int x, int y);
+		COMPP getComp(const point& p);
 
-		Hole* getHole(int x, int y);
-		Hole* getHole(const point& p);
+		HOLEP getHole(int x, int y);
+		HOLEP getHole(const point& p);
 
-		Component* attach(Component* first, Component* second);
-		Hole* tryAttach(Hole* h1, Hole* h2, point p);
+		COMPP attach(COMPP first, COMPP second);
+		HOLEP tryAttach(HOLEP h1, HOLEP h2, point p);
 
 		bool checkCloserB0();
 		bool checkCloserB1();
@@ -83,17 +86,17 @@ namespace bc {
 		void VISULA_DEBUG_COMP(int y, int i);
 		void init(const bcBarImg& src, const ProcType& type, bcBarImg& img);
 
-		void processHole(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
-		void processHole255to0(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
+		void processComp(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
+		void processHole(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
+		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
 
-		void processComp(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
-		void ProcessFullPrepair(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
-		void ProcessPrepComp(bcBarImg& img, int* retBty, int step, Barcontainer* item = nullptr);
-		void processComp255to0(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
-		void addItemToCont(bc::Barcontainer* item);
-		bc::Baritem* getBarcode();
-		void processTypeF(const barstruct& str, bcBarImg& img, Barcontainer* item = nullptr);
-		void processFULL(const barstruct& str, bcBarImg& img, bc::Barcontainer* item);
+		void ProcessFullPrepair(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
+		void ProcessPrepComp(bcBarImg& img, int* retBty, int step, Barcontainer<T>* item = nullptr);
+		//void processComp255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
+		void addItemToCont(bc::Barcontainer<T>* item);
+		bc::Baritem<T>* getBarcode();
+		void processTypeF(const barstruct& str, bcBarImg& img, Barcontainer<T>* item = nullptr);
+		void processFULL(const barstruct& str, bcBarImg& img, bc::Barcontainer<T>* item);
 	public:
 		barcodeCreator();
 
@@ -114,16 +117,16 @@ namespace bc {
 			createGraph = val;
 		}
 
-		bc::Barcontainer* createBarcode(bcBarImg& img, const std::vector<barstruct>& structure);
+		bc::Barcontainer<T>* createBarcode(bcBarImg& img, const std::vector<barstruct>& structure);
 
-		bc::Barcontainer* createSLbarcode(const bcBarImg& src, uchar foneStart, uchar foneEnd, Barcontainer* cont = nullptr);
+		bc::Barcontainer<T>* createSLbarcode(const bcBarImg& src, T foneStart, T foneEnd, Barcontainer<T>* cont = nullptr);
 
-		bc::Barcontainer* createSLbarcode(const bcBarImg& src, uchar foneStart, uchar foneEnd, bool createRGBbar);
+		bc::Barcontainer<T>* createSLbarcode(const bcBarImg& src, T foneStart, T foneEnd, bool createRGBbar);
 #ifdef _PYD
-		bc::Barcontainer* createBarcode(bn::ndarray& img, bp::list& structure);
+		bc::Barcontainer<T>* createBarcode(bn::ndarray& img, bp::list& structure);
 #endif // _PYD
 
-		bc::Barcontainer* searchHoles(float* img, int wid, int hei);
+		bc::Barcontainer<T>* searchHoles(float* img, int wid, int hei);
 
 		virtual ~barcodeCreator();
 

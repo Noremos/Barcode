@@ -66,5 +66,8 @@ public:
 
 }
 //typedef std::unordered_map<bc::point, uchar, bc::pointHash> pmap;
-typedef std::pair<bc::point, float> ppair;
-typedef std::vector<ppair> pmap;
+template<class T>
+using ppair = std::pair<bc::point, T>;
+
+template<class T>
+using pmap = std::vector<ppair<T>>;

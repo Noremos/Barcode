@@ -3,20 +3,17 @@
 namespace bc
 {
 
-class EXPORT Hole : public Component
+template<class T>
+class EXPORT Hole : public Component<T>
 {
     bool isOutside = false;
 public:
 
     bool isValid = false;
 
-    Hole(point p1, point p2, point p3, barcodeCreator* factory);
-    Hole(point p1, barcodeCreator* factory);
-    //******************STATIC SIDE**********************
+    Hole(point p1, point p2, point p3, barcodeCreator<T>* factory);
+    Hole(point p1, barcodeCreator<T>* factory);
 
-
-
-    //***************************************************
 //        void setOutside(bool b) {
 //            isOutside = b;
 
@@ -31,12 +28,12 @@ public:
     //добовляет точку в дыру, если она там не содержится. Возвращает
 
     //явяется ли точка точкой соединения двух дыр
-    bool findCross(point p, Hole* hole);
+    bool findCross(point p, Hole<T>* hole);
     ~Hole();
     bool getIsOutside() const;
     void setShadowOutside(bool outside);
     void setOutside();
     void kill();
-
 };
+
 }
