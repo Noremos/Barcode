@@ -11,8 +11,8 @@ public:
 
     bool isValid = false;
 
-    Hole(point p1, point p2, point p3, barcodeCreator<T>* factory);
-    Hole(point p1, barcodeCreator<T>* factory);
+    Hole(point p1, point p2, point p3, BarcodeCreator<T>* factory);
+    Hole(point p1, BarcodeCreator<T>* factory);
 
 //        void setOutside(bool b) {
 //            isOutside = b;

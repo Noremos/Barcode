@@ -348,3 +348,5 @@ analysis/data
 analysis/datasets
 analysis/node_modules
 analysis/.vscode
+*.dll
+*.lib

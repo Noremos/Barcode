@@ -4,7 +4,7 @@
 namespace bc
 {
 	template<class T>
-	class barcodeCreator;
+	class BarcodeCreator;
 
 	template<class T>
 	class EXPORT Component
@@ -12,17 +12,22 @@ namespace bc
 		Component<T>* cachedMaxParent = nullptr;
 		size_t totalCount = 0;
 	protected:
-		barcodeCreator<T>* factory;
+		BarcodeCreator<T>* factory;
 		bool lived = true;
+
+		int cashedSize = 0;
+		T lastVal = 0;
 	public:
 
-		Component(point pix, barcodeCreator<T>* factory);
-		Component(barcodeCreator<T>* factory, bool create = false);
+		Component(point pix, BarcodeCreator<T>* factory);
+		Component(BarcodeCreator<T>* factory, bool create = false);
 
 		Component<T>* parent = nullptr;
-		pmap<T>* coords;
+		//pmap<T>* coords;
+
 		//pmap subCoords;
 		T start = 0, end = 0;
+		barcounter* bar3d;
 		//0 - nan
 		size_t num = 0;
 		//    pmap coords;

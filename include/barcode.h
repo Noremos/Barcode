@@ -111,6 +111,7 @@ struct EXPORT bline
     pmap<T>* matr = nullptr;
     T start;
     T len;
+    barcounter* bar3d = nullptr;
     //    bline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
     //    bline(uchar _start, uchar _len, cv::Mat _mat) :  start(_start), len(_len)
     //    {
@@ -121,6 +122,10 @@ struct EXPORT bline
 	bline(T _start, T _len, pmap<T> *_mat) : start(_start), len(_len) {
 		matr = _mat;
 	}
+    bline(T _start, T _len, pmap<T>* _mat, barcounter* _barc) : start(_start), len(_len) {
+        matr = _mat;
+        bar3d = _barc;
+    }
     ~bline()
     {
         if(matr!=nullptr)
@@ -133,6 +138,12 @@ struct EXPORT bline
         {
             temp->matr = new pmap<T>();
             temp->matr->insert(temp->matr->begin(), matr->begin(),matr->end());
+        }
+
+        if (bar3d != nullptr)
+        {
+            temp->bar3d = new barcounter();
+            temp->bar3d->insert(temp->bar3d->begin(), bar3d->begin(), bar3d->end());
         }
         return temp;
     }

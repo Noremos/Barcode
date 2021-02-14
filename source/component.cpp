@@ -5,15 +5,16 @@
 #include <assert.h>
 
 template<class T>
-bc::Component<T>::Component(point pix, bc::barcodeCreator<T> *factory)
+bc::Component<T>::Component(point pix, bc::BarcodeCreator<T>* factory)
 {
-    coords = new pmap();
-    this->factory = factory;
+	//coords = new pmap();
+	this->factory = factory;
+	bar3d = new barcounter();
 
-    factory->components.push_back(this);
-    num = factory->components.size();
-    start = factory->curbright;
-    end = factory->curbright;
+	factory->components.push_back(this);
+	num = factory->components.size();
+	start = factory->curbright;
+	end = factory->curbright;
 
 	factory->lastB++;
 
@@ -21,36 +22,37 @@ bc::Component<T>::Component(point pix, bc::barcodeCreator<T> *factory)
 }
 
 template<class T>
-bc::Component<T>::Component(bc::barcodeCreator<T> *factory, bool create)
+bc::Component<T>::Component(bc::BarcodeCreator<T>* factory, bool create)
 {
-	coords = new pmap();
-    this->factory = factory;
+	//coords = new pmap();
+	this->factory = factory;
 
-    factory->components.push_back(this);
-    num = factory->components.size();
-    start = factory->curbright;
+	factory->components.push_back(this);
+	num = factory->components.size();
+	start = factory->curbright;
 	end = factory->curbright;
+	bar3d = new barcounter();
 
 	if (create)
 		factory->lastB++;
-//    binmap.create(factory->hei, factory->wid, CV_16SC1);
-//    binmap.setTo(-1);
+	//    binmap.create(factory->hei, factory->wid, CV_16SC1);
+	//    binmap.setTo(-1);
 }
 
 template<class T>
 bool bc::Component<T>::isContain(int x, int y)
 {
-    return factory->getComp(x,y) == this;
+	return factory->getComp(x, y) == this;
 }
 
 template<class T>
 bool bc::Component<T>::isContain(point p)
 {
-    return factory->getComp(p) == this;
+	return factory->getComp(p) == this;
 }
 
 template<class T>
-inline void bc::Component<T>::add(const point &p)
+inline void bc::Component<T>::add(const point& p)
 {
 	if (lived)
 	{
@@ -64,27 +66,40 @@ inline void bc::Component<T>::add(const point &p)
 	{
 		++this->parent->getMaxParrent()->totalCount;
 	}
-    factory->setInclude(p, this);
-    coords->push_back(ppair<T>(p, factory->curbright));
+	factory->setInclude(p, this);
+	//coords->push_back(ppair<T>(p, factory->curbright));
+
+	// 3d barcode/ —читаем кол-во добавленных значений
+	++cashedSize;
+	if (factory->curbright != lastVal)
+	{
+		bar3d->push_back(cashedSize);
+		lastVal = factory->curbright;
+		cashedSize = 0;
+	}
 }
 
 template<class T>
 void bc::Component<T>::kill()
 {
-    lived = false;
+	lived = false;
 	if (end < factory->curbright)
 		end = factory->curbright;
-    --factory->lastB;
-	coords->reserve(coords->size());
-    if (factory->createBin)
-    {
-        for (auto p = coords->begin(); p != coords->end(); ++p)
-			p->second = end - p->second;
-	}
+	--factory->lastB;
+	//coords->reserve(coords->size());
+	//if (factory->createBin)
+	 //{
+		//for (auto p = coords->begin(); p != coords->end(); ++p)
+		//		p->second = end - p->second;
+	//}
+
+	bar3d->push_back(cashedSize);
+	lastVal = factory->curbright;
+	cashedSize = 0;
 }
 
 template<class T>
-void bc::Component<T>::setParrent(bc::Component<T> *parnt)
+void bc::Component<T>::setParrent(bc::Component<T>* parnt)
 {
 	assert(parent == nullptr);
 	this->parent = parnt;
@@ -95,9 +110,4 @@ template<class T>
 bc::Component<T>::~Component()
 {
 	factory->components[num - 1] = nullptr;
-	if (!factory->createBin && !factory->getCoords)
-    {
-        coords->clear();
-        delete coords;
-    }
 }

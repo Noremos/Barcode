@@ -2,14 +2,14 @@
 #include "barcodeCreator.h"
 
 template<class T>
-bc::Hole<T>::Hole(point p1, barcodeCreator<T> *factory) :Component<T>(factory)
+bc::Hole<T>::Hole(point p1, BarcodeCreator<T> *factory) :Component<T>(factory)
 {
     isValid = false;
     add(p1);
 }
 
 template<class T>
-bc::Hole<T>::Hole(point p1, point p2, point p3, barcodeCreator<T> *factory) : Component<T>(factory)
+bc::Hole<T>::Hole(point p1, point p2, point p3, BarcodeCreator<T> *factory) : Component<T>(factory)
 {
     isValid = true;
 //    zeorStart = p1;

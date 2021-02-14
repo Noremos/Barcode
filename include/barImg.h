@@ -35,6 +35,7 @@ namespace bc {
 		int r, g, b;
 	};*/
 
+
 	template<class T>
 	class EXPORT BarImg
 	{
@@ -45,16 +46,76 @@ namespace bc {
 		int _hei;
 		int _channels;
 		int TSize;
+
+		CachedValue<T> cachedMax;
+		CachedValue<T> cachedMin;
+
+
+		void setMetadata(int width, int height, int chnls)
+		{
+			this->_wid = width;
+			this->_hei = height;
+			this->_channels = chnls;
+			TSize = sizeof(T);
+		}
+
 	protected:
-		std::unique_ptr<T[]> data;
+		T* values = nullptr;
+
+		void valZerofy()
+		{
+			memset(values, 0, length() * TSize);
+		}
+		//same pointer
+		T* valGetShadowsCopy() const
+		{
+			return values;
+		}
+
+		void valInit()
+		{
+			T* newVals = new T[length()];
+			valZerofy();
+		}
+		//copy
+		T* valGetDeepCopy() const
+		{
+			T* newVals = new T[length()];
+			memcpy(newVals, values, length() * TSize);
+			return newVals;
+		}
+
+		void valAssignCopyOf(T* newData)
+		{
+			if (values != nullptr)
+				delete[] values;
+
+			memcpy(values, newData, length() * TSize);
+		}
+
+		void valAssignInstanceOf(T* newData)
+		{
+			if (values != nullptr)
+				delete[] values;
+			values = newData;
+		}
+
+		//std::unique_ptr<T*> data;
 	public:
 
 		BarImg(int width, int height, int chnls = 1)
 		{
-			_channels = chnls;
-			data = std::unique_ptr<T[]>(new T[width * height]);
-			TSize = sizeof(T);
-			memset(getData(), 0, static_cast<unsigned long long>(width) * height * TSize);
+			setMetadata(width, height, chnls);
+			valInit();
+		}
+
+
+		BarImg(int width, int height, int chnls, T* _data, bool copy = true)
+		{
+			if (copy)
+				copyFromData(width, height, chnls, _data);
+			else
+				assignData(width, height, chnls, _data);
 		}
 
 		BarImg(BarImg<T>& copy)
@@ -65,17 +126,65 @@ namespace bc {
 #ifdef USE_OPENCV
 		BarImg(cv::Mat img, bool copy = true)
 		{
-			_wid = img.cols;
-			_hei = img.rows;
-			chnls = img.channels();
-			dataSize = sizeof(T);
-
 			if (copy)
-				memcpy(data, img.data, static_cast<unsigned long long>(_wid) * _hei * sizeof(T));
+				copyFromData(img.cols, img.rows, img.channels(), img.data);
 			else
-				data = reinterpret_cast<T>(img.data);
+				assignData(img.cols, img.rows, img.channels(), img.data);
 		}
 #endif // OPENCV
+		~BarImg()
+		{
+			if (values != nullptr)
+				delete[] values;
+		}
+
+		T* getData() const
+		{
+			return values;
+		}
+
+		T max()
+		{
+			if (cachedMax.isCached)
+				return cachedMax.val;
+			
+			T _max = values[0];
+			for (size_t i = 1; i < length(); i++)
+			{
+				if (values[i] > _max)
+					_max = values;
+			}
+			cachedMax.set(_max);
+			return _max;
+		}
+
+		T min()
+		{
+			if (cachedMin.isCached)
+				return cachedMin.val;
+
+			T _min = values[0];
+			for (size_t i = 1; i < length(); i++)
+			{
+				if (values[i] < _min)
+					_min = values;
+			}
+			cachedMin.set(_min);
+			return _min;
+		}
+
+		void copyFromData(int width, int height, int chnls, uchar* rawData)
+		{
+			setMetadata(width, height, chnls);
+			valAssignCopyOf(reinterpret_cast<T*>(rawData));
+		}
+
+		void assignData(int width, int height, int chnls, uchar* rawData)
+		{
+			setMetadata(width, height, chnls);
+
+			valAssignInstanceOf(reinterpret_cast<T*>(rawData));
+		}
 
 		inline int wid() const
 		{
@@ -101,32 +210,32 @@ namespace bc {
 
 		inline T get(int x, int y) const
 		{
-			return getData()[y * _wid + x];
+			return values[y * _wid + x];
 		}
 
 		inline T get(point& p) const
 		{
-			return getData()[p.y * _wid + p.x];
+			return values[p.y * _wid + p.x];
 		}
 
 		inline void set(int x, int y, T val)
 		{
-			getData()[y * _wid + x] = val;
+			values[y * _wid + x] = val;
 		}
 
 		inline void set(bc::point p, T val)
 		{
-			getData()[p.y * _wid + p.x] = val;
+			values[p.y * _wid + p.x] = val;
 		}
 
 		inline void setLiner(size_t pos, T val)
 		{
-			getData()[pos] = val;
+			values[pos] = val;
 		}
 
 		inline T getLiner(size_t pos) const
 		{
-			return getData()[pos];
+			return values[pos];
 		}
 
 		point getPointAt(size_t iter) const
@@ -138,13 +247,10 @@ namespace bc {
 		{
 			for (size_t i = 0; i < length(); i++)
 			{
-				getData()[i] = min - getData()[i];
+				values[i] = min - values[i];
 			}
 		}
-		T* getData() const
-		{
-			return data.get();
-		}
+
 		void addToMat(T value)
 		{
 			for (auto& sval : this)
@@ -158,8 +264,7 @@ namespace bc {
 
 			_wid = nwid;
 			_hei = nhei;
-			data.release();
-			data = std::unique_ptr<T[]>(new T[_wid * _hei]);
+			assignInstanceOf(new T[length()]);
 		}
 		//Перегрузка оператора присваивания
 		BarImg<T>& operator= (const BarImg<T>& drob)
@@ -190,24 +295,20 @@ namespace bc {
 
 		void assignCopyOf(const BarImg& copy)
 		{
-			this->_wid = copy._wid;
-			this->_hei = copy._hei;
-			this->_channels = copy._channels;
-			memcpy(getData(), copy.getData(), copy.TSize * copy.length());
+			setMetadata(copy._wid, copy._hei, copy._channels);
+			valAssignCopyOf(copy.values);
 		}
 
 		void assignInstanceOf(const BarImg& inst)
 		{
-			this->_wid = inst._wid;
-			this->_hei = inst._hei;
-			this->_channels = inst._channels;
-			data = inst.data;
+			setMetadata(inst._wid, inst._hei, inst._channels);
+			valAssignInstanceOf(inst.values);
 		}
 
-		bar_iterator begin() { return &getData()[0]; }
-		const_bar_iterator begin() const { return &getData()[0]; }
-		bar_iterator end() { return &getData()[_wid * _hei]; }
-		const_bar_iterator end() const { return &getData()[_wid * _hei]; }
+		bar_iterator begin() { return &values[0]; }
+		const_bar_iterator begin() const { return &values[0]; }
+		bar_iterator end() { return &values[length()]; }
+		const_bar_iterator end() const { return &values[length()]; }
 
 
 		static inline void split(const BarImg<BarVec3b>& src, std::vector<BarImg<uchar>>& bgr)
@@ -281,8 +382,6 @@ namespace bc {
 		ret.minusFrom(c1);
 		return ret;
 	}
-
-	
 }
 
 //split

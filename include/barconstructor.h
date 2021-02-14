@@ -8,6 +8,8 @@ namespace bc
 	enum class ProcType { f0t255, f255t0, experement };
 	enum class ColorType { gray, rgb, native };
 
+	enum class ReturnType { betty, barcode2d, barcode3d };
+
 
 	struct barstruct
 	{
@@ -28,24 +30,50 @@ namespace bc
 		}
 	};
 
+	template<class T>
 	class BarConstructor
 	{
-	private:
-		union imgval
-		{
-			float f;
-			int i;
-			uchar b;
-		};
-		imgval foneStart;
-		imgval foneEnd;
+		CachedValue<T> settStep;
 	public:
+		T foneStart;
+		T foneEnd;
+
+#ifdef USE_OPENCV
+		bool visualize = false;
+#endif // USE_OPENCV
+
+		bool createGraph = false;
+		bool createBinayMasks = false;
+		ReturnType returnType;
+		CachedValue<T> maxTypeValue;
 		std::vector<barstruct> structure;
-		
-		void setFoneRange(float st, float ed)
+
+		void checkCorrect()
 		{
-			foneStart.f = st;
-			foneEnd.f = ed;
+			if (createGraph && !createBinayMasks)
+				throw std::exception();
+
+			if (returnType == ReturnType::betty && T != uchar)
+				throw std::exception();
+
+			if (structure.size()==0)
+				throw std::exception();
+
+			getStep();
+		}
+
+		T getStep()
+		{
+			return settStep.getOrDefault(1);
+		}
+		void setStep(T val)
+		{
+			settStep.set(val);
+		}
+		void setFoneRange(T st, T ed)
+		{
+			foneStart = st;
+			foneEnd = ed;
 		}
 	};
 }
