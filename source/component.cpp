@@ -1,7 +1,6 @@
-#include "point.h"
+#include "component.h"
 
 #include "barcodeCreator.h"
-#include "component.h"
 #include <assert.h>
 
 template<class T>
@@ -9,12 +8,12 @@ bc::Component<T>::Component(point pix, bc::BarcodeCreator<T>* factory)
 {
 	//coords = new pmap();
 	this->factory = factory;
-	bar3d = new barcounter();
 
 	factory->components.push_back(this);
 	num = factory->components.size();
 	start = factory->curbright;
 	end = factory->curbright;
+	bar3d = new barcounter();
 
 	factory->lastB++;
 
@@ -52,7 +51,7 @@ bool bc::Component<T>::isContain(point p)
 }
 
 template<class T>
-inline void bc::Component<T>::add(const point& p)
+void bc::Component<T>::add(const point& p)
 {
 	if (lived)
 	{
@@ -61,11 +60,12 @@ inline void bc::Component<T>::add(const point& p)
 		if (factory->curbright < start)
 			start = factory->curbright;
 	}
-	++totalCount;
 	if (this->parent)
 	{
 		++this->parent->getMaxParrent()->totalCount;
-	}
+	}else
+		++totalCount;
+
 	factory->setInclude(p, this);
 	//coords->push_back(ppair<T>(p, factory->curbright));
 
@@ -111,3 +111,6 @@ bc::Component<T>::~Component()
 {
 	factory->components[num - 1] = nullptr;
 }
+
+
+INIT_TEMPLATE_TYPE(bc::Component)

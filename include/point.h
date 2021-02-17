@@ -72,4 +72,4 @@ using ppair = std::pair<bc::point, T>;
 template<class T>
 using pmap = std::vector<ppair<T>>;
 
-typedef std::vector<int> barcounter;
+typedef std::vector<uint32_t> barcounter;

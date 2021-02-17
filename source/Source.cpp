@@ -20,8 +20,8 @@ using std::string;
 //typedef std::pair<bc::BarcodeTwo*, bool> net;
 
 //#define inputArg 3 analysis\images\polus.png analysis\datasets
-#define inputArg 3 analysis\images\winter2.png analysis\datasets
-#define inputArg 3 analysis\images\big.tif analysis\datasets
+//#define inputArg 3 analysis\images\winter2.png analysis\datasets
+//#define inputArg 3 analysis\images\big.tif analysis\datasets
 
 
 namespace bc

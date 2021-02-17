@@ -466,11 +466,8 @@ inline point* BarcodeCreator<uchar>::sort(const ProcType& type)
 {
 	int hist[256];//256
 	int offs[256];//256
-	for (size_t i = 0; i < 256; ++i)
-	{
-		hist[i] = 0;
-		offs[i] = 0;
-	}
+	memset(hist, 0, 256 * sizeof(int));
+	memset(offs, 0, 256 * sizeof(int));
 
 	for (int i = 0; i < workingImg->wid(); ++i)//wid
 	{
@@ -501,7 +498,7 @@ inline point* BarcodeCreator<uchar>::sort(const ProcType& type)
 
 	if (type == ProcType::f255t0)
 	{
-		for (int i = 0, ts = total / 2; i < ts; ++i)
+		for (size_t i = 0, ts = total / 2; i < ts; ++i)
 		{
 			point temp = data[i];
 			data[i] = data[total - i - 1];
@@ -842,8 +839,8 @@ void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* lines)
 
 			for (int j = pred; j > p; --j)
 			{
-				auto t = tempStack.top();
-				lines->add(t, i - t);
+				uchar t = tempStack.top();
+				lines->add((T)t, (T)((uchar)i - t));
 				tempStack.pop();
 			}
 		}
@@ -856,12 +853,12 @@ void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* lines)
 	
 	while (!tempStack.empty())
 	{
-		auto t = tempStack.top();
-		lines->add(t, MIN(mval, mval - t));
+		uchar t = tempStack.top();
+		lines->add((T)t, (T)MIN(mval, mval - t));
 		tempStack.pop();
 	}
-	auto& vec = lines->bar;
-	std::sort(vec.begin(), vec.end(), compareLines);
+	std::vector<bc::bline<T>*>& vec = lines->bar;
+	std::sort(vec.begin(), vec.end(), compareLines<T>);
 }
 
 template<class T>
@@ -953,12 +950,12 @@ void BarcodeCreator<T>::processTypeF(const barstruct& str, const bcBarImg& src, 
 	case  ComponentType::Hole:
 		processHole(b, item);
 		break;
-	case  ComponentType::FullPrepair:
-		ProcessFullPrepair(b, item);
-		break;
-	case  ComponentType::PrepairComp:
-		ProcessPrepComp(b, item);
-		break;
+	//case  ComponentType::FullPrepair:
+	//	ProcessFullPrepair(b, item);
+	//	break;
+	//case  ComponentType::PrepairComp:
+	//	ProcessPrepComp(b, item);
+	//	break;
 	default:
 		break;
 	}
@@ -991,7 +988,7 @@ void BarcodeCreator<T>::processFULL(const barstruct& str, const BarImg<T>& img, 
 }
 
 template<class T>
-bc::Barcontainer<T>* bc::BarcodeCreator<T>::createBarcode(bcBarImg& img, BarConstructor<T> structure)
+bc::Barcontainer<T>* bc::BarcodeCreator<T>::createBarcode(bcBarImg& img, const BarConstructor<T>& structure)
 {
 	this->settings = structure;
 	settings.checkCorrect();
@@ -1157,92 +1154,92 @@ uchar dif(uchar a, uchar b)
 		return b - a;
 }
 
-template<class T>
-void BarcodeCreator<T>::Prepair()
-{
-	const bcBarImg& mat = *workingImg;
-	int N = 4;
-	//	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };//эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
-	static char poss[5][2] = { {-1, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, 0} }; //эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
-	for (int c = 0; c < mat.wid(); ++c)//x //wid
-	{
-		for (int r = 0; r < mat.hei(); ++r)//y //hei
-		{
-			this->curbright = mat.get(r, c);
-			this->curpix = point(c, r);
-			COMPP mainC = getComp(c, r);
-			for (int off = 0; off < N; ++off)
-			{
-				point p(c + poss[off][0], r + poss[off][1]);
-
-				if (p.x < 0 || p.y < 0 || p.x >= wid || p.y >= hei)
-					continue;
-
-				COMPP subC = getComp(p);
-				if (subC == mainC && mainC != nullptr)
-					continue;
-
-				T val = mat.get(p);
-
-				if (dif(val, curbright) <= settings.getStep())
-				{
-					if (subC == nullptr && mainC == nullptr)
-					{
-						mainC = new Component<T>(this->curpix, this);
-						mainC->add(p);
-					}
-					else if (mainC != nullptr && subC == nullptr)
-					{
-						mainC->add(p);
-					}
-					else if (mainC == nullptr && subC != nullptr)
-					{
-						mainC = subC;
-						mainC->add(curpix);
-					}
-					else //if (mainC != nullptr && subC != nullptr)
-					{
-						mainC = attach(mainC, subC);
-					}
-				}
-				if (mainC == nullptr)
-				{
-					mainC = new Component<T>(this->curpix, this);
-				}
-			}
-		}
-	}
-}
-
-template<class T>
-void BarcodeCreator<T>::ProcessFullPrepair(int* retBty, Barcontainer<T>* item)
-{
-	for (int i = 0; i < 256; ++i)
-	{
-		settings.setStep(i);
-		Prepair();
-		retBty[i] = this->lastB;
-	}
-
-	for (auto* c : components)
-	{
-		if (c->isAlive())
-		{
-			c->kill();
-			break;
-		}
-	}
-	addItemToCont(item);
-	clearIncluded();
-	lastB = 0;
-}
-
-template<class T>
-void BarcodeCreator<T>::ProcessPrepComp(int* retBty, Barcontainer<T>* item)
-{
-	Prepair();
-	processComp(retBty, item);
-}
+//template<class T>
+//void BarcodeCreator<T>::Prepair()
+//{
+//	const bcBarImg& mat = *workingImg;
+//	int N = 4;
+//	//	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };//эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
+//	static char poss[5][2] = { {-1, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, 0} }; //эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
+//	for (int c = 0; c < mat.wid(); ++c)//x //wid
+//	{
+//		for (int r = 0; r < mat.hei(); ++r)//y //hei
+//		{
+//			this->curbright = mat.get(r, c);
+//			this->curpix = point(c, r);
+//			COMPP mainC = getComp(c, r);
+//			for (int off = 0; off < N; ++off)
+//			{
+//				point p(c + poss[off][0], r + poss[off][1]);
+//
+//				if (p.x < 0 || p.y < 0 || p.x >= wid || p.y >= hei)
+//					continue;
+//
+//				COMPP subC = getComp(p);
+//				if (subC == mainC && mainC != nullptr)
+//					continue;
+//
+//				T val = mat.get(p);
+//
+//				if (dif(val, curbright) <= settings.getStep())
+//				{
+//					if (subC == nullptr && mainC == nullptr)
+//					{
+//						mainC = new Component<T>(this->curpix, this);
+//						mainC->add(p);
+//					}
+//					else if (mainC != nullptr && subC == nullptr)
+//					{
+//						mainC->add(p);
+//					}
+//					else if (mainC == nullptr && subC != nullptr)
+//					{
+//						mainC = subC;
+//						mainC->add(curpix);
+//					}
+//					else //if (mainC != nullptr && subC != nullptr)
+//					{
+//						mainC = attach(mainC, subC);
+//					}
+//				}
+//				if (mainC == nullptr)
+//				{
+//					mainC = new Component<T>(this->curpix, this);
+//				}
+//			}
+//		}
+//	}
+//}
+//
+//template<class T>
+//void BarcodeCreator<T>::ProcessFullPrepair(int* retBty, Barcontainer<T>* item)
+//{
+//	for (int i = 0; i < 256; ++i)
+//	{
+//		settings.setStep(i);
+//		Prepair();
+//		retBty[i] = this->lastB;
+//	}
+//
+//	for (auto* c : components)
+//	{
+//		if (c->isAlive())
+//		{
+//			c->kill();
+//			break;
+//		}
+//	}
+//	addItemToCont(item);
+//	clearIncluded();
+//	lastB = 0;
+//}
+//
+//template<class T>
+//void BarcodeCreator<T>::ProcessPrepComp(int* retBty, Barcontainer<T>* item)
+//{
+//	Prepair();
+//	processComp(retBty, item);
+//}
 
 Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int hei)
 {
@@ -1286,9 +1283,15 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 	addItemToCont(item);
 	clearIncluded();
 	return item;
+
+	return nullptr;
 }
 
-template class BarcodeCreator<int>;
-template class BarcodeCreator<float>;
-template class BarcodeCreator<uchar>;
-//template class BarcodeCreator<BarVec3b>;
+
+template<class T>
+Barcontainer<T>* BarcodeCreator<T>::searchHoles(float* img, int wid, int hei)
+{
+	return nullptr;
+}
+
+INIT_TEMPLATE_TYPE(BarcodeCreator)

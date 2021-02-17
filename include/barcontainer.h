@@ -38,7 +38,7 @@ public:
 	T getMax()
 	{
 		T max = 0;
-		for (auto &b : this->bar)
+		for (auto *b : this->bar)
 		{
 			if (b->start + b->len > max)
 				max = b->start + b->len;

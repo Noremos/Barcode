@@ -2,7 +2,7 @@
 #include "barcodeCreator.h"
 
 template<class T>
-bc::Hole<T>::Hole(point p1, BarcodeCreator<T> *factory) :Component<T>(factory)
+bc::Hole<T>::Hole(point p1, BarcodeCreator<T> *factory) : Component<T>(factory)
 {
     isValid = false;
     add(p1);
@@ -88,8 +88,7 @@ template<class T>
 inline void bc::Hole<T>::add(const point& p)
 {
     bool outDo = isOutside;
-    this->coords->push_back(ppair<T>(p, this->factory->curbright));
-    this->factory->setInclude(p, this);
+    bc::Component<T>::add(p);
 //    setB(p);
 
     if (!isOutside)//ребро должно быть на границе
@@ -117,7 +116,7 @@ inline void bc::Hole<T>::add(const point& p)
 template<class T>
 bool bc::Hole<T>::checkValid(point p)
 {
-    if (this->coords->size() < 3)
+    if (this->totalCount < 3)
         return false;
 
     if (isValid)
@@ -173,3 +172,5 @@ bool bc::Hole<T>::findCross(point p, bc::Hole<T>* hole)
     }
     return false;
 }
+
+INIT_TEMPLATE_TYPE(bc::Hole)

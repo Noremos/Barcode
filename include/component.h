@@ -1,6 +1,7 @@
 #pragma once
 #include "point.h"
 #include <vector>
+
 namespace bc
 {
 	template<class T>
@@ -10,8 +11,8 @@ namespace bc
 	class EXPORT Component
 	{
 		Component<T>* cachedMaxParent = nullptr;
-		size_t totalCount = 0;
 	protected:
+		size_t totalCount = 0;
 		BarcodeCreator<T>* factory;
 		bool lived = true;
 
@@ -50,7 +51,7 @@ namespace bc
 			while (cachedMaxParent->parent)
 			{
 				cachedMaxParent = cachedMaxParent->parent;
-				totalCount += cachedMaxParent->coords->size();
+				//totalCount += cachedMaxParent->coords->size();
 			}
 			return cachedMaxParent;
 		}

@@ -82,8 +82,18 @@ namespace bc {
 		bool isContain(const point& p, bool valid) const;
 		bool isContain(const point& p) const;
 
-		void setInclude(int x, int y, COMPP comp, T bright = curbright);
-		void setInclude(const point& p, COMPP comp, T bright = curbright);
+		void setInclude(int x, int y, COMPP comp, T bright);
+		void setInclude(const point& p, COMPP comp, T bright);
+
+		inline void setInclude(int x, int y, COMPP comp)
+		{
+			setInclude(x, y, comp, curbright);
+		}
+
+		inline void setInclude(const point& p, COMPP comp)
+		{
+			setInclude(p, comp, curbright);
+		}
 
 		COMPP getComp(int x, int y);
 		COMPP getComp(const point& p);
@@ -112,27 +122,27 @@ namespace bc {
 		void processHole(int* retBty, Barcontainer<T>* item = nullptr);
 		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
 
-		void ProcessFullPrepair(int* retBty, Barcontainer<T>* item = nullptr);
-		void ProcessPrepComp(int* retBty, Barcontainer<T>* item = nullptr);
-		//void processComp255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
-		void addItemToCont(bc::Barcontainer<T>* item);
 		bc::Baritem<T>* getBarcode();
 		void processTypeF(const barstruct& str, const bcBarImg& img, Barcontainer<T>* item = nullptr);
 		void processFULL(const barstruct& str, const BarImg<T>& img, bc::Barcontainer<T>* item);
+		void addItemToCont(Barcontainer<T>* item);
 
 
-		void Prepair();
+		//void ProcessFullPrepair(int* retBty, Barcontainer<T>* item = nullptr);
+		//void ProcesskPrepComp(int* retBty, Barcontainer<T>* item = nullptr);
+		//void processComp255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
+		//void Prepair();
 	public:
 		BarcodeCreator()
 		{
 		}
 
-		[[deprecated]]
-		bc::Barcontainer<T>* createBarcode(bcBarImg& img, BarConstructor<T> structure);
+		bc::Barcontainer<T>* createBarcode(bcBarImg& img, const BarConstructor<T> &structure);
 
 		[[deprecated]]
 		bc::Barcontainer<T>* createBarcode(bcBarImg& img, const std::vector<barstruct>& structure);
 		
+		[[deprecated]]
 		bc::Barcontainer<T>* createBarcode(bcBarImg& img, const barstruct* structure, int size);
 
 		[[deprecated]]

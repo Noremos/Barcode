@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <iterator>
+#include <cassert>
 
 INCLUDE_CV
 
@@ -15,13 +16,36 @@ namespace bc {
 	struct EXPORT BarVec3b
 	{
 	public:
-		uchar r, g, b;
+		uchar vls[3];
+		uchar r()
+		{
+			return vls[2];
+		}
+		uchar g()
+		{
+			return vls[1];
+		}
+		uchar b()
+		{
+			return vls[0];
+		}
 
-		inline BarVec3b() : r(0), g(0), b(0)
-		{ }
+		inline BarVec3b()
+		{ 
+			memset(vls, 0, 3);
+		}
 
-		inline BarVec3b(uchar _r, uchar _g, uchar _b) : r(_r), g(_g), b(_b)
-		{ }
+		inline BarVec3b(uchar _r, uchar _g, uchar _b)
+		{ 
+			vls[0] = _b;
+			vls[1] = _g;
+			vls[2] = _r;
+		}
+		uchar operator[](std::size_t idx)
+		{
+			assert(idx <= 2);
+			return vls[idx];
+		}
 	};
 	/*struct BarVec3f
 	{
@@ -267,7 +291,7 @@ namespace bc {
 
 		point getPointAt(size_t iter) const
 		{
-			return point(iter % _wid, iter / _wid);
+			return point((int)(iter % _wid), (int)(iter / _wid));
 		}
 
 		void minusFrom(T min)
@@ -349,11 +373,9 @@ namespace bc {
 			BarImg<uchar>& ref = bgr[k];
 			ref.resize(src.wid(), src.hei());
 
-			uchar* data = reinterpret_cast<uchar*>(ref.begin());
-			for (size_t i = k; i < static_cast<unsigned long long>(src.length()) * src.typeSize(); i += step)
+			for (size_t i = 0; i < static_cast<unsigned long long>(src.length()) * src.typeSize(); i += step)
 			{
-				point p = src.getPointAt(i / src.typeSize());
-				ref.setLiner(i, reinterpret_cast<uchar>(data + i));
+				ref.setLiner(i, src.getLiner(i)[k]);
 			}
 		}
 	}
@@ -388,7 +410,7 @@ namespace bc {
 		for (size_t i = 0; i < source.length(); ++i)
 		{
 			BarVec3b bgb = source.getLiner(i);
-			uchar u = .2126 * bgb.r + .7152 * bgb.g + 0.0722 * bgb.b;
+			uchar u = (uchar)(MIN(.2126 * bgb.r() + .7152 * bgb.g() + 0.0722 * bgb.b(), 255));
 			dest.setLiner(i, u);
 		}
 	}

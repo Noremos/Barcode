@@ -6,6 +6,8 @@
 
 
 
+typedef unsigned char uchar;
+
 
 
 
@@ -45,7 +47,10 @@ using cv::Mat;
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
-typedef unsigned char uchar;
+#define INIT_TEMPLATE_TYPE(TYPE) \
+template class TYPE<uchar>; \
+template class TYPE<float>;
+
 
 template<class T>
 struct CachedValue

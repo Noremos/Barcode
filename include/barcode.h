@@ -210,7 +210,7 @@ public:
     virtual double sum() const=0;
     virtual void relen()=0;
 //    virtual void fullCompite(barbase const *bc, CompireFunction fn, float poroc = 0.5f) = 0;
-    virtual ~Barbase<T>();
+    virtual ~Barbase();
     static float compireBarcodes(const Barbase<T> *X, const Barbase<T> *Y,const CompireFunction &type);
 };
 

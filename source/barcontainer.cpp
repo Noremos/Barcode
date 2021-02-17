@@ -107,8 +107,6 @@ void bc::Baritem<T>::preprocessBar(const T& porog, bool normalize)
 		this->relen();
 }
 
-
-
 template<class T>
 float bc::Baritem<T>::compireCTML(const bc::Barbase<T>* bc) const
 {
@@ -226,7 +224,7 @@ double bc::Barcontainer<T>::sum() const
 template<class T>
 void bc::Barcontainer<T>::relen()
 {
-	for (Baritem* it : items)
+	for (Baritem<T>* it : items)
 		it->relen();
 }
 
@@ -303,7 +301,7 @@ void bc::Barcontainer<T>::removePorog(const T porog)
 template<class T>
 void bc::Barcontainer<T>::preprocessBar(const T& porog, bool normalize)
 {
-	for (Baritem* it : items)
+	for (Baritem<T>* it : items)
 		it->preprocessBar(porog, normalize);
 }
 
@@ -363,3 +361,8 @@ float bc::Barcontainer<T>::cmpCTS(Barcontainer<T> const* bc) const
 	return compireCTS((const Baritem*)bc);
 }
 #endif
+
+
+
+INIT_TEMPLATE_TYPE(bc::Baritem)
+INIT_TEMPLATE_TYPE(bc::Barcontainer)

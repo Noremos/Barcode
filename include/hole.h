@@ -13,6 +13,7 @@ public:
 
     Hole(point p1, point p2, point p3, BarcodeCreator<T>* factory);
     Hole(point p1, BarcodeCreator<T>* factory);
+    ~Hole();
 
 //        void setOutside(bool b) {
 //            isOutside = b;
@@ -29,7 +30,6 @@ public:
 
     //явяется ли точка точкой соединения двух дыр
     bool findCross(point p, Hole<T>* hole);
-    ~Hole();
     bool getIsOutside() const;
     void setShadowOutside(bool outside);
     void setOutside();

@@ -20,4 +20,6 @@ float bc::Barbase<T>::compireBarcodes(const bc::Barbase<T> *X, const bc::Barbase
         break;
     }
 }
+
+INIT_TEMPLATE_TYPE(bc::Barbase)
 /////////////////////////////////////////////////////////
