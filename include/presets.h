@@ -37,8 +37,13 @@ using cv::Mat;
 #define INCLUDE_CV
 #endif // DEBUG
 
+#ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
+#endif
+
+#ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))
+#endif
 
 typedef unsigned char uchar;
 
@@ -59,3 +64,5 @@ struct CachedValue
 		return isCached ? val : defValue;
 	}
 };
+
+enum class EXPORT CompireFunction { CommonToSum, CommonToLen, FromMethod, Complex, Temp1, Temp2 };

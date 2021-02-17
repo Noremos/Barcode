@@ -31,6 +31,8 @@ public:
 template<class T>
 struct EXPORT bline
 {
+
+    bool dropChildes = true;
     //    cv::Mat binmat;
 #ifdef USE_OPENCV
 
@@ -107,7 +109,10 @@ struct EXPORT bline
         }
         return BarRect(l, t, r - l + 1, d - t + 1);
     }
-
+    void addCoord(const point& first, T bright)
+    {
+        matr->push_back(ppair<T>(first, bright));
+    }
     pmap<T>* matr = nullptr;
     T start;
     T len;
@@ -130,6 +135,18 @@ struct EXPORT bline
     {
         if(matr!=nullptr)
             delete matr;
+        if (dropChildes)
+        {
+            for (int i = 0; i < childrens.size(); ++i)
+            {
+                delete childrens[i];
+            }
+        }
+        if (parent)
+        {
+            parent->childrens[numInParet] = nullptr;
+        }
+
     }
     bline *clone()
     {
@@ -147,8 +164,22 @@ struct EXPORT bline
         }
         return temp;
     }
-	
 
+    //bc::Component *comp;
+    bline<T>* parent = nullptr;
+    std::vector<bline<T>*> childrens;
+    size_t numInParet = 0;
+    void setParrent(bline<T>* node)
+    {
+        numInParet = node->childrens.size();
+        node->childrens.push_back(this);
+        this->parent = node;
+    }
+
+    T end() const
+    {
+        return start + len;
+    }
 
 #ifdef _PYD
     bp::dict getPoints()
@@ -166,21 +197,21 @@ struct EXPORT bline
 #endif // _PYD
 
 };
-enum class EXPORT CompireFunction { CommonToSum, CommonToLen, FromMethod, Complex, Temp1, Temp2 };
 
+template<class T>
 class EXPORT Barbase
 {
 public:
-    virtual void removePorog(uchar const porog) = 0;
-    virtual void preprocessBar(int const &porog, bool normalize) = 0;
-    virtual float compireCTML(const Barbase *Y) const = 0;
-    virtual float compireCTS(Barbase const *Y) const = 0;
-    virtual Barbase* clone() const= 0;
-    virtual int sum() const=0;
+    virtual void removePorog(T const porog) = 0;
+    virtual void preprocessBar(T const &porog, bool normalize) = 0;
+    virtual float compireCTML(const Barbase<T> *Y) const = 0;
+    virtual float compireCTS(Barbase<T> const *Y) const = 0;
+    virtual Barbase<T>* clone() const= 0;
+    virtual double sum() const=0;
     virtual void relen()=0;
 //    virtual void fullCompite(barbase const *bc, CompireFunction fn, float poroc = 0.5f) = 0;
-    virtual ~Barbase();
-    static float compireBarcodes(const Barbase *X, const Barbase *Y,const CompireFunction &type);
+    virtual ~Barbase<T>();
+    static float compireBarcodes(const Barbase<T> *X, const Barbase<T> *Y,const CompireFunction &type);
 };
 
 //class EXPORT Barcode : public Barbase

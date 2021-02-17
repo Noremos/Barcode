@@ -1,16 +1,11 @@
 #include "barcode.h"
 #include <math.h>
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
 
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
+template<class T>
+bc::Barbase<T>::~Barbase() {}
 
-bc::Barbase::~Barbase() {}
-
-float bc::Barbase::compireBarcodes(const bc::Barbase *X, const bc::Barbase *Y, const CompireFunction &type)
+template<class T>
+float bc::Barbase<T>::compireBarcodes(const bc::Barbase<T> *X, const bc::Barbase<T> *Y, const CompireFunction &type)
 {
     switch (type) {
     case CompireFunction::CommonToLen:

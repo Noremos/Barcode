@@ -7,30 +7,7 @@
 namespace bc {
 
 template<class T>
-struct BarNode
-{
-	BarNode() {}
-	BarNode(bc::bline<T> *comp) { this->comp = comp; }
-	bc::bline<T> *comp = nullptr;
-	BarNode<T> *parent = nullptr;
-	//bc::Component *comp;
-	std::vector<BarNode<T> *> childrens;
-	void setParrent(BarNode<T> *node)
-	{
-		node->childrens.push_back(this);
-		this->parent = node;
-	}
-	~BarNode()
-	{
-		for (int i = 0; i < childrens.size(); ++i)
-		{
-			delete childrens[i];
-		}
-	}
-};
-
-template<class T>
-class EXPORT Baritem: public Barbase
+class EXPORT Baritem: public Barbase<T>
 {
 public:
 
@@ -50,13 +27,13 @@ public:
 
     // remove lines than less then passed value
     void removePorog(T const porog);
-    void preprocessBar(int const &porog, bool normalize);
-    float compireCTML(const Barbase *bc) const;
-    float compireCTS(Barbase const *bc) const;
+    void preprocessBar(T const &porog, bool normalize);
+    float compireCTML(const Barbase<T> *bc) const;
+    float compireCTS(Barbase<T> const *bc) const;
     //    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 	~Baritem();
 
-	bc::BarNode<T>* rootNode;
+	bc::bline<T>* rootNode = nullptr;
 
 	T getMax()
 	{
@@ -87,7 +64,7 @@ public:
 
 //template<size_t N>
 template<class T>
-class EXPORT Barcontainer : public Barbase
+class EXPORT Barcontainer : public Barbase<T>
 {
     std::vector<Baritem<T>*> items;
 public:
@@ -95,7 +72,7 @@ public:
 
     double sum() const;
     void relen();
-    Barbase *clone() const;
+    Barbase<T> *clone() const;
     T maxLen() const;
     size_t count();
     //    Baritem *operator [](int i);
@@ -106,8 +83,8 @@ public:
     void removePorog(T const porog);
     void preprocessBar(T const &porog, bool normalize);
 
-    float compireCTML(const Barbase *bc) const;
-    float compireCTS(Barbase const *bc) const;
+    float compireCTML(const Barbase<T> *bc) const;
+    float compireCTS(Barbase<T> const *bc) const;
 
 #ifdef _PYD
     float cmpCTML(const Barcontainer* bc) const;

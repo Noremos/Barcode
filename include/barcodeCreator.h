@@ -29,8 +29,8 @@ namespace bc {
 		typedef bc::BarImg<T> bcBarImg;
 
 	public:
-		std::vector<COMPP*> components;
-		bc::BarNode<T>* graphRoot;
+		std::vector<COMPP> components;
+		bc::bline<T>* graphRoot = nullptr;
 	private:
 #ifdef USE_OPENCV
 		std::vector<cv::Vec3b> colors;
@@ -43,6 +43,14 @@ namespace bc {
 
 		Include<T>* included;
 		BarImg<T>* workingImg = nullptr;
+		void setWorkingImg(BarImg<T>* newWI)
+		{
+			if (workingImg != nullptr && needDelImg)
+				delete workingImg;
+
+			workingImg = newWI;
+		}
+		bool needDelImg = false;
 		T curbright;
 		point curpix;
 		int wid;
@@ -80,6 +88,8 @@ namespace bc {
 		COMPP getComp(int x, int y);
 		COMPP getComp(const point& p);
 
+		Include<T>* getInclude(size_t pos);
+
 		HOLEP getHole(int x, int y);
 		HOLEP getHole(const point& p);
 
@@ -89,7 +99,7 @@ namespace bc {
 		bool checkCloserB0();
 		bool checkCloserB1();
 
-		static point* sort(const ProcType& type);
+		point* sort(const ProcType& type);
 
 		void clearIncluded();
 
@@ -107,13 +117,15 @@ namespace bc {
 		//void processComp255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
 		void addItemToCont(bc::Barcontainer<T>* item);
 		bc::Baritem<T>* getBarcode();
-		void processTypeF(const barstruct& str, bcBarImg& img, Barcontainer<T>* item = nullptr);
+		void processTypeF(const barstruct& str, const bcBarImg& img, Barcontainer<T>* item = nullptr);
 		void processFULL(const barstruct& str, const BarImg<T>& img, bc::Barcontainer<T>* item);
 
 
 		void Prepair();
 	public:
-		BarcodeCreator();
+		BarcodeCreator()
+		{
+		}
 
 		[[deprecated]]
 		bc::Barcontainer<T>* createBarcode(bcBarImg& img, BarConstructor<T> structure);
@@ -134,7 +146,26 @@ namespace bc {
 
 		bc::Barcontainer<T>* searchHoles(float* img, int wid, int hei);
 
-		virtual ~BarcodeCreator();
+		virtual ~BarcodeCreator()
+		{
+			if (workingImg != nullptr && needDelImg)
+				delete workingImg;
+
+			clearIncluded();
+#ifdef USE_OPENCV
+			colors.clear();
+#endif // USE_OPENCV
+		}
+
+		T getMaxValue()
+		{
+			if (settings.maxTypeValue.isCached)
+				return settings.maxTypeValue.val;
+			else
+				return workingImg->max();
+		}
+
+		void reverseCom(std::unordered_map<COMPP, bline<T>*>& graph);
 
 		void computeBettyBarcode(Baritem<T>* lines);
 		void computeNdBarcode(Baritem<T>* lines, int n);

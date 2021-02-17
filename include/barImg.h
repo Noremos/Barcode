@@ -46,7 +46,7 @@ namespace bc {
 		int _hei;
 		int _channels;
 		int TSize;
-
+		bool _deleteData = true;
 		CachedValue<T> cachedMax;
 		CachedValue<T> cachedMin;
 
@@ -74,7 +74,9 @@ namespace bc {
 
 		void valInit()
 		{
-			T* newVals = new T[length()];
+			valDelete();
+			values = new T[length()];
+			_deleteData = true;
 			valZerofy();
 		}
 		//copy
@@ -87,16 +89,26 @@ namespace bc {
 
 		void valAssignCopyOf(T* newData)
 		{
-			if (values != nullptr)
-				delete[] values;
-
+			valDelete();
+			values = new T[length()];
+			_deleteData = true;
+			
 			memcpy(values, newData, length() * TSize);
 		}
 
-		void valAssignInstanceOf(T* newData)
+		void valDelete()
 		{
-			if (values != nullptr)
+			if (values != nullptr && _deleteData)
 				delete[] values;
+
+			cachedMax.isCached = false;
+			cachedMin.isCached = false;
+		}
+
+		void valAssignInstanceOf(T* newData , bool deleteData = true)
+		{
+			valDelete();
+			_deleteData = deleteData;
 			values = newData;
 		}
 
@@ -110,17 +122,33 @@ namespace bc {
 		}
 
 
-		BarImg(int width, int height, int chnls, T* _data, bool copy = true)
+		BarImg(int width, int height, int chnls, uchar* _data, bool copy = true, bool deleteData = true)
 		{
 			if (copy)
+			{
 				copyFromData(width, height, chnls, _data);
+			}
 			else
-				assignData(width, height, chnls, _data);
+				assignData(width, height, chnls, _data, deleteData);
 		}
 
-		BarImg(BarImg<T>& copy)
+		BarImg<T>* getCopy()
+		{
+			BarImg<T>* nimg = new BarImg<T>(_wid, _hei, _channels, values, true, true);
+			return nimg;
+		}
+
+		void assign(const BarImg<T>& copy)
 		{
 			assignCopyOf(copy);
+		}
+
+		BarImg(const BarImg<T>& copyImg, bool copy = true, bool deleteData = true)
+		{
+			if (copy)
+				assignCopyOf(copyImg);
+			else
+				assignInstanceOf(copyImg);
 		}
 
 #ifdef USE_OPENCV
@@ -134,8 +162,7 @@ namespace bc {
 #endif // OPENCV
 		~BarImg()
 		{
-			if (values != nullptr)
-				delete[] values;
+			valDelete();
 		}
 
 		T* getData() const
@@ -143,22 +170,22 @@ namespace bc {
 			return values;
 		}
 
-		T max()
+		T max() const
 		{
 			if (cachedMax.isCached)
 				return cachedMax.val;
-			
+
 			T _max = values[0];
 			for (size_t i = 1; i < length(); i++)
 			{
 				if (values[i] > _max)
-					_max = values;
+					_max = values[i];
 			}
-			cachedMax.set(_max);
+			//cachedMax.set(_max);
 			return _max;
 		}
 
-		T min()
+		T min() const
 		{
 			if (cachedMin.isCached)
 				return cachedMin.val;
@@ -167,9 +194,9 @@ namespace bc {
 			for (size_t i = 1; i < length(); i++)
 			{
 				if (values[i] < _min)
-					_min = values;
+					_min = values[i];
 			}
-			cachedMin.set(_min);
+			//cachedMin.set(_min);
 			return _min;
 		}
 
@@ -179,11 +206,11 @@ namespace bc {
 			valAssignCopyOf(reinterpret_cast<T*>(rawData));
 		}
 
-		void assignData(int width, int height, int chnls, uchar* rawData)
+		void assignData(int width, int height, int chnls, uchar* rawData, bool deleteData = true)
 		{
 			setMetadata(width, height, chnls);
 
-			valAssignInstanceOf(reinterpret_cast<T*>(rawData));
+			valAssignInstanceOf(reinterpret_cast<T*>(rawData), deleteData);
 		}
 
 		inline int wid() const
@@ -264,7 +291,7 @@ namespace bc {
 
 			_wid = nwid;
 			_hei = nhei;
-			assignInstanceOf(new T[length()]);
+			valAssignInstanceOf(new T[length()]);
 		}
 		//Перегрузка оператора присваивания
 		BarImg<T>& operator= (const BarImg<T>& drob)
@@ -309,58 +336,67 @@ namespace bc {
 		const_bar_iterator begin() const { return &values[0]; }
 		bar_iterator end() { return &values[length()]; }
 		const_bar_iterator end() const { return &values[length()]; }
-
-
-		static inline void split(const BarImg<BarVec3b>& src, std::vector<BarImg<uchar>>& bgr)
-		{
-			size_t step = static_cast<unsigned long long>(src.channels()) * src.typeSize();
-			for (size_t k = 0; k < src.channels(); k++)
-			{
-				BarImg<uchar> ib(1, 1);
-				//bgr.push_back(ib);
-				//BarImg<uchar>& ref= bgr[k];
-				/*ref.resize(src.wid(), src.hei());
-
-				uchar* data = reinterpret_cast<uchar*>(ref.begin());
-				for (size_t i = k; i < static_cast<unsigned long long>(src.length()) * src.typeSize(); i += step)
-				{
-					point p = src.getPointAt(i / src.typeSize());
-					ref.setLiner(i, reinterpret_cast<uchar>(data + i));
-				}*/
-			}
-		}
-
-		enum class BarConvert
-		{
-			BGR2GRAY,
-			GRAY2BGR,
-		};
-
-		static inline void cvtColor(bc::BarImg<uchar>& source, bc::BarImg<bc::BarVec3b>& dest)
-		{
-			/*dest.resize(source.wid(), source.hei());
-
-			for (size_t i = 0; i < source.length(); ++i)
-			{
-				uchar u = source.getLiner(i);
-				BarVec3b bgb(u, u, u);
-				dest.setLiner(i, bgb);
-			}*/
-		}
-
-		static inline void cvtColor(bc::BarImg<bc::BarVec3b>& source, bc::BarImg<uchar>& dest)
-		{
-			dest.resize(source.wid(), source.hei());
-
-			for (size_t i = 0; i < source.length(); ++i)
-			{
-				BarVec3b bgb = source.getLiner(i);
-				uchar u = .2126 * bgb.r + .7152 * bgb.g + 0.0722 * bgb.b;
-				dest.setLiner(i, u);
-			}
-		}
 	};
 
+
+	static inline void split(const BarImg<BarVec3b>& src, std::vector<BarImg<uchar>>& bgr)
+	{
+		size_t step = static_cast<unsigned long long>(src.channels()) * src.typeSize();
+		for (size_t k = 0; k < src.channels(); k++)
+		{
+			BarImg<uchar> ib(1, 1);
+			bgr.push_back(ib);
+			BarImg<uchar>& ref = bgr[k];
+			ref.resize(src.wid(), src.hei());
+
+			uchar* data = reinterpret_cast<uchar*>(ref.begin());
+			for (size_t i = k; i < static_cast<unsigned long long>(src.length()) * src.typeSize(); i += step)
+			{
+				point p = src.getPointAt(i / src.typeSize());
+				ref.setLiner(i, reinterpret_cast<uchar>(data + i));
+			}
+		}
+	}
+
+	template<class T, class U>
+	static inline void split(const BarImg<T>& src, std::vector<BarImg<U>>& bgr)
+	{
+	}
+
+	enum class BarConvert
+	{
+		BGR2GRAY,
+		GRAY2BGR,
+	};
+
+	static inline void cvtColor(const bc::BarImg<uchar>& source, bc::BarImg<bc::BarVec3b>& dest)
+	{
+		dest.resize(source.wid(), source.hei());
+
+		for (size_t i = 0; i < source.length(); ++i)
+		{
+			uchar u = source.getLiner(i);
+			BarVec3b bgb(u, u, u);
+			dest.setLiner(i, bgb);
+		}
+	}
+
+	static inline void cvtColor(const bc::BarImg<bc::BarVec3b>& source, bc::BarImg<uchar>& dest)
+	{
+		dest.resize(source.wid(), source.hei());
+
+		for (size_t i = 0; i < source.length(); ++i)
+		{
+			BarVec3b bgb = source.getLiner(i);
+			uchar u = .2126 * bgb.r + .7152 * bgb.g + 0.0722 * bgb.b;
+			dest.setLiner(i, u);
+		}
+	}
+	template<class T, class U>
+	static inline void cvtColor(const bc::BarImg<T>& source, bc::BarImg<U>& dest)
+	{
+
+	}
 
 	//// note: this function is not a member function!
 	template<class T>

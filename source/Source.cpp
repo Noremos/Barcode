@@ -16,9 +16,6 @@
 /////////////////////////////
 /////////////////////////////
 
-namespace fs = std::filesystem;
-
-typedef cv::Point3_<uint8_t> Pixel;
 using std::string;
 //typedef std::pair<bc::BarcodeTwo*, bool> net;
 
@@ -51,8 +48,8 @@ int main()
 	bc->coltype = bc::ColorType::gray;
 	bc->comtype = bc::ComponentType::Component;
 	bc->proctype = bc::ProcType::f0t255;
+	//bc::BarcodeCreator<uchar> test;
 
-	bc::BarcodeCreator<uchar> test;
 	/*test.createBarcode(img, bc, 1);
 
 	uchar* data = new uchar[36]{

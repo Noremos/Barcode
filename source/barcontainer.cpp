@@ -47,9 +47,9 @@ bc::Baritem<T>* bc::Baritem<T>::clone() const
 {
 	Baritem* nb = new Baritem();
 	nb->bar.insert(nb->bar.begin(), bar.begin(), bar.end());
-    for (int i = 0, total = nb->bar.size(); i < total; ++i) {
-        nb->bar[i] = nb->bar[i]->clone();
-    }
+	for (int i = 0, total = nb->bar.size(); i < total; ++i) {
+		nb->bar[i] = nb->bar[i]->clone();
+	}
 	return nb;
 }
 
@@ -99,10 +99,9 @@ void bc::Baritem<T>::removePorog(const T porog)
 }
 
 template<class T>
-void bc::Baritem<T>::preprocessBar(const int& porog, bool normalize)
+void bc::Baritem<T>::preprocessBar(const T& porog, bool normalize)
 {
-	if (porog > 0)
-		this->removePorog((uchar)roundf((porog * float(this->maxLen()) / 100.f)));
+	this->removePorog(porog);
 
 	if (normalize)
 		this->relen();
@@ -111,7 +110,7 @@ void bc::Baritem<T>::preprocessBar(const int& porog, bool normalize)
 
 
 template<class T>
-float bc::Baritem<T>::compireCTML(const bc::Barbase* bc) const
+float bc::Baritem<T>::compireCTML(const bc::Barbase<T>* bc) const
 {
 	Baritem<T>* Y = dynamic_cast<const Baritem<T>*>(bc)->clone();
 	Baritem<T>* X = clone();
@@ -121,7 +120,7 @@ float bc::Baritem<T>::compireCTML(const bc::Barbase* bc) const
 	int n = static_cast<int>(MIN(bar.size(), Y->bar.size()));
 
 	float tsum = 0.f;
-	for (int re = 0; re < n; ++re) 
+	for (int re = 0; re < n; ++re)
 	{
 		float maxCoof = 0;
 		float maxsum = 0;
@@ -154,7 +153,7 @@ float bc::Baritem<T>::compireCTML(const bc::Barbase* bc) const
 }
 
 template<class T>
-float bc::Baritem<T>::compireCTS(const bc::Barbase* bc) const
+float bc::Baritem<T>::compireCTS(const bc::Barbase<T>* bc) const
 {
 	Baritem<T>* Y = dynamic_cast<const Baritem<T>*>(bc)->clone();
 	Baritem<T>* X = clone();
@@ -185,7 +184,7 @@ float bc::Baritem<T>::compireCTS(const bc::Barbase* bc) const
 					continue;
 
 				float coof = minlen / maxlen;
-				if (coof > maxCoof) 
+				if (coof > maxCoof)
 				{
 					maxCoof = coof;
 					maxsum = (float)(X->bar[i]->len + Y->bar[j]->len);
@@ -309,7 +308,7 @@ void bc::Barcontainer<T>::preprocessBar(const T& porog, bool normalize)
 }
 
 template<class T>
-bc::Barbase* bc::Barcontainer<T>::clone() const
+bc::Barbase<T>* bc::Barcontainer<T>::clone() const
 {
 	Barcontainer* newBar = new Barcontainer<T>();
 
@@ -320,21 +319,21 @@ bc::Barbase* bc::Barcontainer<T>::clone() const
 }
 
 template<class T>
-float bc::Barcontainer<T>::compireCTML(const bc::Barbase* bc) const
+float bc::Barcontainer<T>::compireCTML(const bc::Barbase<T>* bc) const
 {
 	const Barcontainer* bcr = dynamic_cast<const Barcontainer*>(bc);
 	float res = 0;
 	float s = sum() + bcr->sum();
 	for (size_t i = 0; i < MIN(items.size(), bcr->items.size()); i++)
 	{
-		res += items[i]->compireCTML(bcr->items[i]) * (items[i]->sum() + bcr->items[i]->sum())  / s;
+		res += items[i]->compireCTML(bcr->items[i]) * (items[i]->sum() + bcr->items[i]->sum()) / s;
 	}
 
 	return res;
 }
 
 template<class T>
-float bc::Barcontainer<T>::compireCTS(const bc::Barbase* bc) const
+float bc::Barcontainer<T>::compireCTS(const bc::Barbase<T>* bc) const
 {
 	float res = 0;
 	float s = sum();

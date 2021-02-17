@@ -17,6 +17,7 @@ namespace bc
 
 		int cashedSize = 0;
 		T lastVal = 0;
+
 	public:
 
 		Component(point pix, BarcodeCreator<T>* factory);
@@ -61,6 +62,11 @@ namespace bc
 		virtual void setParrent(Component<T>* parnt);
 		//    void setB(const point &p);
 		virtual ~Component();
+
+		size_t getTotalSize()
+		{
+			return totalCount;
+		}
 	};
 
 	//typedef std::unordered_map<point, Component*, pointHash> cmap;
