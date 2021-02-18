@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="barconstructor.h" />
+    <ClInclude Include="Barpy.h" />
     <ClInclude Include="include\barcode.h" />
     <ClInclude Include="include\barcodeCreator.h" />
     <ClInclude Include="include\barcontainer.h" />
@@ -84,7 +85,9 @@
     <ClCompile Include="source\barcontainer.cpp" />
     <ClCompile Include="source\Component.cpp" />
     <ClCompile Include="source\Hole.cpp" />
-    <ClCompile Include="source\Source.cpp" />
+    <ClCompile Include="source\Source.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="source\point.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -382,8 +382,10 @@
 //	};
 //}
 ////2 build/polus.png 40 4 build/lables.txt build/traningData.txt
-//int main(int argc, char* argv[])
-//{
+int main(int argc, char* argv[])
+{
+	return 0;
+}
 //	setlocale(0, "rus");
 //	srand(time(0));
 //

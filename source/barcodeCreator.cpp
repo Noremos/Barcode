@@ -784,7 +784,7 @@ bc::Baritem* bc::barcodeCreator::getBarcode()
 	Baritem* lines = new Baritem();
 	std::unordered_map<Component *, GraphVer> vers;
 
-	std::unordered_map<Component *, BarNode *> graph;
+	std::unordered_map<Component *, bline *> graph;
 
     if (!this->useBetty)
 	{
@@ -796,11 +796,9 @@ bc::Baritem* bc::barcodeCreator::getBarcode()
 
 			pmap *map = (createBin || getCoords) ? c->coords : nullptr;
 			bc::bline *line = new bc::bline(c->start, c->end - c->start, map);
-			BarNode *bnode = nullptr;
 			if (createGraph)
 			{
-				bnode = new BarNode(line);
-				graph.insert(std::pair<Component *, BarNode *>(c, bnode));
+				graph.insert(std::pair<Component *, bline *>(c, line));
 			}
 
 			if (createBin)// || getCoords
@@ -824,7 +822,7 @@ bc::Baritem* bc::barcodeCreator::getBarcode()
 				} else
 				{
 					root = vchld;
-					graphRoot = bnode;
+					graphRoot = line;
 				}
 			}
 			lines->add(line);

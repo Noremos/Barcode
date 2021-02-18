@@ -60,6 +60,9 @@ BOOST_PYTHON_MODULE(barpy)
 		.add_property("start", make_getter(&bc::bline::start), make_setter(&bc::bline::start))
 		.add_property("len", make_getter(&bc::bline::len), make_setter(&bc::bline::len))
 		.def("getPoints", &bc::bline::getPoints)
+		.def("getParent", &bc::bline::getParent, return_value_policy< reference_existing_object >())
+		.add_property("parent", make_getter(&bc::bline::parent)/*, make_setter(&bc::bline::parent)*/)
+		.def("getChildren", &bc::bline::getChildren)
 		//.add_property("points", make_getter(&bc::bline::matr))
 		;
 
@@ -73,9 +76,11 @@ BOOST_PYTHON_MODULE(barpy)
 		.def("maxLen", &bc::Baritem::maxLen)
 		.def("removePorog", &bc::Baritem::removePorog, args("porog"))
 		.def("preprocessBar", &bc::Baritem::preprocessBar, args("porog", "normalize"))
+		.def("getRootNode", &bc::Baritem::getRootNode, return_value_policy< reference_existing_object >()/*, make_setter(&bc::Baritem::rootNode)*/)
 		//.def("compireCTML", &bc::Baritem::compireCTML, args("bc"))
 		//.def("compireCTS", &bc::Baritem::compireCTS, args("bc"))
 		.def("getBar", &bc::Baritem::getBar)
+
 
 		//.add_property("bar", make_getter(&bc::Baritem::bar))
 		;
@@ -130,6 +135,7 @@ BOOST_PYTHON_MODULE(barpy)
 	class_<bc::barcodeCreator>("BarcodeCreator")
 		.def("setVisualize", &bc::barcodeCreator::setVisualize, args("value"))
 		.def("setCreateBinaryMasks", &bc::barcodeCreator::setCreateBinaryMasks, args("value"))
+		.def("setCreateGraph", &bc::barcodeCreator::setCreateGraph, args("value"))
 		.def("setReturnType", &bc::barcodeCreator::setReturnType, args("value"))
 
 		.def("createBarcode", static_cast<bc::Barcontainer * (bc::barcodeCreator::*) (bn::ndarray&, bp::list&)>
@@ -161,7 +167,6 @@ BOOST_PYTHON_MODULE(barpy)
 		 .def("compireCTS", &bc::Barcode::compireCTS, args("bc"))
 		 ;*/
 }
-#endif // _PYD
 
 template<> 
 PyObject* type_into_python<pmap>::convert(pmap const& map)
@@ -196,3 +201,5 @@ PyObject* type_into_python<std::vector<bc::bline>>::convert(std::vector<bc::blin
 	return nullptr;
 }
 
+
+#endif // _PYD

@@ -4,27 +4,6 @@
 #include "point.h"
 namespace bc {
 
-struct BarNode
-{
-	BarNode() {}
-	BarNode(bc::bline *comp) { this->comp = comp; }
-	bc::bline *comp = nullptr;
-	BarNode *parent = nullptr;
-	//bc::Component *comp;
-	std::vector<BarNode *> childrens;
-	void setParrent(BarNode *node)
-	{
-		node->childrens.push_back(this);
-		this->parent = node;
-	}
-	~BarNode()
-	{
-		for (int i = 0; i < childrens.size(); ++i)
-		{
-			delete childrens[i];
-		}
-	}
-};
 
 class EXPORT Baritem:public Barbase
 {
@@ -50,7 +29,7 @@ public:
     //    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 	~Baritem();
 
-	bc::BarNode* rootNode;
+	bc::bline* rootNode;
 
 	uchar getMax()
 	{
@@ -74,6 +53,11 @@ public:
             lines.append(line);
         }
         return lines;
+    }
+
+    bc::bline* getRootNode()
+    {
+        return rootNode;
     }
 #endif // _PYD
 

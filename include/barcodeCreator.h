@@ -13,7 +13,7 @@ namespace bc {
 	{
 	public:
 		std::vector<Component*> components;
-		bc::BarNode *graphRoot;
+		bc::bline *graphRoot;
 	private:
 		bool reverse = false;
 		bool createGraph = true;

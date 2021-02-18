@@ -82,6 +82,15 @@ struct EXPORT bline
 	}
 
 
+    bline* parent = nullptr;
+    std::vector<bline*> childrens;
+
+    void setParrent(bline* node)
+    {
+        node->childrens.push_back(this);
+        this->parent = node;
+    }
+
 #ifdef _PYD
     bp::dict getPoints()
 	{
@@ -94,6 +103,20 @@ struct EXPORT bline
         }
 
         return pydict;
+    }
+
+    bp::list getChildren()
+    {
+        bp::list list;
+        for (auto* child :childrens)
+            list.append(child);
+
+        return list;
+    }
+
+    bc::bline* getParent()
+    {
+        return parent;
     }
 #endif // _PYD
 
