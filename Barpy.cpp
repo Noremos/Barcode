@@ -75,6 +75,8 @@ BOOST_PYTHON_MODULE(barpy)
 		.def("end", &bc::barline<uchar>::end)
 		.def("getPoints", &bc::barline<uchar>::getPoints)
 		.def("getRect", &bc::barline<uchar>::getRect)
+		.def("getParrent", &bc::barline<uchar>::getParent, return_value_policy< reference_existing_object >())
+		.def("getChildren", &bc::barline<uchar>::getChildren)
 		//.add_property("points", make_getter(&bc::barline::matr))
 		;
 
@@ -91,6 +93,8 @@ BOOST_PYTHON_MODULE(barpy)
 		.def("getBarcode", &bc::Baritem<uchar>::getBarcode)
 		.def("SortByLineLen", &bc::Baritem<uchar>::sortByLen)
 		.def("SortByPointsCount", &bc::Baritem<uchar>::sortBySize)
+		.def("getRootNode", &bc::Baritem<uchar>::getRootNode, return_value_policy< reference_existing_object >()/*, make_setter(&bc::Baritem::rootNode)*/)
+
 
 
 		//.add_property("bar", make_getter(&bc::Baritem::bar))
@@ -188,7 +192,6 @@ BOOST_PYTHON_MODULE(barpy)
 		 .def("compireCTS", &bc::Barcode::compireCTS, args("bc"))
 		 ;*/
 }
-#endif // _PYD
 
 //template<> 
 //PyObject* type_into_python<pmap>::convert(pmap const& map)
@@ -223,3 +226,5 @@ BOOST_PYTHON_MODULE(barpy)
 //	return nullptr;
 //}
 
+
+#endif // _PYD

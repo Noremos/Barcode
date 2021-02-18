@@ -174,6 +174,20 @@ namespace bc
 			ls.append(rect.height);
 			return ls;
 		}
+
+		bp::list getChildren()
+		{
+			bp::list list;
+			for (auto* child : childrens)
+				list.append(child);
+
+			return list;
+		}
+
+		bc::barline<T>* getParent()
+		{
+			return this->parrent;
+		}
 #endif // _PYD
 
 	};
