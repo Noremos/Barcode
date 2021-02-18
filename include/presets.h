@@ -16,7 +16,7 @@ typedef unsigned char uchar;
 #ifdef _WINDLL
 #  define EXPORT __declspec(dllexport)
 #elif _STL
-#  define EXPORT __declspec(dllimport)
+#  define EXPORT /*__declspec(dllimport)*/
 #else
 # define EXPORT
 #endif
@@ -53,7 +53,7 @@ template class TYPE<float>;
 
 
 template<class T>
-struct CachedValue
+struct EXPORT CachedValue
 {
 	T val;
 	bool isCached = false;

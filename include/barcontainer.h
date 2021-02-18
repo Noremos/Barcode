@@ -16,7 +16,7 @@ public:
 //    cv::Mat binmap;
     void add(T st, T len);
 //    void add(uchar st, uchar len, cv::Mat binmat);
-	void add(T st, T len, pmap<T> *binmat);
+	//void add(T st, T len, pmap<T> *binmat);
 	void add(bline<T> *line);
 
     double sum() const;

@@ -4,7 +4,7 @@ namespace bc
 {
 
 template<class T>
-class EXPORT Hole : public Component<T>
+class Hole : public Component<T>
 {
     bool isOutside = false;
 public:

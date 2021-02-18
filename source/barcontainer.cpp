@@ -20,11 +20,11 @@ void bc::Baritem<T>::add(T st, T len)
 //{
 //    bar.push_back(bline(st, len, binmat));
 //}
-template<class T>
-void bc::Baritem<T>::add(T st, T len, pmap<T>* binmat)
-{
-	bar.push_back(new bline<T>(st, len, binmat));
-}
+//template<class T>
+//void bc::Baritem<T>::add(T st, T len, pmap<T>* binmat)
+//{
+//	bar.push_back(new bline<T>(st, len, binmat));
+//}
 
 template<class T>
 void bc::Baritem<T>::add(bc::bline<T>* line)

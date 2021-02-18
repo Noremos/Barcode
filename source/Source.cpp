@@ -40,17 +40,24 @@ namespace bc
 }
 int main()
 {
-	cv::Mat testmat = cv::imread("test5.png", cv::IMREAD_ANYCOLOR);
-	int w = testmat.cols, h = testmat.rows;
-	bc::BarImg<uchar> img(w, h, 1, testmat.data);
+	bc::BarConstructor<uchar> bcont;
+	bcont.addStructire(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.createBinayMasks = false;
+	bcont.createGraph = false;
+	bcont.createBinayMasks = false;
+	bcont.returnType = bc::ReturnType::barcode2d;
+	bcont.setStep(1);
+	bcont.maxTypeValue.set(255);
 
-	bc::barstruct bc[1];
-	bc->coltype = bc::ColorType::gray;
-	bc->comtype = bc::ComponentType::Component;
-	bc->proctype = bc::ProcType::f0t255;
-	//bc::BarcodeCreator<uchar> test;
 
-	/*test.createBarcode(img, bc, 1);
+	/*cv::Mat testmat = cv::imread("test5.png", cv::IMREAD_ANYCOLOR);
+	int w = testmat.cols, h = testmat.rows;*/
+	//, 1, testmat.data);
+	bc::BarImg<uchar> img(1, 1);
+
+	bc::BarcodeCreator<uchar> test;
+
+	test.createBarcode(img,bcont);
 
 	uchar* data = new uchar[36]{
 	63,121,73,14,120,135,
@@ -62,7 +69,7 @@ int main()
 	};
 
 	img.assignData(6, 6, 1, data);
-	test.createBarcode(img, bc, 1);
+	test.createBarcode(img,bcont);
 
 	uchar* data2 = new uchar[25]{
 	63,121,73,14,120,
@@ -73,7 +80,7 @@ int main()
 	};
 
 	img.assignData(5, 5, 1, data2);
-	test.createBarcode(img, bc, 1);
+	test.createBarcode(img,bcont);
 
 	uchar* data3 = new uchar[16]{
 	63,121,73,14,
@@ -83,7 +90,7 @@ int main()
 	};
 
 	img.assignData(4, 4, 1, data3);
-	test.createBarcode(img, bc, 1);
+	test.createBarcode(img,bcont);
 	
 	uchar* data4 = new uchar[9]{
 	63,121,73,
@@ -92,7 +99,7 @@ int main()
 	};
 
 	img.assignData(3, 3, 1, data3);
-	test.createBarcode(img, bc, 1);*/
+	test.createBarcode(img,bcont);
 
 	return 0;
 }

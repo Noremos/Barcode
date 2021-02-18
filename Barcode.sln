@@ -5,10 +5,14 @@ VisualStudioVersion = 16.0.29209.62
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Barcode", "Barcode.vcxproj", "{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BarcodeTests", "..\BarcodeTests\BarcodeTests.vcxproj", "{32288081-722C-4057-97F1-4BA2CB800BB7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		dll cvless|x64 = dll opencv less|x64
+		dll cvless|x86 = dll opencv less|x86
 		dll|x64 = dll|x64
 		dll|x86 = dll|x86
 		Python 38|x64 = Python 38|x64
@@ -19,6 +23,8 @@ Global
 		Python|x86 = Python|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		stl cvless|x64 = stl cvless|x64
+		stl cvless|x86 = stl cvless|x86
 		stl|x64 = stl|x64
 		stl|x86 = stl|x86
 	EndGlobalSection
@@ -47,10 +53,50 @@ Global
 		{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}.Release|x64.Build.0 = Release|x64
 		{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}.Release|x86.ActiveCfg = Release|Win32
 		{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}.Release|x86.Build.0 = Release|Win32
+		{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}.stl cvless|x64.ActiveCfg = stl cvless|x64
+		{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}.stl cvless|x64.Build.0 = stl cvless|x64
+		{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}.stl cvless|x86.ActiveCfg = stl cvless|Win32
+		{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}.stl cvless|x86.Build.0 = stl cvless|Win32
 		{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}.stl|x64.ActiveCfg = stl|x64
 		{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}.stl|x64.Build.0 = stl|x64
 		{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}.stl|x86.ActiveCfg = stl|Win32
 		{68FA0358-8BEC-4D6F-833A-981B5ABEE5A2}.stl|x86.Build.0 = stl|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Debug|x64.ActiveCfg = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Debug|x64.Build.0 = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Debug|x86.ActiveCfg = Debug|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Debug|x86.Build.0 = Debug|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.dll opencv less|x64.ActiveCfg = dll opencv less|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.dll opencv less|x64.Build.0 = dll opencv less|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.dll opencv less|x86.ActiveCfg = dll opencv less|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.dll opencv less|x86.Build.0 = dll opencv less|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.dll|x64.ActiveCfg = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.dll|x64.Build.0 = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.dll|x86.ActiveCfg = Debug|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.dll|x86.Build.0 = Debug|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python 38|x64.ActiveCfg = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python 38|x64.Build.0 = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python 38|x86.ActiveCfg = Debug|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python 38|x86.Build.0 = Debug|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python Debug|x64.ActiveCfg = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python Debug|x64.Build.0 = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python Debug|x86.ActiveCfg = Debug|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python Debug|x86.Build.0 = Debug|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python|x64.ActiveCfg = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python|x64.Build.0 = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python|x86.ActiveCfg = Debug|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Python|x86.Build.0 = Debug|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Release|x64.ActiveCfg = Release|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Release|x64.Build.0 = Release|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Release|x86.ActiveCfg = Release|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.Release|x86.Build.0 = Release|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.stl cvless|x64.ActiveCfg = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.stl cvless|x64.Build.0 = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.stl cvless|x86.ActiveCfg = stl cvless|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.stl cvless|x86.Build.0 = stl cvless|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.stl|x64.ActiveCfg = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.stl|x64.Build.0 = Debug|x64
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.stl|x86.ActiveCfg = Debug|Win32
+		{32288081-722C-4057-97F1-4BA2CB800BB7}.stl|x86.Build.0 = Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -517,14 +517,14 @@ inline point* BarcodeCreator<T>::sort(const ProcType& type)
 	size_t k = 0;
 	for (int i = 0; i < total; ++i)//wid
 		data[i] = workingImg->getPointAt(i);
-	
+
 	std::sort(data, data + total, [ptr = workingImg](point& a, point& b) {
 		return ptr->get(a) > ptr->get(b);
 		});
 
 	if (type == ProcType::f255t0)
 	{
-		std::reverse(data,  data + total);
+		std::reverse(data, data + total);
 	}
 
 	return data;
@@ -533,18 +533,18 @@ inline point* BarcodeCreator<T>::sort(const ProcType& type)
 template<class T>
 void BarcodeCreator<T>::init(const bcBarImg& src, const  ProcType& type)
 {
-	BarImg<T> *temp= new BarImg<T>(1,1);
+	BarImg<T>* temp = new BarImg<T>(1, 1);
 	needDelImg = false;
 	//if (type != ProcType::f255t0)
 	//{
-		if (src.channels() != 1)
-		{
-			cvtColor(src, *temp);
-		}
-		else
-		{
-			temp->assign(src);
-		}
+	if (src.channels() != 1)
+	{
+		cvtColor(src, *temp);
+	}
+	else
+	{
+		temp->assign(src);
+	}
 	//}
 	//else
 	//{
@@ -584,7 +584,7 @@ void BarcodeCreator<T>::init(const bcBarImg& src, const  ProcType& type)
 			for (int g = 255; g > 20; g -= 20)
 				for (int r = 0; r < 255; r += 50)
 					colors.push_back(cv::Vec3b(b, g, r));
-}
+	}
 #endif // USE_OPENCV
 }
 //#include <QDebug>
@@ -776,7 +776,7 @@ struct TempGraphVer
 };
 
 template<class T>
-void BarcodeCreator<T>::reverseCom(std::unordered_map<COMPP, bline<T>*> &graph)
+void BarcodeCreator<T>::reverseCom(std::unordered_map<COMPP, bline<T>*>& graph)
 {
 	for (size_t i = 0; i < totalSize; i++)
 	{
@@ -786,7 +786,7 @@ void BarcodeCreator<T>::reverseCom(std::unordered_map<COMPP, bline<T>*> &graph)
 		{
 			root->setParrent(graph[incl->comp->parent]);
 
-			auto& rootParrentCoords = (*root->parent->matr);
+			auto& rootParrentCoords = root->parent->matr;
 			auto& ccod = incl->bright;
 			root->parent->addCoord(getPoint(i), root->parent->end() - incl->bright);//root->end
 		}
@@ -850,7 +850,7 @@ void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* lines)
 				tempStack.push((uchar)i);
 		}
 	}
-	
+
 	while (!tempStack.empty())
 	{
 		uchar t = tempStack.top();
@@ -876,14 +876,11 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 			continue;
 
 		pmap<T>* coords = nullptr;
-		if (settings.createBinayMasks)
-		{
-			coords = new pmap<T>();
-			coords->reserve(c->getTotalSize());
-		}
+		size_t size = settings.createBinayMasks ? c->getTotalSize() : 0;
 
 		auto* bar3d = (n == 3) ? c->bar3d : nullptr;
-		bline<T>* line = new bline<T>(c->start, c->end - c->start, coords, bar3d);
+		bline<T>* line = new bline<T>(c->start, c->end - c->start, bar3d, size);
+
 		if (settings.createGraph)
 		{
 			graph.insert(std::pair<COMPP, bline<T>*>(c, line));
@@ -891,8 +888,8 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 				graphRoot = line;
 		}
 	}
-
-	reverseCom(graph);
+	if (settings.createBinayMasks)
+		reverseCom(graph);
 
 	if (settings.createGraph)
 	{
@@ -950,12 +947,12 @@ void BarcodeCreator<T>::processTypeF(const barstruct& str, const bcBarImg& src, 
 	case  ComponentType::Hole:
 		processHole(b, item);
 		break;
-	//case  ComponentType::FullPrepair:
-	//	ProcessFullPrepair(b, item);
-	//	break;
-	//case  ComponentType::PrepairComp:
-	//	ProcessPrepComp(b, item);
-	//	break;
+		//case  ComponentType::FullPrepair:
+		//	ProcessFullPrepair(b, item);
+		//	break;
+		//case  ComponentType::PrepairComp:
+		//	ProcessPrepComp(b, item);
+		//	break;
 	default:
 		break;
 	}
@@ -972,7 +969,7 @@ void BarcodeCreator<T>::processFULL(const barstruct& str, const BarImg<T>& img, 
 		if (img.channels() == 3) {
 			std::vector<bcBarImg> bgr;
 			split(img, bgr); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-				processTypeF(str, bgr[0], item);
+			processTypeF(str, bgr[0], item);
 			processTypeF(str, bgr[1], item);
 			processTypeF(str, bgr[2], item);
 		}
@@ -1265,7 +1262,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 #else
 		checkCloserB0();
 #endif
-}
+	}
 
 	delete[] arr;
 

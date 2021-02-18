@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <barcontainer.h>
+#include "barcontainer.h"
 namespace bc
 {
 
@@ -48,6 +48,10 @@ namespace bc
 		CachedValue<T> maxTypeValue;
 		std::vector<barstruct> structure;
 
+		inline void addStructire(ProcType pt, ColorType colT, ComponentType comT)
+		{
+			structure.push_back(barstruct(pt, colT, comT));
+		}
 		void checkCorrect()
 		{
 			if (createGraph && !createBinayMasks)

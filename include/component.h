@@ -8,7 +8,7 @@ namespace bc
 	class BarcodeCreator;
 
 	template<class T>
-	class EXPORT Component
+	class Component
 	{
 		Component<T>* cachedMaxParent = nullptr;
 	protected:
