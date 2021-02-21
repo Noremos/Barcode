@@ -643,7 +643,7 @@ void BarcodeCreator<T>::processComp(int* retBty, Barcontainer<T>* item)
 		curpix = sortedArr[i];
 		curbright = workingImg->get(curpix);
 #ifdef VDEBUG
-		VISULA_DEBUG_COMPP(totalSize, i);
+		VISULA_DEBUG_COMP(totalSize, i);
 #else
 		checkCloserB0();
 #endif
@@ -857,7 +857,7 @@ void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* lines)
 		lines->add((T)t, (T)MIN(mval, mval - t));
 		tempStack.pop();
 	}
-	std::vector<bc::bline<T>*>& vec = lines->bar;
+	std::vector<bc::bline<T>*>& vec = lines->barlines;
 	std::sort(vec.begin(), vec.end(), compareLines<T>);
 }
 
@@ -870,6 +870,12 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 	std::unordered_map<COMPP, bline<T>*> graph;
 
 	TempGraphVer<T>* root = nullptr;
+
+	if (settings.getStep() > (int)1)
+	{
+		graphRoot = new bline<T>(0,0);
+	}
+
 	for (COMPP c : components)
 	{
 		if (c == nullptr)
@@ -885,9 +891,16 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		{
 			graph.insert(std::pair<COMPP, bline<T>*>(c, line));
 			if (c->parent == nullptr)
-				graphRoot = line;
+			{
+				if (graphRoot != nullptr)
+					line->setParrent(graphRoot);
+				else
+					graphRoot = line;
+			}
 		}
+		lines->add(line);
 	}
+
 	if (settings.createBinayMasks)
 		reverseCom(graph);
 
@@ -1258,7 +1271,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 		curpix = point(val.x, val.y);
 		curbright = workingImg->get(curpix);
 #ifdef VDEBUG
-		VISULA_DEBUG_COMPP(totalSize, i);
+		VISULA_DEBUG_COMP(totalSize, i);
 #else
 		checkCloserB0();
 #endif

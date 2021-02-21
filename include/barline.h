@@ -1,25 +1,9 @@
-#ifndef BARCODE_H
-#define BARCODE_H
-#include <vector>
-#include "point.h"
+#pragma once
+
+#include "barstrucs.h"
 #include "barImg.h"
-
-
-namespace bc {
-
-	struct BarRect
-	{
-		int _x, _y, _wid, _hei;
-	public:
-		BarRect(int x, int y, int width, int height)
-		{
-			_x = x;
-			_y = y;
-			_wid = width;
-			_hei = height;
-		}
-	};
-
+namespace bc
+{
 	template<class T>
 	struct EXPORT bline
 	{
@@ -181,56 +165,8 @@ namespace bc {
 			}
 
 			return pydict;
-	}
+		}
 #endif // _PYD
 
-};
-
-	template<class T>
-	class EXPORT Barbase
-	{
-	public:
-		virtual void removePorog(T const porog) = 0;
-		virtual void preprocessBar(T const& porog, bool normalize) = 0;
-		virtual float compireCTML(const Barbase<T>* Y) const = 0;
-		virtual float compireCTS(Barbase<T> const* Y) const = 0;
-		virtual Barbase<T>* clone() const = 0;
-		virtual double sum() const = 0;
-		virtual void relen() = 0;
-		//    virtual void fullCompite(barbase const *bc, CompireFunction fn, float poroc = 0.5f) = 0;
-		virtual ~Barbase();
-		static float compireBarcodes(const Barbase<T>* X, const Barbase<T>* Y, const CompireFunction& type);
 	};
-
-	//class EXPORT Barcode : public Barbase
-	//{
-	//public:
-	//    std::vector<bc::bline> bar;
-	//
-	//    Barcode();
-	//    Barcode(const Barcode &obj);
-	//
-	//    void add(uchar st, uchar len);
-	//    int sum() const;
-	//    void relen();
-	//
-	//    Barcode *clone() const;
-	//    uchar maxLen() const;
-	//    size_t count();
-	//
-	//    void removePorog(uchar const porog);
-	//    void preprocessBar(int const &porog, bool normalize);
-	//
-	//    float compireCTML(const Barbase *bc) const;
-	//    float compireCTS(Barbase const *bc) const;
-	//    //    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
-	//    ~Barcode();
-	//};
-
-	//typedef barcontainer<1> barcode;
-	//typedef barcontainer<2> barcodeTwo;
-	//typedef barcontainer<3> barcodeRGB;
-	//typedef barcontainer<6> barcodeTwoRGB;
 }
-
-#endif // BARCODE_H

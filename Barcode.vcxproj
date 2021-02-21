@@ -91,22 +91,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\barcode.h" />
+    <ClInclude Include="include\barline.h" />
+    <ClInclude Include="include\barstrucs.h" />
     <ClInclude Include="include\barcodeCreator.h" />
-    <ClInclude Include="include\barconstructor.h" />
-    <ClInclude Include="include\barcontainer.h" />
+    <ClInclude Include="include\barclasses.h" />
     <ClInclude Include="include\barImg.h" />
     <ClInclude Include="include\Component.h" />
     <ClInclude Include="include\Hole.h" />
-    <ClInclude Include="include\point.h" />
     <ClInclude Include="include\presets.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Barpy.cpp" />
-    <ClCompile Include="source\barcode.cpp" />
     <ClCompile Include="source\barcodeCreator.cpp" />
-    <ClCompile Include="source\barconstructor.cpp" />
-    <ClCompile Include="source\barcontainer.cpp" />
+    <ClCompile Include="source\barclasses.cpp" />
     <ClCompile Include="source\barImg.cpp" />
     <ClCompile Include="source\Component.cpp" />
     <ClCompile Include="source\Hole.cpp" />
@@ -119,7 +116,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='stl|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='stl cvless|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="source\point.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="main.def" />

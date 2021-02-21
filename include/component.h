@@ -1,6 +1,6 @@
 #pragma once
-#include "point.h"
 #include <vector>
+#include "barstrucs.h"
 
 namespace bc
 {

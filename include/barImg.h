@@ -1,7 +1,6 @@
 #pragma once
 //#define USE_OPENCV
 #include "presets.h"
-#include "point.h"
 
 #include <memory>
 #include <iterator>
@@ -13,40 +12,7 @@ INCLUDE_CV
 
 namespace bc {
 
-	struct EXPORT BarVec3b
-	{
-	public:
-		uchar vls[3];
-		uchar r()
-		{
-			return vls[2];
-		}
-		uchar g()
-		{
-			return vls[1];
-		}
-		uchar b()
-		{
-			return vls[0];
-		}
-
-		inline BarVec3b()
-		{ 
-			memset(vls, 0, 3);
-		}
-
-		inline BarVec3b(uchar _r, uchar _g, uchar _b)
-		{ 
-			vls[0] = _b;
-			vls[1] = _g;
-			vls[2] = _r;
-		}
-		uchar operator[](std::size_t idx)
-		{
-			assert(idx <= 2);
-			return vls[idx];
-		}
-	};
+	
 	/*struct BarVec3f
 	{
 	public:

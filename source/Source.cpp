@@ -1,14 +1,7 @@
-
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgproc.hpp>
-
-
 #include "barcodeCreator.h" 
 
 #include <iostream>
-#include <filesystem>
 #include <string>
-#include <fstream>
 
 /////////////////////////////
 /////////////////////////////
@@ -42,12 +35,11 @@ int main()
 {
 	bc::BarConstructor<uchar> bcont;
 	bcont.addStructire(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
-	bcont.createBinayMasks = false;
-	bcont.createGraph = false;
-	bcont.createBinayMasks = false;
+	bcont.createGraph = true;
+	bcont.createBinayMasks = true;
 	bcont.returnType = bc::ReturnType::barcode2d;
 	bcont.setStep(1);
-	bcont.maxTypeValue.set(255);
+	bcont.setMaxValue(255);
 
 
 	/*cv::Mat testmat = cv::imread("test5.png", cv::IMREAD_ANYCOLOR);
@@ -57,49 +49,69 @@ int main()
 
 	bc::BarcodeCreator<uchar> test;
 
-	test.createBarcode(img,bcont);
-
 	uchar* data = new uchar[36]{
 	63,121,73,14,120,135,
 	237,90,194,136,4,43,
 	90,212,193,199,88,154,
-	51,150,98,239,42,68,
+	51,150,98,255,42,68,
 	65,141,145,34,203,167,
 	158,234,20,145,80,176
 	};
 
+	uchar backup[36];
+
+	memcpy(backup, data, 36);
+
 	img.assignData(6, 6, 1, data);
-	test.createBarcode(img,bcont);
+	auto* ret = test.createBarcode(img, bcont);
 
-	uchar* data2 = new uchar[25]{
-	63,121,73,14,120,
-	237,90,194,136,4,
-	90,212,193,199,88,
-	51,150,98,239,42,
-	65,141,145,34,203
-	};
+	memset(data, 255, 36);
 
-	img.assignData(5, 5, 1, data2);
-	test.createBarcode(img,bcont);
-
-	uchar* data3 = new uchar[16]{
-	63,121,73,14,
-	237,90,194,136,
-	90,212,193,199,
-	51,150,98,239
-	};
-
-	img.assignData(4, 4, 1, data3);
-	test.createBarcode(img,bcont);
 	
-	uchar* data4 = new uchar[9]{
-	63,121,73,
-	237,90,194,
-	90,212,193
-	};
+	auto* it = ret->getItem(0);
 
-	img.assignData(3, 3, 1, data3);
-	test.createBarcode(img,bcont);
+	auto& lines = it->barlines;
+	for (size_t i = 0; i < lines.size(); i++)
+	{
+		auto& matr = lines[i]->matr;
+		for (size_t k = 0; k < matr.size(); k++)
+		{
+			auto& p = matr[k];
+			data[p.point.getLiner(6)] -=p.value;
+		}
+	}
+	int r = memcmp(data, backup, 36);
+	assert(r == 0);
+
+	//uchar* data2 = new uchar[25]{
+	//63,121,73,14,120,
+	//237,90,194,136,4,
+	//90,212,193,199,88,
+	//51,150,98,239,42,
+	//65,141,145,34,203
+	//};
+
+	//img.assignData(5, 5, 1, data2);
+	//test.createBarcode(img,bcont);
+
+	//uchar* data3 = new uchar[16]{
+	//63,121,73,14,
+	//237,90,194,136,
+	//90,212,193,199,
+	//51,150,98,239
+	//};
+
+	//img.assignData(4, 4, 1, data3);
+	//test.createBarcode(img,bcont);
+	//
+	//uchar* data4 = new uchar[9]{
+	//63,121,73,
+	//237,90,194,
+	//90,212,193
+	//};
+
+	//img.assignData(3, 3, 1, data3);
+	//test.createBarcode(img,bcont);
 
 	return 0;
 }

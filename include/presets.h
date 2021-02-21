@@ -52,22 +52,15 @@ template class TYPE<uchar>; \
 template class TYPE<float>;
 
 
-template<class T>
-struct EXPORT CachedValue
+
+
+namespace bc
 {
-	T val;
-	bool isCached = false;
+	enum class EXPORT CompireFunction { CommonToSum, CommonToLen, FromMethod, Complex, Temp1, Temp2 };
 
-	void set(T val)
-	{
-		this->val = val;
-		this->isCached = true;
-	}
+	enum class ComponentType { Component, Hole, FullPrepair, PrepairComp };
+	enum class ProcType { f0t255, f255t0, experement };
+	enum class ColorType { gray, rgb, native };
 
-	T getOrDefault(T defValue)
-	{
-		return isCached ? val : defValue;
-	}
-};
-
-enum class EXPORT CompireFunction { CommonToSum, CommonToLen, FromMethod, Complex, Temp1, Temp2 };
+	enum class ReturnType { betty, barcode2d, barcode3d };
+}

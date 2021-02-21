@@ -1,9 +1,12 @@
 #pragma once
-#include "hole.h"
-#include "barcode.h"
-#include "barcontainer.h"
-#include "barconstructor.h"
 
+#include "presets.h"
+
+#include "hole.h"
+#include "barstrucs.h"
+#include "barclasses.h"
+
+#include <unordered_map>
 
 #define COMPP Component<T>*
 #define HOLEP Hole<T>*
@@ -132,6 +135,21 @@ namespace bc {
 		//void ProcesskPrepComp(int* retBty, Barcontainer<T>* item = nullptr);
 		//void processComp255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
 		//void Prepair();
+		
+		
+		inline T getMaxValue()
+		{
+			if (settings.maxTypeValue.isCached)
+				return settings.maxTypeValue.val;
+			else
+				return workingImg->max();
+		}
+
+		void reverseCom(std::unordered_map<COMPP, bline<T>*>& graph);
+
+		void computeBettyBarcode(Baritem<T>* lines);
+		void computeNdBarcode(Baritem<T>* lines, int n);
+
 	public:
 		BarcodeCreator()
 		{
@@ -167,18 +185,7 @@ namespace bc {
 #endif // USE_OPENCV
 		}
 
-		T getMaxValue()
-		{
-			if (settings.maxTypeValue.isCached)
-				return settings.maxTypeValue.val;
-			else
-				return workingImg->max();
-		}
 
-		void reverseCom(std::unordered_map<COMPP, bline<T>*>& graph);
-
-		void computeBettyBarcode(Baritem<T>* lines);
-		void computeNdBarcode(Baritem<T>* lines, int n);
 
 	};
 }
