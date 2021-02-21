@@ -49,17 +49,17 @@ BOOST_PYTHON_MODULE(barpy)
 		;
 	class_<ppair>("Ppair")
 		;
-	class_<std::vector<bc::bline>>("LinesList")
+	class_<std::vector<bc::barline>>("LinesList")
 		;
 
-	class_<bc::bline>("BLine")
+	class_<bc::barline>("barline")
 		.def(init<>())
 		.def(init<uchar, uchar>(args("start", "len")))
 		.def(init<uchar, uchar, pmap*>(args("start", "len", "pmap")))
-		.add_property("start", make_getter(&bc::bline::start), make_setter(&bc::bline::start))
-		.add_property("len", make_getter(&bc::bline::len), make_setter(&bc::bline::len))
-		.def("getPoints", &bc::bline::getPoints)
-		//.add_property("points", make_getter(&bc::bline::matr))
+		.add_property("start", make_getter(&bc::barline::start), make_setter(&bc::barline::start))
+		.add_property("len", make_getter(&bc::barline::len), make_setter(&bc::barline::len))
+		.def("getPoints", &bc::barline::getPoints)
+		//.add_property("points", make_getter(&bc::barline::matr))
 		;
 
 
@@ -174,9 +174,9 @@ BOOST_PYTHON_MODULE(barpy)
 // 
 //
 //template<>
-//PyObject* type_into_python<std::vector<bc::bline>>::convert(std::vector<bc::bline> const& bar)
+//PyObject* type_into_python<std::vector<bc::barline>>::convert(std::vector<bc::barline> const& bar)
 //{
-//	bp::object get_iter = bp::iterator<std::vector<bc::bline> >();
+//	bp::object get_iter = bp::iterator<std::vector<bc::barline> >();
 //	bp::object iter = get_iter(bar);
 //	bp::list l(iter);
 //	//return PyObject_New(bp::list, &l);

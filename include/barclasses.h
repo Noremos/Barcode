@@ -33,7 +33,7 @@ namespace bc
 		void add(T st, T len);
 		//    void add(uchar st, uchar len, cv::Mat binmat);
 			//void add(T st, T len, pmap<T> *binmat);
-		void add(bline<T>* line);
+		void add(barline<T>* line);
 
 		T sum() const;
 		void relen();
@@ -49,7 +49,7 @@ namespace bc
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		~Baritem();
 
-		bc::bline<T>* rootNode = nullptr;
+		bc::barline<T>* rootNode = nullptr;
 
 		T getMax()
 		{
@@ -62,7 +62,7 @@ namespace bc
 			return max;
 		}
 
-		std::vector<bc::bline<T>*> barlines;
+		std::vector<bc::barline<T>*> barlines;
 
 #ifdef _PYD
 		bp::list getBar()

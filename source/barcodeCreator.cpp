@@ -749,7 +749,7 @@ void BarcodeCreator<T>::clearIncluded()
 
 
 template<class T>
-bool compareLines(const bline<T>* i1, const bline<T>* i2)
+bool compareLines(const barline<T>* i1, const barline<T>* i2)
 {
 	if (i1->len == i2->len)
 		return i1->start > i2->start;
@@ -776,12 +776,12 @@ struct TempGraphVer
 };
 
 template<class T>
-void BarcodeCreator<T>::reverseCom(std::unordered_map<COMPP, bline<T>*>& graph)
+void BarcodeCreator<T>::reverseCom(std::unordered_map<COMPP, barline<T>*>& graph)
 {
 	for (size_t i = 0; i < totalSize; i++)
 	{
 		Include<T>* incl = getInclude(i);
-		bline<T>* root = graph[incl->comp];
+		barline<T>* root = graph[incl->comp];
 		if (incl->comp->parent != nullptr)
 		{
 			root->setParrent(graph[incl->comp->parent]);
@@ -857,7 +857,7 @@ void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* lines)
 		lines->add((T)t, (T)MIN(mval, mval - t));
 		tempStack.pop();
 	}
-	std::vector<bc::bline<T>*>& vec = lines->barlines;
+	std::vector<bc::barline<T>*>& vec = lines->barlines;
 	std::sort(vec.begin(), vec.end(), compareLines<T>);
 }
 
@@ -867,13 +867,13 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 	assert(n == 2 || n == 3);
 
 	std::unordered_map<COMPP, TempGraphVer<T>> vers;
-	std::unordered_map<COMPP, bline<T>*> graph;
+	std::unordered_map<COMPP, barline<T>*> graph;
 
 	TempGraphVer<T>* root = nullptr;
 
 	if (settings.getStep() > (int)1)
 	{
-		graphRoot = new bline<T>(0,0);
+		graphRoot = new barline<T>(0,0);
 	}
 
 	for (COMPP c : components)
@@ -885,11 +885,11 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		size_t size = settings.createBinayMasks ? c->getTotalSize() : 0;
 
 		auto* bar3d = (n == 3) ? c->bar3d : nullptr;
-		bline<T>* line = new bline<T>(c->start, c->end - c->start, bar3d, size);
+		barline<T>* line = new barline<T>(c->start, c->end - c->start, bar3d, size);
 
 		if (settings.createGraph)
 		{
-			graph.insert(std::pair<COMPP, bline<T>*>(c, line));
+			graph.insert(std::pair<COMPP, barline<T>*>(c, line));
 			if (c->parent == nullptr)
 			{
 				if (graphRoot != nullptr)

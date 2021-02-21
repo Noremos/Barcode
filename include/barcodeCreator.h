@@ -33,7 +33,7 @@ namespace bc {
 
 	public:
 		std::vector<COMPP> components;
-		bc::bline<T>* graphRoot = nullptr;
+		bc::barline<T>* graphRoot = nullptr;
 	private:
 #ifdef USE_OPENCV
 		std::vector<cv::Vec3b> colors;
@@ -145,7 +145,7 @@ namespace bc {
 				return workingImg->max();
 		}
 
-		void reverseCom(std::unordered_map<COMPP, bline<T>*>& graph);
+		void reverseCom(std::unordered_map<COMPP, barline<T>*>& graph);
 
 		void computeBettyBarcode(Baritem<T>* lines);
 		void computeNdBarcode(Baritem<T>* lines, int n);

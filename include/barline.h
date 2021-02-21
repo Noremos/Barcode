@@ -5,7 +5,7 @@
 namespace bc
 {
 	template<class T>
-	struct EXPORT bline
+	struct EXPORT barline
 	{
 
 		bool dropChildes = true;
@@ -93,16 +93,16 @@ namespace bc
 		T start;
 		T len;
 		barcounter* bar3d = nullptr;
-		//    bline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
-		//    bline(uchar _start, uchar _len, cv::Mat _mat) :  start(_start), len(_len)
+		//    barline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
+		//    barline(uchar _start, uchar _len, cv::Mat _mat) :  start(_start), len(_len)
 		//    {
 		//        binmat = _mat;
 		//    }
-		bline(T _start, T _len, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len) {
+		barline(T _start, T _len, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len) {
 			matr.reserve(coordsSize);
 			bar3d = _barc;
 		}
-		~bline()
+		~barline()
 		{
 			if (dropChildes)
 			{
@@ -121,9 +121,9 @@ namespace bc
 			}
 
 		}
-		bline* clone()
+		barline* clone()
 		{
-			auto temp = new bline(start, len, nullptr);
+			auto temp = new barline(start, len, nullptr);
 			if (matr.size() != 0)
 			{
 				temp->matr.insert(temp->matr.begin(), matr.begin(), matr.end());
@@ -138,10 +138,10 @@ namespace bc
 		}
 
 		//bc::Component *comp;
-		bline<T>* parent = nullptr;
-		std::vector<bline<T>*> childrens;
+		barline<T>* parent = nullptr;
+		std::vector<barline<T>*> childrens;
 		size_t numInParet = 0;
-		void setParrent(bline<T>* node)
+		void setParrent(barline<T>* node)
 		{
 			numInParet = node->childrens.size();
 			node->childrens.push_back(this);
@@ -169,4 +169,8 @@ namespace bc
 #endif // _PYD
 
 	};
+	
+	// comparable
+	template<class T>
+	using bline = barline<T>;
 }

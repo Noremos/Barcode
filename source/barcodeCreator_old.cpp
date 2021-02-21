@@ -1053,7 +1053,7 @@ std::vector<std::array<int, 2>> bc::barcodeCreator::getFullWidBars(int* points, 
     return lines;
 }
 
-bool compareLines(const  bc::bline& i1, const  bc::bline& i2)
+bool compareLines(const  bc::barline& i1, const  bc::barline& i2)
 {
     if (i1.len == i2.len)
         return i1.start > i2.start;

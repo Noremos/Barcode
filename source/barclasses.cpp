@@ -35,21 +35,21 @@ bc::Baritem<T>::Baritem(const bc::Baritem<T>& obj)
 template<class T>
 void bc::Baritem<T>::add(T st, T len)
 {
-	barlines.push_back(new bline<T>(st, len));
+	barlines.push_back(new barline<T>(st, len));
 }
 
 //void bc::Baritem::add(uchar st, uchar len, cv::Mat binmat)
 //{
-//    bar.push_back(bline(st, len, binmat));
+//    bar.push_back(barline(st, len, binmat));
 //}
 //template<class T>
 //void bc::Baritem<T>::add(T st, T len, pmap<T>* binmat)
 //{
-//	bar.push_back(new bline<T>(st, len, binmat));
+//	bar.push_back(new barline<T>(st, len, binmat));
 //}
 
 template<class T>
-void bc::Baritem<T>::add(bc::bline<T>* line)
+void bc::Baritem<T>::add(bc::barline<T>* line)
 {
 	barlines.push_back(line);
 }
@@ -58,7 +58,7 @@ template<class T>
 T bc::Baritem<T>::sum() const
 {
 	T sum = 0;
-	for (const bline<T>* l : barlines)
+	for (const barline<T>* l : barlines)
 		sum += l->len;
 
 	return sum;
@@ -79,7 +79,7 @@ template<class T>
 T bc::Baritem<T>::maxLen() const
 {
 	T max = 0;
-	for (const bline<T>* l : barlines)
+	for (const barline<T>* l : barlines)
 		if (l->len > max)
 			max = l->len;
 
@@ -100,8 +100,8 @@ void bc::Baritem<T>::relen()
 	for (size_t i = 0; i < barlines.size(); ++i)
 		barlines[i]->start -= mini;
 
-	//mini = std::min_element(arr.begin(), arr.end(), [](bline &b1, bline &b2) { return b1.start < b2.start; })->start;
-	//std::for_each(arr.begin(), arr.end(), [mini](bline &n) {return n.start - uchar(mini); });
+	//mini = std::min_element(arr.begin(), arr.end(), [](barline &b1, barline &b2) { return b1.start < b2.start; })->start;
+	//std::for_each(arr.begin(), arr.end(), [mini](barline &n) {return n.start - uchar(mini); });
 }
 
 template<class T>
@@ -110,7 +110,7 @@ void bc::Baritem<T>::removePorog(const T porog)
 	if (porog == 0)
 		return;
 	Baritem<T> res;
-	for (bline<T>* line : barlines) {
+	for (barline<T>* line : barlines) {
 		if (line->len >= porog)
 			res.barlines.push_back(line);
 		else
@@ -154,7 +154,7 @@ float bc::Baritem<T>::compireCTML(const bc::Barbase<T>* bc) const
 				T ed = MIN(X->barlines[i]->start + X->barlines[i]->len, Y->barlines[j]->start + Y->barlines[j]->len);
 				float minlen = (float)(ed - st);
 				float maxlen = MAX(X->barlines[i]->len, Y->barlines[j]->len);
-				//Если меньше 0, значит линии не пересекаются
+				//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 0, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				if (minlen <= 0 || maxlen <= 0)
 					continue;
 
@@ -201,7 +201,7 @@ float bc::Baritem<T>::compireCTS(const bc::Barbase<T>* bc) const
 				ed = MAX(X->barlines[i]->start + X->barlines[i]->len, Y->barlines[j]->start + Y->barlines[j]->len);
 				float maxlen = (float)(ed - st);
 
-				//Если меньше 0, значит линии не пересекаются
+				//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 0, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				if (minlen <= 0 || maxlen <= 0)
 					continue;
 
