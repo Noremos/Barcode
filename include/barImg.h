@@ -82,7 +82,6 @@ namespace bc {
 			valDelete();
 			values = new T[length()];
 			_deleteData = true;
-			
 			memcpy(values, newData, length() * TSize);
 		}
 
@@ -162,7 +161,10 @@ namespace bc {
 
 		T max() const
 		{
-			if (cachedMax.isCached)
+			BarImg* ptr = const_cast<BarImg*> (this);
+
+			// byaka. change member in const function
+			if (ptr->cachedMax.isCached)
 				return cachedMax.val;
 
 			T _max = values[0];
@@ -177,7 +179,9 @@ namespace bc {
 
 		T min() const
 		{
-			if (cachedMin.isCached)
+			BarImg* ptr = const_cast<BarImg*> (this);
+
+			if (ptr->cachedMin.isCached)
 				return cachedMin.val;
 
 			T _min = values[0];
@@ -188,6 +192,28 @@ namespace bc {
 			}
 			//cachedMin.set(_min);
 			return _min;
+		}
+
+		T MaxMinMin() const
+		{
+			BarImg* ptr = const_cast<BarImg*> (this);
+
+			if (ptr->cachedMin.isCached && ptr->cachedMax.isCached)
+			{
+				return ptr->cachedMax - ptr->cachedMin;
+			}
+
+			T _min = values[0];
+			T _max = values[0];
+			for (size_t i = 1; i < length(); i++)
+			{
+				if (values[i] < _min)
+					_min = values[i];
+
+				if (values[i] > _max)
+					_max = values[i];
+			}
+			return _max - _min;
 		}
 
 		void copyFromData(int width, int height, int chnls, uchar* rawData)
@@ -238,16 +264,22 @@ namespace bc {
 		inline void set(int x, int y, T val)
 		{
 			values[y * _wid + x] = val;
+			cachedMin.isCached = false;
+			cachedMax.isCached = false;
 		}
 
 		inline void set(bc::point p, T val)
 		{
 			values[p.y * _wid + p.x] = val;
+			cachedMin.isCached = false;
+			cachedMax.isCached = false;
 		}
 
 		inline void setLiner(size_t pos, T val)
 		{
 			values[pos] = val;
+			cachedMin.isCached = false;
+			cachedMax.isCached = false;
 		}
 
 		inline T getLiner(size_t pos) const
@@ -266,12 +298,17 @@ namespace bc {
 			{
 				values[i] = min - values[i];
 			}
+			cachedMin.isCached = false;
+			cachedMax.isCached = false;
 		}
 
 		void addToMat(T value)
 		{
 			for (auto& sval : this)
 				sval += value;
+
+			cachedMin.isCached = false;
+			cachedMax.isCached = false;
 		}
 
 		void resize(int nwid, int nhei)

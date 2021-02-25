@@ -99,7 +99,7 @@ namespace bc
 	template<class T>
 	struct BarConstructor
 	{
-		CachedValue<T> settStep;
+		CachedValue<T> stepPorog;
 	public:
 		T foneStart;
 		T foneEnd;
@@ -111,15 +111,18 @@ namespace bc
 		bool createGraph = false;
 		bool createBinayMasks = false;
 		ReturnType returnType;
-		CachedValue<T> maxTypeValue;
 		std::vector<barstruct> structure;
 
 		inline void addStructire(ProcType pt, ColorType colT, ComponentType comT)
 		{
 			structure.push_back(barstruct(pt, colT, comT));
 		}
+
 		void checkCorrect()
 		{
+			if (returnType == ReturnType::barcode2d || returnType == ReturnType::barcode3d)
+				createBinayMasks = true;
+
 			if (createGraph && !createBinayMasks)
 				throw std::exception();
 
@@ -129,25 +132,24 @@ namespace bc
 			if (structure.size() == 0)
 				throw std::exception();
 
-			getStep();
+			//getStepPorog();
 		}
 
-		T getStep()
+		// разница соединяемх значений должна быть меньше этого значения
+		T getStepPorog()
 		{
-			return settStep.getOrDefault(1);
+			return stepPorog.getOrDefault(0);
 		}
+
 		void setStep(T val)
 		{
-			settStep.set(val);
+			stepPorog.set(val);
 		}
+
 		void setFoneRange(T st, T ed)
 		{
 			foneStart = st;
 			foneEnd = ed;
-		}
-		void setMaxValue(T val)
-		{
-			maxTypeValue.set(val);
 		}
 	};
 

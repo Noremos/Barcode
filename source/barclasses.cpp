@@ -226,6 +226,14 @@ template<class T>
 bc::Baritem<T>::~Baritem()
 {
 	barlines.clear();
+	for (auto* bline : barlines)
+	{
+		delete bline;
+	}
+	barlines.clear();
+
+	if (rootNode != nullptr)
+		delete rootNode;
 }
 
 //=======================barcontainer=====================

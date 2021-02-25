@@ -33,7 +33,6 @@ namespace bc {
 
 	public:
 		std::vector<COMPP> components;
-		bc::barline<T>* graphRoot = nullptr;
 	private:
 #ifdef USE_OPENCV
 		std::vector<cv::Vec3b> colors;
@@ -52,6 +51,8 @@ namespace bc {
 				delete workingImg;
 
 			workingImg = newWI;
+			if (!settings.stepPorog.isCached)
+				settings.stepPorog.set(workingImg->max());
 		}
 		bool needDelImg = false;
 		T curbright;
@@ -61,6 +62,8 @@ namespace bc {
 		int lastB;
 		friend class Component<T>;
 		friend class Hole<T>;
+		friend struct BarRoot<T>;
+		friend class Baritem<T>;
 
 		size_t totalSize = 0;
 		point* sortedArr;
@@ -71,6 +74,11 @@ namespace bc {
 
 		constexpr int GETOFF(int x, int y) const {
 			return wid * y + x;
+		}
+
+		constexpr T GETDIFF(T a, T b) const {
+			
+			return a > b? a-b:b-a;
 		}
 
 		inline point getPoint(size_t i) const
@@ -100,6 +108,7 @@ namespace bc {
 
 		COMPP getComp(int x, int y);
 		COMPP getComp(const point& p);
+		COMPP getPorogComp(const point& p);
 
 		Include<T>* getInclude(size_t pos);
 
@@ -129,21 +138,6 @@ namespace bc {
 		void processTypeF(const barstruct& str, const bcBarImg& img, Barcontainer<T>* item = nullptr);
 		void processFULL(const barstruct& str, const BarImg<T>& img, bc::Barcontainer<T>* item);
 		void addItemToCont(Barcontainer<T>* item);
-
-
-		//void ProcessFullPrepair(int* retBty, Barcontainer<T>* item = nullptr);
-		//void ProcesskPrepComp(int* retBty, Barcontainer<T>* item = nullptr);
-		//void processComp255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
-		//void Prepair();
-		
-		
-		inline T getMaxValue()
-		{
-			if (settings.maxTypeValue.isCached)
-				return settings.maxTypeValue.val;
-			else
-				return workingImg->max();
-		}
 
 		void reverseCom(std::unordered_map<COMPP, barline<T>*>& graph);
 
@@ -184,8 +178,5 @@ namespace bc {
 			colors.clear();
 #endif // USE_OPENCV
 		}
-
-
-
 	};
 }

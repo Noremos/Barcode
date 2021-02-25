@@ -111,9 +111,9 @@ namespace bc
 					delete childrens[i];
 				}
 			}
-			if (parent)
+			if (parrent)
 			{
-				parent->childrens[numInParet] = nullptr;
+				parrent->childrens[numInParet] = nullptr;
 			}
 			if (bar3d != nullptr)
 			{
@@ -138,14 +138,19 @@ namespace bc
 		}
 
 		//bc::Component *comp;
-		barline<T>* parent = nullptr;
+		barline<T>* parrent = nullptr;
 		std::vector<barline<T>*> childrens;
 		size_t numInParet = 0;
+
 		void setParrent(barline<T>* node)
 		{
-			numInParet = node->childrens.size();
-			node->childrens.push_back(this);
-			this->parent = node;
+			assert(parrent == nullptr || parrent == node);
+			if (this->parrent == node)
+				return;
+			
+			this->parrent = node;
+			numInParet = parrent->childrens.size();
+			parrent->childrens.push_back(this);
 		}
 
 		T end() const
@@ -169,8 +174,19 @@ namespace bc
 #endif // _PYD
 
 	};
-	
+
 	// comparable
 	template<class T>
 	using bline = barline<T>;
+
+	template<class T>
+	struct EXPORT BarRoot
+	{
+		std::vector<barline<T>*> children;
+
+		void addChild(barline<T>* line)
+		{
+			children.push_back(line);
+		}
+	};
 }

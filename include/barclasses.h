@@ -25,6 +25,7 @@ namespace bc
 	template<class T>
 	class EXPORT Baritem : public Barbase<T>
 	{
+		bc::BarRoot<T>* rootNode = nullptr;
 	public:
 
 		Baritem();
@@ -49,7 +50,15 @@ namespace bc
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		~Baritem();
 
-		bc::barline<T>* rootNode = nullptr;
+
+		bc::BarRoot<T>* getRootNode()
+		{
+			return rootNode;
+		}
+		void setRootNode(bc::BarRoot<T>* root)
+		{
+			rootNode = root;
+		}
 
 		T getMax()
 		{

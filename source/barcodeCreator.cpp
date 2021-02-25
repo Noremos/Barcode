@@ -146,16 +146,17 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 	//TODO выделять паять заранее
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
 
-	first = getComp(curpix);
-
+	//first = getComp(curpix);
+	// FIXME first always will be nill
 	for (int i = 0; i < 8; ++i)
 	{
 		point curPoint(curpix + poss[i]);
-		if (isContain(curPoint))//существует ли ребро вокруг
+		connected = getPorogComp(curPoint);
+		if (connected != nullptr)//существует ли ребро вокруг
 		{
 			if (first == nullptr)
 			{
-				first = getComp(curPoint);
+				first = connected;
 				first->add(curpix);
 				//setInclude(midP, first);//n--nt обяз нужно
 			}
@@ -164,10 +165,9 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 				if (first->isContain(curPoint))//если в найденном уже есть этот элемент
 					continue;
 
-				connected = getComp(curPoint);
-
 				//lastB -= 1;
-				first = attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
+				if (first != connected)
+					first = attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
 			}
 		}
 	}
@@ -175,8 +175,7 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 	{
 		//lastB += 1;
 
-		connected = new Component<T>(curpix, this);
-		//setInclude(midP.x, midP.y, connected);
+		first = new Component<T>(curpix, this);
 		return true;
 	}
 
@@ -238,8 +237,23 @@ COMPP BarcodeCreator<T>::getComp(const point& p)
 	return itr ? itr->getMaxParrent() : nullptr;
 }
 
+
 template<class T>
-bc::Include<T>* BarcodeCreator<T>::getInclude(size_t pos)
+COMPP BarcodeCreator<T>::getPorogComp(const point& p)
+{
+	if (p.x < 0 || p.y < 0 || p.x >= wid || p.y >= hei)
+		return nullptr;
+
+	const size_t off = wid * p.y + p.x;
+	if (GETDIFF(curbright, workingImg->getLiner(off)) > settings.getStepPorog())
+		return nullptr;
+
+	auto itr = included[off].comp;
+	return itr ? itr->getMaxParrent() : nullptr;
+}
+
+template<class T>
+bc::Include<T>* BarcodeCreator<T>::getInclude(const size_t pos)
 {
 	assert(pos < totalSize);
 	return &included[pos];
@@ -613,7 +627,7 @@ void BarcodeCreator<T>::processHole(int* retBty, Barcontainer<T>* item)
 			T scnd = workingImg->get(sortedArr[i + 1]);
 			if (curbright != scnd) //идет от 0 до 255. если перешагиваем больше чем 1, тогда устанавливаем значения все
 			{
-				for (T k = curbright; k < scnd; k += settings.getStep()) {
+				for (T k = curbright; k < scnd; k += settings.getStepPorog()) {
 					retBty[(int)k] = lastB;
 				}
 			}
@@ -647,31 +661,26 @@ void BarcodeCreator<T>::processComp(int* retBty, Barcontainer<T>* item)
 #else
 		checkCloserB0();
 #endif
-
-		if (i != len)
+		if (settings.returnType == ReturnType::betty)
 		{
-			T scnd = workingImg->get(sortedArr[i + 1]);
-			if (curbright != scnd) //идет от 0 до 255. если перешагиваем больше чем 1, тогда устанавливаем значения все
+			if (i != len)
 			{
-				for (T k = curbright; k < scnd; k += settings.getStep())
-					retBty[(int)k] = lastB;
+				T scnd = workingImg->get(sortedArr[i + 1]);
+				if (curbright != scnd) //идет от 0 до 255. если перешагиваем больше чем 1, тогда устанавливаем значения все
+				{
+					for (T k = curbright; k < scnd; k += settings.getStepPorog())
+						retBty[(int)k] = lastB;
+				}
 			}
-		}
-		else {
-			retBty[(int)curbright] = lastB;
+			else {
+				retBty[(int)curbright] = lastB;
+			}
 		}
 	}
 
 	//    curbright = 255;
-	assert(((void)"ALARM! B0 is not one", lastB == 1));
-	for (auto* c : components)
-	{
-		if (c->isAlive())
-		{
-			c->kill();
-			break;
-		}
-	}
+	//assert(((void)"ALARM! B0 is not one", lastB == 1));
+
 	addItemToCont(item);
 	clearIncluded();
 	lastB = 0;
@@ -781,49 +790,35 @@ void BarcodeCreator<T>::reverseCom(std::unordered_map<COMPP, barline<T>*>& graph
 	for (size_t i = 0; i < totalSize; i++)
 	{
 		Include<T>* incl = getInclude(i);
-		barline<T>* root = graph[incl->comp];
+		barline<T>* bline = graph[incl->comp];
+		auto& ccod = incl->bright;// начало конкретно в этом пикселе
+
 		if (incl->comp->parent != nullptr)
 		{
-			root->setParrent(graph[incl->comp->parent]);
+			barline<T>* blineParrent = graph[incl->comp->parent];
 
-			auto& rootParrentCoords = root->parent->matr;
-			auto& ccod = incl->bright;
-			root->parent->addCoord(getPoint(i), root->parent->end() - incl->bright);//root->end
+			if (settings.createGraph)
+				bline->setParrent(blineParrent);
+
+			blineParrent->addCoord(getPoint(i), blineParrent->end() - bline->end());//нам нужно только то время, которое было у съевшего.
 		}
+		//blineParrent->end() - ccod = общее время
+		//item->end() - ccod + blineParrent->end() - item->end() = общее время
+		//220 - 10
 
-		root->addCoord(getPoint(i), incl->bright);
+		bline->addCoord(getPoint(i), bline->end() - ccod);
 	}
-
-	//for (auto* c : root->childrens)
-	//	reverseCom(c);
-
-	//if (root->parent)
-	//{
-	//	auto& rootCoords = (*root->comp->coords);
-	//	//		auto &rootSubCoords = root->comp->subCoords;
-	//	auto& rootParrentCoords = (*root->parent->comp->coords);
-	//	for (int i = 0, total = rootCoords.size(); i < total; ++i)
-	//	{
-	//		auto& ccod = rootCoords[i];
-	//		rootParrentCoords.push_back(ppair<T>(ccod.first, root->parent->comp->end - root->comp->end));
-
-	//		//			ccod = rootSubCoords[i];
-	//		//			rootParrentCoords.push_back(
-	//		//				std::pair(ccod.first, root->parent->comp->end - root->comp->end));
-
-
-	//					// root->parent->comp->coords->push_back(std::pair((*root->comp->coords)[i].first,(*root->comp->coords)[i].end -  root->comp->end));
-	//		//            root->parent->comp->coords->push_back(std::pair((*root->comp->coords)[i].first,(*root->comp->coords)[i].second -  root->comp->end));
-	//	}
-	//}
 }
 
 template<class T>
 void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* lines)
 {
-	std::stack<uchar> tempStack;
-	uchar mval = (uchar)getMaxValue();
+	throw std::exception();
+}
 
+void BarcodeCreator<uchar>::computeBettyBarcode(Baritem<uchar>* lines)
+{
+	std::stack<uchar> tempStack;
 
 	for (short i = 0; i < 256; ++i)
 	{
@@ -840,7 +835,7 @@ void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* lines)
 			for (int j = pred; j > p; --j)
 			{
 				uchar t = tempStack.top();
-				lines->add((T)t, (T)((uchar)i - t));
+				lines->add(t, (uchar)i - t);
 				tempStack.pop();
 			}
 		}
@@ -854,11 +849,11 @@ void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* lines)
 	while (!tempStack.empty())
 	{
 		uchar t = tempStack.top();
-		lines->add((T)t, (T)MIN(mval, mval - t));
+		lines->add((uchar)t, (uchar)MIN(255, 255 - t));
 		tempStack.pop();
 	}
-	std::vector<bc::barline<T>*>& vec = lines->barlines;
-	std::sort(vec.begin(), vec.end(), compareLines<T>);
+	std::vector<bc::barline<uchar>*>& vec = lines->barlines;
+	std::sort(vec.begin(), vec.end(), compareLines<uchar>);
 }
 
 template<class T>
@@ -871,15 +866,16 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 
 	TempGraphVer<T>* root = nullptr;
 
-	if (settings.getStep() > (int)1)
-	{
-		graphRoot = new barline<T>(0,0);
-	}
+	// якорная линия
+	auto* rootNode = new bc::BarRoot<T>();
 
 	for (COMPP c : components)
 	{
 		if (c == nullptr)
 			continue;
+
+		if (c->isAlive())
+			c->kill();
 
 		pmap<T>* coords = nullptr;
 		size_t size = settings.createBinayMasks ? c->getTotalSize() : 0;
@@ -887,37 +883,25 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		auto* bar3d = (n == 3) ? c->bar3d : nullptr;
 		barline<T>* line = new barline<T>(c->start, c->end - c->start, bar3d, size);
 
-		if (settings.createGraph)
+		if (settings.createBinayMasks)
 		{
 			graph.insert(std::pair<COMPP, barline<T>*>(c, line));
-			if (c->parent == nullptr)
+			if (c->parent == nullptr && settings.createGraph)
 			{
-				if (graphRoot != nullptr)
-					line->setParrent(graphRoot);
-				else
-					graphRoot = line;
+				rootNode->addChild(line);
 			}
 		}
 		lines->add(line);
 	}
 
 	if (settings.createBinayMasks)
-		reverseCom(graph);
-
-	if (settings.createGraph)
 	{
-		for (COMPP c : components)
-		{
-			if (c == nullptr)
-				continue;
-
-			if (c->parent)
-				graph[c]->setParrent(graph[c->parent]);
-		}
-
-		lines->rootNode = graphRoot;
-		graphRoot = nullptr;
+		reverseCom(graph);
 	}
+	if (settings.createGraph)
+		lines->setRootNode(rootNode);
+	else
+		delete rootNode;
 }
 
 template<class T>
@@ -1007,14 +991,9 @@ bc::Barcontainer<T>* bc::BarcodeCreator<T>::createBarcode(bcBarImg& img, const B
 
 	for (const auto& it : settings.structure)
 	{
-		for (short i = 0; i < 256; ++i)
-		{
-			b[i] = 0;
-		}
 		processFULL(it, img, cont);
 	}
 	return cont;
-	return nullptr;
 }
 
 template<class T>
@@ -1025,10 +1004,6 @@ Barcontainer<T>* BarcodeCreator<T>::createBarcode(bcBarImg& img, const std::vect
 
 	for (const auto& it : structure)
 	{
-		for (short i = 0; i < 256; ++i)
-		{
-			b[i] = 0;
-		}
 		processFULL(it, img, cont);
 	}
 	return cont;
@@ -1042,10 +1017,6 @@ Barcontainer<T>* BarcodeCreator<T>::createBarcode(bcBarImg& src, const barstruct
 
 	for (size_t i = 0; i < size; i++)
 	{
-		for (short i = 0; i < 256; ++i)
-		{
-			b[i] = 0;
-		}
 		processFULL(structure[i], src, cont);
 	}
 	return cont;
@@ -1072,7 +1043,7 @@ Barcontainer* barcodeCreator<T>::createBarcode(bn::ndarray& img, bp::list& struc
 		cstruct.push_back(boost::python::extract<barstruct>(structure[i]));
 
 	return createBarcode(image, cstruct);
-	}
+}
 #endif
 
 
@@ -1279,14 +1250,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 
 	delete[] arr;
 
-	for (auto* c : components)
-	{
-		if (c->isAlive())
-		{
-			c->kill();
-			break;
-		}
-	}
+
 
 	Barcontainer<float>* item = new Barcontainer<float>();
 
