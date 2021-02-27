@@ -2,6 +2,10 @@
 
 #include "barstrucs.h"
 #include "barImg.h"
+
+#include "include_py.h"
+#include "include_cv.h"
+
 namespace bc
 {
 	template<class T>
@@ -12,76 +16,59 @@ namespace bc
 		//    cv::Mat binmat;
 #ifdef USE_OPENCV
 
-
-		cv::Mat getMat(const cv::Size& s)
+		cv::Mat getCvMat(const cv::Size& s)
 		{
 			cv::Mat m = cv::Mat::zeros(s.height, s.width, CV_8UC1);
-			for (auto it = matr->begin(); it != matr->end(); ++it) {
-				m.at<uchar>(it->first.y, it->first.x) = it->second;
+			for (auto it = matr.begin(); it != matr.end(); ++it) {
+				m.at<uchar>(it->point.y, it->point.x) = it->value;
 			}
 			return m;
 		}
-		void setFromMat(cv::Mat& mat)
+		void setFromCvMat(cv::Mat& mat)
 		{
 			matr->clear();
 			mat.forEach<uchar>([m = matr](uchar& pixel, const int* pos) -> void {
 				m->push_back(ppair(bc::point(pos[0], pos[1]), pixel)); });
 		}
-		cv::Rect getRect()
+		cv::Rect getCvRect()
 		{
-			pmap& points = (*matr);
-			int l, r, t, d;
-			r = l = points[0].first.x;
-			t = d = points[0].first.y;
-			for (int j = 0; j < points.size(); ++j)
-			{
-				if (l > points[j].first.x)
-					l = points[j].first.x;
-				if (r < points[j].first.x)
-					r = points[j].first.x;
-
-				if (t > points[j].first.y)
-					t = points[j].first.y;
-				if (d < points[j].first.y)
-					d = points[j].first.y;
-			}
-			return cv::Rect(l, t, r - l + 1, d - t + 1);
+			auto r = getBarRect();
+			return cv::Rect(r.x, r.y, r.width, r.height);
 		}
 #endif // USE_OPENCV
 
 		bc::BarImg<T> getBarImg(const int wid, int hei)
 		{
 			BarImg<T> bc(wid, hei);
-			for (auto it = matr->begin(); it != matr->end(); ++it) {
-				bc.set(it->first.y, it->first.x, it->second);
+			for (auto* it = matr.begin(); it != matr.end(); ++it) {
+				bc.set(it->point.y, it->point.x, it->value);
 			}
 			return bc;
 		}
 		void setFromBarImg(const bc::BarImg<T>& mat)
 		{
-			matr->clear();
-			size_t pos = 0;
+			matr.clear();
+
 			for (size_t i = 0; i < mat.getLiner(); i++)
 				matr->push_back(ppair<T>(mat.getPointAt(i), mat.getLiner(i)));
 		}
 
-		BarRect getRect()
+		BarRect getBarRect()
 		{
-			pmap<T>& points = (*matr);
 			int l, r, t, d;
-			r = l = points[0].first.x;
-			t = d = points[0].first.y;
-			for (int j = 0; j < points.size(); ++j)
+			r = l = matr[0].point.x;
+			t = d = matr[0].point.y;
+			for (int j = 0; j < matr.size(); ++j)
 			{
-				if (l > points[j].first.x)
-					l = points[j].first.x;
-				if (r < points[j].first.x)
-					r = points[j].first.x;
+				if (l > matr[j].point.x)
+					l = matr[j].point.x;
+				if (r < matr[j].point.x)
+					r = matr[j].point.x;
 
-				if (t > points[j].first.y)
-					t = points[j].first.y;
-				if (d < points[j].first.y)
-					d = points[j].first.y;
+				if (t > matr[j].point.y)
+					t = matr[j].point.y;
+				if (d < matr[j].point.y)
+					d = matr[j].point.y;
 			}
 			return BarRect(l, t, r - l + 1, d - t + 1);
 		}
@@ -98,22 +85,27 @@ namespace bc
 		//    {
 		//        binmat = _mat;
 		//    }
+		barline()
+		{
+
+		}
 		barline(T _start, T _len, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len) {
 			matr.reserve(coordsSize);
 			bar3d = _barc;
 		}
 		~barline()
 		{
+			if (parrent && parrent->childrens[numInParet]==this)
+			{
+				parrent->childrens[numInParet] = nullptr;
+			}
+
 			if (dropChildes)
 			{
 				for (int i = 0; i < childrens.size(); ++i)
 				{
 					delete childrens[i];
 				}
-			}
-			if (parrent)
-			{
-				parrent->childrens[numInParet] = nullptr;
 			}
 			if (bar3d != nullptr)
 			{
@@ -163,13 +155,21 @@ namespace bc
 		{
 			bp::dict pydict;
 
-			if (matr != nullptr)
-			{
-				for (auto iter = matr->begin(); iter != matr->end(); ++iter)
-					pydict[iter->first] = iter->second;
-			}
+			for (auto iter = matr.begin(); iter != matr.end(); ++iter)
+				pydict[iter->point] = iter->value;
 
 			return pydict;
+		}
+
+		bp::list getRect()
+		{
+			BarRect & rect= getRect();
+			bp::list ls;
+			ls.append(rect._x);
+			ls.append(rect._y);
+			ls.append(rect._wid);
+			ls.append(rect._hei);
+			return ls;
 		}
 #endif // _PYD
 
@@ -180,13 +180,15 @@ namespace bc
 	using bline = barline<T>;
 
 	template<class T>
-	struct EXPORT BarRoot
-	{
-		std::vector<barline<T>*> children;
+	using BarRoot = barline<T>;
+//	template<class T>
+//	struct EXPORT BarRoot
+//	{
+//		std::vector<barline<T>*> children;
 
-		void addChild(barline<T>* line)
-		{
-			children.push_back(line);
-		}
-	};
+//		void addChild(barline<T>* line)
+//		{
+//			children.push_back(line);
+//		}
+//	};
 }

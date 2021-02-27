@@ -221,6 +221,25 @@ float bc::Baritem<T>::compireCTS(const bc::Barbase<T>* bc) const
 	}
 	return tsum / sum;
 }
+#include <algorithm>
+
+template<class T>
+void bc::Baritem<T>::sortByLen()
+{
+	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T> *a, const bc::barline<T> *b)
+			  {
+				  return a->len > b->len;
+	});
+}
+
+template<class T>
+void bc::Baritem<T>::sortBySize()
+{
+	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T> *a, const bc::barline<T> *b)
+	{
+		 return a->matr.size() > b->matr.size();
+	});
+}
 
 template<class T>
 bc::Baritem<T>::~Baritem()
@@ -384,13 +403,13 @@ bc::Barcontainer<T>::~Barcontainer()
 template<class T>
 float bc::Barcontainer<T>::cmpCTML(const Barcontainer<T>* bc) const
 {
-	return compireCTML((const Baritem*)bc);
+	return compireCTML((const Baritem<T>*)bc);
 }
 
 template<class T>
 float bc::Barcontainer<T>::cmpCTS(Barcontainer<T> const* bc) const
 {
-	return compireCTS((const Baritem*)bc);
+	return compireCTS((const Baritem<T>*)bc);
 }
 #endif
 

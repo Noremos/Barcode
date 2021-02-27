@@ -118,6 +118,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="main.def" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -376,6 +377,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>D:\Programs\C++\Barcode\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>USE_OPENCV;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

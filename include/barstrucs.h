@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <cassert>
+#include "include_cv.h"
 
 namespace bc
 {
@@ -29,14 +30,18 @@ namespace bc
 
 	struct BarRect
 	{
-		int _x, _y, _wid, _hei;
-	public:
-		BarRect(int x, int y, int width, int height)
+		int x, y, width, height;
+		BarRect(int _x, int _y, int _width, int _height)
 		{
-			_x = x;
-			_y = y;
-			_wid = width;
-			_hei = height;
+			x = _x;
+			y = _y;
+			width = _width;
+			height = _height;
+		}
+
+		int area()
+		{
+			return width * height;
 		}
 	};
 
@@ -56,6 +61,10 @@ namespace bc
 		{
 			return vls[0];
 		}
+		int sum()
+		{
+			return (int)vls[0] + vls[1] + vls[2];
+		}
 
 		inline BarVec3b()
 		{
@@ -74,6 +83,14 @@ namespace bc
 			return vls[idx];
 		}
 	};
+	static bool operator > (BarVec3b c1, BarVec3b c2)
+	{
+		return c1.sum() > c2.sum();
+	}
+	static bool operator < (BarVec3b c1, BarVec3b c2)
+	{
+		return c1.sum() < c2.sum();
+	}
 
 	struct barstruct
 	{
@@ -135,8 +152,8 @@ namespace bc
 			//getStepPorog();
 		}
 
-		// ðàçíèöà ñîåäèíÿåìõ çíà÷åíèé äîëæíà áûòü ìåíüøå ýòîãî çíà÷åíèÿ
-		T getStepPorog()
+		// Ñ€Ð°Ð·Ð½Ð¸Ñ†Ð° ÑÐ¾ÐµÐ´Ð¸Ð½ÑÐµÐ¼Ñ… Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ð¹ Ð´Ð¾Ð»Ð¶Ð½Ð° Ð±Ñ‹Ñ‚ÑŒ Ð¼ÐµÐ½ÑŒÑˆÐµ ÑÑ‚Ð¾Ð³Ð¾ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ
+		T getMaxStepPorog()
 		{
 			return stepPorog.getOrDefault(0);
 		}
@@ -181,7 +198,7 @@ namespace bc
 		}
 
 #ifdef USE_OPENCV
-		inline cv::Point bc::point::cvPoint()
+		inline cv::Point cvPoint()
 		{
 			return cv::Point(x, y);
 		}
@@ -192,7 +209,7 @@ namespace bc
 			assert(x >= 0);
 			assert(y >= 0);
 
-			return y * wid + x;
+			return y * static_cast<size_t>(wid) + x;
 		}
 
 		point operator+(int* xy)
@@ -255,6 +272,9 @@ namespace bc
 	typedef std::vector<uint32_t> barcounter;
 	//**********************************************
 
+INIT_TEMPLATE_STRUCT(CachedValue)
+INIT_TEMPLATE_STRUCT(BarConstructor)
 }
+
 
 #endif // BARCODE_H

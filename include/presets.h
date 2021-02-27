@@ -22,20 +22,10 @@ typedef unsigned char uchar;
 #endif
 
 #ifdef _PYD
-#define INCLUDE_PY \
-#include "boost/python.hpp" \
-#include "boost/python/numpy.hpp" \
-using namespace boost::python; \
-namespace bp = boost::python; \
-namespace bn = boost::python::numpy;
+#define INCLUDE_PY
 #endif // _PYD
 
 #ifdef USE_OPENCV
-#define INCLUDE_CV \
-#include <opencv2/opencv.hpp> \
-#include <opencv2/imgproc.hpp>
-using cv::Mat;
-#else
 #define INCLUDE_CV
 #endif // DEBUG
 
@@ -50,6 +40,11 @@ using cv::Mat;
 #define INIT_TEMPLATE_TYPE(TYPE) \
 template class TYPE<uchar>; \
 template class TYPE<float>;
+
+
+#define INIT_TEMPLATE_STRUCT(TYPE) \
+template struct TYPE<uchar>; \
+template struct TYPE<float>;
 
 
 

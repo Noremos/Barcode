@@ -11,6 +11,9 @@
 #define COMPP Component<T>*
 #define HOLEP Hole<T>*
 
+#include "include_py.h"
+#include "include_cv.h"
+
 namespace bc {
 
 	template<class T>
@@ -29,7 +32,7 @@ namespace bc {
 	template<class T>
 	class EXPORT BarcodeCreator
 	{
-		typedef bc::BarImg<T> bcBarImg;
+		typedef bc::DatagridProvider<T> bcBarImg;
 
 	public:
 		std::vector<COMPP> components;
@@ -40,12 +43,12 @@ namespace bc {
 
 		bool reverse = false;
 		int b[256];
-		
+
 		BarConstructor<T> settings;
 
 		Include<T>* included;
-		BarImg<T>* workingImg = nullptr;
-		void setWorkingImg(BarImg<T>* newWI)
+		const DatagridProvider<T>* workingImg = nullptr;
+		void setWorkingImg(const bcBarImg* newWI)
 		{
 			if (workingImg != nullptr && needDelImg)
 				delete workingImg;
@@ -54,6 +57,7 @@ namespace bc {
 			if (!settings.stepPorog.isCached)
 				settings.stepPorog.set(workingImg->max());
 		}
+
 		bool needDelImg = false;
 		T curbright;
 		point curpix;
@@ -62,7 +66,7 @@ namespace bc {
 		int lastB;
 		friend class Component<T>;
 		friend class Hole<T>;
-		friend struct BarRoot<T>;
+//		friend struct BarRoot<T>;
 		friend class Baritem<T>;
 
 		size_t totalSize = 0;
@@ -77,8 +81,8 @@ namespace bc {
 		}
 
 		constexpr T GETDIFF(T a, T b) const {
-			
-			return a > b? a-b:b-a;
+
+			return a > b ? a - b : b - a;
 		}
 
 		inline point getPoint(size_t i) const
@@ -128,15 +132,20 @@ namespace bc {
 		void draw(std::string name = "test");
 		void VISULA_DEBUG(int y, int i);
 		void VISULA_DEBUG_COMP(int y, int i);
-		void init(const bcBarImg& src, const ProcType& type);
+
+
+		void init(const bc::DatagridProvider<T>* src, const  ProcType& type);
 
 		void processComp(int* retBty, Barcontainer<T>* item = nullptr);
 		void processHole(int* retBty, Barcontainer<T>* item = nullptr);
 		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
 
 		bc::Baritem<T>* getBarcode();
-		void processTypeF(const barstruct& str, const bcBarImg& img, Barcontainer<T>* item = nullptr);
-		void processFULL(const barstruct& str, const BarImg<T>& img, bc::Barcontainer<T>* item);
+
+		void processTypeF(const barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
+
+		template<class U>
+		void processFULL(const barstruct& str, const bc::DatagridProvider<U>* img, bc::Barcontainer<T>* item);
 		void addItemToCont(Barcontainer<T>* item);
 
 		void reverseCom(std::unordered_map<COMPP, barline<T>*>& graph);
@@ -149,22 +158,33 @@ namespace bc {
 		{
 		}
 
-		bc::Barcontainer<T>* createBarcode(bcBarImg& img, const BarConstructor<T> &structure);
+		template<class U>
+		bc::Barcontainer<T>* createBarcode(const bc::DatagridProvider<U>* img, const BarConstructor<T>& structure);
+		/*{
+			this->settings = structure;
+			settings.checkCorrect();
+
+			Barcontainer<T>* cont = new Barcontainer<T>();
+
+			for (const auto& it : settings.structure)
+			{
+				processFULL(it, img, cont);
+			}
+			return cont;
+		}*/
 
 		[[deprecated]]
-		bc::Barcontainer<T>* createBarcode(bcBarImg& img, const std::vector<barstruct>& structure);
-		
-		[[deprecated]]
-		bc::Barcontainer<T>* createBarcode(bcBarImg& img, const barstruct* structure, int size);
+		bc::Barcontainer<T>* createBarcode(bcBarImg* img, const std::vector<barstruct>& structure);
 
 		[[deprecated]]
-		bc::Barcontainer<T>* createSLbarcode(const bcBarImg& src, T foneStart, T foneEnd, Barcontainer<T>* cont = nullptr);
+		bc::Barcontainer<T>* createBarcode(bcBarImg* img, const barstruct* structure, int size);
 
 		[[deprecated]]
-		bc::Barcontainer<T>* createSLbarcode(const bcBarImg& src, T foneStart, T foneEnd, bool createRGBbar);
-#ifdef _PYD
-		bc::Barcontainer<T>* createBarcode(bn::ndarray& img, bp::list& structure);
-#endif // _PYD
+		bc::Barcontainer<T>* createSLbarcode(const bcBarImg* src, T foneStart, T foneEnd, Barcontainer<T>* cont = nullptr);
+
+		[[deprecated]]
+		bc::Barcontainer<T>* createSLbarcode(const bcBarImg* src, T foneStart, T foneEnd, bool createRGBbar);
+
 
 		bc::Barcontainer<T>* searchHoles(float* img, int wid, int hei);
 
@@ -178,5 +198,27 @@ namespace bc {
 			colors.clear();
 #endif // USE_OPENCV
 		}
+
+#ifdef _PYD
+
+		bc::Barcontainer<T>* createBarcode(bn::ndarray& img, bc::BarConstructor<T>& structure)
+		{
+			//auto shape = img.get_shape();
+			bc::Barcontainer<T>* r = nullptr;
+			printf("1");
+			bc::BarImg<T> image(img.shape(0), img.shape(1), img.get_nd(), (uchar*)img.get_data(), false, false);
+
+			/*	int type = cv_8uc1;
+				if (img.get_nd() == 3 && img.shape[2] == 3)
+					image = &barimg<bcvec3b>(shape[0], shape[1], img.get_data());
+				else if float
+					barimg image(shape[0], shape[1], img.get_data());*/
+
+					//cv::imshow("test", image);
+					//cv::waitkey(0);
+
+			return createBarcode(image, structure);
+		}
+#endif // _PYD
 	};
 }

@@ -77,7 +77,7 @@ namespace bc
 		bp::list getBar()
 		{
 			bp::list lines;
-			for (auto line : bar)
+			for (auto line : barlines)
 			{
 				lines.append(line);
 			}
@@ -85,6 +85,8 @@ namespace bc
 		}
 #endif // _PYD
 
+		void sortByLen();
+		void sortBySize();
 	};
 
 	//template<size_t N>

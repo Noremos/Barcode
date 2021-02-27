@@ -1,34 +1,50 @@
 #ifdef _PYD
-INCLUDE_PY
 
 #include "barcodeCreator.h"
 
+#include "include_py.h"
+
 //namespace python = boost::python;
-
-template< typename T >
-struct type_from_python
-{
-	type_from_python()
-	{
-		converter::registry::push_back(convertible, construct, type_id<T>());
-	}
-
-	static void* convertible(PyObject*)
-	{
-
-	}
-	static void construct(PyObject*, converter::rvalue_from_python_stage1_data*)
-	{
-
-	}
-};
- 
+//
+//template< typename T >
+//struct type_from_python
+//{
+//	type_from_python()
+//	{
+//		converter::registry::push_back(convertible, construct, type_id<T>());
+//	}
+//
+//	static void* convertible(PyObject*)
+//	{
+//
+//	}
+//	static void construct(PyObject*, converter::rvalue_from_python_stage1_data*)
+//	{
+//
+//	}
+//};
+// 
 // to pytion
-template< typename T >
-struct type_into_python
-{
-	static PyObject* convert(T const&);
-};
+//template< typename T >
+//struct type_into_python
+//{
+//	static PyObject* convert(T const&);
+//};
+//
+//class BarlineWrapper
+//{
+//	bc::barline line;
+//	template<class T>
+//	BarlineWrapper()
+//	{
+//	}
+//
+//	template<class T>
+//	BarlineWrapper(T start, T len)
+//	{
+//		line::
+//	}
+//};
 
 BOOST_PYTHON_MODULE(barpy)
 {
@@ -43,58 +59,54 @@ BOOST_PYTHON_MODULE(barpy)
 		.def("init", static_cast<void (bc::point::*)(int, int)>(&bc::point::init), args("x", "y"))
 		;
 
-	class_<bc::pointHash>("PointHash")
-		;
-	class_<pmap>("Pmap")
-		;
-	class_<ppair>("Ppair")
-		;
-	class_<std::vector<bc::barline>>("LinesList")
-		;
-
-	class_<bc::barline>("barline")
-		.def(init<>())
+	//class_<bc::pointHash>("PointHash")
+	//	;
+	//class_<pmap>("Pmap")
+	//	;
+	//class_<ppair>("Ppair")
+	//	;
+	//class_<std::vector<bc::barline>>("LinesList")
+	//	;
+	
+	class_<bc::barline<uchar>>("barline")
 		.def(init<uchar, uchar>(args("start", "len")))
-		.def(init<uchar, uchar, pmap*>(args("start", "len", "pmap")))
-		.add_property("start", make_getter(&bc::barline::start), make_setter(&bc::barline::start))
-		.add_property("len", make_getter(&bc::barline::len), make_setter(&bc::barline::len))
-		.def("getPoints", &bc::barline::getPoints)
+		.add_property("start", make_getter(&bc::barline<uchar>::start), make_setter(&bc::barline<uchar>::start))
+		.add_property("len", make_getter(&bc::barline<uchar>::len), make_setter(&bc::barline<uchar>::len))
+		.def("getPoints", &bc::barline<uchar>::getPoints)
 		//.add_property("points", make_getter(&bc::barline::matr))
 		;
 
 
-	class_<bc::Baritem>("Baritem")
-		.def("add", static_cast<void (bc::Baritem::*)(uchar, uchar)> (&bc::Baritem::add), args("start", "len"))
-		.def("add", static_cast<void (bc::Baritem::*)(uchar, uchar, pmap*)> (&bc::Baritem::add), args("start", "len", "points"))
-		.def("sum", &bc::Baritem::sum)
-		.def("relen", &bc::Baritem::relen)
-		.def("clone", &bc::Baritem::clone, return_value_policy< manage_new_object >())
-		.def("maxLen", &bc::Baritem::maxLen)
-		.def("removePorog", &bc::Baritem::removePorog, args("porog"))
-		.def("preprocessBar", &bc::Baritem::preprocessBar, args("porog", "normalize"))
+	class_<bc::Baritem<uchar>>("Baritem")
+		.def("sum", &bc::Baritem<uchar>::sum)
+		.def("relen", &bc::Baritem<uchar>::relen)
+		.def("clone", &bc::Baritem<uchar>::clone, return_value_policy< manage_new_object >())
+		.def("maxLen", &bc::Baritem<uchar>::maxLen)
+		.def("removePorog", &bc::Baritem<uchar>::removePorog, args("porog"))
+		.def("preprocessBar", &bc::Baritem<uchar>::preprocessBar, args("porog", "normalize"))
 		//.def("compireCTML", &bc::Baritem::compireCTML, args("bc"))
 		//.def("compireCTS", &bc::Baritem::compireCTS, args("bc"))
-		.def("getBar", &bc::Baritem::getBar)
+		.def("getBar", &bc::Baritem<uchar>::getBar)
 
 		//.add_property("bar", make_getter(&bc::Baritem::bar))
 		;
 
-	class_<bc::Barcontainer>("Barcontainer")
-		.def("sum", &bc::Barcontainer::sum)
-		.def("relen", &bc::Barcontainer::relen)
-		.def("clone", &bc::Barcontainer::clone, return_value_policy< manage_new_object >())
-		.def("maxLen", &bc::Barcontainer::maxLen)
-		.def("count", &bc::Barcontainer::count)
-		.def("removePorog", &bc::Barcontainer::removePorog, args("porog"))
-		.def("preprocessBar", &bc::Barcontainer::preprocessBar, args("porog", "normalize"))
+	class_<bc::Barcontainer<uchar>>("Barcontainer")
+		.def("sum", &bc::Barcontainer<uchar>::sum)
+		.def("relen", &bc::Barcontainer<uchar>::relen)
+		.def("clone", &bc::Barcontainer<uchar>::clone, return_value_policy< manage_new_object >())
+		.def("maxLen", &bc::Barcontainer<uchar>::maxLen)
+		.def("count", &bc::Barcontainer<uchar>::count)
+		.def("removePorog", &bc::Barcontainer<uchar>::removePorog, args("porog"))
+		.def("preprocessBar", &bc::Barcontainer<uchar>::preprocessBar, args("porog", "normalize"))
 		//.def("compireCTML", &bc::Barcontainer::compireCTML, args("bc"))
 		//.def("compireCTS", &bc::Barcontainer::compireCTS, args("bc"))
 		//.def("compireCTML", static_cast<float (bc::Barcontainer::*)(const bc::Barbase*) const> (&bc::Barcontainer::compireCTML), args("bc"))
 		//.def("compireCTS", static_cast<float (bc::Barcontainer::*)(bc::Barbase const*) const>(&bc::Barcontainer::compireCTS), args("bc"))
-		.def("cmpCTML", &bc::Barcontainer::cmpCTML, args("bc"))
-		.def("cmpCTS", &bc::Barcontainer::cmpCTS, args("bc"))
-		.def("addItem", &bc::Barcontainer::addItem, args("Baritem"))
-		.def("get", &bc::Barcontainer::get, args("index"), return_value_policy< reference_existing_object>())
+		.def("cmpCTML", &bc::Barcontainer<uchar>::cmpCTML, args("bc"))
+		.def("cmpCTS", &bc::Barcontainer<uchar>::cmpCTS, args("bc"))
+		.def("addItem", &bc::Barcontainer<uchar>::addItem, args("Baritem"))
+		.def("getItem", &bc::Barcontainer<uchar>::getItem, args("index"), return_value_policy< reference_existing_object>())
 		;
 
 	enum_<bc::CompireFunction>("CompireFunction")
@@ -104,7 +116,7 @@ BOOST_PYTHON_MODULE(barpy)
 
 	enum_<bc::ComponentType>("ComponentType")
 		.value("Component", bc::ComponentType::Component)
-		.value("Hole", bc::ComponentType::Hole)
+		//.value("Hole", bc::ComponentType::Hole)
 		;
 
 	enum_<bc::ProcType>("ProcType")
@@ -114,27 +126,37 @@ BOOST_PYTHON_MODULE(barpy)
 
 	enum_<bc::ColorType>("ColorType")
 		.value("gray", bc::ColorType::gray)
-		.value("native", bc::ColorType::native)
-		.value("rgb", bc::ColorType::rgb)
+		//.value("native", bc::ColorType::native)
+		//.value("rgb", bc::ColorType::rgb)
+		;
+	enum_<bc::ReturnType>("ReturnType")
+		.value("betty", bc::ReturnType::betty)
+		.value("barcode2d", bc::ReturnType::barcode2d)
+		.value("barcode3d", bc::ReturnType::barcode3d)
 		;
 
-	class_<bc::barstruct>("Barstruct")
-		.def(init())
-		.def(init< bc::ProcType, bc::ColorType, bc::ComponentType>(args("ProcType", "ColorType", "ComponentType")))
-		.add_property("comType", &bc::barstruct::comtype)
-		.add_property("procType", &bc::barstruct::proctype)
-		.add_property("colType", &bc::barstruct::coltype);
-
-
-	class_<bc::barcodeCreator>("BarcodeCreator")
-		.def("setVisualize", &bc::barcodeCreator::setVisualize, args("value"))
-		.def("setCreateBinaryMasks", &bc::barcodeCreator::setCreateBinaryMasks, args("value"))
-		.def("setReturnType", &bc::barcodeCreator::setReturnType, args("value"))
-
-		.def("createBarcode", static_cast<bc::Barcontainer * (bc::barcodeCreator::*) (bn::ndarray&, bp::list&)>
-			(&bc::barcodeCreator::createBarcode), args("image", "structure"), return_value_policy< manage_new_object >())
+	//class_<bc::barstruct>("Barstruct")
+	//	.def(init())
+	//	.def(init< bc::ProcType, bc::ColorType, bc::ComponentType>(args("ProcType", "ColorType", "ComponentType")))
+	//	.add_property("comType", &bc::barstruct::comtype)
+	//	.add_property("procType", &bc::barstruct::proctype)
+	//	.add_property("colType", &bc::barstruct::coltype);
+	
+	class_<bc::BarConstructor<uchar>>("BarConstructor")
+		.def("addStructire", &bc::BarConstructor<uchar>::addStructire, args("ProcType", "ColorType", "ComponentType"))
+		.def("setPorogStep", &bc::BarConstructor<uchar>::setStep, args("porog"))
+		.add_property("returnType", &bc::BarConstructor<uchar>::returnType, make_setter(&bc::BarConstructor<uchar>::returnType))
+		.add_property("createBinayMasks", &bc::BarConstructor<uchar>::createBinayMasks, make_setter(&bc::BarConstructor<uchar>::createBinayMasks))
+		.add_property("createGraph", &bc::BarConstructor<uchar>::createGraph, make_setter(&bc::BarConstructor<uchar>::createGraph))
 		;
 	;
+
+	class_<bc::BarcodeCreator<uchar>>("BarcodeCreator")
+		.def("createBarcode", static_cast<bc::Barcontainer<uchar> * (bc::BarcodeCreator<uchar>::*) (bn::ndarray&, bc::BarConstructor<uchar>&)>
+			(&bc::BarcodeCreator<uchar>::createBarcode), args("image", "structure"), return_value_policy< manage_new_object >())
+		;
+	;
+
 
 
 
