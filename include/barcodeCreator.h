@@ -144,8 +144,7 @@ namespace bc {
 
 		void processTypeF(const barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
 
-		template<class U>
-		void processFULL(const barstruct& str, const bc::DatagridProvider<U>* img, bc::Barcontainer<T>* item);
+		void processFULL(const barstruct& str, const bc::DatagridProvider<T>* img, bc::Barcontainer<T>* item);
 		void addItemToCont(Barcontainer<T>* item);
 
 		void reverseCom(std::unordered_map<COMPP, barline<T>*>& graph);
@@ -158,8 +157,7 @@ namespace bc {
 		{
 		}
 
-		template<class U>
-		bc::Barcontainer<T>* createBarcode(const bc::DatagridProvider<U>* img, const BarConstructor<T>& structure);
+		bc::Barcontainer<T>* createBarcode(const bc::DatagridProvider<T>* img, const BarConstructor<T>& structure);
 		/*{
 			this->settings = structure;
 			settings.checkCorrect();

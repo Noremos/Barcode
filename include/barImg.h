@@ -37,9 +37,10 @@ namespace bc {
 
 		virtual int channels() const = 0;
 
-		virtual T &get(int x, int y) const = 0;
+		virtual T& get(int x, int y) const = 0;
+		virtual T& get(int x, int y, int z) const = 0;
 
-		virtual T &get(point& p) const
+		virtual T& get(point& p) const
 		{
 			return get(p.x, p.y);
 		}
@@ -50,9 +51,14 @@ namespace bc {
 		}
 
 		// wid * y + x;
-		virtual T &getLiner(size_t pos) const
+		virtual T& getLiner(size_t pos) const
 		{
 			return get((int)(pos % wid()), (int)(pos / wid()));
+		}
+
+		virtual T& getLiner(size_t pos, int chnl) const
+		{
+			return get((int)(pos % wid()), (int)(pos / wid()), chnl);
 		}
 
 		point getPointAt(size_t iter) const
@@ -60,6 +66,7 @@ namespace bc {
 			return point((int)(iter % wid()), (int)(iter / wid()));
 		}
 
+		virtual size_t typeSize() const = 0;
 	};
 
 	template<class T>
@@ -312,17 +319,25 @@ namespace bc {
 			return _channels;
 		}
 
-		inline int typeSize() const
+		inline size_t typeSize() const
 		{
 			return TSize;
 		}
 
-		inline T &get(int x, int y) const
+		inline T& get(int x, int y) const
 		{
 			//if (diagReverce)
 			//	return values[x * _wid + y];
 			//else
 			return values[y * _wid + x];
+		}
+
+		inline T& get(int x, int y, int z) const
+		{
+			//if (diagReverce)
+			//	return values[x * _wid + y];
+			//else
+			return values[y * _wid + x + z];
 		}
 
 		inline void set(int x, int y, T val)
@@ -488,7 +503,7 @@ namespace bc {
 	{
 	public:
 		Mat& mat;
-		BarMat(Mat& _mat): mat(_mat)
+		BarMat(Mat& _mat) : mat(_mat)
 		{ }
 		int wid() const
 		{
@@ -510,6 +525,11 @@ namespace bc {
 			return mat.at<T>(y, x);
 		}
 
+		T& get(int x, int y, int z) const
+		{
+			return mat.at<T>(y, x, z);
+		}
+
 		T max() const
 		{
 			double min, max;
@@ -517,21 +537,26 @@ namespace bc {
 
 			return static_cast<T>(max);
 		}
+
+		inline size_t typeSize() const
+		{
+			return mat.depth();
+		}
 	};
 #endif // USE_OPENCV 
 
 	template<class T>
-	static inline void split(const BarImg<BarVec3b>* src, std::vector<BarImg<T>*>& bgr)
+	static inline void split(const DatagridProvider<T>& src, std::vector<BarImg<T>*>& bgr)
 	{
-		size_t step = static_cast<size_t>(src->channels()) * src->typeSize();
-		for (size_t k = 0; k < src->channels(); k++)
+		size_t step = static_cast<size_t>(src.channels()) * src.typeSize();
+		for (size_t k = 0; k < src.channels(); k++)
 		{
-			BarImg<T>* ib = new BarImg<T>(src->wid(), src->hei());
+			BarImg<T>* ib = new BarImg<T>(src.wid(), src.hei());
 			bgr.push_back(ib);
 
-			for (size_t i = 0; i < static_cast<unsigned long long>(src->length()) * src->typeSize(); i += step)
+			for (size_t i = 0; i < static_cast<unsigned long long>(src.length()) * src.typeSize(); i += step)
 			{
-				ib->setLiner(i, src->getLiner(i)[k]);
+				ib->setLiner(i, src.getLiner(i));
 			}
 		}
 	}
@@ -547,27 +572,37 @@ namespace bc {
 		GRAY2BGR,
 	};
 
-	static inline void cvtColorU1C2V3B(const bc::DatagridProvider<uchar>& source, bc::BarImg<bc::BarVec3b>& dest)
+	template<class T>
+	static inline void cvtColorU1C2V3B(const bc::DatagridProvider<T>& source, bc::BarImg<T>& dest)
 	{
+		assert(source.channels() == 1);
+
 		dest.resize(source.wid(), source.hei());
 
 		for (size_t i = 0; i < source.length(); ++i)
 		{
-			uchar u = source.getLiner(i);
-			BarVec3b bgb(u, u, u);
-			dest.setLiner(i, bgb);
+			T u = source.getLiner(i);
+			for (size_t c = 0; c < source.channels(); c++)
+			{
+				dest.setLiner(i + c, u);
+			}
 		}
 	}
 	template<class T>
-	static inline void cvtColorV3B2U1C(const bc::BarImg<bc::BarVec3b>* source, bc::BarImg<T>* dest)
+	static inline void cvtColorV3B2U1C(const bc::DatagridProvider<T>& source, bc::BarImg<T>& dest)
 	{
-		dest->resize(source->wid(), source->hei());
+		assert(dest.channels() == 1);
+		dest.resize(source.wid(), source.hei());
 
-		for (size_t i = 0; i < source->length(); ++i)
+		double coof = 1.0 / source.channels();
+		for (size_t i = 0; i < source.length(); ++i)
 		{
-			BarVec3b bgb = source->getLiner(i);
-			T u = (T)(MIN(.2126 * bgb.r() + .7152 * bgb.g() + 0.0722 * bgb.b(), 255));
-			dest->setLiner(i, u);
+			T acum = 0;
+			for (size_t c = 0; c < source.channels(); c++)
+			{
+				acum += source.getLiner(i, c);
+			}
+			dest.setLiner(i, acum);
 		}
 	}
 	//template<class T, class U>
@@ -599,7 +634,7 @@ namespace bc {
 
 #ifdef USE_OPENCV
 	template<class T>
-	static cv::Mat convertProvider2Mat(DatagridProvider<T> *img)
+	static cv::Mat convertProvider2Mat(DatagridProvider<T>* img)
 	{
 		cv::Mat m = cv::Mat::zeros(img->hei(), img->wid(), CV_8UC1);
 		for (size_t i = 0; i < img->length(); i++)
@@ -612,8 +647,8 @@ namespace bc {
 #endif // USE_OPENCV
 
 	INIT_TEMPLATE_TYPE(DatagridProvider)
-	INIT_TEMPLATE_TYPE(BarImg)
-	INIT_TEMPLATE_TYPE(BarMat)
+		INIT_TEMPLATE_TYPE(BarImg)
+		INIT_TEMPLATE_TYPE(BarMat)
 }
 //split
 //convert

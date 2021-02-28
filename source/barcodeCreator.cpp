@@ -537,25 +537,6 @@ inline point* BarcodeCreator<T>::sort(const ProcType& type)
 }
 
 template<class T>
-const bc::DatagridProvider<T>* initDatagrid(const bc::BarImg<bc::BarVec3b>* src)
-{
-	assert(src->channels() == 3);
-
-	BarImg<uchar>* tempTemp = new BarImg<uchar>(src->wid(), src->hei());
-	cvtColorV3B2U1C(src, tempTemp);
-
-	return tempTemp;
-}
-
-
-template<class T>
-const bc::DatagridProvider<T>* initDatagrid(const bc::DatagridProvider<T>* src)
-{
-	assert(src->channels() == 1);
-	return src;
-}
-
-template<class T>
 void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType& type)
 {
 	needDelImg = false;
@@ -949,21 +930,19 @@ void BarcodeCreator<T>::processTypeF(const barstruct& str, const bc::DatagridPro
 }
 
 template<class T>
-template<class U>
-void BarcodeCreator<T>::processFULL(const barstruct& str, const bc::DatagridProvider<U>* img, Barcontainer<T>* item)
+void BarcodeCreator<T>::processFULL(const barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item)
 {
-	bool rgb = (img->channels() == 3);
+	bool rgb = (img->channels() != 1);
 
 	if (str.coltype == ColorType::rgb || (str.coltype == ColorType::native && rgb))
 	{
-		if (img->channels() == 3)
+		if (img->channels() != 1)
 		{
 			std::vector<BarImg<T>*> bgr;
-			const bc::BarImg<bc::BarVec3b>* temoing = dynamic_cast<const bc::BarImg<bc::BarVec3b>*>(img);
-			split(temoing, bgr); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			processTypeF(str, bgr[0], item);
-			processTypeF(str, bgr[1], item);
-			processTypeF(str, bgr[2], item);
+			split(*img, bgr); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+			for (size_t i = 0; i < bgr.size(); i++)
+				processTypeF(str, bgr[i], item);
 		}
 		else
 		{
@@ -977,27 +956,24 @@ void BarcodeCreator<T>::processFULL(const barstruct& str, const bc::DatagridProv
 	}
 	else
 	{
-		if (img->channels() == 3)
+		if (img->channels() != 1)
 		{
 			bc::BarImg<T> res(1, 1);
-			const bc::BarImg<bc::BarVec3b>* temoing = dynamic_cast<const bc::BarImg<bc::BarVec3b>*>(img);
+			cvtColorV3B2U1C(*img, res);
 
-			cvtColorV3B2U1C(temoing, &res);
+			//const DatagridProvider<T>* temoing = dynamic_cast<const DatagridProvider<T>*>(res);
 			processTypeF(str, &res, item);
 		}
 		else
 		{
-			const DatagridProvider<T>* temoing = dynamic_cast<const DatagridProvider<T>*>(img);
-
-			processTypeF(str, temoing, item);
+			processTypeF(str, img, item);
 		}
 
 	}
 }
 
 template<class T>
-template<class U>
-bc::Barcontainer<T>* BarcodeCreator<T>::createBarcode(const bc::DatagridProvider<U>* img, const BarConstructor<T>& structure)
+bc::Barcontainer<T>* BarcodeCreator<T>::createBarcode(const bc::DatagridProvider<T>* img, const BarConstructor<T>& structure)
 {
 	this->settings = structure;
 	settings.checkCorrect();
@@ -1267,12 +1243,4 @@ Barcontainer<T>* BarcodeCreator<T>::searchHoles(float* img, int wid, int hei)
 INIT_TEMPLATE_TYPE(BarcodeCreator)
 
 //template bc::Barcontainer<uchar>* BarcodeCreator<uchar>::createBarcode(const bc::DatagridProvider<uchar>*, const BarConstructor<uchar>&)
-
-#define TEMLCLASS_INIT_FUNC_FULL(TEMPL1, TEMPL2) \
-template bc::Barcontainer<TEMPL1>* BarcodeCreator<TEMPL1>::createBarcode(const bc::DatagridProvider<TEMPL2>*, const BarConstructor<TEMPL1>&);
-
-TEMLCLASS_INIT_FUNC_FULL(uchar, uchar)
-TEMLCLASS_INIT_FUNC_FULL(uchar, BarVec3b)
-TEMLCLASS_INIT_FUNC_FULL(float, float)
-
 
