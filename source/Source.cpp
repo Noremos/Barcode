@@ -118,15 +118,14 @@ Bimg8 restreToBarimgFromGraph(bc::Barcontainer<uchar>* cont, int wid, int hei, u
 	return img;
 }
 
-
-
-void test(bool graph, Bbase8& testimg)
+void test(bool graph, Bbase8& testimg, bool createNew = false)
 {
 	bc::BarConstructor<uchar> bcont;
 	bcont.addStructire(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
 	bcont.createBinayMasks = true;
 	bcont.createGraph = graph;
 	bcont.returnType = bc::ReturnType::barcode2d;
+	bcont.createNewComponentOnAttach = createNew;
 	bcont.setStep(255);
 
 	bc::BarcodeCreator<uchar> test;
@@ -154,12 +153,15 @@ void test(bool graph, Bbase8& testimg)
 	cv::imshow("restored", res);
 	cv::waitKey(1);
 	compiteBarAndBar(imgrest, testimg);
+
+	ret->removePorog(100);
+	delete ret;
 }
 
-void testMat(bool graph, Mat testmat)
+void testMat(bool graph, Mat testmat, bool createNew = false)
 {
 	Bmat8 img(testmat);
-	test(graph, img);
+	test(graph, img, createNew);
 }
 
 void testData(bool graph, uchar* data, int lend)
@@ -253,7 +255,7 @@ void checkSingleMat()
 	testMat(false, temp);
 	testMat(true, temp);
 }
-void testMats()
+void testMats(bool createNew = false)
 {
 	string testsuit[]{ "as4.png","as3.png","as2.png","as1.png","as.png" };
 	for (auto& test : testsuit)
@@ -268,6 +270,7 @@ void testMats()
 
 		testMat(true, testmat);
 		testMat(false, testmat);
+		testMat(false, testmat, createNew);
 	}
 }
 

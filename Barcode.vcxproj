@@ -98,6 +98,8 @@
     <ClInclude Include="include\barImg.h" />
     <ClInclude Include="include\Component.h" />
     <ClInclude Include="include\Hole.h" />
+    <ClInclude Include="include\include_cv.h" />
+    <ClInclude Include="include\include_py.h" />
     <ClInclude Include="include\presets.h" />
   </ItemGroup>
   <ItemGroup>

@@ -68,11 +68,13 @@ BOOST_PYTHON_MODULE(barpy)
 	//class_<std::vector<bc::barline>>("LinesList")
 	//	;
 	
-	class_<bc::barline<uchar>>("barline")
+	class_<bc::barline<uchar>>("Barline")
 		.def(init<uchar, uchar>(args("start", "len")))
 		.add_property("start", make_getter(&bc::barline<uchar>::start), make_setter(&bc::barline<uchar>::start))
 		.add_property("len", make_getter(&bc::barline<uchar>::len), make_setter(&bc::barline<uchar>::len))
+		.def("end", &bc::barline<uchar>::end)
 		.def("getPoints", &bc::barline<uchar>::getPoints)
+		.def("getRect", &bc::barline<uchar>::getRect)
 		//.add_property("points", make_getter(&bc::barline::matr))
 		;
 
@@ -84,9 +86,12 @@ BOOST_PYTHON_MODULE(barpy)
 		.def("maxLen", &bc::Baritem<uchar>::maxLen)
 		.def("removePorog", &bc::Baritem<uchar>::removePorog, args("porog"))
 		.def("preprocessBar", &bc::Baritem<uchar>::preprocessBar, args("porog", "normalize"))
-		//.def("compireCTML", &bc::Baritem::compireCTML, args("bc"))
-		//.def("compireCTS", &bc::Baritem::compireCTS, args("bc"))
-		.def("getBar", &bc::Baritem<uchar>::getBar)
+		.def("cmpCTML", &bc::Baritem<uchar>::cmpCTML, args("bitem"))
+		.def("cmpCTS", &bc::Baritem<uchar>::cmpCTS, args("bitem"))
+		.def("getBarcode", &bc::Baritem<uchar>::getBarcode)
+		.def("SortByLineLen", &bc::Baritem<uchar>::sortByLen)
+		.def("SortByPointsCount", &bc::Baritem<uchar>::sortBySize)
+
 
 		//.add_property("bar", make_getter(&bc::Baritem::bar))
 		;
@@ -148,6 +153,7 @@ BOOST_PYTHON_MODULE(barpy)
 		.add_property("returnType", &bc::BarConstructor<uchar>::returnType, make_setter(&bc::BarConstructor<uchar>::returnType))
 		.add_property("createBinayMasks", &bc::BarConstructor<uchar>::createBinayMasks, make_setter(&bc::BarConstructor<uchar>::createBinayMasks))
 		.add_property("createGraph", &bc::BarConstructor<uchar>::createGraph, make_setter(&bc::BarConstructor<uchar>::createGraph))
+		.add_property("createNewComponentOnAttach", &bc::BarConstructor<uchar>::createGraph, make_setter(&bc::BarConstructor<uchar>::createNewComponentOnAttach))
 		;
 	;
 

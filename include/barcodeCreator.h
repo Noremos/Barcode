@@ -202,9 +202,6 @@ namespace bc {
 		bc::Barcontainer<T>* createBarcode(bn::ndarray& img, bc::BarConstructor<T>& structure)
 		{
 			//auto shape = img.get_shape();
-			bc::Barcontainer<T>* r = nullptr;
-			printf("1");
-			bc::BarImg<T> image(img.shape(0), img.shape(1), img.get_nd(), (uchar*)img.get_data(), false, false);
 
 			/*	int type = cv_8uc1;
 				if (img.get_nd() == 3 && img.shape[2] == 3)
@@ -214,8 +211,11 @@ namespace bc {
 
 					//cv::imshow("test", image);
 					//cv::waitkey(0);
+			bc::BarNdarray<T> image(img);
+			return createBarcode(&image, structure);
 
-			return createBarcode(image, structure);
+			//bc::BarImg<T> image(img.shape(1), img.shape(0), img.get_nd(), (uchar*)img.get_data(), false, false);
+			//return createBarcode(&image, structure);
 		}
 #endif // _PYD
 	};

@@ -93,40 +93,33 @@ void BarcodeCreator<T>::draw(std::string name)
 template<class T>
 inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 {
-#ifndef CREATE_NEW
-	// ***************************************************
-	//if (main->coords->size() < second->coords->size()) //свапаем, если у первого меньше элементов. Нужно для производиельности
-	if (main->getTotalSize() < second->getTotalSize())
+	if (settings.createNewComponentOnAttach)
 	{
-		COMPP temp = main;
-		main = second;
-		second = temp;
-	}
-	//	if (second->coords->size()<100)
-	{
-		second->setParrent(main);
-		second->kill();
-		//возращаем единую компоненту.
-		return main;
-	}
-#endif
-#ifdef CREATE_NEW
-	//	else
-	{
-		//	for (auto it = second->coords->begin(); it != second->coords->end(); ++it)
-		//		main->add(it->first);
-		//if (!createBin)
-		//	second->coords->clear();
-		// ***********************************
-
-		COMPP newOne = new Component(this, true);
+		COMPP newOne = new Component<T>(this, true);
 		main->setParrent(newOne);
 		second->setParrent(newOne);
 		main->kill();
 		second->kill();
 		return newOne;
 	}
-#endif
+	else
+	{
+		// ***************************************************
+		//if (main->coords->size() < second->coords->size()) //свапаем, если у первого меньше элементов. Нужно для производиельности
+		if (main->start > second->start)
+		{
+			COMPP temp = main;
+			main = second;
+			second = temp;
+		}
+		//	if (second->coords->size()<100)
+		{
+			second->setParrent(main);
+			second->kill();
+			//возращаем единую компоненту.
+			return main;
+		}
+	}
 }
 
 //****************************************B0**************************************
@@ -467,7 +460,7 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 }
 //********************************************************************************
 
-
+template<>
 inline point* BarcodeCreator<uchar>::sort(const ProcType& type)
 {
 	int hist[256];//256
@@ -790,6 +783,7 @@ void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* lines)
 	throw std::exception();
 }
 
+template<>
 void BarcodeCreator<uchar>::computeBettyBarcode(Baritem<uchar>* lines)
 {
 	std::stack<uchar> tempStack;
@@ -1194,6 +1188,7 @@ uchar dif(uchar a, uchar b)
 //	processComp(retBty, item);
 //}
 
+template<>
 Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int hei)
 {
 	this->wid = wid;
@@ -1240,7 +1235,7 @@ Barcontainer<T>* BarcodeCreator<T>::searchHoles(float* img, int wid, int hei)
 	return nullptr;
 }
 
-INIT_TEMPLATE_TYPE(BarcodeCreator)
+INIT_TEMPLATE_TYPE(bc::BarcodeCreator)
 
 //template bc::Barcontainer<uchar>* BarcodeCreator<uchar>::createBarcode(const bc::DatagridProvider<uchar>*, const BarConstructor<uchar>&)
 

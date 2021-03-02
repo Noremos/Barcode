@@ -5,6 +5,8 @@
 
 #include <vector>
 #include <cassert>
+#include <cstring>
+
 #include "include_cv.h"
 
 namespace bc
@@ -118,8 +120,8 @@ namespace bc
 	{
 		CachedValue<T> stepPorog;
 	public:
-		T foneStart;
-		T foneEnd;
+		//T foneStart;
+		//T foneEnd;
 
 #ifdef USE_OPENCV
 		bool visualize = false;
@@ -127,6 +129,7 @@ namespace bc
 
 		bool createGraph = false;
 		bool createBinayMasks = false;
+		bool createNewComponentOnAttach = false;
 		ReturnType returnType;
 		std::vector<barstruct> structure;
 
@@ -163,11 +166,11 @@ namespace bc
 			stepPorog.set(val);
 		}
 
-		void setFoneRange(T st, T ed)
-		{
-			foneStart = st;
-			foneEnd = ed;
-		}
+		//void setFoneRange(T st, T ed)
+		//{
+		//	foneStart = st;
+		//	foneEnd = ed;
+		//}
 	};
 
 
@@ -269,7 +272,7 @@ namespace bc
 	template<class T>
 	using pmap = std::vector<ppair<T>>;
 
-	typedef std::vector<uint32_t> barcounter;
+	typedef std::vector<size_t> barcounter;
 	//**********************************************
 
 INIT_TEMPLATE_STRUCT(CachedValue)

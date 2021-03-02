@@ -6,13 +6,14 @@
 #include "include_py.h"
 #include "include_cv.h"
 
+
 namespace bc
 {
 	template<class T>
 	struct EXPORT barline
 	{
 
-		bool dropChildes = true;
+		bool isCopy = false;
 		//    cv::Mat binmat;
 #ifdef USE_OPENCV
 
@@ -95,15 +96,16 @@ namespace bc
 		}
 		~barline()
 		{
-			if (parrent && parrent->childrens[numInParet]==this)
+			// canBeDleted - у копии, копи¤ не может удал¤ть детей. ј оригинал может
+			if (!isCopy)
 			{
-				parrent->childrens[numInParet] = nullptr;
-			}
-
-			if (dropChildes)
-			{
+				if (parrent && parrent->childrens.size() > numInParet && parrent->childrens[numInParet] == this)
+				{
+					parrent->childrens[numInParet] = nullptr;
+				}
 				for (int i = 0; i < childrens.size(); ++i)
 				{
+					childrens[i]->parrent = nullptr;
 					delete childrens[i];
 				}
 			}
@@ -120,6 +122,7 @@ namespace bc
 			{
 				temp->matr.insert(temp->matr.begin(), matr.begin(), matr.end());
 			}
+			temp->isCopy = true;
 
 			if (bar3d != nullptr)
 			{
@@ -163,12 +166,12 @@ namespace bc
 
 		bp::list getRect()
 		{
-			BarRect & rect= getRect();
+			BarRect rect= getBarRect();
 			bp::list ls;
-			ls.append(rect._x);
-			ls.append(rect._y);
-			ls.append(rect._wid);
-			ls.append(rect._hei);
+			ls.append(rect.x);
+			ls.append(rect.y);
+			ls.append(rect.width);
+			ls.append(rect.height);
 			return ls;
 		}
 #endif // _PYD

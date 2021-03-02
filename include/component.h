@@ -19,6 +19,7 @@ namespace bc
 		int cashedSize = 0;
 		T lastVal = 0;
 
+		void init(BarcodeCreator<T>* factory);
 	public:
 
 		Component(point pix, BarcodeCreator<T>* factory);

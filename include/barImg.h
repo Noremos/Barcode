@@ -5,8 +5,11 @@
 #include <memory>
 #include <iterator>
 #include <cassert>
+#include <cstring>
 
 #include "include_cv.h"
+#include "include_py.h"
+#include "barstrucs.h"
 
 
 
@@ -30,12 +33,12 @@ namespace bc {
 	{
 	public:
 		virtual int wid() const = 0;
-
 		virtual int hei() const = 0;
+		virtual int channels() const = 0;
 
 		virtual T max() const = 0;
+		virtual size_t typeSize() const = 0;
 
-		virtual int channels() const = 0;
 
 		virtual T& get(int x, int y) const = 0;
 		virtual T& get(int x, int y, int z) const = 0;
@@ -66,7 +69,6 @@ namespace bc {
 			return point((int)(iter % wid()), (int)(iter / wid()));
 		}
 
-		virtual size_t typeSize() const = 0;
 	};
 
 	template<class T>
@@ -171,7 +173,7 @@ namespace bc {
 
 		BarImg<T>* getCopy()
 		{
-			BarImg<T>* nimg = new BarImg<T>(*this, true, true);
+			BarImg<T>* nimg = new BarImg<T>(*this, true);
 			return nimg;
 		}
 
@@ -180,7 +182,7 @@ namespace bc {
 			assignCopyOf(copy);
 		}
 
-		BarImg(const BarImg<T>& copyImg, bool copy = true, bool deleteData = true)
+		BarImg(const BarImg<T>& copyImg, bool copy = true)
 		{
 			if (copy)
 				assignCopyOf(copyImg);
@@ -305,26 +307,26 @@ namespace bc {
 			valAssignInstanceOf(reinterpret_cast<T*>(rawData), deleteData);
 		}
 
-		inline int wid() const
+		inline int wid() const override
 		{
 			return _wid;
 		}
 
-		inline int hei() const
+		inline int hei() const override
 		{
 			return _hei;
 		}
-		inline int channels() const
+		inline int channels() const override
 		{
 			return _channels;
 		}
 
-		inline size_t typeSize() const
+		inline size_t typeSize() const override
 		{
 			return TSize;
 		}
 
-		inline T& get(int x, int y) const
+		inline T& get(int x, int y) const override
 		{
 			//if (diagReverce)
 			//	return values[x * _wid + y];
@@ -332,7 +334,7 @@ namespace bc {
 			return values[y * _wid + x];
 		}
 
-		inline T& get(int x, int y, int z) const
+		inline T& get(int x, int y, int z) const override
 		{
 			//if (diagReverce)
 			//	return values[x * _wid + y];
@@ -436,9 +438,9 @@ namespace bc {
 
 			_wid = nwid;
 			_hei = nhei;
-			valAssignInstanceOf(new T[this->length()]);
+			valAssignInstanceOf(new T[this->length()], true);
 		}
-		//Перегрузка оператора присваивания
+		//РџРµСЂРµРіСЂСѓР·РєР° РѕРїРµСЂР°С‚РѕСЂР° РїСЂРёСЃРІР°РёРІР°РЅРёСЏ
 		BarImg<T>& operator= (const BarImg<T>& drob)
 		{
 			if (&drob != this)
@@ -545,6 +547,71 @@ namespace bc {
 	};
 #endif // USE_OPENCV 
 
+
+
+#ifdef _PYD
+	template <class T>
+	class BarNdarray : public DatagridProvider<T>
+	{
+	public:
+		Py_intptr_t const* strides;
+
+		bn::ndarray& mat;
+
+		BarNdarray(bn::ndarray& _mat) : mat(_mat)
+		{ 
+			strides = _mat.get_strides();
+		}
+		int wid() const
+		{
+			return mat.shape(1);
+		}
+
+		int hei() const
+		{
+			return mat.shape(0);
+		}
+
+		int channels() const
+		{
+			return mat.get_nd();
+		}
+
+		T& get(int x, int y) const
+		{
+
+			return *reinterpret_cast<T*>(mat.get_data() + y * strides[0] + x * strides[1]);
+		}
+
+		T& get(int x, int y, int z) const
+		{
+			return *reinterpret_cast<T*>(mat.get_data() + y * strides[0] + x * strides[1] + z* strides[2]);
+		}
+
+		T max() const
+		{
+			if (this->length() == 0)
+				return 0;
+
+			T max = this->getLiner(0);
+			for (size_t i = 1; i < this->length(); i++)
+			{
+				T t = this->getLiner(i);
+				if (t > max)
+					max = t;
+			}
+			/*printf("max for nd: %i" + mat.attr("max"));
+			return mat.attr("max"));*/
+			return max;
+		}
+
+		size_t typeSize() const 
+		{
+			return mat.get_dtype().get_itemsize();
+		}
+	};
+#endif // USE_OPENCV 
+
 	template<class T>
 	static inline void split(const DatagridProvider<T>& src, std::vector<BarImg<T>*>& bgr)
 	{
@@ -597,10 +664,10 @@ namespace bc {
 		double coof = 1.0 / source.channels();
 		for (size_t i = 0; i < source.length(); ++i)
 		{
-			T acum = 0;
+			double acum = 0;
 			for (size_t c = 0; c < source.channels(); c++)
 			{
-				acum += source.getLiner(i, c);
+				acum += source.getLiner(i, c) * coof;
 			}
 			dest.setLiner(i, acum);
 		}
@@ -644,11 +711,13 @@ namespace bc {
 		}
 		return m;
 	}
+	INIT_TEMPLATE_TYPE(BarMat)
+
 #endif // USE_OPENCV
 
 	INIT_TEMPLATE_TYPE(DatagridProvider)
 		INIT_TEMPLATE_TYPE(BarImg)
-		INIT_TEMPLATE_TYPE(BarMat)
+		INIT_TEMPLATE_TYPE(BarNdarray)
 }
 //split
 //convert

@@ -1,6 +1,8 @@
 #include "barclasses.h"
 #include <math.h>
 
+#include <unordered_map>
+
 template<class T>
 bc::Barbase<T>::~Barbase() {}
 
@@ -64,13 +66,45 @@ T bc::Baritem<T>::sum() const
 	return sum;
 }
 
+
+//template<class T>
+//void cloneGraph(bc::barline<T>* old, bc::barline<T>* newone)
+//{
+//	for (size_t i = 0; i < old->childrens.size(); i++)
+//	{
+//		cloneGraph(old->childrens[i], newone->childrens[i]);
+//		old->childrens[i] = newone->childrens[i]->clone();
+//	}
+//}
+
 template<class T>
 bc::Baritem<T>* bc::Baritem<T>::clone() const
 {
-	Baritem* nb = new Baritem();
+	std::unordered_map<barline<T>*, barline<T>*> oldNew;
+	Baritem<T>* nb = new Baritem<T>();
 	nb->barlines.insert(nb->barlines.begin(), barlines.begin(), barlines.end());
-	for (size_t i = 0, total = nb->barlines.size(); i < total; ++i) {
-		nb->barlines[i] = nb->barlines[i]->clone();
+	bool createGraph = false;
+	if (barlines.size() > 0 && barlines[0]->parrent != nullptr || barlines[0]->childrens.size() > 0)
+		createGraph = true;
+
+	for (size_t i = 0, total = nb->barlines.size(); i < total; ++i)
+	{
+		auto* nnew = nb->barlines[i]->clone();
+		if (createGraph)
+			oldNew.insert(std::pair(nb->barlines[i], nnew));
+
+		nb->barlines[i] = nnew;
+	}
+	if (createGraph)
+	{
+		for (size_t i = 0, total = nb->barlines.size(); i < total; ++i)
+		{
+			auto* nline = nb->barlines[i];
+			nline->parrent = oldNew[nline->parrent];
+
+			for (size_t i = 0; i < nline->childrens.size(); i++)
+				nline->childrens[i] = oldNew[nline->childrens[i]];
+		}
 	}
 	return nb;
 }
@@ -109,15 +143,17 @@ void bc::Baritem<T>::removePorog(const T porog)
 {
 	if (porog == 0)
 		return;
-	Baritem<T> res;
-	for (barline<T>* line : barlines) {
+	std::vector<barline<T>*> res;
+	for (size_t i = 0; i < barlines.size(); i++)
+	{
+		barline<T>* line = barlines[i];
 		if (line->len >= porog)
-			res.barlines.push_back(line);
-		else
+			res.push_back(line);
+		else if (line->isCopy)
 			delete line;
 	}
 	barlines.clear();
-	barlines.insert(barlines.begin(), res.barlines.begin(), res.barlines.end());
+	barlines.insert(barlines.begin(), res.begin(), res.end());
 }
 
 template<class T>
@@ -226,19 +262,19 @@ float bc::Baritem<T>::compireCTS(const bc::Barbase<T>* bc) const
 template<class T>
 void bc::Baritem<T>::sortByLen()
 {
-	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T> *a, const bc::barline<T> *b)
-			  {
-				  return a->len > b->len;
-	});
+	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
+		{
+			return a->len > b->len;
+		});
 }
 
 template<class T>
 void bc::Baritem<T>::sortBySize()
 {
-	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T> *a, const bc::barline<T> *b)
-	{
-		 return a->matr.size() > b->matr.size();
-	});
+	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
+		{
+			return a->matr.size() > b->matr.size();
+		});
 }
 
 template<class T>

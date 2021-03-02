@@ -74,7 +74,7 @@ namespace bc
 		std::vector<bc::barline<T>*> barlines;
 
 #ifdef _PYD
-		bp::list getBar()
+		bp::list getBarcode()
 		{
 			bp::list lines;
 			for (auto line : barlines)
@@ -82,6 +82,16 @@ namespace bc
 				lines.append(line);
 			}
 			return lines;
+		}
+		
+		float cmpCTML(const Baritem<T>* bitem) const
+		{
+			return compireCTML((const Baritem<T>*)bitem);
+		}
+
+		float cmpCTS(Baritem<T> const* bitem) const
+		{
+			return compireCTS((const Baritem<T>*)bitem);
 		}
 #endif // _PYD
 

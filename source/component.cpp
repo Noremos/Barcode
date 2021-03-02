@@ -4,38 +4,32 @@
 #include <assert.h>
 
 template<class T>
-bc::Component<T>::Component(point pix, bc::BarcodeCreator<T>* factory)
+void bc::Component<T>::init(BarcodeCreator<T>* factory)
 {
-	//coords = new pmap();
 	this->factory = factory;
-
 	factory->components.push_back(this);
 	num = factory->components.size();
 	start = factory->curbright;
 	end = factory->curbright;
 	bar3d = new barcounter();
+}
+
+template<class T>
+bc::Component<T>::Component(point pix, bc::BarcodeCreator<T>* factory)
+{
+	init(factory);
 
 	factory->lastB++;
-
 	add(pix);
 }
 
 template<class T>
 bc::Component<T>::Component(bc::BarcodeCreator<T>* factory, bool create)
 {
-	//coords = new pmap();
-	this->factory = factory;
-
-	factory->components.push_back(this);
-	num = factory->components.size();
-	start = factory->curbright;
-	end = factory->curbright;
-	bar3d = new barcounter();
+	init(factory);
 
 	if (create)
 		factory->lastB++;
-	//    binmap.create(factory->hei, factory->wid, CV_16SC1);
-	//    binmap.setTo(-1);
 }
 
 template<class T>
