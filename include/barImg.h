@@ -574,7 +574,7 @@ namespace bc {
 
 		int channels() const
 		{
-			return mat.get_nd();
+			return mat.get_nd() <= 2 ? 1 : mat.shape(2);
 		}
 
 		T& get(int x, int y) const
@@ -610,6 +610,8 @@ namespace bc {
 			return mat.get_dtype().get_itemsize();
 		}
 	};
+
+	INIT_TEMPLATE_TYPE(BarNdarray)
 #endif // USE_OPENCV 
 
 	template<class T>
@@ -716,8 +718,7 @@ namespace bc {
 #endif // USE_OPENCV
 
 	INIT_TEMPLATE_TYPE(DatagridProvider)
-		INIT_TEMPLATE_TYPE(BarImg)
-		INIT_TEMPLATE_TYPE(BarNdarray)
+	INIT_TEMPLATE_TYPE(BarImg)
 }
 //split
 //convert

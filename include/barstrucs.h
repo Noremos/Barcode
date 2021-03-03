@@ -255,6 +255,22 @@ namespace bc
 		}
 	};
 
+	template<class T>
+	struct bar3dpair
+	{
+		bar3dpair(T value, size_t count)
+		{
+			this->count = count;
+			this->value = value;
+		}
+		bar3dpair()
+		{
+			this->count = 0;
+		}
+
+		size_t count;
+		T value;
+	};
 
 	template<class T>
 	struct ppair
@@ -264,6 +280,28 @@ namespace bc
 			this->point = point;
 			this->value = value;
 		}
+
+		ppair()
+		{ }
+
+		int getX() const
+		{
+			return point.x;
+		}
+		void setX(int x)
+		{
+			point.x = x;
+		}
+
+		int getY() const
+		{
+			return point.y;
+		}
+		void setY(int y)
+		{
+			point.y = y;
+		}
+
 		bc::point point;
 		T value;
 	};
@@ -272,7 +310,8 @@ namespace bc
 	template<class T>
 	using pmap = std::vector<ppair<T>>;
 
-	typedef std::vector<size_t> barcounter;
+	template<class T>
+	using barcounter = std::vector<bar3dpair<T>> ;
 	//**********************************************
 
 INIT_TEMPLATE_STRUCT(CachedValue)

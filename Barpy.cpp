@@ -67,16 +67,37 @@ BOOST_PYTHON_MODULE(barpy)
 	//	;
 	//class_<std::vector<bc::barline>>("LinesList")
 	//	;
-	
+	class_<bc::ppair<uchar>>("Matrvalue")
+		.add_property("x", &bc::ppair<uchar>::getX, &bc::ppair<uchar>::setX)
+		.add_property("y", &bc::ppair<uchar>::getY, &bc::ppair<uchar>::setY)
+		.add_property("point", make_getter(&bc::ppair<uchar>::point), make_setter(&bc::ppair<uchar>::point))
+		.add_property("value", make_getter(&bc::ppair<uchar>::value), make_setter(&bc::ppair<uchar>::value))
+		//.add_property("points", make_getter(&bc::barline::matr))
+		;
+
+	class_<bc::bar3dpair<uchar>>("Bar3dvalue")
+		.add_property("count", make_getter(&bc::bar3dpair<uchar>::count), make_setter(&bc::bar3dpair<uchar>::count))
+		.add_property("value", make_getter(&bc::bar3dpair<uchar>::value), make_setter(&bc::bar3dpair<uchar>::value))
+		//.add_property("points", make_getter(&bc::barline::matr))
+		;
+
 	class_<bc::barline<uchar>>("Barline")
 		.def(init<uchar, uchar>(args("start", "len")))
 		.add_property("start", make_getter(&bc::barline<uchar>::start), make_setter(&bc::barline<uchar>::start))
 		.add_property("len", make_getter(&bc::barline<uchar>::len), make_setter(&bc::barline<uchar>::len))
 		.def("end", &bc::barline<uchar>::end)
+		.def("getPointsInDict", &bc::barline<uchar>::getPointsInDict)
 		.def("getPoints", &bc::barline<uchar>::getPoints)
+		.def("getPointsSize", &bc::barline<uchar>::getPointsSize)
+		.def("getMatrvalue", &bc::barline<uchar>::getPoint, args("index"))
 		.def("getRect", &bc::barline<uchar>::getRect)
-		.def("getParrent", &bc::barline<uchar>::getParent, return_value_policy< reference_existing_object >())
+		.def("getParrent", &bc::barline<uchar>::getParent, return_internal_reference())
 		.def("getChildren", &bc::barline<uchar>::getChildren)
+
+		.def("get3dList", &bc::barline<uchar>::getBarcode3d)
+		.def("get3dSize", &bc::barline<uchar>::getBarcode3dSize)
+		.def("get3dValue", &bc::barline<uchar>::getBarcode3dValue, args("index"))
+
 		//.add_property("points", make_getter(&bc::barline::matr))
 		;
 
@@ -93,7 +114,7 @@ BOOST_PYTHON_MODULE(barpy)
 		.def("getBarcode", &bc::Baritem<uchar>::getBarcode)
 		.def("SortByLineLen", &bc::Baritem<uchar>::sortByLen)
 		.def("SortByPointsCount", &bc::Baritem<uchar>::sortBySize)
-		.def("getRootNode", &bc::Baritem<uchar>::getRootNode, return_value_policy< reference_existing_object >()/*, make_setter(&bc::Baritem::rootNode)*/)
+		.def("getRootNode", &bc::Baritem<uchar>::getRootNode, return_internal_reference()/*, make_setter(&bc::Baritem::rootNode)*/)
 
 
 
@@ -115,7 +136,7 @@ BOOST_PYTHON_MODULE(barpy)
 		.def("cmpCTML", &bc::Barcontainer<uchar>::cmpCTML, args("bc"))
 		.def("cmpCTS", &bc::Barcontainer<uchar>::cmpCTS, args("bc"))
 		.def("addItem", &bc::Barcontainer<uchar>::addItem, args("Baritem"))
-		.def("getItem", &bc::Barcontainer<uchar>::getItem, args("index"), return_value_policy< reference_existing_object>())
+		.def("getItem", &bc::Barcontainer<uchar>::getItem, args("index"), return_internal_reference())
 		;
 
 	enum_<bc::CompireFunction>("CompireFunction")

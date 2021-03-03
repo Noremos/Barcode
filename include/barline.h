@@ -80,7 +80,7 @@ namespace bc
 		pmap<T> matr;
 		T start;
 		T len;
-		barcounter* bar3d = nullptr;
+		barcounter<T>* bar3d = nullptr;
 		//    barline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
 		//    barline(uchar _start, uchar _len, cv::Mat _mat) :  start(_start), len(_len)
 		//    {
@@ -90,7 +90,7 @@ namespace bc
 		{
 
 		}
-		barline(T _start, T _len, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len) {
+		barline(T _start, T _len, barcounter<T>* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len) {
 			matr.reserve(coordsSize);
 			bar3d = _barc;
 		}
@@ -106,7 +106,7 @@ namespace bc
 				for (int i = 0; i < childrens.size(); ++i)
 				{
 					childrens[i]->parrent = nullptr;
-					delete childrens[i];
+					//delete childrens[i];
 				}
 			}
 			if (bar3d != nullptr)
@@ -126,7 +126,7 @@ namespace bc
 
 			if (bar3d != nullptr)
 			{
-				temp->bar3d = new barcounter();
+				temp->bar3d = new barcounter<T>();
 				temp->bar3d->insert(temp->bar3d->begin(), bar3d->begin(), bar3d->end());
 			}
 			return temp;
@@ -153,8 +153,57 @@ namespace bc
 			return start + len;
 		}
 
+		size_t getPointsSize()
+		{
+			return matr.size();
+		}
+
+		ppair<T> getPoint(size_t index)
+		{
+			if (index >= matr.size())
+				index = index % matr.size();
+
+			return matr[index];
+		}
 #ifdef _PYD
-		bp::dict getPoints()
+		bp::list getPoints()
+		{
+			bp::list l;
+			for (size_t i = 0; i < matr.size(); i++)
+				l.append(matr[i]);
+
+			return l;
+		}
+
+		bp::list getBarcode3d()
+		{
+			bp::list l;
+			if (bar3d != nullptr)
+			{
+				for (size_t i = 0; i < bar3d->size(); i++)
+					l.append(bar3d->at(i));
+			}
+
+			return l;
+		}
+
+		size_t getBarcode3dSize()
+		{
+			return bar3d->size();
+		}
+
+		bar3dpair<T> getBarcode3dValue(size_t index)
+		{
+			if (bar3d == nullptr)
+				return bar3dpair<T>();
+			
+			if (index >= bar3d->size())
+				index = index % bar3d->size();
+
+			return bar3d->at(index);
+		}
+
+		bp::dict getPointsInDict()
 		{
 			bp::dict pydict;
 
@@ -178,7 +227,7 @@ namespace bc
 		bp::list getChildren()
 		{
 			bp::list list;
-			for (auto* child : childrens)
+			for (barline<T>* child : childrens)
 				list.append(child);
 
 			return list;

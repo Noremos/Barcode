@@ -212,7 +212,15 @@ namespace bc {
 					//cv::imshow("test", image);
 					//cv::waitkey(0);
 			bc::BarNdarray<T> image(img);
-			return createBarcode(&image, structure);
+			try
+			{
+				return createBarcode(&image, structure);
+			}
+			catch (const std::exception& ex)
+			{
+				printf("ERROR");
+				printf(ex.what());
+			}
 
 			//bc::BarImg<T> image(img.shape(1), img.shape(0), img.get_nd(), (uchar*)img.get_data(), false, false);
 			//return createBarcode(&image, structure);

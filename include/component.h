@@ -30,7 +30,7 @@ namespace bc
 
 		//pmap subCoords;
 		T start = 0, end = 0;
-		barcounter* bar3d;
+		barcounter<T>* bar3d;
 		//0 - nan
 		size_t num = 0;
 		//    pmap coords;
