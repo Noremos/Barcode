@@ -230,11 +230,13 @@ COMPP BarcodeCreator<T>::getPorogComp(const point& p)
 		return nullptr;
 
 	const size_t off = static_cast<size_t>(wid) * p.y + p.x;
-	if (GETDIFF(curbright, workingImg->get(p.x, p.y)) > settings.getMaxStepPorog())
+	auto& itr = included[off];
+	if (itr.comp && GETDIFF(curbright, itr.bright) <= settings.getMaxStepPorog())
+	{
+		return itr.comp->getMaxParrent();
+	}
+	else
 		return nullptr;
-
-	auto itr = included[off].comp;
-	return itr ? itr->getMaxParrent() : nullptr;
 }
 
 template<class T>
