@@ -731,14 +731,14 @@ void BarcodeCreator<T>::reverseCom()
 {
 	for (size_t i = 0; i < totalSize; i++)
 	{
-		Include<T>* incl = getInclude(i);
+		Include<T>& incl = included[i];
 		barline<T>* bline;
-		auto& ccod = incl->bright;// начало конкретно в этом пикселе
+		auto& ccod = incl.bright;// начало конкретно в этом пикселе
 
 		if (settings.createBinayMasks)
 		{
 			// надо добавить заничя каому потомку
-			COMPP prev = incl->comp;
+			COMPP prev = incl.comp;
 			while (prev->parent)
 			{
 				barline<T>* blineParrent = prev->parent->resline;
@@ -753,13 +753,13 @@ void BarcodeCreator<T>::reverseCom()
 		//blineParrent->end() - ccod = общее время
 		//item->end() - ccod + blineParrent->end() - item->end() = общее время
 		//220 - 10
-		bline = incl->comp->resline;
+		bline = incl.comp->resline;
 		if (settings.createBinayMasks)
 			bline->addCoord(getPoint(i), bline->end() - ccod);
 
 		// parent always will be (rootNode for root elements
-		if (settings.createGraph && incl->comp->parent != nullptr)
-			bline->setParrent(incl->comp->parent->resline);
+		if (settings.createGraph && incl.comp->parent != nullptr)
+			bline->setParrent(incl.comp->parent->resline);
 	}
 }
 
