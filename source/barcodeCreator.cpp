@@ -230,7 +230,7 @@ COMPP BarcodeCreator<T>::getPorogComp(const point& p)
 		return nullptr;
 
 	const size_t off = static_cast<size_t>(wid) * p.y + p.x;
-	if (GETDIFF(curbright, workingImg->getLiner(off)) > settings.getMaxStepPorog())
+	if (GETDIFF(curbright, workingImg->get(p.x, p.y)) > settings.getMaxStepPorog())
 		return nullptr;
 
 	auto itr = included[off].comp;
@@ -518,7 +518,7 @@ inline point* BarcodeCreator<T>::sort(const ProcType& type)
 		data[i] = workingImg->getPointAt(i);
 
 	std::sort(data, data + total, [ptr = workingImg](point& a, point& b) {
-		return ptr->get(a) > ptr->get(b);
+		return ptr->get(a.x, a.y) > ptr->get(b.x, b.y);
 		});
 
 	if (type == ProcType::f255t0)
@@ -733,7 +733,7 @@ void BarcodeCreator<T>::reverseCom()
 		barline<T>* bline;
 		auto& ccod = incl->bright;// начало конкретно в этом пикселе
 
-		if (incl->comp->parent != nullptr)
+		if (settings.createBinayMasks)
 		{
 			// надо добавить заничя каому потомку
 			COMPP prev = incl->comp;
@@ -741,9 +741,6 @@ void BarcodeCreator<T>::reverseCom()
 			{
 				barline<T>* blineParrent = prev->parent->resline;
 				bline = prev->resline;
-
-				if (settings.createGraph)
-					bline->setParrent(blineParrent);
 
 				if (settings.createBinayMasks)
 					blineParrent->addCoord(getPoint(i), blineParrent->end() - bline->end());//нам нужно только то время, которое было у съевшего.
@@ -757,6 +754,10 @@ void BarcodeCreator<T>::reverseCom()
 		bline = incl->comp->resline;
 		if (settings.createBinayMasks)
 			bline->addCoord(getPoint(i), bline->end() - ccod);
+
+		// parent always will be (rootNode for root elements
+		if (settings.createGraph && incl->comp->parent != nullptr)
+			bline->setParrent(incl->comp->parent->resline);
 	}
 }
 

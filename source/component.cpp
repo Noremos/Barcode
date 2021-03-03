@@ -11,7 +11,8 @@ void bc::Component<T>::init(BarcodeCreator<T>* factory)
 	num = factory->components.size();
 	start = factory->curbright;
 	end = factory->curbright;
-	bar3d = new barcounter<T>();
+	if (factory->settings.returnType == bc::ReturnType::barcode3d)
+		bar3d = new barcounter<T>();
 }
 
 template<class T>
@@ -64,7 +65,7 @@ void bc::Component<T>::add(const point& p)
 	//coords->push_back(ppair<T>(p, factory->curbright));
 
 	// 3d barcode/ —читаем кол-во добавленных значений
-	if (factory->settings.returnType == bc::ReturnType::barcode3d)
+	if (bar3d != nullptr)
 	{
 		if (factory->curbright != lastVal)
 		{
@@ -89,7 +90,10 @@ void bc::Component<T>::kill()
 		//for (auto p = coords->begin(); p != coords->end(); ++p)
 		//		p->second = end - p->second;
 	//}
-	bar3d->push_back(bar3dpair<T>(lastVal, cashedSize));
+
+	if (bar3d != nullptr)
+		bar3d->push_back(bar3dpair<T>(lastVal, cashedSize));
+
 	lastVal = factory->curbright;
 	cashedSize = 0;
 }
