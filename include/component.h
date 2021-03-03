@@ -8,6 +8,9 @@ namespace bc
 	class BarcodeCreator;
 
 	template<class T>
+	struct barline;
+
+	template<class T>
 	class Component
 	{
 		Component<T>* cachedMaxParent = nullptr;
@@ -34,6 +37,7 @@ namespace bc
 		//0 - nan
 		size_t num = 0;
 		//    pmap coords;
+		barline<T>* resline;
 
 		bool isAlive()
 		{

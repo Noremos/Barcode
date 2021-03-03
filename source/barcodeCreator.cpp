@@ -725,25 +725,7 @@ bool compareLines(const barline<T>* i1, const barline<T>* i2)
 }
 
 template<class T>
-struct TempGraphVer
-{
-	TempGraphVer()
-	{
-	}
-	TempGraphVer(COMPP comp)
-	{
-		this->comp = comp;
-		//		this->node = node;
-	}
-	//	BarNode *node;
-	COMPP comp = nullptr;
-	TempGraphVer* parent = nullptr;
-	//Component *comp;
-	std::vector<TempGraphVer*> childrens;
-};
-
-template<class T>
-void BarcodeCreator<T>::reverseCom(std::unordered_map<COMPP, barline<T>*>& graph)
+void BarcodeCreator<T>::reverseCom()
 {
 	for (size_t i = 0; i < totalSize; i++)
 	{
@@ -757,13 +739,14 @@ void BarcodeCreator<T>::reverseCom(std::unordered_map<COMPP, barline<T>*>& graph
 			COMPP prev = incl->comp;
 			while (prev->parent)
 			{
-				barline<T>* blineParrent = graph[prev->parent];
-				bline = graph[prev];
+				barline<T>* blineParrent = prev->parent->resline;
+				bline = prev->resline;
 
 				if (settings.createGraph)
 					bline->setParrent(blineParrent);
 
-				blineParrent->addCoord(getPoint(i), blineParrent->end() - bline->end());//нам нужно только то время, которое было у съевшего.
+				if (settings.createBinayMasks)
+					blineParrent->addCoord(getPoint(i), blineParrent->end() - bline->end());//нам нужно только то время, которое было у съевшего.
 
 				prev = prev->parent;
 			}
@@ -771,9 +754,9 @@ void BarcodeCreator<T>::reverseCom(std::unordered_map<COMPP, barline<T>*>& graph
 		//blineParrent->end() - ccod = общее время
 		//item->end() - ccod + blineParrent->end() - item->end() = общее время
 		//220 - 10
-		bline = graph[incl->comp];
-
-		bline->addCoord(getPoint(i), bline->end() - ccod);
+		bline = incl->comp->resline;
+		if (settings.createBinayMasks)
+			bline->addCoord(getPoint(i), bline->end() - ccod);
 	}
 }
 
@@ -829,9 +812,6 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 {
 	assert(n == 2 || n == 3);
 
-	std::unordered_map<COMPP, TempGraphVer<T>> vers;
-	std::unordered_map<COMPP, barline<T>*> graph;
-
 	// якорная линия
 	auto* rootNode = new BarRoot<T>(0, 0);
 
@@ -848,10 +828,10 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 
 		auto* bar3d = (n == 3) ? c->bar3d : nullptr;
 		barline<T>* line = new barline<T>(c->start, c->end - c->start, bar3d, size);
+		c->resline = line;
 
 		if (settings.createBinayMasks)
 		{
-			graph.insert(std::pair<COMPP, barline<T>*>(c, line));
 			if (c->parent == nullptr && settings.createGraph)
 			{
 				line->setParrent(rootNode);
@@ -862,7 +842,7 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 
 	if (settings.createBinayMasks)
 	{
-		reverseCom(graph);
+		reverseCom();
 	}
 	if (settings.createGraph)
 		lines->setRootNode(rootNode);

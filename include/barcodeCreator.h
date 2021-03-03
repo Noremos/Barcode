@@ -147,7 +147,7 @@ namespace bc {
 		void processFULL(const barstruct& str, const bc::DatagridProvider<T>* img, bc::Barcontainer<T>* item);
 		void addItemToCont(Barcontainer<T>* item);
 
-		void reverseCom(std::unordered_map<COMPP, barline<T>*>& graph);
+		void reverseCom();
 
 		void computeBettyBarcode(Baritem<T>* lines);
 		void computeNdBarcode(Baritem<T>* lines, int n);

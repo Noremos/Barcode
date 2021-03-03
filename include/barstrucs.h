@@ -140,11 +140,11 @@ namespace bc
 
 		void checkCorrect()
 		{
-			if (returnType == ReturnType::barcode2d || returnType == ReturnType::barcode3d)
-				createBinayMasks = true;
+			//if (returnType == ReturnType::barcode2d || returnType == ReturnType::barcode3d)
+			//	createBinayMasks = true;
 
-			if (createGraph && !createBinayMasks)
-				throw std::exception();
+			//if (createGraph && !createBinayMasks)
+			//	throw std::exception();
 
 			if (returnType == ReturnType::betty && !std::is_same<T, uchar>::value)
 				throw std::exception();
