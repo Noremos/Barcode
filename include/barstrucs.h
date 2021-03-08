@@ -40,10 +40,23 @@ namespace bc
 			width = _width;
 			height = _height;
 		}
+		int right()
+		{
+			return x+width;
+		}
+		int botton()
+		{
+			return y+height;
+		}
 
 		int area()
 		{
 			return width * height;
+		}
+
+		bool isItemInside(BarRect anItem)
+		{
+			return (anItem.x >= x && anItem.y >= y && anItem.right() <= right() && anItem.botton() <= botton());
 		}
 	};
 
@@ -133,7 +146,7 @@ namespace bc
 		ReturnType returnType;
 		std::vector<barstruct> structure;
 
-		inline void addStructire(ProcType pt, ColorType colT, ComponentType comT)
+		inline void addStructure(ProcType pt, ColorType colT, ComponentType comT)
 		{
 			structure.push_back(barstruct(pt, colT, comT));
 		}

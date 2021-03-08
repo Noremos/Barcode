@@ -91,7 +91,7 @@ BOOST_PYTHON_MODULE(barpy)
 		.def("getPointsSize", &bc::barline<uchar>::getPointsSize)
 		.def("getMatrvalue", &bc::barline<uchar>::getPoint, args("index"))
 		.def("getRect", &bc::barline<uchar>::getRect)
-		.def("getParrent", &bc::barline<uchar>::getParent, return_internal_reference())
+		.def("getParent", &bc::barline<uchar>::getParent, return_internal_reference())
 		.def("getChildren", &bc::barline<uchar>::getChildren)
 
 		.def("get3dList", &bc::barline<uchar>::getBarcode3d)
@@ -173,12 +173,12 @@ BOOST_PYTHON_MODULE(barpy)
 	//	.add_property("colType", &bc::barstruct::coltype);
 	
 	class_<bc::BarConstructor<uchar>>("BarConstructor")
-		.def("addStructire", &bc::BarConstructor<uchar>::addStructire, args("ProcType", "ColorType", "ComponentType"))
+		.def("addStructure", &bc::BarConstructor<uchar>::addStructure, args("ProcType", "ColorType", "ComponentType"))
 		.def("setPorogStep", &bc::BarConstructor<uchar>::setStep, args("porog"))
 		.add_property("returnType", &bc::BarConstructor<uchar>::returnType, make_setter(&bc::BarConstructor<uchar>::returnType))
-		.add_property("createBinayMasks", &bc::BarConstructor<uchar>::createBinayMasks, make_setter(&bc::BarConstructor<uchar>::createBinayMasks))
+		.add_property("createBinaryMasks", &bc::BarConstructor<uchar>::createBinayMasks, make_setter(&bc::BarConstructor<uchar>::createBinayMasks))
 		.add_property("createGraph", &bc::BarConstructor<uchar>::createGraph, make_setter(&bc::BarConstructor<uchar>::createGraph))
-		.add_property("createNewComponentOnAttach", &bc::BarConstructor<uchar>::createGraph, make_setter(&bc::BarConstructor<uchar>::createNewComponentOnAttach))
+		.add_property("createNewComponentOnAttach", &bc::BarConstructor<uchar>::createNewComponentOnAttach, make_setter(&bc::BarConstructor<uchar>::createNewComponentOnAttach))
 		;
 	;
 

@@ -11,6 +11,7 @@ void bc::Component<T>::init(BarcodeCreator<T>* factory)
 	num = factory->components.size();
 	start = factory->curbright;
 	end = factory->curbright;
+	lastVal = factory->curbright;
 	if (factory->settings.returnType == bc::ReturnType::barcode3d)
 		bar3d = new barcounter<T>();
 }

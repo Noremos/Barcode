@@ -38,7 +38,7 @@ namespace bc
 		}
 #endif // USE_OPENCV
 
-		bc::BarImg<T> getBarImg(const int wid, int hei)
+		bc::BarImg<T> getBarImg(const int wid, int hei) const
 		{
 			BarImg<T> bc(wid, hei);
 			for (auto* it = matr.begin(); it != matr.end(); ++it) {
@@ -54,7 +54,7 @@ namespace bc
 				matr->push_back(ppair<T>(mat.getPointAt(i), mat.getLiner(i)));
 		}
 
-		BarRect getBarRect()
+		BarRect getBarRect()  const
 		{
 			int l, r, t, d;
 			r = l = matr[0].point.x;
@@ -115,7 +115,7 @@ namespace bc
 			}
 
 		}
-		barline* clone()
+		barline* clone() const
 		{
 			auto temp = new barline(start, len, nullptr);
 			if (matr.size() != 0)
@@ -153,12 +153,12 @@ namespace bc
 			return start + len;
 		}
 
-		size_t getPointsSize()
+		size_t getPointsSize() const
 		{
 			return matr.size();
 		}
 
-		ppair<T> getPoint(size_t index)
+		ppair<T> getPoint(size_t index) const
 		{
 			if (index >= matr.size())
 				index = index % matr.size();

@@ -121,7 +121,7 @@ Bimg8 restreToBarimgFromGraph(bc::Barcontainer<uchar>* cont, int wid, int hei, u
 void test(bool graph, Bbase8& testimg, bool createNew = false)
 {
 	bc::BarConstructor<uchar> bcont;
-	bcont.addStructire(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
 	bcont.createBinayMasks = true;
 	bcont.createGraph = graph;
 	bcont.returnType = bc::ReturnType::barcode2d;
@@ -158,6 +158,52 @@ void test(bool graph, Bbase8& testimg, bool createNew = false)
 	delete ret;
 }
 
+void testf255t0(Bbase8& testimg)
+{
+	bc::BarConstructor<uchar> bcont;
+	bcont.addStructure(bc::ProcType::f255t0, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.createBinayMasks = true;
+	bcont.createGraph = false;
+	bcont.returnType = bc::ReturnType::barcode2d;
+	bcont.createNewComponentOnAttach = false;
+	bcont.setStep(255);
+
+	bc::BarcodeCreator<uchar> test;
+	for (size_t i = 0; i < testimg.length(); i++)
+	{
+		uchar& b = testimg.getLiner(i);
+		b = 255 - b;
+	}
+	auto* ret = test.createBarcode(&testimg, bcont);
+
+	auto* it = ret->getItem(0);
+	auto& lines = it->barlines;
+
+	int wid = testimg.wid();
+	int hei = testimg.hei();
+	Bimg8 img(wid, hei);
+	memset(img.getData(), 0, static_cast<size_t>(wid) * hei);
+
+	for (size_t i = 0; i < lines.size(); i++)
+	{
+		auto& matr = lines[i]->matr;
+		for (size_t k = 0; k < matr.size(); k++)
+		{
+			auto& p = matr[k];
+			img.add(p.point, p.value);
+		}
+	}
+
+	Mat orig = bc::convertProvider2Mat(&testimg);
+	Mat res = bc::convertProvider2Mat(&img);
+	cv::namedWindow("restored", cv::WINDOW_NORMAL);
+	cv::imshow("restored", res);
+	cv::namedWindow("original", cv::WINDOW_NORMAL);
+	cv::imshow("original", orig);
+	cv::waitKey(1);
+	compiteBarAndBar(img, testimg);
+}
+
 void testMat(bool graph, Mat testmat, bool createNew = false)
 {
 	Bmat8 img(testmat);
@@ -174,9 +220,11 @@ void checkImgFromData2()
 {
 	const int lend = 2;
 	uchar data[lend * lend]{
-		63,121,
-		237,90
+		0,121,
+		255,90
 	};
+	Bimg8 img(2, 2, 1, data);
+	testf255t0(img);
 
 	testData(false, data, lend);
 	testData(true, data, lend);
@@ -268,30 +316,62 @@ void testMats(bool createNew = false)
 		Bmat8 img(testmat);
 		compiteBarAndMat(&img, testmat);
 
+		//testf255t0(img);
+
 		testMat(true, testmat);
 		testMat(false, testmat);
 		testMat(false, testmat, createNew);
 	}
 }
 
+#include <thread>
 
+
+void checkBigImg()
+{
+	bc::BarConstructor<uchar> bcont;
+	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.createBinayMasks = false;
+	bcont.createGraph = false;
+	bcont.returnType = bc::ReturnType::barcode2d;
+	bcont.createNewComponentOnAttach = false;
+	bcont.setStep(255);
+
+	bc::BarcodeCreator<uchar> test;
+
+	Mat testmat = cv::imread((string)"D:\\MyA\\z.jpg", cv::IMREAD_GRAYSCALE);
+	//Mat testmat = cv::imread((string)"D:\\Programs\\Python\\barcode\\lenna.png", cv::IMREAD_GRAYSCALE);
+	bc::BarMat<uchar> mf(testmat);
+
+	using std::chrono::high_resolution_clock;
+	using std::chrono::duration_cast;
+	using std::chrono::duration;
+	using std::chrono::milliseconds;
+
+	auto t1 = high_resolution_clock::now();
+	auto* ret = test.createBarcode(&mf, bcont);
+	auto t2 = high_resolution_clock::now();
+	auto ms_int = duration_cast<milliseconds>(t2 - t1);
+	std::cout << ms_int.count();
+}
 int main()
 {
-	// TODO Move i to test project
+	// TODO Move it to test project
 	testInitFromMat();
 
 	printf("raw data tests: star...");
 	checkImgFromData2();
-	checkImgFromData3();
-	checkImgFromData4();
-	checkImgFromData5();
-	checkImgFromData6();
+	//checkImgFromData3();
+	//checkImgFromData4();
+	//checkImgFromData5();
+	//checkImgFromData6();
 	printf("done\n\n");
 
 	printf("mat tests: star...");
 	checkSingleMat();
 	testMats();
 	printf("done\n\n");
-
+	checkBigImg();
+	
 	return 0;
 }

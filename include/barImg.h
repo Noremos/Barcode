@@ -86,6 +86,8 @@ namespace bc {
 		CachedValue<T> cachedMin;
 	public:
 		bool diagReverce = false;
+		virtual int width(){ return wid();}
+		virtual int height(){ return hei();}
 
 	protected:
 
@@ -154,7 +156,7 @@ namespace bc {
 
 
 	public:
-		BarImg(int width, int height, int chnls = 1)
+		BarImg(int width = 1, int height = 1, int chnls = 1)
 		{
 			setMetadata(width, height, chnls);
 			valInit();

@@ -17,23 +17,14 @@
 namespace bc {
 
 	template<class T>
-	struct Include
-	{
-	public:
-		bc::Component<T>* comp;
-		T bright;
-		void setValues(bc::Component<T>* comp, T bright)
-		{
-			this->comp = comp;
-			this->bright = bright;
-		}
-	};
+	using Include = Component<T>*;
 
 	template<class T>
 	class EXPORT BarcodeCreator
 	{
 		typedef bc::DatagridProvider<T> bcBarImg;
 
+		bool originalImg = true;
 	public:
 		std::vector<COMPP> components;
 	private:
@@ -66,7 +57,7 @@ namespace bc {
 		int lastB;
 		friend class Component<T>;
 		friend class Hole<T>;
-//		friend struct BarRoot<T>;
+		//		friend struct BarRoot<T>;
 		friend class Baritem<T>;
 
 		size_t totalSize = 0;
@@ -85,7 +76,7 @@ namespace bc {
 			return a > b ? a - b : b - a;
 		}
 
-		inline point getPoint(size_t i) const
+		constexpr point getPoint(size_t i) const
 		{
 			return point(static_cast<int>(i % (size_t)wid), static_cast<int>(i / (size_t)wid));
 		}
@@ -97,18 +88,18 @@ namespace bc {
 		bool isContain(const point& p, bool valid) const;
 		bool isContain(const point& p) const;
 
-		void setInclude(int x, int y, COMPP comp, T bright);
-		void setInclude(const point& p, COMPP comp, T bright);
+		void setInclude(int x, int y, COMPP comp);
+		void setInclude(const point& p, COMPP comp);
 
-		inline void setInclude(int x, int y, COMPP comp)
-		{
-			setInclude(x, y, comp, curbright);
-		}
+		//inline void setInclude(int x, int y, COMPP comp)
+		//{
+		//	setInclude(x, y, comp);
+		//}
 
-		inline void setInclude(const point& p, COMPP comp)
-		{
-			setInclude(p, comp, curbright);
-		}
+		//inline void setInclude(const point& p, COMPP comp)
+		//{
+		//	setInclude(p, comp);
+		//}
 
 		COMPP getComp(int x, int y);
 		COMPP getComp(const point& p);
@@ -125,7 +116,7 @@ namespace bc {
 		bool checkCloserB0();
 		bool checkCloserB1();
 
-		point* sort(const ProcType& type);
+		point* sort();
 
 		void clearIncluded();
 
@@ -188,9 +179,6 @@ namespace bc {
 
 		virtual ~BarcodeCreator()
 		{
-			if (workingImg != nullptr && needDelImg)
-				delete workingImg;
-
 			clearIncluded();
 #ifdef USE_OPENCV
 			colors.clear();
@@ -212,15 +200,15 @@ namespace bc {
 					//cv::imshow("test", image);
 					//cv::waitkey(0);
 			bc::BarNdarray<T> image(img);
-			try
-			{
-				return createBarcode(&image, structure);
-			}
-			catch (const std::exception& ex)
-			{
-				printf("ERROR");
-				printf(ex.what());
-			}
+			//try
+			//{
+			return createBarcode(&image, structure);
+			//}
+			//catch (const std::exception& ex)
+			//{
+				//printf("ERROR");
+				//printf(ex.what());
+			//}
 
 			//bc::BarImg<T> image(img.shape(1), img.shape(0), img.get_nd(), (uchar*)img.get_data(), false, false);
 			//return createBarcode(&image, structure);

@@ -15,7 +15,7 @@ namespace bc
 	{
 		Component<T>* cachedMaxParent = nullptr;
 	protected:
-		size_t totalCount = 0;
+		size_t totalCount = 0/*, ownSize = 0*/;
 		BarcodeCreator<T>* factory;
 		bool lived = true;
 
@@ -33,7 +33,7 @@ namespace bc
 
 		//pmap subCoords;
 		T start = 0, end = 0;
-		barcounter<T>* bar3d;
+		barcounter<T>* bar3d = nullptr;
 		//0 - nan
 		size_t num = 0;
 		//    pmap coords;
