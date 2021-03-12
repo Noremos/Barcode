@@ -84,7 +84,7 @@ bc::Baritem<T>* bc::Baritem<T>::clone() const
 	Baritem<T>* nb = new Baritem<T>();
 	nb->barlines.insert(nb->barlines.begin(), barlines.begin(), barlines.end());
 	bool createGraph = false;
-	if (barlines.size() > 0 && barlines[0]->parrent != nullptr || barlines[0]->childrens.size() > 0)
+	if ((barlines.size() > 0 && barlines[0]->parrent != nullptr) || barlines[0]->childrens.size() > 0)
 		createGraph = true;
 
 	for (size_t i = 0, total = nb->barlines.size(); i < total; ++i)
@@ -343,7 +343,7 @@ bc::Baritem<T>* bc::Barcontainer<T>::getItem(size_t i)
 	while (i < 0)
 		i += items.size();
 
-	while (i >= (int)items.size())
+	while (i >= items.size())
 		i -= items.size();
 
 	return items[i];

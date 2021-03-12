@@ -131,8 +131,8 @@ namespace bc {
 		void clearIncluded();
 
 		void draw(std::string name = "test");
-		void VISULA_DEBUG(int y, int i);
-		void VISULA_DEBUG_COMP(int y, int i);
+		void VISULA_DEBUG();
+		void VISULA_DEBUG_COMP();
 
 
 		void init(const bc::DatagridProvider<T>* src, const  ProcType& type);

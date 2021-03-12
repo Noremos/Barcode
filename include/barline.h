@@ -29,7 +29,7 @@ namespace bc
 		{
 			matr->clear();
 			mat.forEach<T>([m = matr](uchar& pixel, const int* pos) -> void {
-				m->push_back(ppair(bc::point(pos[0], pos[1]), pixel)); });
+				m->push_back(barvalue(bc::point(pos[0], pos[1]), pixel)); });
 		}
 		cv::Rect getCvRect()
 		{
@@ -51,7 +51,7 @@ namespace bc
 			matr.clear();
 
 			for (size_t i = 0; i < mat.getLiner(); i++)
-				matr->push_back(ppair<T>(mat.getPointAt(i), mat.getLiner(i)));
+				matr->push_back(barvalue<T>(mat.getPointAt(i), mat.getLiner(i)));
 		}
 
 		BarRect getBarRect()  const
@@ -75,7 +75,7 @@ namespace bc
 		}
 		void addCoord(const point& first, T bright)
 		{
-			matr.push_back(ppair<T>(first, bright));
+			matr.push_back(barvalue<T>(first, bright));
 		}
 		pmap<T> matr;
 		T start;
@@ -103,7 +103,7 @@ namespace bc
 				{
 					parrent->childrens[numInParet] = nullptr;
 				}
-				for (int i = 0; i < childrens.size(); ++i)
+				for (size_t i = 0; i < childrens.size(); ++i)
 				{
 					childrens[i]->parrent = nullptr;
 					//delete childrens[i];
@@ -158,7 +158,7 @@ namespace bc
 			return matr.size();
 		}
 
-		ppair<T> getPoint(size_t index) const
+		barvalue<T> getPoint(size_t index) const
 		{
 			if (index >= matr.size())
 				index = index % matr.size();
@@ -192,10 +192,10 @@ namespace bc
 			return bar3d->size();
 		}
 
-		bar3dpair<T> getBarcode3dValue(size_t index)
+		bar3dvalue<T> getBarcode3dValue(size_t index)
 		{
 			if (bar3d == nullptr)
-				return bar3dpair<T>();
+				return bar3dvalue<T>();
 			
 			if (index >= bar3d->size())
 				index = index % bar3d->size();

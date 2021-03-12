@@ -63,21 +63,21 @@ BOOST_PYTHON_MODULE(barpy)
 	//	;
 	//class_<pmap>("Pmap")
 	//	;
-	//class_<ppair>("Ppair")
+	//class_<barvalue>("barvalue")
 	//	;
 	//class_<std::vector<bc::barline>>("LinesList")
 	//	;
-	class_<bc::ppair<TV>>("Matrvalue")
-		.add_property("x", &bc::ppair<TV>::getX, &bc::ppair<TV>::setX)
-		.add_property("y", &bc::ppair<TV>::getY, &bc::ppair<TV>::setY)
-		.add_property("point", make_getter(&bc::ppair<TV>::point), make_setter(&bc::ppair<TV>::point))
-		.add_property("value", make_getter(&bc::ppair<TV>::value), make_setter(&bc::ppair<TV>::value))
+	class_<bc::barvalue<TV>>("Matrvalue")
+		.add_property("x", &bc::barvalue<TV>::getX, &bc::barvalue<TV>::setX)
+		.add_property("y", &bc::barvalue<TV>::getY, &bc::barvalue<TV>::setY)
+		.add_property("point", make_getter(&bc::barvalue<TV>::point), make_setter(&bc::barvalue<TV>::point))
+		.add_property("value", make_getter(&bc::barvalue<TV>::value), make_setter(&bc::barvalue<TV>::value))
 		//.add_property("points", make_getter(&bc::barline::matr))
 		;
 
-	class_<bc::bar3dpair<TV>>("Bar3dvalue")
-		.add_property("count", make_getter(&bc::bar3dpair<TV>::count), make_setter(&bc::bar3dpair<TV>::count))
-		.add_property("value", make_getter(&bc::bar3dpair<TV>::value), make_setter(&bc::bar3dpair<TV>::value))
+	class_<bc::bar3dvalue<TV>>("Bar3dvalue")
+		.add_property("count", make_getter(&bc::bar3dvalue<TV>::count), make_setter(&bc::bar3dvalue<TV>::count))
+		.add_property("value", make_getter(&bc::bar3dvalue<TV>::value), make_setter(&bc::bar3dvalue<TV>::value))
 		//.add_property("points", make_getter(&bc::barline::matr))
 		;
 

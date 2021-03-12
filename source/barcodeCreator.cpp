@@ -427,7 +427,7 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 			{
 				if (h2 != nullptr && !h2->isValid)
 				{
-					Hole<T>* nh = new Hole<T>(curpix, curp, next, this);
+					new Hole<T>(curpix, curp, next, this);
 					delete h_t;
 					delete h2;
 				}
@@ -527,7 +527,7 @@ inline point* BarcodeCreator<T>::sort()
 	myclass<T> cmp;
 	cmp.workingImg = workingImg;
 
-	for (int i = 0; i < total; ++i)//wid
+	for (size_t i = 0; i < total; ++i)//wid
 		data[i] = workingImg->getPointAt(i);
 
 	std::sort(data, data + total, cmp);
@@ -551,9 +551,9 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType
 			needDelImg = true;
 			bc::BarImg<T>* nimg = new bc::BarImg<T>(wid, hei, 1);
 
-			for (size_t i = 0; i < wid; ++i)
+			for (int i = 0; i < wid; ++i)
 			{
-				for (size_t j = 0; j < hei; ++j)
+				for (int j = 0; j < hei; ++j)
 				{
 					T& val = src->get(i, j);
 					nimg->set(i, j, maxel -val);
@@ -564,9 +564,9 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType
 		else
 		{
 			// src - созданное изобрадение, можно менять
-			for (size_t i = 0; i < wid; ++i)
+			for (int i = 0; i < wid; ++i)
 			{
-				for (size_t j = 0; j < hei; ++j)
+				for (int j = 0; j < hei; ++j)
 				{
 					T& val = src->get(i, j);
 					val = maxel - val;
@@ -654,8 +654,7 @@ void BarcodeCreator<T>::processComp(int* retBty, Barcontainer<T>* item)
 	{
 		curpix = sortedArr[i];
 		curbright = workingImg->get(curpix.x, curpix.y);
-		if (i == 90)
-			printf("");
+
 #ifdef VDEBUG
 		VISULA_DEBUG_COMP(totalSize, i);
 #else
@@ -692,7 +691,7 @@ void BarcodeCreator<T>::processComp(int* retBty, Barcontainer<T>* item)
 // Parallel execution with function object.
 struct Operator
 {
-	void operator()(short& pixel, const int* position) const
+	void operator()(short& pixel, const int* /*position*/) const
 	{
 		// Perform a simple threshold operation
 		assert(pixel != 256);
@@ -713,7 +712,7 @@ void BarcodeCreator<T>::addItemToCont(Barcontainer<T>* container)
 }
 
 template<class T>
-void BarcodeCreator<T>::VISULA_DEBUG(int y, int i)
+void BarcodeCreator<T>::VISULA_DEBUG()
 {
 	checkCloserB1();
 #ifdef USE_OPENCV
@@ -726,7 +725,7 @@ void BarcodeCreator<T>::VISULA_DEBUG(int y, int i)
 }
 
 template<class T>
-void BarcodeCreator<T>::VISULA_DEBUG_COMP(int y, int i)
+void BarcodeCreator<T>::VISULA_DEBUG_COMP()
 {
 	checkCloserB0();
 #ifdef USE_OPENCV
@@ -808,7 +807,7 @@ void BarcodeCreator<T>::reverseCom()
 }
 
 template<class T>
-void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* lines)
+void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* /*lines*/)
 {
 	throw std::exception();
 }
@@ -870,7 +869,6 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		if (c->isAlive())
 			c->kill();
 
-		pmap<T>* coords = nullptr;
 		size_t size = settings.createBinayMasks ? c->getTotalSize() : 0;
 
 		auto* bar3d = (n == 3) ? c->bar3d : nullptr;
@@ -1037,7 +1035,7 @@ Barcontainer<T>* BarcodeCreator<T>::createBarcode(bcBarImg* src, const barstruct
 	Barcontainer<T>* cont = new Barcontainer<T>();
 	settings.checkCorrect();
 
-	for (size_t i = 0; i < size; i++)
+	for (int i = 0; i < size; i++)
 	{
 		processFULL(structure[i], src, cont);
 	}
@@ -1057,7 +1055,6 @@ Barcontainer<T>* BarcodeCreator<T>::createSLbarcode(const bcBarImg* src, T foneS
 	const bcBarImg& img = *workingImg;
 
 	const size_t len = totalSize - 1;
-	size_t foneStartI = 0;
 	foneStart = MAX(foneStart, img.get(sortedArr[0]));
 	foneStart = MIN(foneStart, img.get(sortedArr[len]));
 
@@ -1068,8 +1065,8 @@ Barcontainer<T>* BarcodeCreator<T>::createSLbarcode(const bcBarImg* src, T foneS
 	for (size_t i = 0; i < totalSize; ++i)
 	{
 		curbright = img.get(sortedArr[i]);
-		if (foneStart == 0 && curbright >= foneStart) {
-			foneStartI = i;
+		if (foneStart == 0 && curbright >= foneStart)
+		{
 			break;
 		}
 		if (foneEndI == 0) {
@@ -1110,9 +1107,9 @@ Barcontainer<T>* BarcodeCreator<T>::createSLbarcode(const bcBarImg* src, T foneS
 		std::vector<bcBarImg*>  bgr;
 		//bc::BarImg<BarVec3b>* ds = dynamic_cast<bc::BarImg<BarVec3b>*>(src);
 		//split(ds, bgr);
-		Barbase<T>* b = createSLbarcode(bgr[0], foneStart, foneEnd, cont);
-		Barbase<T>* g = createSLbarcode(bgr[1], foneStart, foneEnd, cont);
-		Barbase<T>* r = createSLbarcode(bgr[2], foneStart, foneEnd, cont);
+		createSLbarcode(bgr[0], foneStart, foneEnd, cont);
+		createSLbarcode(bgr[1], foneStart, foneEnd, cont);
+		 createSLbarcode(bgr[2], foneStart, foneEnd, cont);
 
 		return cont;
 	}
@@ -1267,7 +1264,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 
 
 template<class T>
-Barcontainer<T>* BarcodeCreator<T>::searchHoles(float* img, int wid, int hei)
+Barcontainer<T>* BarcodeCreator<T>::searchHoles(float* /*img*/, int /*wid*/, int /*hei*/)
 {
 	return nullptr;
 }
