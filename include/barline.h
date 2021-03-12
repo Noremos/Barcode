@@ -21,14 +21,14 @@ namespace bc
 		{
 			cv::Mat m = cv::Mat::zeros(s.height, s.width, CV_8UC1);
 			for (auto it = matr.begin(); it != matr.end(); ++it) {
-				m.at<uchar>(it->point.y, it->point.x) = it->value;
+				m.at<T>(it->point.y, it->point.x) = it->value;
 			}
 			return m;
 		}
 		void setFromCvMat(cv::Mat& mat)
 		{
 			matr->clear();
-			mat.forEach<uchar>([m = matr](uchar& pixel, const int* pos) -> void {
+			mat.forEach<T>([m = matr](uchar& pixel, const int* pos) -> void {
 				m->push_back(ppair(bc::point(pos[0], pos[1]), pixel)); });
 		}
 		cv::Rect getCvRect()

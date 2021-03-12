@@ -122,6 +122,8 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 	}
 }
 
+#include <iostream>
+#include <QDebug>
 //****************************************B0**************************************
 template<class T>
 inline bool BarcodeCreator<T>::checkCloserB0()
@@ -142,7 +144,16 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 			if (first == nullptr)
 			{
 				first = connected;
-				first->add(curpix);
+				// len <= maxLen
+				if (curbright - first->start <= settings.maxLen.getOrDefault(0))
+					first->add(curpix);
+				else
+				{
+					qDebug() << first->num << " " << curbright  << " " << settings.maxLen.getOrDefault(0);
+					if (settings.killOnMaxLen)
+						first->kill(); //Интересный результат
+					first = nullptr;
+				}
 				//setInclude(midP, first);//n--nt обяз нужно
 			}
 			else// соединяет несколько разных компоненты
@@ -163,7 +174,6 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 		first = new Component<T>(curpix, this);
 		return true;
 	}
-
 	return false;
 }
 //********************************************************************************
@@ -233,7 +243,7 @@ COMPP BarcodeCreator<T>::getPorogComp(const point& p)
 	auto& itr = included[off];
 	if (itr && GETDIFF(curbright, workingImg->get(p.x, p.y)) <= settings.getMaxStepPorog())
 	{
-		return itr->getMaxParrent();
+		return itr->getMaxAliveParrent();
 	}
 	else
 		return nullptr;
@@ -644,11 +654,16 @@ void BarcodeCreator<T>::processComp(int* retBty, Barcontainer<T>* item)
 	{
 		curpix = sortedArr[i];
 		curbright = workingImg->get(curpix.x, curpix.y);
+		if (i == 90)
+			printf("");
 #ifdef VDEBUG
 		VISULA_DEBUG_COMP(totalSize, i);
 #else
 		checkCloserB0();
+
 #endif
+		assert(included[wid * curpix.y + curpix.x]);
+
 		if (settings.returnType == ReturnType::betty)
 		{
 			if (i != len)
@@ -799,9 +814,9 @@ void BarcodeCreator<T>::computeBettyBarcode(Baritem<T>* lines)
 }
 
 template<>
-void BarcodeCreator<uchar>::computeBettyBarcode(Baritem<uchar>* lines)
+void BarcodeCreator<ushort>::computeBettyBarcode(Baritem<ushort>* lines)
 {
-	std::stack<uchar> tempStack;
+	std::stack<ushort> tempStack;
 
 	for (short i = 0; i < 256; ++i)
 	{
@@ -835,8 +850,8 @@ void BarcodeCreator<uchar>::computeBettyBarcode(Baritem<uchar>* lines)
 		lines->add((uchar)t, (uchar)MIN(255, 255 - t));
 		tempStack.pop();
 	}
-	std::vector<bc::barline<uchar>*>& vec = lines->barlines;
-	std::sort(vec.begin(), vec.end(), compareLines<uchar>);
+	std::vector<bc::barline<ushort>*>& vec = lines->barlines;
+	std::sort(vec.begin(), vec.end(), compareLines<ushort>);
 }
 
 template<class T>
@@ -862,12 +877,9 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		barline<T>* line = new barline<T>(c->start, c->end - c->start, bar3d, size);
 		c->resline = line;
 
-		if (settings.createBinayMasks)
+		if (c->parent == nullptr && settings.createGraph)
 		{
-			if (c->parent == nullptr && settings.createGraph)
-			{
-				line->setParrent(rootNode);
-			}
+			line->setParrent(rootNode);
 		}
 		// TODO
 		/*if (settings.createGraph && incl->parent != nullptr)
@@ -1262,5 +1274,5 @@ Barcontainer<T>* BarcodeCreator<T>::searchHoles(float* img, int wid, int hei)
 
 INIT_TEMPLATE_TYPE(bc::BarcodeCreator)
 
-//template bc::Barcontainer<uchar>* BarcodeCreator<uchar>::createBarcode(const bc::DatagridProvider<uchar>*, const BarConstructor<uchar>&)
+//template bc::Barcontainer<ushort>* BarcodeCreator<ushort>::createBarcode(const bc::DatagridProvider<ushort>*, const BarConstructor<ushort>&)
 

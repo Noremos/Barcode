@@ -143,6 +143,8 @@ namespace bc
 		bool createGraph = false;
 		bool createBinayMasks = false;
 		bool createNewComponentOnAttach = false;
+		bool killOnMaxLen = false;
+		CachedValue<T> maxLen;
 		ReturnType returnType;
 		std::vector<barstruct> structure;
 
@@ -179,12 +181,48 @@ namespace bc
 			stepPorog.set(val);
 		}
 
+		T getMaxLen()
+		{
+			return maxLen.getOrDefault(0);
+		}
+
+		void setMaxLen(T val)
+		{
+			maxLen.set(val);
+		}
+
 		//void setFoneRange(T st, T ed)
 		//{
 		//	foneStart = st;
 		//	foneEnd = ed;
 		//}
 	};
+
+	template<class T>
+	static BarConstructor<T>* createStructure(bc::BarType type)
+	{
+		switch (type)
+		{
+		case bc::BarType::bc_byte:
+			return new BarConstructor<uchar>();
+			break;
+		case bc::BarType::bc_float:
+			return new BarConstructor<float>();
+			break;
+		case bc::BarType::bc_int:
+			return new BarConstructor<int>();
+			break;
+		case bc::BarType::bc_short:
+			return new BarConstructor<short>();
+			break;
+		case bc::BarType::bc_ushort:
+			return new BarConstructor<ushort>();
+			break;
+		default:
+			return nullptr;
+			break;
+		}
+	}
 
 
 	struct EXPORT point

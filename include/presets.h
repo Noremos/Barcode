@@ -7,6 +7,11 @@
 
 
 typedef unsigned char uchar;
+typedef unsigned short ushort;
+
+
+// typedef short TV;
+typedef uchar TV;
 
 
 
@@ -39,13 +44,18 @@ typedef unsigned char uchar;
 
 #define INIT_TEMPLATE_TYPE(TYPE) \
 template class TYPE<uchar>; \
-template class TYPE<float>;
+template class TYPE<float>; \
+template class TYPE<int>; \
+template class TYPE<short>; \
+template class TYPE<ushort>;
 
 
 #define INIT_TEMPLATE_STRUCT(TYPE) \
 template struct TYPE<uchar>; \
-template struct TYPE<float>;
-
+template struct TYPE<float>; \
+template struct TYPE<int>; \
+template struct TYPE<short>; \
+template struct TYPE<ushort>;
 
 
 
@@ -58,4 +68,6 @@ namespace bc
 	enum class ColorType { gray, rgb, native };
 
 	enum class ReturnType { betty, barcode2d, barcode3d };
+
+	enum class BarType {bc_byte, bc_float, bc_int, bc_short, bc_ushort};
 }

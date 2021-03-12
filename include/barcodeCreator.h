@@ -45,8 +45,18 @@ namespace bc {
 				delete workingImg;
 
 			workingImg = newWI;
-			if (!settings.stepPorog.isCached)
-				settings.stepPorog.set(workingImg->max());
+
+			if (settings.stepPorog.isCached || settings.stepPorog.isCached)
+			{
+				T maxVal = workingImg->max();
+
+				if (!settings.stepPorog.isCached)
+					settings.stepPorog.set(maxVal);
+
+				if (!settings.maxLen.isCached)
+					settings.maxLen.set(maxVal);
+			}
+
 		}
 
 		bool needDelImg = false;
@@ -76,7 +86,7 @@ namespace bc {
 			return a > b ? a - b : b - a;
 		}
 
-		constexpr point getPoint(size_t i) const
+		point getPoint(size_t i) const
 		{
 			return point(static_cast<int>(i % (size_t)wid), static_cast<int>(i / (size_t)wid));
 		}
@@ -215,4 +225,39 @@ namespace bc {
 		}
 #endif // _PYD
 	};
+
+	template<class T>
+	static Barcontainer<T>* createBarcode(bc::BarType type, const bc::DatagridProvider<T>* img, BarConstructor<T>& strct)
+	{
+		switch (type)
+		{
+		case bc::BarType::bc_byte:
+		{
+			BarcodeCreator<ushort> t;
+			return t.createBarcode(img, strct);
+		}
+		case bc::BarType::bc_float:
+		{
+			BarcodeCreator<float> t;
+			return t.createBarcode(img, strct);
+		}
+		case bc::BarType::bc_int:
+		{
+			BarcodeCreator<int> t;
+			return t.createBarcode(img, strct);
+		}
+		case bc::BarType::bc_short:
+		{
+			BarcodeCreator<short> t;
+			return t.createBarcode(img, strct);
+		}
+		case bc::BarType::bc_ushort:
+		{
+			BarcodeCreator<ushort> t;
+			return t.createBarcode(img, strct);
+		}
+		default:
+			return nullptr;
+		}
+	}
 }

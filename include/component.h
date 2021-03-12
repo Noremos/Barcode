@@ -60,6 +60,11 @@ namespace bc
 			}
 			return cachedMaxParent;
 		}
+		Component<T> *getMaxAliveParrent()
+		{
+			auto *par = getMaxParrent();
+			return par->isAlive() ? par : nullptr;
+		}
 
 		bool isContain(int x, int y);
 		bool isContain(point p);

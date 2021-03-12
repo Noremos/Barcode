@@ -12,6 +12,7 @@ void bc::Component<T>::init(BarcodeCreator<T>* factory)
 	start = factory->curbright;
 	end = factory->curbright;
 	lastVal = factory->curbright;
+
 	if (factory->settings.returnType == bc::ReturnType::barcode3d)
 		bar3d = new barcounter<T>();
 }
@@ -22,7 +23,11 @@ bc::Component<T>::Component(point pix, bc::BarcodeCreator<T>* factory)
 	init(factory);
 
 	factory->lastB++;
-	add(pix);
+
+	//add
+	++totalCount;
+	factory->setInclude(pix, this);
+	++cashedSize;
 }
 
 template<class T>
@@ -49,18 +54,16 @@ bool bc::Component<T>::isContain(point p)
 template<class T>
 void bc::Component<T>::add(const point& p)
 {
-	if (lived)
-	{
-		if (factory->curbright > end)
-			end = factory->curbright;
-		if (factory->curbright < start)
-			start = factory->curbright;
-	}
-	if (this->parent)
-	{
-		++this->parent->getMaxParrent()->totalCount;
-	}else
-		++totalCount;
+//	if (lived)
+//	{
+//		if (factory->curbright > end)
+//			end = factory->curbright;
+//		if (factory->curbright < start)
+//			start = factory->curbright;
+//	}
+	assert(lived);
+
+	++getMaxParrent()->totalCount;
 
 	factory->setInclude(p, this);
 	//coords->push_back(ppair<T>(p, factory->curbright));
@@ -82,8 +85,14 @@ template<class T>
 void bc::Component<T>::kill()
 {
 	lived = false;
-	if (end < factory->curbright)
+//	if (end < factory->curbright)
 		end = factory->curbright;
+
+//	T maxLen = factory->settings.maxLen.getOrDefault(0);
+//	if (end - start > maxLen)
+//	{
+//		end = start + maxLen;
+//	}
 	--factory->lastB;
 	//coords->reserve(coords->size());
 	//if (factory->createBin)
