@@ -123,7 +123,6 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 }
 
 #include <iostream>
-#include <QDebug>
 //****************************************B0**************************************
 template<class T>
 inline bool BarcodeCreator<T>::checkCloserB0()
@@ -144,19 +143,20 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 			if (first == nullptr)
 			{
 				first = connected;
-				// len <= maxLen
-				if (curbright - first->start <= settings.maxLen.getOrDefault(0))
-					first->add(curpix);
-				else
+				if (curbright - first->start > settings.maxLen.getOrDefault(0))
 				{
-					qDebug() << first->num << " " << curbright  << " " << settings.maxLen.getOrDefault(0);
+					//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
 					if (settings.killOnMaxLen)
+					{
 						first->kill(); //Интересный результат
-					first = nullptr;
+						first = nullptr;
+					}
 				}
+				else
+					first->add(curpix);
 				//setInclude(midP, first);//n--nt обяз нужно
 			}
-			else// соединяет несколько разных компоненты
+			else
 			{
 				if (first->isContain(curPoint))//если в найденном уже есть этот элемент
 					continue;
@@ -509,29 +509,80 @@ inline point* BarcodeCreator<uchar>::sort()
 	return data;
 }
 
-
-template<class T>
-struct myclass {
-	const bc::DatagridProvider<T>* workingImg;
-	bool operator() (point& a, point& b)
-	{
-		return workingImg->get(a.x, a.y) < workingImg->get(b.x, b.y);
-	}
-};
+//
+//template<class T>
+//struct myclass {
+//	const bc::DatagridProvider<T>* workingImg;
+//	bool operator() (point& a, point& b)
+//	{
+//		return workingImg->get(a.x, a.y) < workingImg->get(b.x, b.y);
+//	}
+//};
+//
+//template<class T>
+//inline point* BarcodeCreator<T>::sort()
+//{
+//	size_t total = workingImg->length();
+//	point* data = new point[total];//256
+//	myclass<T> cmp;
+//	cmp.workingImg = workingImg;
+//
+//	for (size_t i = 0; i < total; ++i)//wid
+//		data[i] = workingImg->getPointAt(i);
+//
+//	std::sort(data, data + total, cmp);
+//
+//	return data;
+//}
+#include<map>
 
 template<class T>
 inline point* BarcodeCreator<T>::sort()
 {
+	std::map<T, int> hist;
+	std::unordered_map<T, int> offs;
+
+	for (int i = 0; i < workingImg->wid(); ++i)//wid
+	{
+		for (int j = 0; j < workingImg->hei(); ++j)//hei
+		{
+			T& p = workingImg->get(i, j);
+			if (hist.find(p) != hist.end())
+			{
+				++hist[p];
+			}
+			else
+				hist.insert(std::pair<T, int>(p, 1));
+		}
+	}
+
+	T prev;
+	bool f = false;
+	for (const auto& [key, value] : hist)
+	{
+		if (!f)
+		{
+			prev = key;
+			f = true;
+			continue;
+		}
+		hist[key] += hist[prev];
+		offs[key] = hist[prev];
+		prev = key;
+	}
+	hist.clear();
+
 	size_t total = workingImg->length();
+
 	point* data = new point[total];//256
-	myclass<T> cmp;
-	cmp.workingImg = workingImg;
-
-	for (size_t i = 0; i < total; ++i)//wid
-		data[i] = workingImg->getPointAt(i);
-
-	std::sort(data, data + total, cmp);
-
+	for (int i = 0; i < workingImg->wid(); ++i)//wid
+	{
+		for (int j = 0; j < workingImg->hei(); ++j)//hei
+		{
+			auto p = (int)workingImg->get(i, j);
+			data[offs[p]++] = point(i, j);
+		}
+	}
 	return data;
 }
 
@@ -556,7 +607,7 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType
 				for (int j = 0; j < hei; ++j)
 				{
 					T& val = src->get(i, j);
-					nimg->set(i, j, maxel -val);
+					nimg->set(i, j, maxel - val);
 				}
 			}
 			setWorkingImg(nimg);
@@ -705,9 +756,29 @@ struct Operator
 template<class T>
 void BarcodeCreator<T>::addItemToCont(Barcontainer<T>* container)
 {
-	if (container != nullptr)
+	if (container == nullptr)
 	{
-		container->addItem(getBarcode());
+		Baritem<T>* lines = new Baritem<T>();
+
+		switch (settings.returnType)
+		{
+
+		case ReturnType::betty:
+			computeBettyBarcode(lines);
+			break;
+		case ReturnType::barcode2d:
+			computeNdBarcode(lines, 2);
+			break;
+		case ReturnType::barcode3d:
+			computeNdBarcode(lines, 3);
+			break;
+
+
+			break;
+		default:
+			break;
+		}
+		container->addItem(lines);
 	}
 }
 
@@ -751,11 +822,10 @@ void BarcodeCreator<T>::clearIncluded()
 
 	if (included != nullptr)
 	{
-		memset(included, 0, totalSize * sizeof(Include<T>));
+		//memset(included, 0, totalSize * sizeof(Include<T>));
 		delete[] included;
 		included = nullptr;
 	}
-
 }
 
 
@@ -774,7 +844,6 @@ void BarcodeCreator<T>::reverseCom()
 	for (size_t i = 0; i < totalSize; i++)
 	{
 		Include<T>& incl = included[i];
-		barline<T>* bline;
 		point p = getPoint(i);
 		auto& ccod = workingImg->get(p.x, p.y);// начало конкретно в этом пикселе
 
@@ -782,27 +851,30 @@ void BarcodeCreator<T>::reverseCom()
 		{
 			// надо добавить заничя каому потомку
 			COMPP prev = incl;
-			while (prev->parent)
+			COMPP prevparent = prev->getNonZeroParent();
+			while (prevparent)
 			{
-				barline<T>* blineParrent = prev->parent->resline;
-				bline = prev->resline;
+				barline<T>* blineParrent = prevparent->resline;
 
 				if (settings.createBinayMasks)
-					blineParrent->addCoord(p, blineParrent->end() - bline->end());//нам нужно только то время, которое было у съевшего.
+					blineParrent->addCoord(p, prevparent->end - prev->end);//нам нужно только то время, которое было у съевшего.
 
-				prev = prev->parent;
+				prev = prevparent;
+				prevparent = prev->getNonZeroParent();
 			}
 		}
 		//blineParrent->end() - ccod = общее время
 		//item->end() - ccod + blineParrent->end() - item->end() = общее время
 		//220 - 10
-		bline = incl->resline;
+		barline<T>* brline = incl->resline;
 		if (settings.createBinayMasks)
-			bline->addCoord(p, bline->end() - ccod);
+			brline->addCoord(p, incl->end - ccod);
 
 		// parent always will be (rootNode for root elements
-		if (settings.createGraph && incl->parent != nullptr)
-			bline->setParrent(incl->parent->resline);
+		COMPP pparent = incl->getNonZeroParent();
+
+		if (settings.createGraph && pparent != nullptr)
+			brline->setParrent(pparent->resline);
 	}
 }
 
@@ -869,10 +941,17 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		if (c->isAlive())
 			c->kill();
 
+		T len = c->end - c->start;
+
+		if (len == 0)
+			continue;
+
+		assert(len > 0);
+
 		size_t size = settings.createBinayMasks ? c->getTotalSize() : 0;
 
 		auto* bar3d = (n == 3) ? c->bar3d : nullptr;
-		barline<T>* line = new barline<T>(c->start, c->end - c->start, bar3d, size);
+		barline<T>* line = new barline<T>(c->start, len, bar3d, size);
 		c->resline = line;
 
 		if (c->parent == nullptr && settings.createGraph)
@@ -882,7 +961,6 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		// TODO
 		/*if (settings.createGraph && incl->parent != nullptr)
 			bline->setParrent(incl->parent->resline);*/
-
 		lines->add(line);
 	}
 
@@ -890,39 +968,15 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 	{
 		reverseCom();
 	}
+
 	if (settings.createGraph)
 	{
 		lines->setRootNode(rootNode);
 	}
 	else
-		delete rootNode;
-}
-
-template<class T>
-Baritem<T>* BarcodeCreator<T>::getBarcode()
-{
-	Baritem<T>* lines = new Baritem<T>();
-
-	switch (settings.returnType)
 	{
-
-	case ReturnType::betty:
-		computeBettyBarcode(lines);
-		break;
-	case ReturnType::barcode2d:
-		computeNdBarcode(lines, 2);
-		break;
-	case ReturnType::barcode3d:
-		computeNdBarcode(lines, 3);
-		break;
-
-
-		break;
-	default:
-		break;
+		delete rootNode;
 	}
-
-	return lines;
 }
 
 template<class T>
@@ -1109,7 +1163,7 @@ Barcontainer<T>* BarcodeCreator<T>::createSLbarcode(const bcBarImg* src, T foneS
 		//split(ds, bgr);
 		createSLbarcode(bgr[0], foneStart, foneEnd, cont);
 		createSLbarcode(bgr[1], foneStart, foneEnd, cont);
-		 createSLbarcode(bgr[2], foneStart, foneEnd, cont);
+		createSLbarcode(bgr[2], foneStart, foneEnd, cont);
 
 		return cont;
 	}
@@ -1251,15 +1305,11 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 
 	delete[] arr;
 
-
-
 	Barcontainer<float>* item = new Barcontainer<float>();
 
 	addItemToCont(item);
 	clearIncluded();
 	return item;
-
-	return nullptr;
 }
 
 

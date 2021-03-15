@@ -7,25 +7,6 @@ template<class T>
 bc::Barbase<T>::~Barbase() {}
 
 template<class T>
-float bc::Barbase<T>::compireBarcodes(const bc::Barbase<T>* X, const bc::Barbase<T>* Y, const CompireFunction& type)
-{
-	switch (type) {
-	case CompireFunction::CommonToLen:
-		return X->compireCTML(Y);
-		break;
-	case CompireFunction::CommonToSum:
-		return X->compireCTS(Y);
-		break;
-	default:
-		return 0;
-		//X->compireCTML(Y);
-		break;
-	}
-}
-
-/////////////////////////////////////////////////////////
-
-template<class T>
 bc::Baritem<T>::Baritem() {}
 
 template<class T>
@@ -166,9 +147,36 @@ void bc::Baritem<T>::preprocessBar(const T& porog, bool normalize)
 }
 
 template<class T>
-float bc::Baritem<T>::compireCTML(const bc::Barbase<T>* bc) const
+double findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat)
 {
-	Baritem<T>* Y = dynamic_cast<const Baritem<T>*>(bc)->clone();
+	double maxlen, minlen;
+	if (strat == bc::CompireStrategy::CommonToLen)
+	{
+		T st = MAX(X->start, Y->start);
+		T ed = MIN(X->end(), Y->end());
+		minlen = (double)(ed - st);
+
+		st = MIN(X->start, Y->start);
+		ed = MAX(X->end(), Y->end());
+		maxlen = (double)(ed - st);
+	}
+	else
+	{
+		T st = MAX(X->start, Y->start);
+		T ed = MIN(X->end(), Y->end());
+		minlen = (double)(ed - st);
+		maxlen = (double)MAX(X->len, Y->len);
+	}
+	if (minlen <= 0 || maxlen <= 0)
+		return -1;
+
+	float coof = minlen / maxlen;
+}
+
+template<class T>
+float bc::Baritem<T>::compireBestRes(const bc::Baritem<T>* bc, bc::CompireStrategy& strat) const
+{
+	Baritem<T>* Y = bc->clone();
 	Baritem<T>* X = clone();
 	if (X->barlines.size() == 0 || Y->barlines.size() == 0)
 		return 0;
@@ -186,62 +194,10 @@ float bc::Baritem<T>::compireCTML(const bc::Barbase<T>* bc) const
 		{
 			for (size_t j = 0, totalY = Y->barlines.size(); j < totalY; ++j)
 			{
-				T st = MAX(X->barlines[i]->start, Y->barlines[j]->start);
-				T ed = MIN(X->barlines[i]->start + X->barlines[i]->len, Y->barlines[j]->start + Y->barlines[j]->len);
-				float minlen = (float)(ed - st);
-				float maxlen = MAX(X->barlines[i]->len, Y->barlines[j]->len);
-				//���� ������ 0, ������ ����� �� ������������
-				if (minlen <= 0 || maxlen <= 0)
+				double coof = findCoof(X->barlines[i], Y->barlines[j], strat);
+				if (coof < 0)
 					continue;
 
-				float coof = minlen / maxlen;
-				if (coof > maxCoof) {
-					maxCoof = coof;
-					maxsum = (float)(X->barlines[i]->len + Y->barlines[j]->len);
-					ik = i;
-					jk = j;
-				}
-			}
-		}
-		X->barlines.erase(X->barlines.begin() + ik);
-		Y->barlines.erase(Y->barlines.begin() + jk);
-		tsum += maxsum * maxCoof;
-	}
-	return tsum / sum;
-}
-
-template<class T>
-float bc::Baritem<T>::compireCTS(const bc::Barbase<T>* bc) const
-{
-	Baritem<T>* Y = dynamic_cast<const Baritem<T>*>(bc)->clone();
-	Baritem<T>* X = clone();
-	if (X->barlines.size() == 0 || Y->barlines.size() == 0)
-		return 0;
-	float sum = (float)(X->sum() + Y->sum());
-	size_t n = static_cast<int>(MIN(X->barlines.size(), Y->barlines.size()));
-
-	float tsum = 0.f;
-	for (size_t re = 0; re < n; ++re)
-	{
-		float maxCoof = 0;
-		float maxsum = 0;
-		size_t ik = 0;
-		size_t jk = 0;
-		for (size_t i = 0, total = X->barlines.size(); i < total; ++i) {
-			for (size_t j = 0, total2 = Y->barlines.size(); j < total2; ++j) {
-				T st = MAX(X->barlines[i]->start, Y->barlines[j]->start);
-				T ed = MIN(X->barlines[i]->start + X->barlines[i]->len, Y->barlines[j]->start + Y->barlines[j]->len);
-				float minlen = (float)(ed - st);
-
-				st = MIN(X->barlines[i]->start, Y->barlines[j]->start);
-				ed = MAX(X->barlines[i]->start + X->barlines[i]->len, Y->barlines[j]->start + Y->barlines[j]->len);
-				float maxlen = (float)(ed - st);
-
-				//���� ������ 0, ������ ����� �� ������������
-				if (minlen <= 0 || maxlen <= 0)
-					continue;
-
-				float coof = minlen / maxlen;
 				if (coof > maxCoof)
 				{
 					maxCoof = coof;
@@ -257,6 +213,69 @@ float bc::Baritem<T>::compireCTS(const bc::Barbase<T>* bc) const
 	}
 	return tsum / sum;
 }
+
+template<class T>
+float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy& strat) const
+{
+	Baritem<T>* Y = dynamic_cast<const Baritem<T>*>(bc)->clone();
+	Baritem<T>* X = clone();
+	if (X->barlines.size() == 0 || Y->barlines.size() == 0)
+		return 0;
+
+	float sum = (float)(X->sum() + Y->sum());
+	size_t n = static_cast<int>(MIN(X->barlines.size(), Y->barlines.size()));
+	X->sortByLen();
+	Y->sortByLen();
+
+	float tsum = 0.f;
+	for (size_t i = 0; i < n; ++i)
+	{
+		double coof = findCoof(X->barlines[i], Y->barlines[i], strat);
+		if (coof < 0)
+			continue;
+
+		T xysum = X->barlines[i]->len + Y->barlines[i]->len;
+		tsum += xysum * coof;
+	}
+	return tsum / sum;
+}
+
+template<class T>
+float bc::Baritem<T>::compareOccurrence(const bc::Baritem<T>* bc, bc::CompireStrategy& strat) const
+{
+	Baritem<T>* Y = bc->clone();
+	Baritem<T>* X = clone();
+	if (X->barlines.size() == 0 || Y->barlines.size() == 0)
+		return 0;
+	float sum = 0;
+	size_t n = static_cast<int>(MIN(X->barlines.size(), Y->barlines.size()));
+
+	float tsum = 0.f;
+	for (size_t re = 0; re < n; ++re)
+	{
+		float maxCoof = 0;
+		float maxsum = 0;
+		size_t jk = 0;
+		for (size_t j = 0, total2 = Y->barlines.size(); j < total2; ++j)
+		{
+			double coof = findCoof(X->barlines[re], Y->barlines[j], strat);
+			if (coof < 0)
+				continue;
+
+			if (coof > maxCoof)
+			{
+				maxCoof = coof;
+				maxsum = (float)(X->barlines[re]->len + Y->barlines[j]->len);
+				jk = j;
+			}
+		}
+		Y->barlines.erase(Y->barlines.begin() + jk);
+		sum += maxsum;
+		tsum += maxsum * maxCoof;
+	}
+	return tsum / sum;
+}
+
 #include <algorithm>
 
 template<class T>
@@ -404,26 +423,15 @@ bc::Barbase<T>* bc::Barcontainer<T>::clone() const
 }
 
 template<class T>
-float bc::Barcontainer<T>::compireCTML(const bc::Barbase<T>* bc) const
+float bc::Barcontainer<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy& strat) const
 {
 	const Barcontainer* bcr = dynamic_cast<const Barcontainer*>(bc);
 	double res = 0;
 	double s = sum() + bcr->sum();
 	for (size_t i = 0; i < MIN(items.size(), bcr->items.size()); i++)
 	{
-		res += items[i]->compireCTML(bcr->items[i]) * (items[i]->sum() + bcr->items[i]->sum()) / s;
+		res += items[i]->compireFull(bcr->items[i], strat) * (items[i]->sum() + bcr->items[i]->sum()) / s;
 	}
-
-	return (float)res;
-}
-
-template<class T>
-float bc::Barcontainer<T>::compireCTS(const bc::Barbase<T>* bc) const
-{
-	float res = 0;
-	T s = sum();
-	for (Baritem<T>* it : items)
-		res += bc->compireCTS(it) * it->sum() / s;
 
 	return (float)res;
 }
@@ -434,20 +442,6 @@ bc::Barcontainer<T>::~Barcontainer()
 	for (size_t i = 0; i < items.size(); ++i)
 		delete items[i];
 }
-
-#ifdef _PYD
-template<class T>
-float bc::Barcontainer<T>::cmpCTML(const Barcontainer<T>* bc) const
-{
-	return compireCTML((const Baritem<T>*)bc);
-}
-
-template<class T>
-float bc::Barcontainer<T>::cmpCTS(Barcontainer<T> const* bc) const
-{
-	return compireCTS((const Baritem<T>*)bc);
-}
-#endif
 
 INIT_TEMPLATE_TYPE(bc::Barbase)
 INIT_TEMPLATE_TYPE(bc::Baritem)

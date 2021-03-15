@@ -11,25 +11,24 @@ namespace bc
 	public:
 		virtual void removePorog(T const porog) = 0;
 		virtual void preprocessBar(T const& porog, bool normalize) = 0;
-		virtual float compireCTML(const Barbase<T>* Y) const = 0;
-		virtual float compireCTS(Barbase<T> const* Y) const = 0;
+		virtual float compireFull(const Barbase<T>* Y, bc::CompireStrategy& strat) const = 0;
 		virtual Barbase<T>* clone() const = 0;
 		virtual T sum() const = 0;
 		virtual void relen() = 0;
 		//    virtual void fullCompite(barbase const *bc, CompireFunction fn, float poroc = 0.5f) = 0;
 		virtual ~Barbase();
-		static float compireBarcodes(const Barbase<T>* X, const Barbase<T>* Y, const CompireFunction& type);
 	};
 
+	
+	template<class T>
+	using barlinevector = std::vector<bc::barline<T>*>;
 
 	template<class T>
 	class EXPORT Baritem : public Barbase<T>
 	{
 		bc::BarRoot<T>* rootNode = nullptr;
 	public:
-		std::vector<bc::barline<T>*> barlines;
-
-
+		barlinevector<T> barlines;
 
 		Baritem();
 		Baritem(const Baritem<T>& obj);
@@ -48,8 +47,9 @@ namespace bc
 		// remove lines than less then passed value
 		void removePorog(T const porog);
 		void preprocessBar(T const& porog, bool normalize);
-		float compireCTML(const Barbase<T>* bc) const;
-		float compireCTS(Barbase<T> const* bc) const;
+		float compireFull(const Barbase<T>* bc, bc::CompireStrategy& strat) const;
+		float compireBestRes(Baritem<T> const* bc, bc::CompireStrategy& strat) const;
+		float compareOccurrence(Baritem<T> const* bc, bc::CompireStrategy& strat) const;
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		~Baritem();
 
@@ -105,15 +105,11 @@ namespace bc
 			return lines;
 		}
 		
-		float cmpCTML(const Baritem<T>* bitem) const
+		float cmp(const Baritem<T>* bitem, bc::CompireStrategy& strat) const
 		{
-			return compireCTML((const Baritem<T>*)bitem);
+			return compireFull((const Baritem<T>*)bitem, strat);
 		}
 
-		float cmpCTS(Baritem<T> const* bitem) const
-		{
-			return compireCTS((const Baritem<T>*)bitem);
-		}
 
 #endif // _PYD
 
@@ -142,15 +138,7 @@ namespace bc
 		void removePorog(T const porog);
 		void preprocessBar(T const& porog, bool normalize);
 
-		float compireCTML(const Barbase<T>* bc) const;
-		float compireCTS(Barbase<T> const* bc) const;
-
-#ifdef _PYD
-		float cmpCTML(const Barcontainer* bc) const;
-		float cmpCTS(Barcontainer const* bc) const;
-
-#endif // _PYD
-
+		float compireFull(const Barbase<T>* bc, bc::CompireStrategy& strat) const;
 
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		~Barcontainer();

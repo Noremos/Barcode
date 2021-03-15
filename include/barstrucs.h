@@ -132,6 +132,7 @@ namespace bc
 	struct BarConstructor
 	{
 		CachedValue<T> stepPorog;
+		CachedValue<T> maxLen;
 	public:
 		//T foneStart;
 		//T foneEnd;
@@ -147,7 +148,7 @@ namespace bc
 		CachedValue<T> maxLen;
 		ReturnType returnType;
 		std::vector<barstruct> structure;
-
+		bool killOnMaxLen = false;
 		inline void addStructure(ProcType pt, ColorType colT, ComponentType comT)
 		{
 			structure.push_back(barstruct(pt, colT, comT));
@@ -190,13 +191,6 @@ namespace bc
 		{
 			maxLen.set(val);
 		}
-
-		//void setFoneRange(T st, T ed)
-		//{
-		//	foneStart = st;
-		//	foneEnd = ed;
-		//}
-	};
 
 	template<class T>
 	static BarConstructor<T>* createStructure(bc::BarType type)
@@ -365,7 +359,7 @@ namespace bc
 	using barcounter = std::vector<bar3dvalue<T>> ;
 	
 	template<class T>
-	using ppair = barvalue;
+	using ppair = barvalue<T>;
 	//**********************************************
 
 INIT_TEMPLATE_STRUCT(CachedValue)

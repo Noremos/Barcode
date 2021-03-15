@@ -46,7 +46,7 @@ namespace bc {
 
 			workingImg = newWI;
 
-			if (settings.stepPorog.isCached || settings.stepPorog.isCached)
+			if (!settings.stepPorog.isCached || !settings.stepPorog.isCached)
 			{
 				T maxVal = workingImg->max();
 
@@ -56,7 +56,6 @@ namespace bc {
 				if (!settings.maxLen.isCached)
 					settings.maxLen.set(maxVal);
 			}
-
 		}
 
 		bool needDelImg = false;
@@ -140,8 +139,6 @@ namespace bc {
 		void processComp(int* retBty, Barcontainer<T>* item = nullptr);
 		void processHole(int* retBty, Barcontainer<T>* item = nullptr);
 		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
-
-		bc::Baritem<T>* getBarcode();
 
 		void processTypeF(const barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
 
