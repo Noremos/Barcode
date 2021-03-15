@@ -44,13 +44,35 @@ namespace bc
 			return lived;
 		}
 
+		T len()
+		{
+			return end - start;
+		}
+
+		Component<T>* getNonZeroParent()
+		{
+			if (parent == nullptr)
+				return nullptr;
+
+			Component<T>* ccomp = parent->parent;
+			while (ccomp)
+			{
+				if (ccomp->parent->len() != 0)
+					return ccomp;
+
+				ccomp = ccomp->parent;
+			}
+			return nullptr;
+		}
+
 		//    cv::Mat binmap;
 		Component<T>* getMaxParrent()
 		{
-			if (cachedMaxParent == nullptr || parent == nullptr)
+			if (parent == nullptr)
+				return this;
+
+			if (cachedMaxParent == nullptr)
 			{
-				if (parent == nullptr)
-					return this;
 				cachedMaxParent = parent;
 			}
 			while (cachedMaxParent->parent)
@@ -59,6 +81,12 @@ namespace bc
 				//totalCount += cachedMaxParent->coords->size();
 			}
 			return cachedMaxParent;
+		}
+
+		Component<T>* getMaxAliveParrent()
+		{
+			auto* par = getMaxParrent();
+			return par->isAlive() ? par : nullptr;
 		}
 
 		bool isContain(int x, int y);

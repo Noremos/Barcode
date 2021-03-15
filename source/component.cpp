@@ -70,7 +70,7 @@ void bc::Component<T>::add(const point& p)
 	{
 		if (factory->curbright != lastVal)
 		{
-			bar3d->push_back(bar3dpair<T>(lastVal,cashedSize));
+			bar3d->push_back(bar3dvalue<T>(lastVal,cashedSize));
 			lastVal = factory->curbright;
 			cashedSize = 0;
 		}
@@ -93,7 +93,7 @@ void bc::Component<T>::kill()
 	//}
 
 	if (bar3d != nullptr)
-		bar3d->push_back(bar3dpair<T>(lastVal, cashedSize));
+		bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
 
 	lastVal = factory->curbright;
 	cashedSize = 0;

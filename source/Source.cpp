@@ -48,7 +48,7 @@ void set(bc::barline<uchar>* rt, Bimg8* data)
 
 	for (size_t i = 0; i < rt->childrens.size(); i++)
 	{
-		set(rt->childrens[i], data);
+		::set(rt->childrens[i], data);
 	}
 }
 
@@ -113,7 +113,7 @@ Bimg8 restreToBarimgFromGraph(bc::Barcontainer<uchar>* cont, int wid, int hei, u
 	Bimg8 img(wid, hei);
 	memset(img.getData(), maxval, static_cast<size_t>(wid) * hei);
 
-	set(it->getRootNode(), &img);
+	::set(it->getRootNode(), &img);
 
 	return img;
 }
@@ -354,6 +354,8 @@ void checkBigImg()
 	auto ms_int = duration_cast<milliseconds>(t2 - t1);
 	std::cout << ms_int.count();
 }
+
+using namespace std;
 int main()
 {
 	// TODO Move it to test project

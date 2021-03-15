@@ -101,24 +101,20 @@ BOOST_PYTHON_MODULE(barpy)
 		//.add_property("points", make_getter(&bc::barline::matr))
 		;
 
-
-	class_<bc::Baritem<uchar>>("Baritem")
-		.def("sum", &bc::Baritem<uchar>::sum)
-		.def("relen", &bc::Baritem<uchar>::relen)
-		.def("clone", &bc::Baritem<uchar>::clone, return_value_policy< manage_new_object >())
-		.def("maxLen", &bc::Baritem<uchar>::maxLen)
-		.def("removePorog", &bc::Baritem<uchar>::removePorog, args("porog"))
-		.def("preprocessBar", &bc::Baritem<uchar>::preprocessBar, args("porog", "normalize"))
-		.def("cmpCTML", &bc::Baritem<uchar>::cmpCTML, args("bitem"))
-		.def("cmpCTS", &bc::Baritem<uchar>::cmpCTS, args("bitem"))
-		.def("getBarcode", &bc::Baritem<uchar>::getBarcode)
-		.def("SortByLineLen", &bc::Baritem<uchar>::sortByLen)
-		.def("SortByPointsCount", &bc::Baritem<uchar>::sortBySize)
-		.def("getRootNode", &bc::Baritem<uchar>::getRootNode, return_internal_reference()/*, make_setter(&bc::Baritem::rootNode)*/)
-
-
-
-		//.add_property("bar", make_getter(&bc::Baritem::bar))
+	class_<bc::Baritem<TV>>("Baritem")
+		.def("sum", &bc::Baritem<TV>::sum)
+		.def("relen", &bc::Baritem<TV>::relen)
+		.def("clone", &bc::Baritem<TV>::clone, return_value_policy< manage_new_object >())
+		.def("maxLen", &bc::Baritem<TV>::maxLen)
+		.def("removePorog", &bc::Baritem<TV>::removePorog, args("porog"))
+		.def("preprocessBar", &bc::Baritem<TV>::preprocessBar, args("porog", "normalize"))
+		.def("cmp", &bc::Baritem<TV>::cmp, args("bitem", "compireStrategy"))
+		.def("cmpOccurrence", &bc::Baritem<TV>::compareOccurrence, args("bitem", "compireStrategy"))
+		.def("getBarcode", &bc::Baritem<TV>::getBarcode)
+		.def("SortByLineLen", &bc::Baritem<TV>::sortByLen)
+		.def("SortByPointsCount", &bc::Baritem<TV>::sortBySize)
+		.def("calcHistByBarlen", &bc::Baritem<TV>::calcHistByBarlen)
+		.def("getRootNode", &bc::Baritem<TV>::getRootNode, return_internal_reference()/*, make_setter(&bc::Baritem::rootNode)*/)
 		;
 
 	class_<bc::Barcontainer<uchar>>("Barcontainer")
@@ -133,15 +129,13 @@ BOOST_PYTHON_MODULE(barpy)
 		//.def("compireCTS", &bc::Barcontainer::compireCTS, args("bc"))
 		//.def("compireCTML", static_cast<float (bc::Barcontainer::*)(const bc::Barbase*) const> (&bc::Barcontainer::compireCTML), args("bc"))
 		//.def("compireCTS", static_cast<float (bc::Barcontainer::*)(bc::Barbase const*) const>(&bc::Barcontainer::compireCTS), args("bc"))
-		.def("cmpCTML", &bc::Barcontainer<uchar>::cmpCTML, args("bc"))
-		.def("cmpCTS", &bc::Barcontainer<uchar>::cmpCTS, args("bc"))
-		.def("addItem", &bc::Barcontainer<uchar>::addItem, args("Baritem"))
-		.def("getItem", &bc::Barcontainer<uchar>::getItem, args("index"), return_internal_reference())
+		.def("addItem", &bc::Barcontainer<TV>::addItem, args("Baritem"))
+		.def("getItem", &bc::Barcontainer<TV>::getItem, args("index"), return_internal_reference())
 		;
 
-	enum_<bc::CompireFunction>("CompireFunction")
-		.value("CommonToLen", bc::CompireFunction::CommonToLen)
-		.value("CommonToSum", bc::CompireFunction::CommonToSum)
+	enum_<bc::CompireStrategy>("CompireStrategy")
+		.value("CommonToLen", bc::CompireStrategy::CommonToLen)
+		.value("CommonToSum", bc::CompireStrategy::CommonToSum)
 		;
 
 	enum_<bc::ComponentType>("ComponentType")

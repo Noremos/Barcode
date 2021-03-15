@@ -132,6 +132,7 @@ namespace bc
 	struct BarConstructor
 	{
 		CachedValue<T> stepPorog;
+		CachedValue<T> maxLen;
 	public:
 		//T foneStart;
 		//T foneEnd;
@@ -145,7 +146,7 @@ namespace bc
 		bool createNewComponentOnAttach = false;
 		ReturnType returnType;
 		std::vector<barstruct> structure;
-
+		bool killOnMaxLen = false;
 		inline void addStructure(ProcType pt, ColorType colT, ComponentType comT)
 		{
 			structure.push_back(barstruct(pt, colT, comT));
@@ -179,6 +180,10 @@ namespace bc
 			stepPorog.set(val);
 		}
 
+		void setMaxLen(T val)
+		{
+			maxLen.set(val);
+		}
 		//void setFoneRange(T st, T ed)
 		//{
 		//	foneStart = st;
@@ -269,14 +274,14 @@ namespace bc
 	};
 
 	template<class T>
-	struct bar3dpair
+	struct bar3dvalue
 	{
-		bar3dpair(T value, size_t count)
+		bar3dvalue(T value, size_t count)
 		{
 			this->count = count;
 			this->value = value;
 		}
-		bar3dpair()
+		bar3dvalue()
 		{
 			this->count = 0;
 		}
@@ -286,15 +291,15 @@ namespace bc
 	};
 
 	template<class T>
-	struct ppair
+	struct barvalue
 	{
-		ppair(bc::point point, T value)
+		barvalue(bc::point point, T value)
 		{
 			this->point = point;
 			this->value = value;
 		}
 
-		ppair()
+		barvalue()
 		{ }
 
 		int getX() const
@@ -321,10 +326,13 @@ namespace bc
 
 
 	template<class T>
-	using pmap = std::vector<ppair<T>>;
+	using pmap = std::vector<barvalue<T>>;
 
 	template<class T>
-	using barcounter = std::vector<bar3dpair<T>> ;
+	using barcounter = std::vector<bar3dvalue<T>> ;
+	
+	template<class T>
+	using ppair = barvalue<T>;
 	//**********************************************
 
 INIT_TEMPLATE_STRUCT(CachedValue)
