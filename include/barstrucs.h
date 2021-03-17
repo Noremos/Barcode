@@ -144,8 +144,6 @@ namespace bc
 		bool createGraph = false;
 		bool createBinayMasks = false;
 		bool createNewComponentOnAttach = false;
-		bool killOnMaxLen = false;
-		CachedValue<T> maxLen;
 		ReturnType returnType;
 		std::vector<barstruct> structure;
 		bool killOnMaxLen = false;
@@ -191,6 +189,8 @@ namespace bc
 		{
 			maxLen.set(val);
 		}
+
+	};
 
 	template<class T>
 	static BarConstructor<T>* createStructure(bc::BarType type)
@@ -353,13 +353,11 @@ namespace bc
 
 
 	template<class T>
-	using pmap = std::vector<barvalue<T>>;
+	using barvector = std::vector<barvalue<T>>;
 
 	template<class T>
 	using barcounter = std::vector<bar3dvalue<T>> ;
 	
-	template<class T>
-	using ppair = barvalue<T>;
 	//**********************************************
 
 INIT_TEMPLATE_STRUCT(CachedValue)

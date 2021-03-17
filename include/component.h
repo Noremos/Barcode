@@ -29,14 +29,11 @@ namespace bc
 		Component(BarcodeCreator<T>* factory, bool create = false);
 
 		Component<T>* parent = nullptr;
-		//pmap<T>* coords;
 
-		//pmap subCoords;
 		T start = 0, end = 0;
 		barcounter<T>* bar3d = nullptr;
 		//0 - nan
 		size_t num = 0;
-		//    pmap coords;
 		barline<T>* resline;
 
 		bool isAlive()
@@ -85,18 +82,6 @@ namespace bc
 		Component<T> *getMaxAliveParrent()
 		{
 			auto *par = getMaxParrent();
-			return par->isAlive() ? par : nullptr;
-		}
-
-		Component<T>* getMaxAliveParrent()
-		{
-			auto* par = getMaxParrent();
-			return par->isAlive() ? par : nullptr;
-		}
-
-		Component<T>* getMaxAliveParrent()
-		{
-			auto* par = getMaxParrent();
 			return par->isAlive() ? par : nullptr;
 		}
 

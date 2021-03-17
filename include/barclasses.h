@@ -34,8 +34,6 @@ namespace bc
 		Baritem(const Baritem<T>& obj);
 		//    cv::Mat binmap;
 		void add(T st, T len);
-		//    void add(uchar st, uchar len, cv::Mat binmat);
-			//void add(T st, T len, pmap<T> *binmat);
 		void add(barline<T>* line);
 
 		T sum() const;

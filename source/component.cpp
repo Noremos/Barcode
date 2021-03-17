@@ -66,7 +66,6 @@ void bc::Component<T>::add(const point& p)
 	++getMaxParrent()->totalCount;
 
 	factory->setInclude(p, this);
-	//coords->push_back(barvalue<T>(p, factory->curbright));
 
 	// 3d barcode/ —читаем кол-во добавленных значений
 	if (bar3d != nullptr)

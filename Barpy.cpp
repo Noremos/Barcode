@@ -59,14 +59,7 @@ BOOST_PYTHON_MODULE(barpy)
 		.def("init", static_cast<void (bc::point::*)(int, int)>(&bc::point::init), args("x", "y"))
 		;
 
-	//class_<bc::pointHash>("PointHash")
-	//	;
-	//class_<pmap>("Pmap")
-	//	;
-	//class_<barvalue>("barvalue")
-	//	;
-	//class_<std::vector<bc::barline>>("LinesList")
-	//	;
+
 	class_<bc::barvalue<TV>>("Matrvalue")
 		.add_property("x", &bc::barvalue<TV>::getX, &bc::barvalue<TV>::setX)
 		.add_property("y", &bc::barvalue<TV>::getY, &bc::barvalue<TV>::setY)
@@ -201,7 +194,7 @@ BOOST_PYTHON_MODULE(barpy)
 }
 
 //template<> 
-//PyObject* type_into_python<pmap>::convert(pmap const& map)
+//PyObject* type_into_python<barvector>::convert(barvector const& map)
 //{
 //	//auto d = t.date();
 //	//auto tod = t.time_of_day();

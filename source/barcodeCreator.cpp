@@ -149,8 +149,8 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 					if (settings.killOnMaxLen)
 					{
 						first->kill(); //Интересный результат
-						first = nullptr;
 					}
+					first = nullptr;
 				}
 				else
 					first->add(curpix);
@@ -541,6 +541,23 @@ inline point* BarcodeCreator<T>::sort()
 {
 	std::map<T, int> hist;
 	std::unordered_map<T, int> offs;
+
+	for (int i = 0; i < workingImg->wid(); ++i)//wid
+	{
+		for (int j = 0; j < workingImg->hei(); ++j)//hei
+		{
+			T& p = workingImg->get(i, j);
+			if (hist.find(p) != hist.end())
+			{
+				++hist[p];
+			}
+			else
+				hist.insert(std::pair<T, int>(p, 1));
+		}
+	}
+
+	T prev;
+	bool f = false;
 	for (const auto& [key, value] : hist)
 	{
 		if (!f)
@@ -556,6 +573,7 @@ inline point* BarcodeCreator<T>::sort()
 	hist.clear();
 
 	size_t total = workingImg->length();
+
 	point* data = new point[total];//256
 	for (int i = 0; i < workingImg->wid(); ++i)//wid
 	{
@@ -567,6 +585,7 @@ inline point* BarcodeCreator<T>::sort()
 	}
 	return data;
 }
+
 
 template<class T>
 void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType& type)
@@ -738,7 +757,7 @@ struct Operator
 template<class T>
 void BarcodeCreator<T>::addItemToCont(Barcontainer<T>* container)
 {
-	if (container == nullptr)
+	if (container != nullptr)
 	{
 		Baritem<T>* lines = new Baritem<T>();
 

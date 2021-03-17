@@ -3,3 +3,5 @@
 // Дополнительные сведения: https://go.microsoft.com/fwlink/?linkid=865984
 #define INCLUDE_PY
 #define _PYD
+#define EXPORT __declspec(dllexport)
+#define EXPORT

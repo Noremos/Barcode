@@ -77,7 +77,8 @@ namespace bc
 		{
 			matr.push_back(barvalue<T>(first, bright));
 		}
-		pmap<T> matr;
+
+		bc::barvector<T> matr;
 		T start;
 		T len;
 		barcounter<T>* bar3d = nullptr;

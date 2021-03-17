@@ -21,15 +21,6 @@ void bc::Baritem<T>::add(T st, T len)
 	barlines.push_back(new barline<T>(st, len));
 }
 
-//void bc::Baritem::add(uchar st, uchar len, cv::Mat binmat)
-//{
-//    bar.push_back(barline(st, len, binmat));
-//}
-//template<class T>
-//void bc::Baritem<T>::add(T st, T len, pmap<T>* binmat)
-//{
-//	bar.push_back(new barline<T>(st, len, binmat));
-//}
 
 template<class T>
 void bc::Baritem<T>::add(bc::barline<T>* line)

@@ -224,7 +224,7 @@ void checkImgFromData2()
 		255,90
 	};
 	Bimg8 img(2, 2, 1, data);
-	testf255t0(img);
+	//testf255t0(img);
 
 	testData(false, data, lend);
 	testData(true, data, lend);
@@ -358,100 +358,15 @@ void checkBigImg()
 using namespace std;
 int main()
 {
-	int n;
-
-	int min0 =1001, min1 = 1001, max2 = -1001, max1 = -1001, max0 = -1001;
-	cin >> n;
-	for (int i = 0; i < n; ++i)
-	{
-		int a;
-		cin >> a;
-
-		if (a <= min0)
-		{
-			min1 = min0;
-			min0 = a;
-		}
-		else if (min1 > a)
-		{
-			min1 = a;
-		}
-
-		if (a >= max0)
-		{
-			max2 = max1;
-			max1 = max0;
-			max0 = a;
-		}
-		else if (max1<a)
-		{
-			max2 = max1;
-			max1 = a;
-		}
-		else if (max2<a)
-		{
-			max2 = a;
-		}
-	}
-
-	int minS = min0 * min1;
-	int maxS = max0 * max1 * max2;
-	if (minS > 0)
-	{
-		if (minS * max0 > maxS)
-			cout << max0 << " " << min1 << " " << min0;
-		else if (minS * max1 > maxS)
-			cout << max1 << " " << min1 << " " << min0;
-		else if (minS * max2 > maxS)
-			cout << max2 << " " << min1 << " " << min0;
-		else
-		cout << max2 << " " << max1 << " " << max0;
-	}
-	else
-		cout << max2 << " " << max1 << " " << max0;
-
-	return 0;
-
-	node* root = new node(5);
-	root->next = new node(4);
-	node* cur = root->next;
-	cur->next = new node(3);
-	cur = cur->next;
-	cur->next = new node(2);
-	cur = cur->next;
-	cur->next = new node(1);
-	cur = cur->next;
-	cur->next = new node(0);
-	cur = cur->next;
-
-	node* fir = root;
-
-	while(fir != nullptr)
-	{
-		node* sec = fir->next;
-		while (sec!=nullptr)
-		{
-			// <  -- �� ������������
-			if (sec->value < fir->value)
-			{
-				int temp = sec->value;
-				sec->value = fir->value;
-				fir->value = temp;
-			}
-			sec = sec->next;
-		}
-		fir = fir->next;
-	}
-
 	// TODO Move it to test project
 	testInitFromMat();
 
 	printf("raw data tests: star...");
 	checkImgFromData2();
-	//checkImgFromData3();
-	//checkImgFromData4();
-	//checkImgFromData5();
-	//checkImgFromData6();
+	checkImgFromData3();
+	checkImgFromData4();
+	checkImgFromData5();
+	checkImgFromData6();
 	printf("done\n\n");
 
 	printf("mat tests: star...");
