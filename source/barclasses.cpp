@@ -158,10 +158,11 @@ double findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat
 		minlen = (double)(ed - st);
 		maxlen = (double)MAX(X->len, Y->len);
 	}
+
 	if (minlen <= 0 || maxlen <= 0)
 		return -1;
 
-	float coof = minlen / maxlen;
+	return minlen / maxlen;
 }
 
 template<class T>

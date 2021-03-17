@@ -868,7 +868,10 @@ void BarcodeCreator<T>::reverseCom()
 		//item->end() - ccod + blineParrent->end() - item->end() = общее время
 		//220 - 10
 		barline<T>* brline = incl->resline;
-		if (settings.createBinayMasks)
+		if (brline==nullptr)
+			assert(incl->len() == 0);
+
+		if (settings.createBinayMasks && brline)
 			brline->addCoord(p, incl->end - ccod);
 
 		// parent always will be (rootNode for root elements
