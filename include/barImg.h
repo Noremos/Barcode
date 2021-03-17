@@ -68,6 +68,8 @@ namespace bc {
 		{
 			return point((int)(iter % wid()), (int)(iter / wid()));
 		}
+		virtual ~DatagridProvider()
+		{ }
 
 	};
 
@@ -233,7 +235,7 @@ namespace bc {
 			return values;
 		}
 
-		T max() const
+		T max() const override
 		{
 			BarImg<T>* ptr = const_cast<BarImg<T>*> (this);
 
@@ -620,7 +622,7 @@ namespace bc {
 	static inline void split(const DatagridProvider<T>& src, std::vector<BarImg<T>*>& bgr)
 	{
 		size_t step = static_cast<size_t>(src.channels()) * src.typeSize();
-		for (size_t k = 0; k < src.channels(); k++)
+		for (int k = 0; k < src.channels(); k++)
 		{
 			BarImg<T>* ib = new BarImg<T>(src.wid(), src.hei());
 			bgr.push_back(ib);
@@ -669,7 +671,7 @@ namespace bc {
 		for (size_t i = 0; i < source.length(); ++i)
 		{
 			double acum = 0;
-			for (size_t c = 0; c < source.channels(); c++)
+			for (int c = 0; c < source.channels(); c++)
 			{
 				acum += source.getLiner(i, c) * coof;
 			}

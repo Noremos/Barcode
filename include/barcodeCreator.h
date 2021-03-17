@@ -48,15 +48,14 @@ namespace bc {
 
 			if (!settings.stepPorog.isCached || !settings.stepPorog.isCached)
 			{
-				T max = workingImg->max();
+				T maxVal = workingImg->max();
+
 				if (!settings.stepPorog.isCached)
-					settings.stepPorog.set(max);
+					settings.stepPorog.set(maxVal);
 
 				if (!settings.maxLen.isCached)
-					settings.maxLen.set(max);
+					settings.maxLen.set(maxVal);
 			}
-
-
 		}
 
 		bool needDelImg = false;
@@ -86,7 +85,7 @@ namespace bc {
 			return a > b ? a - b : b - a;
 		}
 
-		constexpr point getPoint(size_t i) const
+		point getPoint(size_t i) const
 		{
 			return point(static_cast<int>(i % (size_t)wid), static_cast<int>(i / (size_t)wid));
 		}
@@ -131,8 +130,8 @@ namespace bc {
 		void clearIncluded();
 
 		void draw(std::string name = "test");
-		void VISULA_DEBUG(int y, int i);
-		void VISULA_DEBUG_COMP(int y, int i);
+		void VISULA_DEBUG();
+		void VISULA_DEBUG_COMP();
 
 
 		void init(const bc::DatagridProvider<T>* src, const  ProcType& type);
@@ -223,4 +222,39 @@ namespace bc {
 		}
 #endif // _PYD
 	};
+
+	template<class T>
+	static Barcontainer<T>* createBarcode(bc::BarType type, const bc::DatagridProvider<T>* img, BarConstructor<T>& strct)
+	{
+		switch (type)
+		{
+		case bc::BarType::bc_byte:
+		{
+			BarcodeCreator<ushort> t;
+			return t.createBarcode(img, strct);
+		}
+		case bc::BarType::bc_float:
+		{
+			BarcodeCreator<float> t;
+			return t.createBarcode(img, strct);
+		}
+		case bc::BarType::bc_int:
+		{
+			BarcodeCreator<int> t;
+			return t.createBarcode(img, strct);
+		}
+		case bc::BarType::bc_short:
+		{
+			BarcodeCreator<short> t;
+			return t.createBarcode(img, strct);
+		}
+		case bc::BarType::bc_ushort:
+		{
+			BarcodeCreator<ushort> t;
+			return t.createBarcode(img, strct);
+		}
+		default:
+			return nullptr;
+		}
+	}
 }

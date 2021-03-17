@@ -82,6 +82,17 @@ namespace bc
 			}
 			return cachedMaxParent;
 		}
+		Component<T> *getMaxAliveParrent()
+		{
+			auto *par = getMaxParrent();
+			return par->isAlive() ? par : nullptr;
+		}
+
+		Component<T>* getMaxAliveParrent()
+		{
+			auto* par = getMaxParrent();
+			return par->isAlive() ? par : nullptr;
+		}
 
 		Component<T>* getMaxAliveParrent()
 		{

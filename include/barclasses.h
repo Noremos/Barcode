@@ -75,6 +75,26 @@ namespace bc
 		}
 
 #ifdef _PYD
+		// only for uchar
+		bp::list calcHistByBarlen()
+		{
+			bp::list hist;
+			//for (int i = 0; i < 256; ++i)
+			//	hist.append(0);
+
+			//for (size_t i = 0; i < barlines.size(); i++)
+			//	++hist[barlines[i]->len];
+
+			return hist;
+			//int hist[256];
+			//memset(hist, 0, 256 * sizeof(int));
+
+			//for (size_t i = 0; i < barlines.size(); i++)
+			//{
+			//	++hist[barlines[i].len];
+			//}
+		}
+
 		bp::list getBarcode()
 		{
 			bp::list lines;
