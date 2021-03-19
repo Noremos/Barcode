@@ -26,10 +26,13 @@ namespace bc
 	template<class T>
 	class EXPORT Baritem : public Barbase<T>
 	{
-		bc::BarRoot<T>* rootNode = nullptr;
 	public:
 		barlinevector<T> barlines;
 
+	private:
+		bc::BarRoot<T>* rootNode = nullptr;
+
+	public:
 		Baritem();
 		Baritem(const Baritem<T>& obj);
 		//    cv::Mat binmap;

@@ -13,28 +13,28 @@ namespace bc
 	template<class T>
 	class Component
 	{
-		Component<T>* cachedMaxParent = nullptr;
 	protected:
+		size_t num = 0;
 		size_t totalCount = 0/*, ownSize = 0*/;
 		BarcodeCreator<T>* factory;
-		bool lived = true;
+		Component<T>* cachedMaxParent = nullptr;
+		Component<T>* cachedNonZeroParent = nullptr;
+		Component<T>* parent = nullptr;
+
+		barcounter<T>* bar3d = nullptr;
+		barline<T>* resline = nullptr;
 
 		int cashedSize = 0;
 		T lastVal = 0;
+		T start = 0, end = 0;
+		bool lived = true;
+		//0 - nan
 
 		void init(BarcodeCreator<T>* factory);
 	public:
 
 		Component(point pix, BarcodeCreator<T>* factory);
 		Component(BarcodeCreator<T>* factory, bool create = false);
-
-		Component<T>* parent = nullptr;
-
-		T start = 0, end = 0;
-		barcounter<T>* bar3d = nullptr;
-		//0 - nan
-		size_t num = 0;
-		barline<T>* resline;
 
 		bool isAlive()
 		{
@@ -51,15 +51,19 @@ namespace bc
 			if (parent == nullptr)
 				return nullptr;
 
-			Component<T>* ccomp = parent->parent;
-			while (ccomp)
+			if (cachedNonZeroParent == nullptr)
 			{
-				if (ccomp->parent->len() != 0)
-					return ccomp;
-
-				ccomp = ccomp->parent;
+				cachedNonZeroParent = parent;
 			}
-			return nullptr;
+
+			while (cachedNonZeroParent)
+			{
+				if (cachedNonZeroParent->len() != 0)
+					return cachedNonZeroParent;
+
+				cachedNonZeroParent = cachedNonZeroParent->parent;
+			}
+			return cachedNonZeroParent;
 		}
 
 		//    cv::Mat binmap;
@@ -79,6 +83,7 @@ namespace bc
 			}
 			return cachedMaxParent;
 		}
+
 		Component<T> *getMaxAliveParrent()
 		{
 			auto *par = getMaxParrent();
@@ -90,7 +95,7 @@ namespace bc
 		virtual void add(const point& p);
 		virtual void kill();
 		virtual void setParrent(Component<T>* parnt);
-		//    void setB(const point &p);
+
 		virtual ~Component();
 
 		size_t getTotalSize()

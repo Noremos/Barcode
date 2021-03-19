@@ -12,8 +12,16 @@ namespace bc
 	template<class T>
 	struct EXPORT barline
 	{
-
+		bc::barvector<T> matr;
+		barcounter<T>* bar3d = nullptr;
+		std::vector<barline<T>*> childrens;
+		barline<T>* parrent = nullptr;
+		size_t numInParet = 0;
+		T start;
+		T len;
 		bool isCopy = false;
+
+		//bc::Component *comp;
 		//    cv::Mat binmat;
 #ifdef USE_OPENCV
 
@@ -78,10 +86,6 @@ namespace bc
 			matr.push_back(barvalue<T>(first, bright));
 		}
 
-		bc::barvector<T> matr;
-		T start;
-		T len;
-		barcounter<T>* bar3d = nullptr;
 		//    barline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
 		//    barline(uchar _start, uchar _len, cv::Mat _mat) :  start(_start), len(_len)
 		//    {
@@ -132,11 +136,6 @@ namespace bc
 			}
 			return temp;
 		}
-
-		//bc::Component *comp;
-		barline<T>* parrent = nullptr;
-		std::vector<barline<T>*> childrens;
-		size_t numInParet = 0;
 
 		void setParrent(barline<T>* node)
 		{

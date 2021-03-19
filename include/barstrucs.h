@@ -24,7 +24,7 @@ namespace bc
 			this->isCached = true;
 		}
 
-		T getOrDefault(T defValue)
+		T getOrDefault(T defValue) const
 		{
 			return isCached ? val : defValue;
 		}
@@ -98,6 +98,7 @@ namespace bc
 			return vls[idx];
 		}
 	};
+
 	static bool operator > (BarVec3b c1, BarVec3b c2)
 	{
 		return c1.sum() > c2.sum();
@@ -127,7 +128,6 @@ namespace bc
 	};
 
 
-
 	template<class T>
 	struct BarConstructor
 	{
@@ -136,23 +136,24 @@ namespace bc
 	public:
 		//T foneStart;
 		//T foneEnd;
+		std::vector<barstruct> structure;
+		ReturnType returnType;
+
+		bool createGraph = false;
+		bool createBinayMasks = false;
+		bool createNewComponentOnAttach = false;
+		bool killOnMaxLen = false;
 
 #ifdef USE_OPENCV
 		bool visualize = false;
 #endif // USE_OPENCV
 
-		bool createGraph = false;
-		bool createBinayMasks = false;
-		bool createNewComponentOnAttach = false;
-		ReturnType returnType;
-		std::vector<barstruct> structure;
-		bool killOnMaxLen = false;
 		inline void addStructure(ProcType pt, ColorType colT, ComponentType comT)
 		{
 			structure.push_back(barstruct(pt, colT, comT));
 		}
 
-		void checkCorrect()
+		void checkCorrect() const
 		{
 			//if (returnType == ReturnType::barcode2d || returnType == ReturnType::barcode3d)
 			//	createBinayMasks = true;
@@ -170,7 +171,7 @@ namespace bc
 		}
 
 		// разница соединяемх значений должна быть меньше этого значения
-		T getMaxStepPorog()
+		T getMaxStepPorog() const
 		{
 			return stepPorog.getOrDefault(0);
 		}
@@ -189,8 +190,8 @@ namespace bc
 		{
 			maxLen.set(val);
 		}
-
 	};
+
 
 	template<class T>
 	static BarConstructor<T>* createStructure(bc::BarType type)
@@ -303,6 +304,9 @@ namespace bc
 	template<class T>
 	struct bar3dvalue
 	{
+		size_t count;
+		T value;
+
 		bar3dvalue(T value, size_t count)
 		{
 			this->count = count;
@@ -312,14 +316,14 @@ namespace bc
 		{
 			this->count = 0;
 		}
-
-		size_t count;
-		T value;
 	};
 
 	template<class T>
 	struct barvalue
 	{
+		bc::point point;
+		T value;
+
 		barvalue(bc::point point, T value)
 		{
 			this->point = point;
@@ -346,11 +350,7 @@ namespace bc
 		{
 			point.y = y;
 		}
-
-		bc::point point;
-		T value;
 	};
-
 
 	template<class T>
 	using barvector = std::vector<barvalue<T>>;
@@ -363,6 +363,5 @@ namespace bc
 INIT_TEMPLATE_STRUCT(CachedValue)
 INIT_TEMPLATE_STRUCT(BarConstructor)
 }
-
 
 #endif // BARCODE_H

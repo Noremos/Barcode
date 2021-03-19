@@ -5,3 +5,4 @@
 #define _PYD
 #define EXPORT __declspec(dllexport)
 #define EXPORT
+#define INIT_TEMPLATE_STRUCT(TYPE)

@@ -46,7 +46,7 @@ namespace bc {
 
 			workingImg = newWI;
 
-			if (!settings.stepPorog.isCached || !settings.stepPorog.isCached)
+			if (!settings.stepPorog.isCached || !settings.maxLen.isCached)
 			{
 				T maxVal = workingImg->max();
 
@@ -80,9 +80,9 @@ namespace bc {
 			return wid * y + x;
 		}
 
-		constexpr T GETDIFF(T a, T b) const {
-
-			return a > b ? a - b : b - a;
+		constexpr bool GETDIFF(T a, T b) const
+		{
+			return (a > b ? a - b : b - a) <= this->settings.getMaxStepPorog();
 		}
 
 		point getPoint(size_t i) const

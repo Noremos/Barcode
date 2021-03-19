@@ -241,7 +241,7 @@ COMPP BarcodeCreator<T>::getPorogComp(const point& p)
 
 	const size_t off = static_cast<size_t>(wid) * p.y + p.x;
 	auto& itr = included[off];
-	if (itr && GETDIFF(curbright, workingImg->get(p.x, p.y)) <= settings.getMaxStepPorog())
+	if (itr && GETDIFF(curbright, workingImg->get(p.x, p.y)))
 	{
 		return itr->getMaxAliveParrent();
 	}
@@ -868,11 +868,20 @@ void BarcodeCreator<T>::reverseCom()
 		//item->end() - ccod + blineParrent->end() - item->end() = общее время
 		//220 - 10
 		barline<T>* brline = incl->resline;
-		if (brline==nullptr)
-			assert(incl->len() == 0);
-
-		if (settings.createBinayMasks && brline)
-			brline->addCoord(p, incl->end - ccod);
+		if (settings.createBinayMasks)
+		{
+			if (brline == nullptr)
+			{
+				brline = incl->getNonZeroParent()->resline;
+				assert(incl->len() == 0);
+				assert(brline);
+				brline->addCoord(p, incl->end - ccod);
+				continue;
+				//ignore zerolen comp
+			}
+			else
+				brline->addCoord(p, incl->end - ccod);
+		}
 
 		// parent always will be (rootNode for root elements
 		COMPP pparent = incl->getNonZeroParent();
@@ -955,8 +964,7 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		size_t size = settings.createBinayMasks ? c->getTotalSize() : 0;
 
 		auto* bar3d = (n == 3) ? c->bar3d : nullptr;
-		barline<T>* line = new barline<T>(c->start, len, bar3d, size);
-		c->resline = line;
+		barline<T>* line = c->resline = new barline<T>(c->start, len, bar3d, size);
 
 		if (c->parent == nullptr && settings.createGraph)
 		{

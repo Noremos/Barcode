@@ -145,10 +145,11 @@ void test(bool graph, Bbase8& testimg, bool createNew = false)
 		imgrest = restreToBarimg(ret, testimg.wid(), testimg.hei(), max);
 	}
 
-	Mat res = bc::convertProvider2Mat(&imgrest);
+	Mat res = bc::convertProvider2Mat(&testimg);
+	Mat orig = bc::convertProvider2Mat(&imgrest);
 
-	//cv::namedWindow("orig", cv::WINDOW_NORMAL);
-	//cv::imshow("orig", orig);
+	cv::namedWindow("orig", cv::WINDOW_NORMAL);
+	cv::imshow("orig", orig);
 	cv::namedWindow("restored", cv::WINDOW_NORMAL);
 	cv::imshow("restored", res);
 	cv::waitKey(1);
@@ -331,7 +332,7 @@ void checkBigImg()
 {
 	bc::BarConstructor<uchar> bcont;
 	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
-	bcont.createBinayMasks = false;
+	bcont.createBinayMasks = true;
 	bcont.createGraph = false;
 	bcont.returnType = bc::ReturnType::barcode2d;
 	bcont.createNewComponentOnAttach = false;
@@ -339,7 +340,7 @@ void checkBigImg()
 
 	bc::BarcodeCreator<uchar> test;
 
-	Mat testmat = cv::imread((string)"D:\\MyA\\z.jpg", cv::IMREAD_GRAYSCALE);
+	Mat testmat = cv::imread((string)"test/bigimg.jpg", cv::IMREAD_GRAYSCALE);
 	//Mat testmat = cv::imread((string)"D:\\Programs\\Python\\barcode\\lenna.png", cv::IMREAD_GRAYSCALE);
 	bc::BarMat<uchar> mf(testmat);
 

@@ -78,14 +78,20 @@ namespace bc {
 	{
 		typedef T* bar_iterator;
 		typedef const T* const_bar_iterator;
+
+	protected:
+		T* values = nullptr;
+
+	private:
+		CachedValue<T> cachedMax;
+		CachedValue<T> cachedMin;
+
 		int _wid;
 		int _hei;
 		int _channels;
 		int TSize;
 
 		bool _deleteData = true;
-		CachedValue<T> cachedMax;
-		CachedValue<T> cachedMin;
 	public:
 		bool diagReverce = false;
 		virtual int width(){ return wid();}
@@ -102,7 +108,6 @@ namespace bc {
 			diagReverce = false;
 		}
 
-		T* values = nullptr;
 
 		void valZerofy()
 		{
