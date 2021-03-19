@@ -343,6 +343,7 @@ x64
 test
 QTGUI
 build
+PrjTests/data/shapes
 analysis
 analysis/data
 analysis/datasets
