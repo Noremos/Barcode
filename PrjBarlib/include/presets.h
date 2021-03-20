@@ -10,8 +10,6 @@ typedef unsigned char uchar;
 typedef unsigned short ushort;
 
 
-// typedef short TV;
-typedef uchar TV;
 
 
 

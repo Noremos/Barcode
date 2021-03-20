@@ -46,6 +46,10 @@
 //	}
 //};
 
+
+// typedef short TV;
+typedef uchar TV;
+
 BOOST_PYTHON_MODULE(barpy)
 {
 	bn::initialize();
