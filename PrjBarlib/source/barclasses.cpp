@@ -121,7 +121,7 @@ void bc::Baritem<T>::removePorog(const T porog)
 		barline<T>* line = barlines[i];
 		if (line->len >= porog)
 			res.push_back(line);
-		else if (line->isCopy)
+		else// if (line->isCopy)
 			delete line;
 	}
 	barlines.clear();
