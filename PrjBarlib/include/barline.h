@@ -179,49 +179,6 @@ namespace bc
 			}
 		}
 
-#ifdef _PYD
-
-
-
-		//bp::list getPoints()
-		//{
-		//	return getPoints(false);
-		//}
-		bp::list getPoints(bool skipChildPoints = false)
-		{
-			std::unordered_map<bc::point, bool, bc::pointHash> childs;
-			bp::list l;
-
-			if (skipChildPoints)
-			{
-				getChildsMatr(childs);
-
-				for (size_t i = 0; i < matr.size(); i++)
-				{
-					if (childs.find(matr[i].point) == childs.end())
-						l.append(matr[i]);
-				}
-			}
-			else
-			{
-				for (size_t i = 0; i < matr.size(); i++)
-					l.append(matr[i]);
-			}
-
-			return l;
-		}
-
-		bp::list getBarcode3d()
-		{
-			bp::list l;
-			if (bar3d != nullptr)
-			{
-				for (size_t i = 0; i < bar3d->size(); i++)
-					l.append(bar3d->at(i));
-			}
-
-			return l;
-		}
 
 		size_t getBarcode3dSize()
 		{
@@ -285,6 +242,52 @@ namespace bc
 				return 1.f;
 			return  abs(roundf(1000 * (PI - t) / PI) / 1000.f);
 		}
+
+#ifdef _PYD
+
+
+
+		//bp::list getPoints()
+		//{
+		//	return getPoints(false);
+		//}
+		bp::list getPoints(bool skipChildPoints = false)
+		{
+			std::unordered_map<bc::point, bool, bc::pointHash> childs;
+			bp::list l;
+
+			if (skipChildPoints)
+			{
+				getChildsMatr(childs);
+
+				for (size_t i = 0; i < matr.size(); i++)
+				{
+					if (childs.find(matr[i].point) == childs.end())
+						l.append(matr[i]);
+				}
+			}
+			else
+			{
+				for (size_t i = 0; i < matr.size(); i++)
+					l.append(matr[i]);
+			}
+
+			return l;
+		}
+
+		bp::list getBarcode3d()
+		{
+			bp::list l;
+			if (bar3d != nullptr)
+			{
+				for (size_t i = 0; i < bar3d->size(); i++)
+					l.append(bar3d->at(i));
+			}
+
+			return l;
+		}
+
+		
 
 		//bp::dict getPointsInDict()
 		//{
