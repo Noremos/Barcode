@@ -101,6 +101,7 @@
     <ClInclude Include="include\include_cv.h" />
     <ClInclude Include="include\include_py.h" />
     <ClInclude Include="include\presets.h" />
+    <ClInclude Include="include\pytemplcalsses.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\barcodeCreator.cpp" />

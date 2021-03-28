@@ -63,7 +63,7 @@ bc::Baritem<T>* bc::Baritem<T>::clone() const
 	{
 		auto* nnew = nb->barlines[i]->clone();
 		if (createGraph)
-			oldNew.insert(std::pair(nb->barlines[i], nnew));
+			oldNew.insert(std::pair<barline<T>*, barline<T>*>(nb->barlines[i], nnew));
 
 		nb->barlines[i] = nnew;
 	}
@@ -151,12 +151,16 @@ double findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat
 		ed = MAX(X->end(), Y->end());
 		maxlen = (double)(ed - st);
 	}
-	else
+	else if (strat == bc::CompireStrategy::CommonToSum)
 	{
 		T st = MAX(X->start, Y->start);
 		T ed = MIN(X->end(), Y->end());
 		minlen = (double)(ed - st);
 		maxlen = (double)MAX(X->len, Y->len);
+	}
+	else
+	{
+		return X->compire3dbars(Y, strat);
 	}
 
 	if (minlen <= 0 || maxlen <= 0)
@@ -165,15 +169,29 @@ double findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat
 	return minlen / maxlen;
 }
 
+#include <algorithm>
+
 template<class T>
-float bc::Baritem<T>::compireBestRes(const bc::Baritem<T>* bc, bc::CompireStrategy& strat) const
+void soirBarlens(bc::barlinevector<T>& barl)
 {
-	Baritem<T>* Y = bc->clone();
-	Baritem<T>* X = clone();
-	if (X->barlines.size() == 0 || Y->barlines.size() == 0)
+	std::sort(barl.begin(), barl.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
+		{
+			return a->len > b->len;
+		});
+}
+
+
+template<class T>
+float bc::Baritem<T>::compireBestRes(const bc::Baritem<T>* bc, bc::CompireStrategy strat) const
+{
+	barlinevector<T> Xbarlines = barlines;
+	barlinevector<T> Ybarlines = dynamic_cast<const Baritem<T>*>(bc)->barlines;
+
+	if (Xbarlines.size() == 0 || Ybarlines.size() == 0)
 		return 0;
-	float sum = (float)(X->sum() + Y->sum());
-	int n = static_cast<int>(MIN(barlines.size(), Y->barlines.size()));
+
+	float totalsum = 0.f;
+	int n = static_cast<int>(MIN(barlines.size(), Ybarlines.size()));
 
 	float tsum = 0.f;
 	for (int re = 0; re < n; ++re)
@@ -182,101 +200,103 @@ float bc::Baritem<T>::compireBestRes(const bc::Baritem<T>* bc, bc::CompireStrate
 		float maxsum = 0;
 		size_t ik = 0;
 		size_t jk = 0;
-		for (size_t i = 0, totalI = X->barlines.size(); i < totalI; ++i)
+		for (size_t i = 0, totalI = Xbarlines.size(); i < totalI; ++i)
 		{
-			for (size_t j = 0, totalY = Y->barlines.size(); j < totalY; ++j)
+			for (size_t j = 0, totalY = Ybarlines.size(); j < totalY; ++j)
 			{
-				double coof = findCoof(X->barlines[i], Y->barlines[j], strat);
+				double coof = findCoof(Xbarlines[i], Ybarlines[j], strat);
 				if (coof < 0)
 					continue;
 
 				if (coof > maxCoof)
 				{
 					maxCoof = coof;
-					maxsum = (float)(X->barlines[i]->len + Y->barlines[j]->len);
+					maxsum = (float)(Xbarlines[i]->len + Ybarlines[j]->len);
 					ik = i;
 					jk = j;
 				}
 			}
 		}
-		X->barlines.erase(X->barlines.begin() + ik);
-		Y->barlines.erase(Y->barlines.begin() + jk);
+		Xbarlines.erase(Xbarlines.begin() + ik);
+		Ybarlines.erase(Ybarlines.begin() + jk);
 		tsum += maxsum * maxCoof;
+		totalsum += maxsum;
 	}
-	return tsum / sum;
+	return tsum / totalsum;
 }
 
 template<class T>
 float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy& strat) const
 {
-	Baritem<T>* Y = dynamic_cast<const Baritem<T>*>(bc)->clone();
-	Baritem<T>* X = clone();
-	if (X->barlines.size() == 0 || Y->barlines.size() == 0)
+	barlinevector<T> Xbarlines = barlines;
+	barlinevector<T> Ybarlines = dynamic_cast<const Baritem<T>*>(bc)->barlines;
+
+	if (Xbarlines.size() == 0 || Ybarlines.size() == 0)
 		return 0;
 
-	float sum = (float)(X->sum() + Y->sum());
-	size_t n = static_cast<int>(MIN(X->barlines.size(), Y->barlines.size()));
-	X->sortByLen();
-	Y->sortByLen();
+	float totalsum = 0;
+	size_t n = static_cast<int>(MIN(Xbarlines.size(), Ybarlines.size()));
+	soirBarlens<T>(Xbarlines);
+	soirBarlens<T>(Xbarlines);
 
-	float tsum = 0.f;
+	float tcoof = 0.f;
 	for (size_t i = 0; i < n; ++i)
 	{
-		double coof = findCoof(X->barlines[i], Y->barlines[i], strat);
+		double coof = findCoof(Xbarlines[i], Ybarlines[i], strat);
 		if (coof < 0)
 			continue;
 
-		T xysum = X->barlines[i]->len + Y->barlines[i]->len;
-		tsum += xysum * coof;
+		float xysum = Xbarlines[i]->len + Ybarlines[i]->len;
+		totalsum += xysum;
+		tcoof += xysum * coof;
 	}
-	return tsum / sum;
+	return tcoof / totalsum;
 }
 
 template<class T>
-float bc::Baritem<T>::compareOccurrence(const bc::Baritem<T>* bc, bc::CompireStrategy& strat) const
+float bc::Baritem<T>::compareOccurrence(const bc::Baritem<T>* bc, bc::CompireStrategy strat) const
 {
-	Baritem<T>* Y = bc->clone();
-	Baritem<T>* X = clone();
-	if (X->barlines.size() == 0 || Y->barlines.size() == 0)
-		return 0;
-	float sum = 0;
-	size_t n = static_cast<int>(MIN(X->barlines.size(), Y->barlines.size()));
+	barlinevector<T> Xbarlines = barlines;
+	barlinevector<T> Ybarlines = dynamic_cast<const Baritem<T>*>(bc)->barlines;
 
-	float tsum = 0.f;
+	if (Xbarlines.size() == 0 || Ybarlines.size() == 0)
+		return 0;
+
+	size_t n = static_cast<int>(MIN(Xbarlines.size(), Ybarlines.size()));
+	soirBarlens<T>(Xbarlines);
+	soirBarlens<T>(Ybarlines);
+
+	float coofsum = 0.f, totalsum = 0.f;
 	for (size_t re = 0; re < n; ++re)
 	{
 		float maxCoof = 0;
 		float maxsum = 0;
 		size_t jk = 0;
-		for (size_t j = 0, total2 = Y->barlines.size(); j < total2; ++j)
+		for (size_t j = 0, total2 = Ybarlines.size(); j < total2; ++j)
 		{
-			double coof = findCoof(X->barlines[re], Y->barlines[j], strat);
+			double coof = findCoof(Xbarlines[re], Ybarlines[j], strat);
 			if (coof < 0)
 				continue;
 
 			if (coof > maxCoof)
 			{
 				maxCoof = coof;
-				maxsum = (float)(X->barlines[re]->len + Y->barlines[j]->len);
+				maxsum = (float)(Xbarlines[re]->len + Ybarlines[j]->len);
 				jk = j;
 			}
 		}
-		Y->barlines.erase(Y->barlines.begin() + jk);
-		sum += maxsum;
-		tsum += maxsum * maxCoof;
+		Ybarlines.erase(Ybarlines.begin() + jk);
+		totalsum += maxsum;
+		coofsum += maxsum * maxCoof;
 	}
-	return tsum / sum;
+	return coofsum / totalsum;
 }
 
-#include <algorithm>
 
 template<class T>
 void bc::Baritem<T>::sortByLen()
 {
-	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
-		{
-			return a->len > b->len;
-		});
+	soirBarlens<T>(barlines);
 }
 
 template<class T>

@@ -59,7 +59,7 @@ template struct TYPE<ushort>;
 
 namespace bc
 {
-	enum class EXPORT CompireStrategy { CommonToSum, CommonToLen, FromMethod, Complex, Temp1, Temp2 };
+	enum class EXPORT CompireStrategy { CommonToSum, CommonToLen, compire3dHist, compire3dBrightless, FromMethod, Complex, Temp1, Temp2 };
 
 	enum class ComponentType { Component, Hole, FullPrepair, PrepairComp };
 	enum class ProcType { f0t255, f255t0, experement };

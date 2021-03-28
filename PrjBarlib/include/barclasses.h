@@ -49,11 +49,10 @@ namespace bc
 		void removePorog(T const porog);
 		void preprocessBar(T const& porog, bool normalize);
 		float compireFull(const Barbase<T>* bc, bc::CompireStrategy& strat) const;
-		float compireBestRes(Baritem<T> const* bc, bc::CompireStrategy& strat) const;
-		float compareOccurrence(Baritem<T> const* bc, bc::CompireStrategy& strat) const;
+		float compireBestRes(Baritem<T> const* bc, bc::CompireStrategy strat) const;
+		float compareOccurrence(Baritem<T> const* bc, bc::CompireStrategy strat) const;
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		~Baritem();
-
 
 		bc::BarRoot<T>* getRootNode()
 		{
@@ -77,24 +76,50 @@ namespace bc
 
 #ifdef _PYD
 		// only for uchar
-		bp::list calcHistByBarlen()
+		bp::list calcHistByBarlen(/*T maxLen*/)
 		{
-			bp::list hist;
-			//for (int i = 0; i < 256; ++i)
-			//	hist.append(0);
+			int maxLen = 256;
+			int* hist = new int[maxLen];
+			memset(hist, 0, maxLen * sizeof(int));
 
-			//for (size_t i = 0; i < barlines.size(); i++)
-			//	++hist[barlines[i]->len];
+			for (size_t i = 0; i < barlines.size(); i++)
+				++hist[(uchar)barlines[i]->len];
 
-			return hist;
-			//int hist[256];
-			//memset(hist, 0, 256 * sizeof(int));
+			bp::list pyhist;
+			for (size_t i = 0; i < maxLen; i++)
+				pyhist[i] = hist[i];
+			
+			delete[] hist;
 
-			//for (size_t i = 0; i < barlines.size(); i++)
-			//{
-			//	++hist[barlines[i].len];
-			//}
+			return pyhist;
 		}
+
+
+		// only for uchar
+		bp::list calcHistByPointsSize(/*T maxLen*/)
+		{
+			int rm = 0;
+			for (size_t i = 0; i < barlines.size(); i++)
+			{
+				int rf = barlines[i]->getPointsSize();
+				if (rf > rm)
+					rm = rf;
+			}
+			int* hist = new int[rm];
+			memset(hist, 0, rm * sizeof(int));
+
+			for (size_t i = 0; i < barlines.size(); i++)
+				++hist[barlines[i]->getPointsSize()];
+
+			bp::list pyhist;
+			for (size_t i = 0; i < rm; i++)
+				pyhist[i] = hist[i];
+
+			delete[] hist;
+
+			return pyhist;
+		}
+
 
 		bp::list getBarcode()
 		{
@@ -106,7 +131,7 @@ namespace bc
 			return lines;
 		}
 		
-		float cmp(const Baritem<T>* bitem, bc::CompireStrategy& strat) const
+		float cmp(const Baritem<T>* bitem, bc::CompireStrategy strat) const
 		{
 			return compireFull((const Baritem<T>*)bitem, strat);
 		}

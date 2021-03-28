@@ -37,7 +37,7 @@ namespace bc {
 
 		BarConstructor<T> settings;
 
-		Include<T>* included;
+		Include<T>* included = nullptr;
 		const DatagridProvider<T>* workingImg = nullptr;
 		void setWorkingImg(const bcBarImg* newWI)
 		{

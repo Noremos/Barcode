@@ -309,7 +309,7 @@ void testMats(bool createNew = false)
 	string testsuit[]{ "as4.png","as3.png","as2.png","as1.png","as.png" };
 	for (auto& test : testsuit)
 	{
-		Mat testmat = cv::imread((string)"test/" + test, cv::IMREAD_GRAYSCALE);
+		Mat testmat = cv::imread((string)"../PrjTests/data/tests/" + test, cv::IMREAD_GRAYSCALE);
 		//testmat = testmat(cv::Range(10, 20), cv::Range(7, 10));
 		cv::namedWindow("orig", cv::WINDOW_NORMAL);
 		cv::imshow("orig", testmat);
@@ -332,7 +332,7 @@ void checkBigImg()
 {
 	bc::BarConstructor<uchar> bcont;
 	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
-	bcont.createBinayMasks = true;
+	bcont.createBinayMasks = false;
 	bcont.createGraph = false;
 	bcont.returnType = bc::ReturnType::barcode2d;
 	bcont.createNewComponentOnAttach = false;
@@ -340,7 +340,7 @@ void checkBigImg()
 
 	bc::BarcodeCreator<uchar> test;
 
-	Mat testmat = cv::imread((string)"test/bigimg.jpg", cv::IMREAD_GRAYSCALE);
+	Mat testmat = cv::imread((string)"../PrjTests/data/bigimg.jpg", cv::IMREAD_GRAYSCALE);
 	//Mat testmat = cv::imread((string)"D:\\Programs\\Python\\barcode\\lenna.png", cv::IMREAD_GRAYSCALE);
 	bc::BarMat<uchar> mf(testmat);
 
@@ -353,7 +353,28 @@ void checkBigImg()
 	auto* ret = test.createBarcode(&mf, bcont);
 	auto t2 = high_resolution_clock::now();
 	auto ms_int = duration_cast<milliseconds>(t2 - t1);
-	std::cout << ms_int.count();
+	std::cout << "time:" << (double)(ms_int.count())/1000 << std::endl;
+}
+
+void testMaxLen()
+{
+	bc::BarcodeCreator<uchar> bc;
+	bc::BarConstructor<uchar> constr;
+	constr.createBinayMasks = true;
+	constr.createGraph = false;
+	constr.createNewComponentOnAttach = false;
+	constr.returnType = bc::ReturnType::barcode2d;
+	constr.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	constr.setStep(255);
+	constr.setMaxLen(20);
+
+	Mat testmat = cv::imread((string)"../PrjTests/data/hole-test.png", cv::IMREAD_GRAYSCALE);
+	bc::BarMat<uchar> gray(testmat);
+
+	auto varcode = bc.createBarcode(&gray, constr);
+
+	Bimg8 sd = restreToBarimg(varcode, gray.wid(), gray.hei(), gray.max());
+	compiteBarAndBar(sd, gray);
 }
 
 using namespace std;
@@ -374,7 +395,14 @@ int main()
 	checkSingleMat();
 	testMats();
 	printf("done\n\n");
-	checkBigImg();
 	
+	printf("maxLen test: sart...\n");
+	testMaxLen();
+	printf("done\n\n");
+
+	printf("BigImg test: sart...\n");
+	checkBigImg();
+	printf("done\n\n");
+
 	return 0;
 }

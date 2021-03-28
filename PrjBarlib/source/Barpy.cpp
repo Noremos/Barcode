@@ -47,92 +47,35 @@
 //};
 
 
-// typedef short TV;
+//typedef float TV;
 typedef uchar TV;
+
+#define PY_SILENS
+#define TN(NAME) NAME
+
+//class Barline8u : public bc::barline<uchar>
+//{ };
+//class Barline32s : public bc::barline<float>
+//{ };
+//BarcodeCreator
+//BarConstructor
+//Baritem
+//bar3dvalue
+//barvalue
+//BarcodeCreator
+
 
 BOOST_PYTHON_MODULE(barpy)
 {
 	bn::initialize();
 	Py_Initialize();
 
-	class_<bc::point>("Point")
-		.def(init<int, int>(args("x", "y")))
-		.add_property("x", make_getter(&bc::point::x), make_setter(&bc::point::x))
-		.add_property("y", make_getter(&bc::point::y), make_setter(&bc::point::y))
-		//.def("y", &bc::point::y)
-		.def("init", static_cast<void (bc::point::*)(int, int)>(&bc::point::init), args("x", "y"))
-		;
-
-
-	class_<bc::barvalue<TV>>("Matrvalue")
-		.add_property("x", &bc::barvalue<TV>::getX, &bc::barvalue<TV>::setX)
-		.add_property("y", &bc::barvalue<TV>::getY, &bc::barvalue<TV>::setY)
-		.add_property("point", make_getter(&bc::barvalue<TV>::point), make_setter(&bc::barvalue<TV>::point))
-		.add_property("value", make_getter(&bc::barvalue<TV>::value), make_setter(&bc::barvalue<TV>::value))
-		//.add_property("points", make_getter(&bc::barline::matr))
-		;
-
-	class_<bc::bar3dvalue<TV>>("Bar3dvalue")
-		.add_property("count", make_getter(&bc::bar3dvalue<TV>::count), make_setter(&bc::bar3dvalue<TV>::count))
-		.add_property("value", make_getter(&bc::bar3dvalue<TV>::value), make_setter(&bc::bar3dvalue<TV>::value))
-		//.add_property("points", make_getter(&bc::barline::matr))
-		;
-
-	class_<bc::barline<TV>>("Barline")
-		.def(init<TV, TV>(args("start", "len")))
-		.add_property("start", make_getter(&bc::barline<TV>::start), make_setter(&bc::barline<TV>::start))
-		.add_property("len", make_getter(&bc::barline<TV>::len), make_setter(&bc::barline<TV>::len))
-		.def("end", &bc::barline<TV>::end)
-		.def("getPointsInDict", &bc::barline<TV>::getPointsInDict)
-		.def("getPoints", &bc::barline<TV>::getPoints)
-		.def("getPointsSize", &bc::barline<TV>::getPointsSize)
-		.def("getMatrvalue", &bc::barline<TV>::getPoint, args("index"))
-		.def("getRect", &bc::barline<TV>::getRect)
-		.def("getParent", &bc::barline<TV>::getParent, return_internal_reference())
-		.def("getChildren", &bc::barline<TV>::getChildren)
-
-		.def("get3dList", &bc::barline<TV>::getBarcode3d)
-		.def("get3dSize", &bc::barline<TV>::getBarcode3dSize)
-		.def("get3dValue", &bc::barline<TV>::getBarcode3dValue, args("index"))
-
-		//.add_property("points", make_getter(&bc::barline::matr))
-		;
-
-	class_<bc::Baritem<TV>>("Baritem")
-		.def("sum", &bc::Baritem<TV>::sum)
-		.def("relen", &bc::Baritem<TV>::relen)
-		.def("clone", &bc::Baritem<TV>::clone, return_value_policy< manage_new_object >())
-		.def("maxLen", &bc::Baritem<TV>::maxLen)
-		.def("removePorog", &bc::Baritem<TV>::removePorog, args("porog"))
-		.def("preprocessBar", &bc::Baritem<TV>::preprocessBar, args("porog", "normalize"))
-		.def("cmp", &bc::Baritem<TV>::cmp, args("bitem", "compireStrategy"))
-		.def("cmpOccurrence", &bc::Baritem<TV>::compareOccurrence, args("bitem", "compireStrategy"))
-		.def("getBarcode", &bc::Baritem<TV>::getBarcode)
-		.def("SortByLineLen", &bc::Baritem<TV>::sortByLen)
-		.def("SortByPointsCount", &bc::Baritem<TV>::sortBySize)
-		.def("calcHistByBarlen", &bc::Baritem<TV>::calcHistByBarlen)
-		.def("getRootNode", &bc::Baritem<TV>::getRootNode, return_internal_reference()/*, make_setter(&bc::Baritem::rootNode)*/)
-		;
-
-	class_<bc::Barcontainer<TV>>("Barcontainer")
-		.def("sum", &bc::Barcontainer<TV>::sum)
-		.def("relen", &bc::Barcontainer<TV>::relen)
-		.def("clone", &bc::Barcontainer<TV>::clone, return_value_policy< manage_new_object >())
-		.def("maxLen", &bc::Barcontainer<TV>::maxLen)
-		.def("count", &bc::Barcontainer<TV>::count)
-		.def("removePorog", &bc::Barcontainer<TV>::removePorog, args("porog"))
-		.def("preprocessBar", &bc::Barcontainer<TV>::preprocessBar, args("porog", "normalize"))
-		//.def("compireCTML", &bc::Barcontainer::compireCTML, args("bc"))
-		//.def("compireCTS", &bc::Barcontainer::compireCTS, args("bc"))
-		//.def("compireCTML", static_cast<float (bc::Barcontainer::*)(const bc::Barbase*) const> (&bc::Barcontainer::compireCTML), args("bc"))
-		//.def("compireCTS", static_cast<float (bc::Barcontainer::*)(bc::Barbase const*) const>(&bc::Barcontainer::compireCTS), args("bc"))
-		.def("addItem", &bc::Barcontainer<TV>::addItem, args("Baritem"))
-		.def("getItem", &bc::Barcontainer<TV>::getItem, args("index"), return_internal_reference())
-		;
 
 	enum_<bc::CompireStrategy>("CompireStrategy")
 		.value("CommonToLen", bc::CompireStrategy::CommonToLen)
 		.value("CommonToSum", bc::CompireStrategy::CommonToSum)
+		.value("compire3d", bc::CompireStrategy::compire3dHist)
+		.value("compire3d", bc::CompireStrategy::compire3dBrightless)
 		;
 
 	enum_<bc::ComponentType>("ComponentType")
@@ -157,12 +100,85 @@ BOOST_PYTHON_MODULE(barpy)
 		.value("barcode3d", bc::ReturnType::barcode3d)
 		;
 
-	//class_<bc::barstruct>("Barstruct")
-	//	.def(init())
-	//	.def(init< bc::ProcType, bc::ColorType, bc::ComponentType>(args("ProcType", "ColorType", "ComponentType")))
-	//	.add_property("comType", &bc::barstruct::comtype)
-	//	.add_property("procType", &bc::barstruct::proctype)
-	//	.add_property("colType", &bc::barstruct::coltype);
+	class_<bc::point>("Point")
+		.def(init<int, int>(args("x", "y")))
+		.add_property("x", make_getter(&bc::point::x), make_setter(&bc::point::x))
+		.add_property("y", make_getter(&bc::point::y), make_setter(&bc::point::y))
+		//.def("y", &bc::point::y)
+		.def("init", static_cast<void (bc::point::*)(int, int)>(&bc::point::init), args("x", "y"))
+		;
+
+
+	//#define TN(NAME) (std::string(NAME)+"8u").c_str()
+	//#include "pytemplcalsses.h"
+
+	class_<bc::barvalue<TV>>("Matrvalue")
+		.add_property("x", &bc::barvalue<TV>::getX, &bc::barvalue<TV>::setX)
+		.add_property("y", &bc::barvalue<TV>::getY, &bc::barvalue<TV>::setY)
+		.add_property("point", make_getter(&bc::barvalue<TV>::point), make_setter(&bc::barvalue<TV>::point))
+		.add_property("value", make_getter(&bc::barvalue<TV>::value), make_setter(&bc::barvalue<TV>::value))
+		//.add_property("points", make_getter(&bc::barline::matr))
+		;
+
+	class_<bc::bar3dvalue<TV>>("Bar3dvalue")
+		.add_property("count", make_getter(&bc::bar3dvalue<TV>::count), make_setter(&bc::bar3dvalue<TV>::count))
+		.add_property("value", make_getter(&bc::bar3dvalue<TV>::value), make_setter(&bc::bar3dvalue<TV>::value))
+		//.add_property("points", make_getter(&bc::barline::matr))
+		;
+
+	class_<bc::barline<TV>>("Barline")
+		.def(init<TV, TV>(args("start", "len")))
+		.add_property("start", make_getter(&bc::barline<TV>::start), make_setter(&bc::barline<TV>::start))
+		.add_property("len", make_getter(&bc::barline<TV>::len), make_setter(&bc::barline<TV>::len))
+		.def("end", &bc::barline<TV>::end)
+		.def("getPointsInDict", &bc::barline<TV>::getPointsInDict, (arg("skipChildPoints")=false))
+		.def("getPoints", &bc::barline<TV>::getPoints, (arg("skipChildPoints") = false))
+		.def("getPointsSize", &bc::barline<TV>::getPointsSize)
+		.def("getMatrvalue", &bc::barline<TV>::getPoint, args("index"))
+		.def("getRect", &bc::barline<TV>::getRect)
+		.def("getParent", &bc::barline<TV>::getParent, return_internal_reference())
+		.def("getChildren", &bc::barline<TV>::getChildren)
+		.def("compire3dbars", &bc::barline<TV>::compire3dbars, args("inc", "compireStrategy"))
+
+		.def("get3dList", &bc::barline<TV>::getBarcode3d)
+		.def("get3dSize", &bc::barline<TV>::getBarcode3dSize)
+		.def("get3dValue", &bc::barline<TV>::getBarcode3dValue, args("index"))
+
+		//.add_property("points", make_getter(&bc::barline::matr))
+		;
+
+	class_<bc::Baritem<TV>>("Baritem")
+		.def("sum", &bc::Baritem<TV>::sum)
+		.def("relen", &bc::Baritem<TV>::relen)
+		.def("clone", &bc::Baritem<TV>::clone, return_value_policy< manage_new_object >())
+		.def("maxLen", &bc::Baritem<TV>::maxLen)
+		.def("removePorog", &bc::Baritem<TV>::removePorog, args("porog"))
+		.def("preprocessBar", &bc::Baritem<TV>::preprocessBar, args("porog", "normalize"))
+		.def("cmp", &bc::Baritem<TV>::cmp, args("bitem", "compireStrategy"))
+		.def("cmpOccurrence", &bc::Baritem<TV>::compareOccurrence, args("bitem", "compireStrategy"))
+		.def("compireBestRes", &bc::Baritem<TV>::compireBestRes, args("bitem", "compireStrategy"))
+		.def("getBarcode", &bc::Baritem<TV>::getBarcode)
+		.def("SortByLineLen", &bc::Baritem<TV>::sortByLen)
+		.def("SortByPointsCount", &bc::Baritem<TV>::sortBySize)
+		.def("calcHistByBarlen", &bc::Baritem<TV>::calcHistByBarlen)
+		.def("getRootNode", &bc::Baritem<TV>::getRootNode, return_internal_reference()/*, make_setter(&bc::Baritem::rootNode)*/)
+		;
+
+	class_<bc::Barcontainer<TV>>("Barcontainer")
+		.def("sum", &bc::Barcontainer<TV>::sum)
+		.def("relen", &bc::Barcontainer<TV>::relen)
+		.def("clone", &bc::Barcontainer<TV>::clone, return_value_policy< manage_new_object >())
+		.def("maxLen", &bc::Barcontainer<TV>::maxLen)
+		.def("count", &bc::Barcontainer<TV>::count)
+		.def("removePorog", &bc::Barcontainer<TV>::removePorog, args("porog"))
+		.def("preprocessBar", &bc::Barcontainer<TV>::preprocessBar, args("porog", "normalize"))
+		//.def("compireCTML", &bc::Barcontainer::compireCTML, args("bc"))
+		//.def("compireCTS", &bc::Barcontainer::compireCTS, args("bc"))
+		//.def("compireCTML", static_cast<float (bc::Barcontainer::*)(const bc::Barbase*) const> (&bc::Barcontainer::compireCTML), args("bc"))
+		//.def("compireCTS", static_cast<float (bc::Barcontainer::*)(bc::Barbase const*) const>(&bc::Barcontainer::compireCTS), args("bc"))
+		.def("addItem", &bc::Barcontainer<TV>::addItem, args("Baritem"))
+		.def("getItem", &bc::Barcontainer<TV>::getItem, args("index"), return_internal_reference())
+		;
 
 	class_<bc::BarConstructor<TV>>("BarConstructor")
 		.def("addStructure", &bc::BarConstructor<TV>::addStructure, args("ProcType", "ColorType", "ComponentType"))
@@ -176,25 +192,18 @@ BOOST_PYTHON_MODULE(barpy)
 	;
 
 	class_<bc::BarcodeCreator<TV>>("BarcodeCreator")
-		.def("createBarcode", static_cast<bc::Barcontainer<TV> * (bc::BarcodeCreator<TV>::*) (bn::ndarray&, bc::BarConstructor<TV>&)>
+		.def("createBarcode", static_cast<bc::Barcontainer<TV>*(bc::BarcodeCreator<TV>::*) (bn::ndarray&, bc::BarConstructor<TV>&)>
 			(&bc::BarcodeCreator<TV>::createBarcode), args("image", "structure"), return_value_policy< manage_new_object >())
 		;
-	;
 
+	//#define TV float;
+	//#define TN(NAME) (std::string(NAME)+"32s").c_str()
+	//#include "pytemplcalsses.h"
 
-/* class_<bc::Barcode>("Barcode")
-		.def("bar", return_value_policy<reference_existing_object>())
-		.def("add", &bc::Barcode::add, args("start","len"))
-		.def("sum", &bc::Barcode::sum)
-		.def("relen", &bc::Barcode::relen)
-		.def("clone", &bc::Barcode::clone, return_value_policy< manage_new_object >())
-		.def("maxLen", &bc::Barcode::maxLen)
-		.def("count", &bc::Barcode::count)
-		.def("removePorog", &bc::Barcode::removePorog, args("porog"))
-		.def("preprocessBar", &bc::Barcode::preprocessBar, args("porog", "normalize"))
-		.def("compireCTML", &bc::Barcode::compireCTML, args("bc"))
-		.def("compireCTS", &bc::Barcode::compireCTS, args("bc"))
-		;*/
+	//#define TV short;
+	//#define TN(NAME) (std::string(NAME)+"16s").c_str()
+	//#include "pytemplcalsses.h"
+
 }
 
 //template<> 

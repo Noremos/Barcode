@@ -6,6 +6,7 @@
 #include "include_py.h"
 #include "include_cv.h"
 
+#include <unordered_map>
 
 namespace bc
 {
@@ -142,7 +143,7 @@ namespace bc
 			assert(parrent == nullptr || parrent == node);
 			if (this->parrent == node)
 				return;
-			
+
 			this->parrent = node;
 			numInParet = parrent->childrens.size();
 			parrent->childrens.push_back(this);
@@ -165,12 +166,47 @@ namespace bc
 
 			return matr[index];
 		}
-#ifdef _PYD
-		bp::list getPoints()
+
+
+		void getChildsMatr(std::unordered_map<bc::point, bool, bc::pointHash>& childs)
 		{
+			for (barline<T>* chil : this->childrens)
+			{
+				for (barvalue<T>& val : chil->matr)
+				{
+					childs.insert(std::pair< bc::point, bool>(val.point, true));
+				}
+			}
+		}
+
+#ifdef _PYD
+
+
+
+		//bp::list getPoints()
+		//{
+		//	return getPoints(false);
+		//}
+		bp::list getPoints(bool skipChildPoints = false)
+		{
+			std::unordered_map<bc::point, bool, bc::pointHash> childs;
 			bp::list l;
-			for (size_t i = 0; i < matr.size(); i++)
-				l.append(matr[i]);
+
+			if (skipChildPoints)
+			{
+				getChildsMatr(childs);
+
+				for (size_t i = 0; i < matr.size(); i++)
+				{
+					if (childs.find(matr[i].point) == childs.end())
+						l.append(matr[i]);
+				}
+			}
+			else
+			{
+				for (size_t i = 0; i < matr.size(); i++)
+					l.append(matr[i]);
+			}
 
 			return l;
 		}
@@ -196,26 +232,93 @@ namespace bc
 		{
 			if (bar3d == nullptr)
 				return bar3dvalue<T>();
-			
+
 			if (index >= bar3d->size())
 				index = index % bar3d->size();
 
 			return bar3d->at(index);
 		}
 
-		bp::dict getPointsInDict()
+		float compire3dbars(bc::barline<T>* inc, bc::CompireStrategy cmp)
 		{
+			T s0[255];
+			float t = 0, x2 = 0, y2 = 0;
+			int n = MIN(bar3d->size(), inc->bar3d->size());
+
+			if (n == 0)
+				return 1;
+			memset(&s0, 0, 255 * sizeof(T));
+			for (size_t i = 0; i < bar3d->size(); ++i)
+			{
+				bc::bar3dvalue<T>& b = bar3d->at(i);
+				s0[(uchar)b.value] = b.count;
+				x2 += b.count * b.count;
+			}
+
+			T s1[255];
+			memset(&s1, 0, 255 * sizeof(T));
+			for (size_t i = 0; i < inc->bar3d->size(); ++i)
+			{
+				bc::bar3dvalue<T>& b = inc->bar3d->at(i);
+				s1[(uchar)b.value] = b.count;
+				y2 += b.count * b.count;
+			}
+			if (cmp == bc::CompireStrategy::compire3dHist)
+			{
+				for (size_t i = 0; i < 255; i++)
+					t += s0[i] * s1[i];
+			}
+			else if (cmp == bc::CompireStrategy::compire3dBrightless)
+			{
+				for (size_t i = 0; i < n; i++)
+					t += inc->bar3d->at(i).count * bar3d->at(i).count;
+			}
+			else
+				return 0;
+
+			x2 = sqrtf(x2);
+			y2 = sqrtf(y2);
+			t = acosf(t / (x2 * y2));
+
+			const double PI = acos(-1.0) / 2;
+			if (isnan(t))
+				return 1.f;
+			return  abs(roundf(1000 * (PI - t) / PI) / 1000.f);
+		}
+
+		//bp::dict getPointsInDict()
+		//{
+		//	return getPointsInDict(false);
+		//}
+		bp::dict getPointsInDict(bool skipChildPoints = false)
+		{
+			std::unordered_map<bc::point, bool, bc::pointHash> childs;
 			bp::dict pydict;
 
-			for (auto iter = matr.begin(); iter != matr.end(); ++iter)
-				pydict[iter->point] = iter->value;
+			if (skipChildPoints)
+			{
+				getChildsMatr(childs);
 
+				for (auto iter = matr.begin(); iter != matr.end(); ++iter)
+				{
+					if (childs.find(iter->point) == childs.end())
+						pydict[iter->point] = iter->value;
+				}
+			}
+			else
+			{
+				for (auto iter = matr.begin(); iter != matr.end(); ++iter)
+				{
+					if (childs.find(iter->point) == childs.end())
+						pydict[iter->point] = iter->value;
+				}
+			}
 			return pydict;
 		}
 
 		bp::list getRect()
 		{
-			BarRect rect= getBarRect();
+			BarRect rect = getBarRect();
 			bp::list ls;
 			ls.append(rect.x);
 			ls.append(rect.y);
@@ -247,14 +350,14 @@ namespace bc
 
 	template<class T>
 	using BarRoot = barline<T>;
-//	template<class T>
-//	struct EXPORT BarRoot
-//	{
-//		std::vector<barline<T>*> children;
+	//	template<class T>
+	//	struct EXPORT BarRoot
+	//	{
+	//		std::vector<barline<T>*> children;
 
-//		void addChild(barline<T>* line)
-//		{
-//			children.push_back(line);
-//		}
-//	};
+	//		void addChild(barline<T>* line)
+	//		{
+	//			children.push_back(line);
+	//		}
+	//	};
 }

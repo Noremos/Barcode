@@ -558,8 +558,10 @@ inline point* BarcodeCreator<T>::sort()
 
 	T prev;
 	bool f = false;
-	for (const auto& [key, value] : hist)
+	//auto const& [key, val]
+	for (auto const& iter : hist)
 	{
+		auto key = iter.first;
 		if (!f)
 		{
 			prev = key;
@@ -872,11 +874,15 @@ void BarcodeCreator<T>::reverseCom()
 		{
 			if (brline == nullptr)
 			{
-				brline = incl->getNonZeroParent()->resline;
-				assert(incl->len() == 0);
-				assert(brline);
-				brline->addCoord(p, incl->end - ccod);
-				continue;
+				auto par = incl->getNonZeroParent();
+				if (par)
+				{
+					brline = incl->getNonZeroParent()->resline;
+					assert(incl->len() == 0);
+					assert(brline);
+					brline->addCoord(p, incl->end - ccod);
+					continue;
+				}
 				//ignore zerolen comp
 			}
 			else
@@ -1313,7 +1319,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 #else
 		checkCloserB0();
 #endif
-	}
+}
 
 	delete[] arr;
 

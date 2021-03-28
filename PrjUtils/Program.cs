@@ -117,11 +117,42 @@ public class parcInfo
     }
 }
 
-public enum ps : byte
+public enum ps : sbyte
 {
-    word = 1, tr_skob_word, fig_skob_op, fig_skob_cl, skob_word, ravn,
-    zero, virt, pstatic, _const, je, _ref, export, pclass, clsepr,
-    _using, typedef, template, _override, skip, end
+    op = -1, // -n: next n symb is optional but only if there is actily this n symbols exsists
+    // for example for smt {-2, word, _class, word, je};
+
+    // "my class parser;"   = {word, _class, word, je}  =  {[word, _class,] word, je} = ok
+    // "parser;"            = {word, je}                =  {[word, _class,] word, je} = ok
+    // "my parser;"         = {word, word, je}          != {[word, _class,] word, je} = not ok
+    
+    // system symbols (can be only in the base str)
+    _if = 0, // {_if, n, m} = if next n symbls are exists, the next m symbols must be in the stmt else skip m symbls
+    _ifel = 1, // {_if, n, m, e} = if next n symbls are exists, the next m symbols must be in the stmt else 'e' symbls must be in the stmt
+    repitable = 2, // {_if, n} = the next n symbols can be repited some times
+    skip, // skip next symbols check and return true
+    end, // end of stmt (must be in base and inpunt strs)
+
+    // the actiual symbols
+    word = 10, // any work
+    skob_word, // (..)
+    fig_skob_op, // {
+    fig_skob_cl, // }
+    tr_skob_word, //  <..>
+    ravn, // =
+    zero, // 0
+    virt, // virtual
+    pstatic, // static
+    _const, // const
+    _ref, // * or &
+    export, // EXPORT
+    pclass, // class
+    clsepr, // :
+    _using, // using
+    typedef, // typedef
+    template, // template
+    _override, // override
+    je, // ;
 }
 
 public class parser
@@ -131,26 +162,6 @@ public class parser
     public parcInfo lineInfo;
     public parser()
     {
-        //ps.word = ye++;//
-        //ps.tr_skob_word = ye++; // <..>
-        //ps.fig_skob_op = ye++;//{
-        //ps.fig_skob_cl = ye++;//}
-        //ps.skob_word = ye++;//(...)
-        //ps.ravn = ye++;//=
-        //ps.zero = ye++;//0
-        //ps.virt = ye++;//virtual
-        //ps.pstatic = ye++;//static
-        //ps._const = ye++;//const
-        //ps.je = ye++;//;
-        //ps._ref = ye++;// * or &
-        //ps.export = ye++;// EXPORT
-        //ps.pclass = ye++;// class
-        //ps.using = ye++;// using
-        //ps.typedef = ye++;// tytedef
-        //ps.template = ye++;// template
-        //ps._override = ye++; //override
-        //ps.end = ye++;// end of seq
-
         wordparser = new Dictionary<string, ps>();
         wordparser.Add("virtual", ps.virt);
         wordparser.Add("satatic", ps.pstatic);
@@ -232,7 +243,7 @@ public class parser
         public void addType()
         {
             //[const] void <T> [const][*] [const]
-            ps[] typePart = new ps[] { 0, ps._const, ps.word, 0, ps.tr_skob_word, 0, ps._const, 0, ps._ref, 0, ps._const };
+            ps[] typePart = new ps[] {ps.op, ps._const, ps.word,ps.op, ps.tr_skob_word, ps.op, ps._const, ps.op, ps._ref, ps.op, ps._const };
             sign.AddRange(typePart);
         }
 
@@ -452,7 +463,7 @@ public class parser
     public bool isClassProto()
     {
         // class [Exopr] cl1;
-        ps[] classProtoSig = new ps[] { ps.pclass, 0, ps.export, ps.word, ps.je, ps.end };
+        ps[] classProtoSig = new ps[] { ps.pclass, ps.op, ps.export, ps.word, ps.je, ps.end };
         return compireSigs(classProtoSig, lineInfo.sign);
     }
     public string getClassProto()
@@ -484,7 +495,7 @@ public class parser
     public bool isUsing()
     {
         // using a = b<T>*;
-        ps[] usingSig = new ps[] { ps._using, ps.word, ps.ravn, ps.word, 0, ps.tr_skob_word, 0, ps._ref, ps.je, ps.end };
+        ps[] usingSig = new ps[] { ps._using, ps.word, ps.ravn, ps.word, ps.op, ps.tr_skob_word, ps.op, ps._ref, ps.je, ps.end };
         return compireSigs(usingSig, lineInfo.sign);
     }
 
@@ -509,7 +520,7 @@ public class parser
     public bool isTypedef()
     {
         // typedef bc::DatagridProvider < T >* bcBarImg;
-        ps[] typedefSig = new ps[] { ps.typedef, ps.word, 0, ps.template, 0, ps._ref, ps.word, ps.je, ps.end };
+        ps[] typedefSig = new ps[] { ps.typedef, ps.word, ps.op, ps.template, ps.op, ps._ref, ps.word, ps.je, ps.end };
         return compireSigs(typedefSig, lineInfo.sign);
     }
 
