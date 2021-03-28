@@ -161,9 +161,6 @@ namespace bc
 			//if (createGraph && !createBinayMasks)
 			//	throw std::exception();
 
-			if (returnType == ReturnType::betty && !std::is_same<T, uchar>::value)
-				throw std::exception();
-
 			if (structure.size() == 0)
 				throw std::exception();
 

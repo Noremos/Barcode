@@ -32,9 +32,6 @@ namespace bc {
 		std::vector<cv::Vec3b> colors;
 #endif
 
-		bool reverse = false;
-		int b[256];
-
 		BarConstructor<T> settings;
 
 		Include<T>* included = nullptr;
@@ -63,7 +60,7 @@ namespace bc {
 		point curpix;
 		int wid;
 		int hei;
-		int lastB;
+		// int lastB;
 		friend class Component<T>;
 		friend class Hole<T>;
 		//		friend struct BarRoot<T>;
@@ -136,8 +133,8 @@ namespace bc {
 
 		void init(const bc::DatagridProvider<T>* src, const  ProcType& type);
 
-		void processComp(int* retBty, Barcontainer<T>* item = nullptr);
-		void processHole(int* retBty, Barcontainer<T>* item = nullptr);
+		void processComp(Barcontainer<T>* item = nullptr);
+		void processHole(Barcontainer<T>* item = nullptr);
 		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
 
 		void processTypeF(const barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
@@ -147,7 +144,6 @@ namespace bc {
 
 		void reverseCom();
 
-		void computeBettyBarcode(Baritem<T>* lines);
 		void computeNdBarcode(Baritem<T>* lines, int n);
 
 	public:

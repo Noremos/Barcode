@@ -13,7 +13,7 @@ bc::Hole<T>::Hole(point p1, point p2, point p3, BarcodeCreator<T> *factory) : Co
 {
     isValid = true;
 //    zeorStart = p1;
-    ++factory->lastB;
+    // ++factory->lastB;
 
     add(p1);
     add(p2);
@@ -45,7 +45,7 @@ void bc::Hole<T>::setOutside()
         if (isValid)
         {
             this->end = this->factory->curbright;
-            --this->factory->lastB;
+            // --this->factory->lastB;
         }
     }
 }
@@ -56,7 +56,7 @@ void bc::Hole<T>::kill()
     if(!isOutside && isValid)
     {
         this->end = this->factory->curbright;
-        --this->factory->lastB;
+        // --this->factory->lastB;
     }
 }
 
@@ -106,7 +106,7 @@ inline void bc::Hole<T>::add(const point& p)
 
         if (isOutside != outDo)
         {
-            --this->factory->lastB;
+            // --this->factory->lastB;
             this->end = this->factory->curbright;
         }
     }

@@ -31,12 +31,37 @@ void bc::Baritem<T>::add(bc::barline<T>* line)
 template<class T>
 T bc::Baritem<T>::sum() const
 {
-	T sum = 0;
+	T ssum = 0;
 	for (const barline<T>* l : barlines)
-		sum += l->len;
+		ssum += l->len;
 
-	return sum;
+	return ssum;
 }
+
+template<>
+int* bc::Baritem<uchar>::getBettyNumbers()
+{
+	int bs[256];
+	memset(bs, 0, 256 * sizeof(int));
+
+	for (const barline<uchar>* l : barlines)
+	{
+		for (size_t i = l->start; i < l->end(); ++i)
+		{
+			++bs[i];
+		}
+		 
+	}
+	return bs;
+}
+
+
+template<class T>
+int* bc::Baritem<T>::getBettyNumbers()
+{
+	return NULL;
+}
+
 
 
 //template<class T>
@@ -138,25 +163,25 @@ void bc::Baritem<T>::preprocessBar(const T& porog, bool normalize)
 }
 
 template<class T>
-double findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat)
+float findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat)
 {
-	double maxlen, minlen;
+    float maxlen, minlen;
 	if (strat == bc::CompireStrategy::CommonToLen)
 	{
 		T st = MAX(X->start, Y->start);
 		T ed = MIN(X->end(), Y->end());
-		minlen = (double)(ed - st);
+        minlen = static_cast<float>(ed - st);
 
 		st = MIN(X->start, Y->start);
 		ed = MAX(X->end(), Y->end());
-		maxlen = (double)(ed - st);
+        maxlen = static_cast<float>(ed - st);
 	}
 	else if (strat == bc::CompireStrategy::CommonToSum)
 	{
 		T st = MAX(X->start, Y->start);
 		T ed = MIN(X->end(), Y->end());
-		minlen = (double)(ed - st);
-		maxlen = (double)MAX(X->len, Y->len);
+        minlen = static_cast<float>(ed - st);
+        maxlen = static_cast<float>(MAX(X->len, Y->len));
 	}
 	else
 	{
@@ -204,7 +229,7 @@ float bc::Baritem<T>::compireBestRes(const bc::Baritem<T>* bc, bc::CompireStrate
 		{
 			for (size_t j = 0, totalY = Ybarlines.size(); j < totalY; ++j)
 			{
-				double coof = findCoof(Xbarlines[i], Ybarlines[j], strat);
+                float coof = findCoof(Xbarlines[i], Ybarlines[j], strat);
 				if (coof < 0)
 					continue;
 
@@ -235,18 +260,18 @@ float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy&
 		return 0;
 
 	float totalsum = 0;
-	size_t n = static_cast<int>(MIN(Xbarlines.size(), Ybarlines.size()));
+    size_t n = MIN(Xbarlines.size(), Ybarlines.size());
 	soirBarlens<T>(Xbarlines);
 	soirBarlens<T>(Xbarlines);
 
 	float tcoof = 0.f;
 	for (size_t i = 0; i < n; ++i)
 	{
-		double coof = findCoof(Xbarlines[i], Ybarlines[i], strat);
+        float coof = findCoof(Xbarlines[i], Ybarlines[i], strat);
 		if (coof < 0)
 			continue;
 
-		float xysum = Xbarlines[i]->len + Ybarlines[i]->len;
+        float xysum = static_cast<float>(Xbarlines[i]->len + Ybarlines[i]->len);
 		totalsum += xysum;
 		tcoof += xysum * coof;
 	}
@@ -274,7 +299,7 @@ float bc::Baritem<T>::compareOccurrence(const bc::Baritem<T>* bc, bc::CompireStr
 		size_t jk = 0;
 		for (size_t j = 0, total2 = Ybarlines.size(); j < total2; ++j)
 		{
-			double coof = findCoof(Xbarlines[re], Ybarlines[j], strat);
+            float coof = findCoof(Xbarlines[re], Ybarlines[j], strat);
 			if (coof < 0)
 				continue;
 
@@ -437,18 +462,18 @@ template<class T>
 float bc::Barcontainer<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy& strat) const
 {
 	const Barcontainer* bcr = dynamic_cast<const Barcontainer*>(bc);
-	double res = 0;
-	double s = sum() + bcr->sum();
+    float res = 0;
+    float s = static_cast<float>(sum() + bcr->sum());
 	for (size_t i = 0; i < MIN(items.size(), bcr->items.size()); i++)
 	{
-		res += items[i]->compireFull(bcr->items[i], strat) * (items[i]->sum() + bcr->items[i]->sum()) / s;
+        res += items[i]->compireFull(bcr->items[i], strat) * static_cast<float>(items[i]->sum() + bcr->items[i]->sum()) / s;
 	}
 
-	return (float)res;
+    return res;
 }
 
 template<class T>
-bc::Barcontainer<T>::~Barcontainer()
+bc::Barcontainer<T>::Barcontainer::~Barcontainer()
 {
 	for (size_t i = 0; i < items.size(); ++i)
 		delete items[i];
