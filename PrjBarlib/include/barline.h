@@ -55,6 +55,7 @@ namespace bc
 			}
 			return bc;
 		}
+
 		void setFromBarImg(const bc::BarImg<T>& mat)
 		{
 			matr.clear();
@@ -82,16 +83,14 @@ namespace bc
 			}
 			return BarRect(l, t, r - l + 1, d - t + 1);
 		}
+
 		void addCoord(const point& first, T bright)
 		{
 			matr.push_back(barvalue<T>(first, bright));
 		}
 
 		//    barline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
-		//    barline(uchar _start, uchar _len, cv::Mat _mat) :  start(_start), len(_len)
-		//    {
-		//        binmat = _mat;
-		//    }
+
 		barline()
 		{
 
@@ -100,6 +99,7 @@ namespace bc
 			matr.reserve(coordsSize);
 			bar3d = _barc;
 		}
+
 		~barline()
 		{
 			// canBeDleted - у копии, копи¤ не может удал¤ть детей. ј оригинал может
@@ -121,8 +121,8 @@ namespace bc
 			{
 				delete bar3d;
 			}
-
 		}
+
 		barline* clone() const
 		{
 			auto temp = new barline(start, len, nullptr);
@@ -169,7 +169,6 @@ namespace bc
 			return matr[index];
 		}
 
-
 		void getChildsMatr(std::unordered_map<bc::point, bool, bc::pointHash>& childs)
 		{
 			for (barline<T>* chil : this->childrens)
@@ -180,7 +179,6 @@ namespace bc
 				}
 			}
 		}
-
 
 		size_t getBarcode3dSize()
 		{
@@ -247,12 +245,6 @@ namespace bc
 
 #ifdef _PYD
 
-
-
-		//bp::list getPoints()
-		//{
-		//	return getPoints(false);
-		//}
 		bp::list getPoints(bool skipChildPoints = false)
 		{
 			std::unordered_map<bc::point, bool, bc::pointHash> childs;
@@ -289,12 +281,6 @@ namespace bc
 			return l;
 		}
 
-		
-
-		//bp::dict getPointsInDict()
-		//{
-		//	return getPointsInDict(false);
-		//}
 		bp::dict getPointsInDict(bool skipChildPoints = false)
 		{
 			std::unordered_map<bc::point, bool, bc::pointHash> childs;
@@ -355,14 +341,4 @@ namespace bc
 
 	template<class T>
 	using BarRoot = barline<T>;
-	//	template<class T>
-	//	struct EXPORT BarRoot
-	//	{
-	//		std::vector<barline<T>*> children;
-
-	//		void addChild(barline<T>* line)
-	//		{
-	//			children.push_back(line);
-	//		}
-	//	};
 }
