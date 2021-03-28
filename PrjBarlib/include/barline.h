@@ -111,7 +111,9 @@ namespace bc
 				}
 				for (size_t i = 0; i < childrens.size(); ++i)
 				{
-					childrens[i]->parrent = nullptr;
+					// not null, not parent on any child
+					if (childrens[i])
+						childrens[i]->parrent = nullptr;
 					//delete childrens[i];
 				}
 			}

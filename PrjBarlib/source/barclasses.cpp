@@ -311,7 +311,6 @@ void bc::Baritem<T>::sortBySize()
 template<class T>
 bc::Baritem<T>::~Baritem()
 {
-	barlines.clear();
 	for (auto* bline : barlines)
 	{
 		delete bline;
