@@ -809,6 +809,8 @@ void BarcodeCreator<T>::reverseCom()
 		{
 			// надо добавить заничя каому потомку
 			COMPP prev = incl;
+            if (prev == nullptr)
+                printf("BAD");
 			COMPP prevparent = prev->getNonZeroParent();
 			while (prevparent)
 			{
@@ -1205,7 +1207,7 @@ uchar dif(uchar a, uchar b)
 template<>
 Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int hei)
 {
-	settings.createBinayMasks = false;
+    settings.createBinayMasks = true;
 	settings.createGraph = false;
     settings.returnType = ReturnType::barcode3d;
 	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
@@ -1217,6 +1219,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
         auto& val = sortedArr[i];
 		curpix = point(val.x, val.y);
 		curbright = workingImg->get(curpix);
+
 #ifdef VDEBUG
 		VISULA_DEBUG_COMP(totalSize, i);
 #else
