@@ -18,7 +18,7 @@ typedef unsigned short ushort;
 
 #ifdef _WINDLL
 #  define EXPORT __declspec(dllexport)
-#elifdef _STL
+#elif defined _STL
 #  define EXPORT /*__declspec(dllimport)*/
 #else
 # define EXPORT
