@@ -237,10 +237,10 @@ namespace bc
 			y2 = sqrtf(y2);
 			t = acosf(t / (x2 * y2));
 
-			const double PI = acos(-1.0) / 2;
+            const float PI = acosf(-1.0f) / 2;
 			if (isnan(t))
 				return 1.f;
-			return  abs(roundf(1000 * (PI - t) / PI) / 1000.f);
+            return  abs(roundf(1000.f * (PI - t) / PI) / 1000.f);
 		}
 
 #ifdef _PYD

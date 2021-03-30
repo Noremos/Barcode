@@ -21,7 +21,7 @@ bc::Component<T>::Component(point pix, bc::BarcodeCreator<T>* factory)
 {
 	init(factory);
 
-	factory->lastB++;
+	// factory->lastB++;
 
 	//add
 	++totalCount;
@@ -30,12 +30,11 @@ bc::Component<T>::Component(point pix, bc::BarcodeCreator<T>* factory)
 }
 
 template<class T>
-bc::Component<T>::Component(bc::BarcodeCreator<T>* factory, bool create)
+bc::Component<T>::Component(bc::BarcodeCreator<T>* factory, bool /*create*/)
 {
 	init(factory);
 
-	if (create)
-		factory->lastB++;
+	// if (create)	factory->lastB++;
 }
 
 template<class T>
@@ -82,6 +81,7 @@ void bc::Component<T>::add(const point& p)
 template<class T>
 void bc::Component<T>::kill()
 {
+	// --factory->lastB;
 	lived = false;
 //	if (end < factory->curbright)
 		end = factory->curbright;
@@ -91,7 +91,6 @@ void bc::Component<T>::kill()
 //	{
 //		end = start + maxLen;
 //	}
-	--factory->lastB;
 	//coords->reserve(coords->size());
 	//if (factory->createBin)
 	 //{

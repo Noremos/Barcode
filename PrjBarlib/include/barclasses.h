@@ -44,6 +44,7 @@ namespace bc
 		T maxLen() const;
 		Baritem<T>* clone() const;
 
+		int* getBettyNumbers();
 
 		// remove lines than less then passed value
 		void removePorog(T const porog);

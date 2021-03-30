@@ -95,7 +95,6 @@ BOOST_PYTHON_MODULE(barpy)
 		;
 
 	enum_<bc::ReturnType>("ReturnType")
-		.value("betty", bc::ReturnType::betty)
 		.value("barcode2d", bc::ReturnType::barcode2d)
 		.value("barcode3d", bc::ReturnType::barcode3d)
 		;

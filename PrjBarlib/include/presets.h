@@ -18,7 +18,7 @@ typedef unsigned short ushort;
 
 #ifdef _WINDLL
 #  define EXPORT __declspec(dllexport)
-#elif _STL
+#elifdef _STL
 #  define EXPORT /*__declspec(dllimport)*/
 #else
 # define EXPORT
@@ -65,7 +65,7 @@ namespace bc
 	enum class ProcType { f0t255, f255t0, experement };
 	enum class ColorType { gray, rgb, native };
 
-	enum class ReturnType { betty, barcode2d, barcode3d };
+	enum class ReturnType { barcode2d, barcode3d };
 
 	enum class BarType {bc_byte, bc_float, bc_int, bc_short, bc_ushort};
 }

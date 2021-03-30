@@ -230,7 +230,7 @@ namespace bc {
 		//		}
 		//#endif // OPENCV
 
-		~BarImg()
+        virtual ~BarImg()
 		{
 			valDelete();
 		}
