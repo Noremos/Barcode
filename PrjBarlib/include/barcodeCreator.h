@@ -60,6 +60,7 @@ namespace bc {
 
 		bool needDelImg = false;
 		T curbright;
+		size_t curindex;
 		point curpix;
 		int wid;
 		int hei;

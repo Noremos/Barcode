@@ -8,7 +8,6 @@ void bc::Component<T>::init(BarcodeCreator<T>* factory)
 {
 	this->factory = factory;
 	factory->components.push_back(this);
-	num = factory->components.size();
 	start = factory->curbright;
 	end = factory->curbright;
 	lastVal = factory->curbright;
@@ -118,7 +117,6 @@ void bc::Component<T>::setParrent(bc::Component<T>* parnt)
 template<class T>
 bc::Component<T>::~Component()
 {
-	factory->components[num - 1] = nullptr;
 }
 
 

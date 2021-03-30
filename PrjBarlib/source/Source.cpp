@@ -149,9 +149,9 @@ void test(bool graph, Bbase8& testimg, bool createNew = false)
 	Mat orig = bc::convertProvider2Mat(&imgrest);
 
 	cv::namedWindow("orig", cv::WINDOW_NORMAL);
-	cv::imshow("orig", orig);
+	//cv::imshow("orig", orig);
 	cv::namedWindow("restored", cv::WINDOW_NORMAL);
-	cv::imshow("restored", res);
+	//cv::imshow("restored", res);
 	cv::waitKey(1);
 	compiteBarAndBar(imgrest, testimg);
 
@@ -198,9 +198,9 @@ void testf255t0(Bbase8& testimg)
 	Mat orig = bc::convertProvider2Mat(&testimg);
 	Mat res = bc::convertProvider2Mat(&img);
 	cv::namedWindow("restored", cv::WINDOW_NORMAL);
-	cv::imshow("restored", res);
+	//cv::imshow("restored", res);
 	cv::namedWindow("original", cv::WINDOW_NORMAL);
-	cv::imshow("original", orig);
+	//cv::imshow("original", orig);
 	cv::waitKey(1);
 	compiteBarAndBar(img, testimg);
 }
@@ -312,7 +312,7 @@ void testMats(bool createNew = false)
 		Mat testmat = cv::imread((string)"../PrjTests/data/tests/" + test, cv::IMREAD_GRAYSCALE);
 		//testmat = testmat(cv::Range(10, 20), cv::Range(7, 10));
 		cv::namedWindow("orig", cv::WINDOW_NORMAL);
-		cv::imshow("orig", testmat);
+		//cv::imshow("orig", testmat);
 		cv::waitKey(1);
 		Bmat8 img(testmat);
 		compiteBarAndMat(&img, testmat);
@@ -332,7 +332,7 @@ void checkBigImg()
 {
 	bc::BarConstructor<uchar> bcont;
 	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
-	bcont.createBinayMasks = false;
+	bcont.createBinayMasks = true;
 	bcont.createGraph = false;
 	bcont.returnType = bc::ReturnType::barcode2d;
 	bcont.createNewComponentOnAttach = false;
@@ -354,6 +354,7 @@ void checkBigImg()
 	auto t2 = high_resolution_clock::now();
 	auto ms_int = duration_cast<milliseconds>(t2 - t1);
 	std::cout << "time:" << (double)(ms_int.count())/1000 << std::endl;
+	delete ret;
 }
 
 void testMaxLen()
@@ -376,6 +377,31 @@ void testMaxLen()
 	Bimg8 sd = restreToBarimg(varcode, gray.wid(), gray.hei(), gray.max());
 	compiteBarAndBar(sd, gray);
 }
+
+void checkSameVals()
+{
+	bc::BarcodeCreator<uchar> bc;
+	bc::BarConstructor<uchar> constr;
+	constr.createBinayMasks = true;
+	constr.createGraph = false;
+	constr.createNewComponentOnAttach = false;
+	constr.returnType = bc::ReturnType::barcode2d;
+	constr.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	constr.setStep(255);
+
+	uchar data[6]
+	{
+		1, 2, 1,
+		1, 1, 1
+	};
+
+	Bimg8 img(3, 2, 1, data, false, false);
+
+	auto varcode = bc.createBarcode(&img, constr);
+
+	assert(varcode->getItem(0)->barlines.size() == 1);
+}
+
 
 using namespace std;
 int main()
@@ -401,7 +427,11 @@ int main()
 	printf("done\n\n");
 
 	printf("BigImg test: sart...\n");
-	checkBigImg();
+	//checkBigImg();
+	printf("done\n\n");
+
+	printf("Check fix for zero len: sart...\n");
+	checkSameVals();
 	printf("done\n\n");
 
 	return 0;

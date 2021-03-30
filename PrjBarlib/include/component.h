@@ -14,8 +14,6 @@ namespace bc
 	class Component
 	{
 	public:
-		size_t num = 0;
-
 	protected:
 		size_t totalCount = 0/*, ownSize = 0*/;
 		BarcodeCreator<T>* factory;

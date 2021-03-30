@@ -60,7 +60,7 @@ void BarcodeCreator<T>::draw(std::string name)
 		//		}
 		//		else
 		{
-			col = colors[comp->num % size];
+			col = colors[(size_t)comp % size];
 			marc = cv::MARKER_TILTED_CROSS;
 		}
 
@@ -114,6 +114,27 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 		}
 		//	if (second->coords->size()<100)
 		{
+			//if (second->len == 0)
+			//{
+
+			//	size_t ind = curindex;
+			//	while (ind - 1 != 0)
+			//	{
+
+			//		point p = sortedArr[ind];
+			//		if (workingImg->get(p.x, p.y) == curbright)
+			//		{
+			//			if (getInclude(i) == second)
+			//			{
+			//				main->add(p);
+			//			}
+			//		}
+			//		else
+			//			break;
+			//	}
+			//	delete second;
+			//	return main;
+			//}
 			second->setParrent(main);
 			second->kill();
 			//возращаем единую компоненту.
@@ -480,9 +501,9 @@ inline point* BarcodeCreator<uchar>::sort()
 	memset(hist, 0, 256 * sizeof(int));
 	memset(offs, 0, 256 * sizeof(int));
 
-	for (int i = 0; i < workingImg->wid(); ++i)//wid
+	for (int j = 0; j < workingImg->hei(); ++j)//hei
 	{
-		for (int j = 0; j < workingImg->hei(); ++j)//hei
+		for (int i = 0; i < workingImg->wid(); ++i)//wid
 		{
 			auto p = (int)workingImg->get(i, j);
 			++hist[p];//можно vector, но хз
@@ -498,9 +519,9 @@ inline point* BarcodeCreator<uchar>::sort()
 	size_t total = workingImg->length();
 
 	point* data = new point[total];//256
-	for (int i = 0; i < workingImg->wid(); ++i)//wid
+	for (int j = 0; j < workingImg->hei(); ++j)//hei
 	{
-		for (int j = 0; j < workingImg->hei(); ++j)//hei
+		for (int i = 0; i < workingImg->wid(); ++i)//wid
 		{
 			auto p = (int)workingImg->get(i, j);
 			data[offs[p]++] = point(i, j);
@@ -662,9 +683,9 @@ void BarcodeCreator<T>::processHole(int* retBty, Barcontainer<T>* item)
 	size_t len = totalSize - 1;
 	reverse = false;
 
-	for (size_t i = 0; i < totalSize; ++i)
+	for (curindex = 0; curindex < totalSize; ++curindex)
 	{
-		curpix = sortedArr[i];
+		curpix = sortedArr[curindex];
 		curbright = workingImg->get(curpix);
 
 		/*	if (i == 25)
@@ -675,9 +696,9 @@ void BarcodeCreator<T>::processHole(int* retBty, Barcontainer<T>* item)
 		checkCloserB1();
 #endif
 
-		if (i != len)
+		if (curindex != len)
 		{
-			T scnd = workingImg->get(sortedArr[i + 1]);
+			T scnd = workingImg->get(sortedArr[curindex + 1]);
 			if (curbright != scnd) //идет от 0 до 255. если перешагиваем больше чем 1, тогда устанавливаем значения все
 			{
 				for (T k = curbright; k < scnd; k += settings.getMaxStepPorog()) {
@@ -704,9 +725,9 @@ void BarcodeCreator<T>::processComp(int* retBty, Barcontainer<T>* item)
 {
 	size_t len = totalSize - 1;
 
-	for (size_t i = 0; i < totalSize; ++i)
+	for (curindex = 0; curindex < totalSize; ++curindex)
 	{
-		curpix = sortedArr[i];
+		curpix = sortedArr[curindex];
 		curbright = workingImg->get(curpix.x, curpix.y);
 
 #ifdef VDEBUG
@@ -719,9 +740,9 @@ void BarcodeCreator<T>::processComp(int* retBty, Barcontainer<T>* item)
 
 		if (settings.returnType == ReturnType::betty)
 		{
-			if (i != len)
+			if (curindex != len)
 			{
-				T scnd = workingImg->get(sortedArr[i + 1]);
+				T scnd = workingImg->get(sortedArr[curindex + 1]);
 				if (curbright != scnd) //идет от 0 до 255. если перешагиваем больше чем 1, тогда устанавливаем значения все
 				{
 					for (T k = curbright; k < scnd; k += settings.getMaxStepPorog())
@@ -1134,20 +1155,20 @@ Barcontainer<T>* BarcodeCreator<T>::createSLbarcode(const bcBarImg* src, T foneS
 	foneEnd = MAX(foneEnd, img.get(sortedArr[0]));
 	foneEnd = MIN(foneEnd, img.get(sortedArr[len]));
 
-	for (size_t i = 0; i < totalSize; ++i)
+	for (curindex = 0; curindex < totalSize; ++curindex)
 	{
-		curbright = img.get(sortedArr[i]);
+		curbright = img.get(sortedArr[curindex]);
 		if (foneStart == 0 && curbright >= foneStart)
 		{
 			break;
 		}
 		if (foneEndI == 0) {
 			if (curbright > foneEnd) {
-				foneEndI = i - 1;
+				foneEndI = curindex - 1;
 				break;
 			}
 			if (curbright == foneEnd) {
-				foneEndI = i;
+				foneEndI = curindex;
 				break;
 			}
 		}
@@ -1309,9 +1330,9 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
 	auto* arr = sort();
 
-	for (size_t i = 0; i < totalSize; ++i)
+	for (curindex = 0; curindex < totalSize; ++curindex)
 	{
-		auto& val = arr[i];
+		auto& val = arr[curindex];
 		curpix = point(val.x, val.y);
 		curbright = workingImg->get(curpix);
 #ifdef VDEBUG
@@ -1319,7 +1340,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 #else
 		checkCloserB0();
 #endif
-}
+	}
 
 	delete[] arr;
 
