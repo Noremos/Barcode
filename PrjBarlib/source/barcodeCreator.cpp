@@ -678,7 +678,6 @@ template<class T>
 void BarcodeCreator<T>::processHole(Barcontainer<T>* item)
 {
 	size_t len = totalSize - 1;
-	reverse = false;
 
 	for (curindex = 0; curindex < totalSize; ++curindex)
 	{
@@ -692,21 +691,6 @@ void BarcodeCreator<T>::processHole(Barcontainer<T>* item)
 #else
 		checkCloserB1();
 #endif
-
-		if (curindex != len)
-		{
-			T scnd = workingImg->get(sortedArr[curindex + 1]);
-			if (curbright != scnd) //идет от 0 до 255. если перешагиваем больше чем 1, тогда устанавливаем значения все
-			{
-				for (T k = curbright; k < scnd; k += settings.getMaxStepPorog()) {
-					retBty[(int)k] = lastB;
-				}
-			}
-		}
-		else
-		{
-			retBty[(int)curbright] = lastB;
-		}
 	}
 	// assert(((void)"ALARM! B1 is not zero", lastB == 1));
 
@@ -1257,7 +1241,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 
 	for (curindex = 0; curindex < totalSize; ++curindex)
 	{
-		auto& val = arr[curindex];
+		auto& val = sortedArr[curindex];
 		curpix = point(val.x, val.y);
 		curbright = workingImg->get(curpix);
 
