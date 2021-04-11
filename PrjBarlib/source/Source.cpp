@@ -325,6 +325,45 @@ void testMats(bool createNew = false)
 	}
 }
 
+#include <fstream>
+#include <iterator>
+#include <vector>
+
+void testFloatMats()
+{
+	for(int i=0;i<24;++i)
+	{
+		std::string path = "D:\\Programs\\Python\\barcode\\experements\\geo\\imgs\\imgOut";
+		path += std::to_string(i);
+		path += ".bf";
+		std::ifstream input(path, std::ios::binary);
+
+		std::vector<char> bytes(
+			(std::istreambuf_iterator<char>(input)),
+			(std::istreambuf_iterator<char>()));
+
+		//testmat = testmat(cv::Range(10, 20), cv::Range(7, 10));
+		bc::BarImg<float> baseimg((int)60, (int)60, 1, (uchar*)bytes.data() + 2, false, false);
+
+		bc::BarConstructor<float> bcont;
+		bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+		bcont.createBinayMasks = false;
+		bcont.createGraph = false;
+		bcont.returnType = bc::ReturnType::barcode3d;
+		bcont.createNewComponentOnAttach = false;
+		bcont.setStep(255);
+
+		bc::BarcodeCreator<float> test;
+		auto* ret = test.createBarcode(&baseimg, bcont);
+
+		bc::Barcontainer<float>* sdd = (bc::Barcontainer<float>*)ret->clone();
+		float re = sdd->compireFull(ret, bc::CompireStrategy::compire3dBrightless);
+
+		delete ret;
+		input.close();
+	}
+}
+
 #include <thread>
 
 
@@ -405,31 +444,35 @@ void checkSameVals()
 int main()
 {
 	// TODO Move it to test project
-	testInitFromMat();
+	//testInitFromMat();
 
-	printf("raw data tests: star...");
-	checkImgFromData2();
-	checkImgFromData3();
-	checkImgFromData4();
-	checkImgFromData5();
-	checkImgFromData6();
-	printf("done\n\n");
+	//printf("raw data tests: star...");
+	//checkImgFromData2();
+	//checkImgFromData3();
+	//checkImgFromData4();
+	//checkImgFromData5();
+	//checkImgFromData6();
+	//printf("done\n\n");
 
-	printf("mat tests: star...");
-	checkSingleMat();
-	testMats();
-	printf("done\n\n");
-	
-	printf("maxLen test: sart...\n");
-	testMaxLen();
-	printf("done\n\n");
+	//printf("mat tests: star...");
+	//checkSingleMat();
+	//testMats();
+	//printf("done\n\n");
+	//
+	//printf("maxLen test: sart...\n");
+	//testMaxLen();
+	//printf("done\n\n");
 
-	printf("BigImg test: sart...\n");
-	//checkBigImg();
-	printf("done\n\n");
+	//printf("BigImg test: sart...\n");
+	////checkBigImg();
+	//printf("done\n\n");
 
-	printf("Check fix for zero len: sart...\n");
-	checkSameVals();
+	//printf("Check fix for zero len: sart...\n");
+	//checkSameVals();
+	//printf("done\n\n");
+
+	printf("Check float imgs: sart...\n");
+	testFloatMats();
 	printf("done\n\n");
 
 	return 0;

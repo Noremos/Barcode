@@ -677,8 +677,6 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType
 template<class T>
 void BarcodeCreator<T>::processHole(Barcontainer<T>* item)
 {
-	size_t len = totalSize - 1;
-
 	for (curindex = 0; curindex < totalSize; ++curindex)
 	{
 		curpix = sortedArr[curindex];
@@ -702,8 +700,6 @@ void BarcodeCreator<T>::processHole(Barcontainer<T>* item)
 template<class T>
 void BarcodeCreator<T>::processComp(Barcontainer<T>* item)
 {
-	size_t len = totalSize - 1;
-
 	for (curindex = 0; curindex < totalSize; ++curindex)
 	{
 		curpix = sortedArr[curindex];

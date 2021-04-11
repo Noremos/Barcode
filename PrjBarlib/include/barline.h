@@ -197,37 +197,52 @@ namespace bc
 			return bar3d->at(index);
 		}
 
+		//  bc::CompireStrategy::compire3dHist ONLY FOR !!! UCHAR !!!
 		float compire3dbars(bc::barline<T>* inc, bc::CompireStrategy cmp)
 		{
-			T s0[255];
 			float t = 0, x2 = 0, y2 = 0;
 			int n = MIN(bar3d->size(), inc->bar3d->size());
 
-			if (n == 0)
-				return 1;
-			memset(&s0, 0, 255 * sizeof(T));
-			for (size_t i = 0; i < bar3d->size(); ++i)
-			{
-				bc::bar3dvalue<T>& b = bar3d->at(i);
-				s0[(uchar)b.value] = b.count;
-				x2 += b.count * b.count;
-			}
-
-			T s1[255];
-			memset(&s1, 0, 255 * sizeof(T));
-			for (size_t i = 0; i < inc->bar3d->size(); ++i)
-			{
-				bc::bar3dvalue<T>& b = inc->bar3d->at(i);
-				s1[(uchar)b.value] = b.count;
-				y2 += b.count * b.count;
-			}
 			if (cmp == bc::CompireStrategy::compire3dHist)
 			{
+				T s0[255];
+
+				if (n == 0)
+					return 1;
+				memset(&s0, 0, 255 * sizeof(T));
+				for (size_t i = 0; i < bar3d->size(); ++i)
+				{
+					bc::bar3dvalue<T>& b = bar3d->at(i);
+					s0[(uchar)b.value] = b.count;
+					x2 += b.count * b.count;
+				}
+			
+				T s1[255];
+				memset(&s1, 0, 255 * sizeof(T));
+				for (size_t i = 0; i < inc->bar3d->size(); ++i)
+				{
+					bc::bar3dvalue<T>& b = inc->bar3d->at(i);
+					s1[(uchar)b.value] = b.count;
+					y2 += b.count * b.count;
+				}
+
 				for (size_t i = 0; i < 255; i++)
 					t += s0[i] * s1[i];
 			}
 			else if (cmp == bc::CompireStrategy::compire3dBrightless)
 			{
+				for (size_t i = 0; i < bar3d->size(); ++i)
+				{
+					bc::bar3dvalue<T>& b = bar3d->at(i);
+					x2 += b.count * b.count;
+				}
+
+				for (size_t i = 0; i < inc->bar3d->size(); ++i)
+				{
+					bc::bar3dvalue<T>& b = inc->bar3d->at(i);
+					y2 += b.count * b.count;
+				}
+
 				for (size_t i = 0; i < n; i++)
 					t += inc->bar3d->at(i).count * bar3d->at(i).count;
 			}

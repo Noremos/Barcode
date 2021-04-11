@@ -49,6 +49,7 @@
 
 //typedef float TV;
 typedef uchar TV;
+//typedef short TV;
 
 #define PY_SILENS
 #define TN(NAME) NAME
@@ -161,6 +162,9 @@ BOOST_PYTHON_MODULE(barpy)
 		.def("SortByPointsCount", &bc::Baritem<TV>::sortBySize)
 		.def("calcHistByBarlen", &bc::Baritem<TV>::calcHistByBarlen)
 		.def("getRootNode", &bc::Baritem<TV>::getRootNode, return_internal_reference()/*, make_setter(&bc::Baritem::rootNode)*/)
+
+		.def("getBettyNumbers", &bc::Baritem<TV>::PY_getBettyNumbers)
+
 		;
 
 	class_<bc::Barcontainer<TV>>("Barcontainer")
