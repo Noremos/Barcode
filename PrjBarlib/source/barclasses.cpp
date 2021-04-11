@@ -39,9 +39,8 @@ T bc::Baritem<T>::sum() const
 }
 
 template<>
-int* bc::Baritem<uchar>::getBettyNumbers()
+void bc::Baritem<uchar>::getBettyNumbers(int* bs)
 {
-	int bs[256];
 	memset(bs, 0, 256 * sizeof(int));
 
 	for (const barline<uchar>* l : barlines)
@@ -50,16 +49,13 @@ int* bc::Baritem<uchar>::getBettyNumbers()
 		{
 			++bs[i];
 		}
-		 
 	}
-	return bs;
 }
 
 
 template<class T>
-int* bc::Baritem<T>::getBettyNumbers()
+void bc::Baritem<T>::getBettyNumbers(int* bs)
 {
-	return NULL;
 }
 
 
@@ -251,7 +247,7 @@ float bc::Baritem<T>::compireBestRes(const bc::Baritem<T>* bc, bc::CompireStrate
 }
 
 template<class T>
-float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy& strat) const
+float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy strat) const
 {
 	barlinevector<T> Xbarlines = barlines;
 	barlinevector<T> Ybarlines = dynamic_cast<const Baritem<T>*>(bc)->barlines;
@@ -262,7 +258,7 @@ float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy&
 	float totalsum = 0;
     size_t n = MIN(Xbarlines.size(), Ybarlines.size());
 	soirBarlens<T>(Xbarlines);
-	soirBarlens<T>(Xbarlines);
+	soirBarlens<T>(Ybarlines);
 
 	float tcoof = 0.f;
 	for (size_t i = 0; i < n; ++i)
@@ -459,7 +455,7 @@ bc::Barbase<T>* bc::Barcontainer<T>::clone() const
 }
 
 template<class T>
-float bc::Barcontainer<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy& strat) const
+float bc::Barcontainer<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy strat) const
 {
 	const Barcontainer* bcr = dynamic_cast<const Barcontainer*>(bc);
     float res = 0;

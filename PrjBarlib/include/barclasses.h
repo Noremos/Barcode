@@ -11,7 +11,7 @@ namespace bc
 	public:
 		virtual void removePorog(T const porog) = 0;
 		virtual void preprocessBar(T const& porog, bool normalize) = 0;
-		virtual float compireFull(const Barbase<T>* Y, bc::CompireStrategy& strat) const = 0;
+		virtual float compireFull(const Barbase<T>* Y, bc::CompireStrategy strat) const = 0;
 		virtual Barbase<T>* clone() const = 0;
 		virtual T sum() const = 0;
 		virtual void relen() = 0;
@@ -44,12 +44,12 @@ namespace bc
 		T maxLen() const;
 		Baritem<T>* clone() const;
 
-		int* getBettyNumbers();
+		void getBettyNumbers(int* bs);
 
 		// remove lines than less then passed value
 		void removePorog(T const porog);
 		void preprocessBar(T const& porog, bool normalize);
-		float compireFull(const Barbase<T>* bc, bc::CompireStrategy& strat) const;
+		float compireFull(const Barbase<T>* bc, bc::CompireStrategy strat) const;
 		float compireBestRes(Baritem<T> const* bc, bc::CompireStrategy strat) const;
 		float compareOccurrence(Baritem<T> const* bc, bc::CompireStrategy strat) const;
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
@@ -88,13 +88,23 @@ namespace bc
 
 			bp::list pyhist;
 			for (size_t i = 0; i < maxLen; i++)
-				pyhist[i] = hist[i];
+				pyhist.append(hist[i]);
 			
 			delete[] hist;
 
 			return pyhist;
 		}
 
+		bp::list PY_getBettyNumbers()
+		{
+			int hist[256];
+			getBettyNumbers(hist);
+			bp::list pyhist;
+			for (size_t i = 0; i < 256; i++)
+				pyhist.append(hist[i]);
+
+			return pyhist;
+		}
 
 		// only for uchar
 		bp::list calcHistByPointsSize(/*T maxLen*/)
@@ -114,7 +124,7 @@ namespace bc
 
 			bp::list pyhist;
 			for (size_t i = 0; i < rm; i++)
-				pyhist[i] = hist[i];
+				pyhist.append(hist[i]);
 
 			delete[] hist;
 
@@ -125,9 +135,10 @@ namespace bc
 		bp::list getBarcode()
 		{
 			bp::list lines;
-			for (auto line : barlines)
+			for (auto* line : barlines)
 			{
-				lines.append(line);
+				// on deliting list will call ~destr for every line
+				lines.append(line->clone());
 			}
 			return lines;
 		}
@@ -165,7 +176,7 @@ namespace bc
 		void removePorog(T const porog);
 		void preprocessBar(T const& porog, bool normalize);
 
-		float compireFull(const Barbase<T>* bc, bc::CompireStrategy& strat) const;
+		float compireFull(const Barbase<T>* bc, bc::CompireStrategy strat) const;
 
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		~Barcontainer();
