@@ -7,6 +7,7 @@
 #include "include_cv.h"
 
 #include <unordered_map>
+#include <math.h>
 
 namespace bc
 {

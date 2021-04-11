@@ -895,11 +895,17 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		if (c->isAlive())
 			c->kill();
 
-		T len = c->end - c->start;
+		T len = round(100000*(c->end - c->start)) / 100000;
 
-		if (len == 0)
+		if (len == 0 || len==INFINITY)
 			continue;
 
+		if (len < 0)
+		{
+			continue;
+			int a = 0;
+			a += 1;
+		}
 		assert(len > 0);
 
 		size_t size = settings.createBinayMasks ? c->getTotalSize() : 0;

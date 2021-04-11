@@ -11,7 +11,7 @@ namespace bc
 	public:
 		virtual void removePorog(T const porog) = 0;
 		virtual void preprocessBar(T const& porog, bool normalize) = 0;
-		virtual float compireFull(const Barbase<T>* Y, bc::CompireStrategy& strat) const = 0;
+		virtual float compireFull(const Barbase<T>* Y, bc::CompireStrategy strat) const = 0;
 		virtual Barbase<T>* clone() const = 0;
 		virtual T sum() const = 0;
 		virtual void relen() = 0;
@@ -49,7 +49,7 @@ namespace bc
 		// remove lines than less then passed value
 		void removePorog(T const porog);
 		void preprocessBar(T const& porog, bool normalize);
-		float compireFull(const Barbase<T>* bc, bc::CompireStrategy& strat) const;
+		float compireFull(const Barbase<T>* bc, CompireStrategy strat) const;
 		float compireBestRes(Baritem<T> const* bc, bc::CompireStrategy strat) const;
 		float compareOccurrence(Baritem<T> const* bc, bc::CompireStrategy strat) const;
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
@@ -159,13 +159,35 @@ namespace bc
 		size_t count();
 		//    Baritem *operator [](int i);
 		Baritem<T>* getItem(size_t i);
+
+
+		Baritem<T> *exractItem(int index)
+		{
+			if (index >= 0 && index < items.size())
+			{
+				auto *item = items[index];
+				items[index] = nullptr;
+				return item;
+			}
+			return nullptr;
+		}
+
+		void exractItems(std::vector<Baritem<T> *> extr)
+		{
+			for (int i = 0; i < items.size(); ++i)
+			{
+				if (items[i]!=nullptr)
+					extr.push_back(items[i]);
+			}
+			items.clear();
+		}
 		Baritem<T>* lastItem();
 		void addItem(Baritem<T>* item);
 		// remove lines than less then passed value
 		void removePorog(T const porog);
 		void preprocessBar(T const& porog, bool normalize);
 
-		float compireFull(const Barbase<T>* bc, bc::CompireStrategy& strat) const;
+		float compireFull(const Barbase<T>* bc, bc::CompireStrategy strat) const;
 
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		~Barcontainer();
