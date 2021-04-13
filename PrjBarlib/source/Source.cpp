@@ -79,6 +79,20 @@ void compiteBarAndBar(Bbase8& img, Bbase8& mat)
 }
 
 
+void compiteBarAndBar(bc::BarImg<float>& img, bc::BarImg<float>& mat)
+{
+	for (int i = 0; i < img.hei(); i++)
+	{
+		for (int j = 0; j < img.wid(); j++)
+		{
+			float av = round(img.get(j, i)*1000);
+			float bv = round(mat.get(j, i)*1000);
+			assert(av == bv);
+		}
+	}
+}
+
+
 void testInitFromMat()
 {
 	Mat testmat = cv::imread("test/test5.png", cv::IMREAD_GRAYSCALE);
@@ -87,19 +101,26 @@ void testInitFromMat()
 }
 
 
-Bimg8 restreToBarimg(bc::Barcontainer<uchar>* cont, int wid, int hei, uchar maxval)
+template<class T>
+bc::BarImg<T> restreToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T maxval)
 {
 	auto* it = cont->getItem(0);
 	auto& lines = it->barlines;
-	Bimg8 img(wid, hei);
-	memset(img.getData(), maxval, static_cast<size_t>(wid) * hei);
+	bc::BarImg<T> img(wid, hei);
+	for (size_t i = 0; i < wid*hei; i++)
+	{
+		img.setLiner(i, maxval);
+	}
 
 	for (size_t i = 0; i < lines.size(); i++)
 	{
+		T start = lines[i]->start;
+		T end = start + lines[i]->len;
 		auto& matr = lines[i]->matr;
 		for (size_t k = 0; k < matr.size(); k++)
 		{
 			auto& p = matr[k];
+			//assert(start <= p.value && p.value <= end);
 			img.minus(p.point, p.value);
 		}
 	}
@@ -329,6 +350,56 @@ void testMats(bool createNew = false)
 #include <iterator>
 #include <vector>
 
+
+void readImg(std::string path, std::vector<char>& vec)
+{
+	std::ifstream input(path, std::ios::binary);
+
+	vec.assign(
+		(std::istreambuf_iterator<char>(input)),
+		(std::istreambuf_iterator<char>()));
+}
+void testProblemFloatMats()
+{
+	std::string pathFromGeo = "D:\\Programs\\Python\\barcode\\experements\\geo\\imgs_one\\imgOut0.bf";
+
+	std::string pathArctic = "D:\\Programs\\QT\\ArctivViewer\\ArcticViewer\\temp\\out.fd";
+
+	std::vector<char> vec,vec2;
+	readImg(pathFromGeo, vec);
+	bc::BarImg<float> imgFromGeo((int)60, (int)60, 1, (uchar*)vec.data() + 2, false, false);
+
+	readImg(pathArctic, vec2);
+
+	bc::BarImg<float> findedImg((int)vec2[0], (int)vec2[1], 1, (uchar*)vec2.data() + 2, false, false);
+
+
+
+	bc::BarConstructor<float> bcont;
+	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.createBinayMasks = false;
+	bcont.createGraph = false;
+	bcont.returnType = bc::ReturnType::barcode3d;
+	bcont.createNewComponentOnAttach = false;
+	bcont.setStep(255);
+	bc::BarcodeCreator<float> test;
+
+
+	auto* retFromQGIS = test.createBarcode(&imgFromGeo, bcont);
+	auto* retFromArctic = test.createBarcode(&findedImg, bcont);
+
+	retFromQGIS->relen();
+	retFromQGIS->removePorog(3);
+	retFromArctic->relen();
+	retFromArctic->removePorog(3);
+
+	auto* qgis = retFromQGIS->getItem(0);
+	auto* arcticItem = retFromArctic->getItem(0);
+
+	float ret = qgis->compireFull(arcticItem, bc::CompireStrategy::CommonToLen);
+	std::cout << "Ret: " << ret << std::endl;
+}
+
 void testFloatMats()
 {
 	for(int i=0;i<24;++i)
@@ -347,7 +418,7 @@ void testFloatMats()
 
 		bc::BarConstructor<float> bcont;
 		bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
-		bcont.createBinayMasks = false;
+		bcont.createBinayMasks = true;
 		bcont.createGraph = false;
 		bcont.returnType = bc::ReturnType::barcode3d;
 		bcont.createNewComponentOnAttach = false;
@@ -358,6 +429,10 @@ void testFloatMats()
 
 		bc::Barcontainer<float>* sdd = (bc::Barcontainer<float>*)ret->clone();
 		float re = sdd->compireFull(ret, bc::CompireStrategy::compire3dBrightless);
+		
+		bc::BarImg<float> retimg = restreToBarimg(sdd, 60, 60, baseimg.max());
+
+		compiteBarAndBar(retimg, baseimg);
 
 		delete ret;
 		input.close();
@@ -473,9 +548,12 @@ int main()
 	//checkSameVals();
 	//printf("done\n\n");
 
-	printf("Check float imgs: sart...\n");
+	/*printf("Check float imgs: sart...\n");
 	testFloatMats();
-	printf("done\n\n");
+	printf("done\n\n");*/
 
+	printf("Check problem float imgs: sart...\n");
+	testProblemFloatMats();
+	printf("done\n\n");
 	return 0;
 }
