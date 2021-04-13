@@ -162,7 +162,7 @@ template<class T>
 float findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat)
 {
     float maxlen, minlen;
-	if (strat == bc::CompireStrategy::CommonToLen)
+	if (strat == bc::CompireStrategy::CommonToSum)
 	{
 		T st = MAX(X->start, Y->start);
 		T ed = MIN(X->end(), Y->end());
@@ -172,7 +172,7 @@ float findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat)
 		ed = MAX(X->end(), Y->end());
         maxlen = static_cast<float>(ed - st);
 	}
-	else if (strat == bc::CompireStrategy::CommonToSum)
+	else if (strat == bc::CompireStrategy::CommonToLen)
 	{
 		T st = MAX(X->start, Y->start);
 		T ed = MIN(X->end(), Y->end());
@@ -271,7 +271,7 @@ float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy 
 		totalsum += xysum;
 		tcoof += xysum * coof;
 	}
-	return tcoof / totalsum;
+	return totalsum!=0 ? tcoof / totalsum : 0;
 }
 
 template<class T>
