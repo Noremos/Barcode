@@ -162,7 +162,7 @@ template<class T>
 float findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat)
 {
     float maxlen, minlen;
-	if (strat == bc::CompireStrategy::CommonToLen)
+	if (strat == bc::CompireStrategy::CommonToSum)
 	{
 		T st = MAX(X->start, Y->start);
 		T ed = MIN(X->end(), Y->end());
@@ -172,7 +172,7 @@ float findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat)
 		ed = MAX(X->end(), Y->end());
         maxlen = static_cast<float>(ed - st);
 	}
-	else if (strat == bc::CompireStrategy::CommonToSum)
+	else if (strat == bc::CompireStrategy::CommonToLen)
 	{
 		T st = MAX(X->start, Y->start);
 		T ed = MIN(X->end(), Y->end());
@@ -271,7 +271,7 @@ float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy 
 		totalsum += xysum;
 		tcoof += xysum * coof;
 	}
-	return tcoof / totalsum;
+	return totalsum!=0 ? tcoof / totalsum : 0;
 }
 
 template<class T>
@@ -334,7 +334,8 @@ bc::Baritem<T>::~Baritem()
 {
 	for (auto* bline : barlines)
 	{
-		delete bline;
+		if (bline!=nullptr)
+			delete bline;
 	}
 	barlines.clear();
 
@@ -353,27 +354,36 @@ template<class T>
 T bc::Barcontainer<T>::sum() const
 {
 	T sm = 0;
-	for (const Baritem<T>* it : items)
-		sm += it->sum();
-
+	for (const Baritem<T> *it : items)
+	{
+		if (it!=nullptr)
+			sm += it->sum();
+	}
 	return sm;
 }
 
 template<class T>
 void bc::Barcontainer<T>::relen()
 {
-	for (Baritem<T>* it : items)
-		it->relen();
+	for (Baritem<T> *it : items)
+	{
+		if (it!=nullptr)
+			it->relen();
+	}
 }
 
 template<class T>
 T bc::Barcontainer<T>::maxLen() const
 {
 	T mx = 0;
-	for (const Baritem<T>* it : items) {
-		T curm = it->maxLen();
-		if (curm > mx)
-			mx = curm;
+	for (const Baritem<T>* it : items)
+	{
+		if (it!=nullptr)
+		{
+			T curm = it->maxLen();
+			if (curm > mx)
+				mx = curm;
+		}
 	}
 
 	return mx;
@@ -432,15 +442,21 @@ void bc::Barcontainer<T>::addItem(bc::Baritem<T>* item)
 template<class T>
 void bc::Barcontainer<T>::removePorog(const T porog)
 {
-	for (Baritem<T>* it : items)
-		it->removePorog(porog);
+	for (Baritem<T> *it : items)
+	{
+		if (it!=nullptr)
+			it->removePorog(porog);
+	}
 }
 
 template<class T>
 void bc::Barcontainer<T>::preprocessBar(const T& porog, bool normalize)
 {
-	for (Baritem<T>* it : items)
-		it->preprocessBar(porog, normalize);
+	for (Baritem<T> *it : items)
+	{
+		if (it!=nullptr)
+			it->preprocessBar(porog, normalize);
+	}
 }
 
 template<class T>
@@ -449,8 +465,10 @@ bc::Barbase<T>* bc::Barcontainer<T>::clone() const
 	Barcontainer* newBar = new Barcontainer<T>();
 
 	for (Baritem<T>* it : items)
-		newBar->items.push_back(new Baritem<T>(*it));
-
+	{
+		if (it!=nullptr)
+			newBar->items.push_back(new Baritem<T>(*it));
+	}
 	return newBar;
 }
 
@@ -462,7 +480,8 @@ float bc::Barcontainer<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStra
     float s = static_cast<float>(sum() + bcr->sum());
 	for (size_t i = 0; i < MIN(items.size(), bcr->items.size()); i++)
 	{
-        res += items[i]->compireFull(bcr->items[i], strat) * static_cast<float>(items[i]->sum() + bcr->items[i]->sum()) / s;
+		if (items[i]!=nullptr)
+			res += items[i]->compireFull(bcr->items[i], strat) * static_cast<float>(items[i]->sum() + bcr->items[i]->sum()) / s;
 	}
 
     return res;
@@ -472,7 +491,11 @@ template<class T>
 bc::Barcontainer<T>::Barcontainer::~Barcontainer()
 {
 	for (size_t i = 0; i < items.size(); ++i)
-		delete items[i];
+	{
+		if (items[i] != nullptr)
+			delete items[i];
+	}
+	items.clear();
 }
 
 INIT_TEMPLATE_TYPE(bc::Barbase)

@@ -516,8 +516,6 @@ void checkSameVals()
 	assert(varcode->getItem(0)->barlines.size() == 1);
 }
 
-
-using namespace std;
 int main()
 {
 	// TODO Move it to test project

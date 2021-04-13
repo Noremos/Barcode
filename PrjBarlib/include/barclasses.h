@@ -170,6 +170,28 @@ namespace bc
 		size_t count();
 		//    Baritem *operator [](int i);
 		Baritem<T>* getItem(size_t i);
+
+
+		Baritem<T> *exractItem(int index)
+		{
+			if (index >= 0 && index < items.size())
+			{
+				auto *item = items[index];
+				items[index] = nullptr;
+				return item;
+			}
+			return nullptr;
+		}
+
+		void exractItems(std::vector<Baritem<T> *> extr)
+		{
+			for (int i = 0; i < items.size(); ++i)
+			{
+				if (items[i]!=nullptr)
+					extr.push_back(items[i]);
+			}
+			items.clear();
+		}
 		Baritem<T>* lastItem();
 		void addItem(Baritem<T>* item);
 		// remove lines than less then passed value
