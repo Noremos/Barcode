@@ -81,6 +81,8 @@ void bc::Component<T>::add(const point& p)
 template<class T>
 void bc::Component<T>::kill()
 {
+	if (!lived)
+		return;
 	// --factory->lastB;
 	lived = false;
 //	if (end < factory->curbright)
