@@ -389,7 +389,7 @@ namespace bc {
 
 		inline void minus(int x, int y, T val)
 		{
-			assert(values[y * _wid + x] >= val);
+			//assert(values[y * _wid + x] >= val);
 			//if (diagReverce)
 			//	values[x * _wid + y] -= val;
 			//else
