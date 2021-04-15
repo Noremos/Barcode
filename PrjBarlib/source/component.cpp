@@ -52,13 +52,13 @@ bool bc::Component<T>::isContain(point p)
 template<class T>
 void bc::Component<T>::add(const point& p)
 {
-//	if (lived)
-//	{
-//		if (factory->curbright > end)
-//			end = factory->curbright;
-//		if (factory->curbright < start)
-//			start = factory->curbright;
-//	}
+	//	if (lived)
+	//	{
+	//		if (factory->curbright > end)
+	//			end = factory->curbright;
+	//		if (factory->curbright < start)
+	//			start = factory->curbright;
+	//	}
 	assert(lived);
 
 	++getMaxParrent()->totalCount;
@@ -70,7 +70,7 @@ void bc::Component<T>::add(const point& p)
 	{
 		if (factory->curbright != lastVal)
 		{
-			bar3d->push_back(bar3dvalue<T>(lastVal,cashedSize));
+			bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
 			lastVal = factory->curbright;
 			cashedSize = 0;
 		}
@@ -85,20 +85,21 @@ void bc::Component<T>::kill()
 		return;
 	// --factory->lastB;
 	lived = false;
-//	if (end < factory->curbright)
-		end = factory->curbright;
+	//	if (end < factory->curbright)
+	end = factory->curbright;
+	// assert(len() != 0);
 
-//	T maxLen = factory->settings.maxLen.getOrDefault(0);
-//	if (end - start > maxLen)
-//	{
-//		end = start + maxLen;
-//	}
-	//coords->reserve(coords->size());
-	//if (factory->createBin)
-	 //{
-		//for (auto p = coords->begin(); p != coords->end(); ++p)
-		//		p->second = end - p->second;
-	//}
+	//	T maxLen = factory->settings.maxLen.getOrDefault(0);
+	//	if (end - start > maxLen)
+	//	{
+	//		end = start + maxLen;
+	//	}
+		//coords->reserve(coords->size());
+		//if (factory->createBin)
+		 //{
+			//for (auto p = coords->begin(); p != coords->end(); ++p)
+			//		p->second = end - p->second;
+		//}
 
 	if (bar3d != nullptr)
 		bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));

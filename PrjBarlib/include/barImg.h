@@ -36,7 +36,7 @@ namespace bc {
 		virtual int hei() const = 0;
 		virtual int channels() const = 0;
 
-		virtual T max() const = 0;
+		virtual void maxAndMin(T& min, T&max) const = 0;
 		virtual size_t typeSize() const = 0;
 
 
@@ -240,7 +240,21 @@ namespace bc {
 			return values;
 		}
 
-		T max() const override
+		void maxAndMin(T& _min, T& _max) const override
+		{
+			_max = values[0];
+			_min = values[0];
+			for (size_t i = 1; i < this->length(); i++)
+			{
+				T val = values[i];
+				if (val > _max)
+					_max = val;
+				if (val < _min)
+					_min = val;
+			}
+
+		}
+		T max() const
 		{
 			BarImg<T>* ptr = const_cast<BarImg<T>*> (this);
 
@@ -541,6 +555,13 @@ namespace bc {
 			return mat.at<T>(y, x, z);
 		}
 
+		void maxAndMin(T& min, T& max) const override
+		{
+			double amin, amax;
+			cv::minMaxLoc(mat, &amin, &amax);
+			min = amin;
+			max = amax;
+		}
 		T max() const
 		{
 			double min, max;

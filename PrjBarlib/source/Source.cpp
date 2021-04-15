@@ -154,7 +154,8 @@ void test(bool graph, Bbase8& testimg, bool createNew = false)
 	auto* ret = test.createBarcode(&testimg, bcont);
 
 	//testimg.diagReverce = false;
-	uchar max = testimg.max();
+	uchar max, min;
+	testimg.maxAndMin(min, max);
 
 	Bimg8 imgrest(1, 1);
 	if (graph)
@@ -359,20 +360,44 @@ void readImg(std::string path, std::vector<char>& vec)
 		(std::istreambuf_iterator<char>(input)),
 		(std::istreambuf_iterator<char>()));
 }
+
+
+union conv
+{
+	char data[4];
+	float val;
+	int ival;
+};
+
+
 void testProblemFloatMats()
 {
 	std::string pathFromGeo = "D:\\Programs\\Python\\barcode\\experements\\geo\\imgs_one\\imgOut0.bf";
 
-	std::string pathArctic = "D:\\Programs\\QT\\ArctivViewer\\ArcticViewer\\temp\\out.fd";
+		std::string pathArctic = "D:\\Programs\\QT\\ArctivViewer\\ArcticViewer\\temp\\out.fd";
 
 	std::vector<char> vec,vec2;
+
 	readImg(pathFromGeo, vec);
 	bc::BarImg<float> imgFromGeo((int)60, (int)60, 1, (uchar*)vec.data() + 2, false, false);
 
-	readImg(pathArctic, vec2);
 
+	readImg(pathArctic, vec2);
 	bc::BarImg<float> findedImg((int)vec2[0], (int)vec2[1], 1, (uchar*)vec2.data() + 2, false, false);
 
+	char c1[4]{ vec2[2],vec2[3] ,vec2[4] ,vec2[5] };
+	char c2[4]{ vec2[5],vec2[4] ,vec2[3] ,vec2[2] };
+
+	conv con1, con2;
+	con1.data[0] = vec2[2];
+	con1.data[1] = vec2[3];
+	con1.data[2] = vec2[4];
+	con1.data[3] = vec2[5];
+
+	con2.data[3] = vec2[2];
+	con2.data[2] = vec2[3];
+	con2.data[1] = vec2[4];
+	con2.data[0] = vec2[5];
 
 
 	bc::BarConstructor<float> bcont;
@@ -385,20 +410,74 @@ void testProblemFloatMats()
 	bc::BarcodeCreator<float> test;
 
 
-	auto* retFromQGIS = test.createBarcode(&imgFromGeo, bcont);
+	//auto* retFromQGIS = test.createBarcode(&imgFromGeo, bcont);
+	//auto* qgis = retFromQGIS->getItem(0);
+	//retFromQGIS->relen();
+	//retFromQGIS->removePorog(3);
+	
 	auto* retFromArctic = test.createBarcode(&findedImg, bcont);
-
-	retFromQGIS->relen();
-	retFromQGIS->removePorog(3);
 	retFromArctic->relen();
 	retFromArctic->removePorog(3);
-
-	auto* qgis = retFromQGIS->getItem(0);
 	auto* arcticItem = retFromArctic->getItem(0);
 
-	float ret = qgis->compireFull(arcticItem, bc::CompireStrategy::CommonToLen);
-	std::cout << "Ret: " << ret << std::endl;
+
+	//float ret = qgis->compireFull(arcticItem, bc::CompireStrategy::CommonToLen);
+	//std::cout << "Ret: " << ret << std::endl;
 }
+
+
+void testBigProblemFloatMats()
+{
+	std::string pathBig = "D:\\Programs\\QT\\ArctivViewer\\ArcticViewer\\temp\\outbig.bf";
+
+	std::vector<char> vec;
+
+	readImg(pathBig, vec);
+	
+	int w = 60, h = 60;
+	int off = 2;
+	if (vec[0] == 'b')
+	{
+		conv con1;
+		con1.data[0] = vec[1];
+		con1.data[1] = vec[2];
+		con1.data[2] = vec[3];
+		con1.data[3] = vec[4];
+		w = con1.ival;
+
+		con1.data[0] = vec[5];
+		con1.data[1] = vec[6];
+		con1.data[2] = vec[7];
+		con1.data[3] = vec[8];
+		h = con1.ival;
+		off = 9;
+	}
+	
+	bc::BarImg<float> imgFromGeo(w, h, 1, (uchar*)vec.data() + off, false, false);
+
+	bc::BarConstructor<float> bcont;
+	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.createBinayMasks = true;
+	bcont.createGraph = false;
+	bcont.returnType = bc::ReturnType::barcode2d;
+	bcont.createNewComponentOnAttach = false;
+	bcont.setStep(255);
+	bc::BarcodeCreator<float> test;
+
+
+	//auto* retFromQGIS = test.createBarcode(&imgFromGeo, bcont);
+	//auto* qgis = retFromQGIS->getItem(0);
+	//retFromQGIS->relen();
+	//retFromQGIS->removePorog(3);
+
+	auto* retFromArctic = test.createBarcode(&imgFromGeo, bcont);
+	auto* arcticItem = retFromArctic->getItem(0);
+
+	std::cout << arcticItem->barlines.size() << std::endl;
+	//float ret = qgis->compireFull(arcticItem, bc::CompireStrategy::CommonToLen);
+	//std::cout << "Ret: " << ret << std::endl;
+}
+
 
 void testFloatMats()
 {
@@ -550,8 +629,12 @@ int main()
 	testFloatMats();
 	printf("done\n\n");*/
 
-	printf("Check problem float imgs: sart...\n");
-	testProblemFloatMats();
+	//printf("Check problem float imgs: sart...\n");
+	//testProblemFloatMats();
+	//printf("done\n\n");
+
+	printf("Check big problem float imgs: sart...\n");
+	testBigProblemFloatMats();
 	printf("done\n\n");
 	return 0;
 }

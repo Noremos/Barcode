@@ -45,13 +45,14 @@ namespace bc {
 
 			if (!settings.stepPorog.isCached || !settings.maxLen.isCached)
 			{
-				T maxVal = workingImg->max();
+				T maxVal, minVal;
+				workingImg->maxAndMin(minVal, maxVal);
 
 				if (!settings.stepPorog.isCached)
-					settings.stepPorog.set(maxVal);
+					settings.stepPorog.set(maxVal - minVal);
 
 				if (!settings.maxLen.isCached)
-					settings.maxLen.set(maxVal);
+					settings.maxLen.set(maxVal - minVal);
 			}
 		}
 
@@ -61,6 +62,8 @@ namespace bc {
 		point curpix;
 		int wid;
 		int hei;
+		T sourceMax;
+		T sourceMin;
 		// int lastB;
 		friend class Component<T>;
 		friend class Hole<T>;

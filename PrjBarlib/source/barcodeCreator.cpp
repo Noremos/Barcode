@@ -114,29 +114,34 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 		}
 		//	if (second->coords->size()<100)
 		{
-			//if (second->len == 0)
-			//{
-
-			//	size_t ind = curindex;
-			//	while (ind - 1 != 0)
-			//	{
-
-			//		point p = sortedArr[ind];
-			//		if (workingImg->get(p.x, p.y) == curbright)
-			//		{
-			//			if (getInclude(i) == second)
-			//			{
-			//				main->add(p);
-			//			}
-			//		}
-			//		else
-			//			break;
-			//	}
-			//	delete second;
-			//	return main;
-			//}
-			second->setParrent(main);
 			second->kill();
+			if (second->len() == 0)
+			{
+
+				size_t ind = curindex+1;
+				for (;ind - 1 != 0;--ind)
+				{
+					size_t rind = ind - 1;
+					point& p = sortedArr[rind];
+					if (workingImg->get(p.x, p.y) == curbright)
+					{
+						// Перебираем предыдущие элементы
+						if (included[rind] == second)
+						{
+							included[rind] = main;
+							main->add(p);
+						}
+					}
+					else
+						break;
+				}
+				delete second;
+				return main;
+			}
+			else
+			{
+				second->setParrent(main);
+			}
 			//возращаем единую компоненту.
 			return main;
 		}
@@ -164,6 +169,7 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 			if (first == nullptr)
 			{
 				first = connected;
+				// if len more then maxlen, kill the component
 				if (curbright - first->start > settings.maxLen.getOrDefault(0))
 				{
 					//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
@@ -543,9 +549,12 @@ template<class T>
 inline point* BarcodeCreator<T>::sort()
 {
 	size_t total = workingImg->length();
+
 	// do this hack to skip constructor calling for every point
 	uchar* datatemp = new uchar[total * sizeof(point)];//256
 	point* data = reinterpret_cast<bc::point*>(datatemp);//256
+
+
 
 	myclass<T> cmp;
 	cmp.workingImg = workingImg;
@@ -621,7 +630,7 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType
 	needDelImg = false;
 	if (type == ProcType::f255t0)
 	{
-		T maxel = src->max();
+		src->maxAndMin(sourceMin, sourceMax);
 		if (originalImg)
 		{
 			// src - входное изобрадение
@@ -633,7 +642,7 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType
 				for (int j = 0; j < hei; ++j)
 				{
 					T& val = src->get(i, j);
-					nimg->set(i, j, maxel - val);
+					nimg->set(i, j, sourceMax - val);
 				}
 			}
 			setWorkingImg(nimg);
@@ -646,7 +655,7 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType
 				for (int j = 0; j < hei; ++j)
 				{
 					T& val = src->get(i, j);
-					val = maxel - val;
+					val = sourceMax - val;
 				}
 			}
 			setWorkingImg(src);
@@ -894,7 +903,7 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		if (c->isAlive())
 			c->kill();
 
-		T len = round(100000*(c->end - c->start)) / 100000;
+		T len = c->len();
 
 		if (len == 0 || len==INFINITY)
 			continue;

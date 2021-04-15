@@ -49,6 +49,7 @@ namespace bc
 
 		T len()
 		{
+			//return round(100000 * (end - start)) / 100000;
 			return end - start;
 		}
 
