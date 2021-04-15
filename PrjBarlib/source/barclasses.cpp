@@ -313,6 +313,35 @@ float bc::Baritem<T>::compareOccurrence(const bc::Baritem<T>* bc, bc::CompireStr
 	return coofsum / totalsum;
 }
 
+using std::string;
+
+template<class T>
+void bc::Baritem<T>::getJsonObejct(std::string &out)
+{
+	string nl = "\r\n";
+
+	out = "{" + nl + "lines: ";
+
+	getJsonLinesArray(out);
+	out += nl + '}';
+}
+
+template<class T>
+void bc::Baritem<T>::getJsonLinesArray(std::string &out)
+{
+	string nl = "\r\n";
+
+	out = "[ ";
+
+	for (bc::barline<T> *line : barlines)
+	{
+		line->getJsonObject(out);
+		out += ",";
+	}
+
+	out[out.length() - 1] = ']';
+}
+
 
 template<class T>
 void bc::Baritem<T>::sortByLen()

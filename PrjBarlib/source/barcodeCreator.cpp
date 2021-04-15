@@ -529,84 +529,87 @@ inline point* BarcodeCreator<uchar>::sort()
 	return data;
 }
 
-//
-//template<class T>
-//struct myclass {
-//	const bc::DatagridProvider<T>* workingImg;
-//	bool operator() (point& a, point& b)
-//	{
-//		return workingImg->get(a.x, a.y) < workingImg->get(b.x, b.y);
-//	}
-//};
-//
-//template<class T>
-//inline point* BarcodeCreator<T>::sort()
-//{
-//	size_t total = workingImg->length();
-//	point* data = new point[total];//256
-//	myclass<T> cmp;
-//	cmp.workingImg = workingImg;
-//
-//	for (size_t i = 0; i < total; ++i)//wid
-//		data[i] = workingImg->getPointAt(i);
-//
-//	std::sort(data, data + total, cmp);
-//
-//	return data;
-//}
-#include<map>
+
+template<class T>
+struct myclass {
+	const bc::DatagridProvider<T>* workingImg;
+	bool operator() (point& a, point& b)
+	{
+		return workingImg->get(a.x, a.y) < workingImg->get(b.x, b.y);
+	}
+};
 
 template<class T>
 inline point* BarcodeCreator<T>::sort()
 {
-	std::map<T, int> hist;
-	std::unordered_map<T, int> offs;
-
-	for (int i = 0; i < workingImg->wid(); ++i)//wid
-	{
-		for (int j = 0; j < workingImg->hei(); ++j)//hei
-		{
-			T& p = workingImg->get(i, j);
-			if (hist.find(p) != hist.end())
-			{
-				++hist[p];
-			}
-			else
-				hist.insert(std::pair<T, int>(p, 1));
-		}
-	}
-
-	T prev;
-	bool f = false;
-	//auto const& [key, val]
-	for (auto const& iter : hist)
-	{
-		auto key = iter.first;
-		if (!f)
-		{
-			prev = key;
-			f = true;
-			continue;
-		}
-		hist[key] += hist[prev];
-		offs[key] = hist[prev];
-		prev = key;
-	}
-	hist.clear();
-
 	size_t total = workingImg->length();
+	// do this hack to skip constructor calling for every point
+	uchar* datatemp = new uchar[total * sizeof(point)];//256
+	point* data = reinterpret_cast<bc::point*>(datatemp);//256
 
-	point* data = new point[total];//256
-	for (int i = 0; i < workingImg->wid(); ++i)//wid
-	{
-		for (int j = 0; j < workingImg->hei(); ++j)//hei
-		{
-            T p = workingImg->get(i, j);
-			data[offs[p]++] = point(i, j);
-		}
-	}
+	myclass<T> cmp;
+	cmp.workingImg = workingImg;
+
+	for (size_t i = 0; i < total; ++i)//wid
+		data[i] = workingImg->getPointAt(i);
+
+	std::sort(data, data + total, cmp);
+
 	return data;
 }
+#include<map>
+
+//template<class T>
+//inline point* BarcodeCreator<T>::sort()
+//{
+//	std::map<T, int> hist;
+//	std::unordered_map<T, int> offs;
+
+//	for (int i = 0; i < workingImg->wid(); ++i)//wid
+//	{
+//		for (int j = 0; j < workingImg->hei(); ++j)//hei
+//		{
+//			T& p = workingImg->get(i, j);
+//			if (hist.find(p) != hist.end())
+//			{
+//				++hist[p];
+//			}
+//			else
+//				hist.insert(std::pair<T, int>(p, 1));
+//		}
+//	}
+
+//	T prev;
+//	bool f = false;
+//	//auto const& [key, val]
+//	for (auto const& iter : hist)
+//	{
+//		auto key = iter.first;
+//		if (!f)
+//		{
+//			prev = key;
+//			f = true;
+//			continue;
+//		}
+//		hist[key] += hist[prev];
+//		offs[key] = hist[prev];
+//		prev = key;
+//	}
+//	hist.clear();
+
+//	size_t total = workingImg->length();
+
+//	point* data = new point[total];//256
+//	for (int i = 0; i < workingImg->wid(); ++i)//wid
+//	{
+//		for (int j = 0; j < workingImg->hei(); ++j)//hei
+//		{
+//            T p = workingImg->get(i, j);
+//			data[offs[p]++] = point(i, j);
+//		}
+//	}
+//	return data;
+//}
 
 
 template<class T>
@@ -1236,7 +1239,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 {
     settings.createBinayMasks = true;
 	settings.createGraph = false;
-    settings.returnType = ReturnType::barcode3d;
+	settings.returnType = ReturnType::barcode2d;
 	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
 
     init(workingImg, ProcType::f0t255);

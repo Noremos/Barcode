@@ -53,6 +53,9 @@ namespace bc
 		float compireBestRes(Baritem<T> const* bc, bc::CompireStrategy strat) const;
 		float compareOccurrence(Baritem<T> const* bc, bc::CompireStrategy strat) const;
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
+
+		void getJsonObejct(std::string &out);
+		void getJsonLinesArray(std::string &out);
 		~Baritem();
 
 		bc::BarRoot<T>* getRootNode()

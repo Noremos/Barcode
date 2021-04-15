@@ -14,14 +14,58 @@ namespace bc
 	template<class T>
 	struct EXPORT barline
 	{
-		bc::barvector<T> matr;
-		barcounter<T>* bar3d = nullptr;
+		// Graph
 		std::vector<barline<T>*> childrens;
 		barline<T>* parrent = nullptr;
 		size_t numInParet = 0;
+
+		// Binary mask
+		bc::barvector<T> matr;
+
+		// 3d barcode
+		barcounter<T>* bar3d = nullptr;
+
+		// Main params
 		T start;
 		T len;
+
+	private:
+		// System member
 		bool isCopy = false;
+
+	public:
+		barline()
+		{
+
+		}
+		barline(T _start, T _len, barcounter<T>* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len) {
+			matr.reserve(coordsSize);
+			bar3d = _barc;
+		}
+
+		~barline()
+		{
+			// canBeDleted - у копии, копи¤ не может удал¤ть детей. ј оригинал может
+			if (!isCopy)
+			{
+				if (parrent && parrent->childrens.size() > numInParet && parrent->childrens[numInParet] == this)
+				{
+					parrent->childrens[numInParet] = nullptr;
+				}
+				for (size_t i = 0; i < childrens.size(); ++i)
+				{
+					// not null, not parent on any child
+					if (childrens[i])
+						childrens[i]->parrent = nullptr;
+					//delete childrens[i];
+				}
+			}
+			if (bar3d != nullptr)
+			{
+				delete bar3d;
+			}
+		}
+
 
 		//bc::Component *comp;
 		//    cv::Mat binmat;
@@ -92,37 +136,6 @@ namespace bc
 
 		//    barline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
 
-		barline()
-		{
-
-		}
-		barline(T _start, T _len, barcounter<T>* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len) {
-			matr.reserve(coordsSize);
-			bar3d = _barc;
-		}
-
-		~barline()
-		{
-			// canBeDleted - у копии, копи¤ не может удал¤ть детей. ј оригинал может
-			if (!isCopy)
-			{
-				if (parrent && parrent->childrens.size() > numInParet && parrent->childrens[numInParet] == this)
-				{
-					parrent->childrens[numInParet] = nullptr;
-				}
-				for (size_t i = 0; i < childrens.size(); ++i)
-				{
-					// not null, not parent on any child
-					if (childrens[i])
-						childrens[i]->parrent = nullptr;
-					//delete childrens[i];
-				}
-			}
-			if (bar3d != nullptr)
-			{
-				delete bar3d;
-			}
-		}
 
 		barline* clone() const
 		{
@@ -349,6 +362,38 @@ namespace bc
 		}
 #endif // _PYD
 
+		void getJsonObject(std::string &outObj,
+						   bool exportGraph = false,
+						   bool export3dbar = false,
+						   bool expotrBinaryMask = false)
+		{
+//			std::string nl = "\r\n";
+			outObj += "{";
+
+			if (exportGraph)
+			{
+				// TODO
+
+				// numInParet = 0;
+				// parrent = nullptr;
+				// childrens;
+			}
+			if (export3dbar && bar3d)
+			{
+				// TODO
+
+				barcounter<T>* bar3d = nullptr;
+			}
+			if (expotrBinaryMask)
+			{
+				// TOOD
+
+				// matr
+			}
+
+			outObj += "start:"+ std::to_string(start);
+			outObj += ", len:"+ std::to_string(len) + "}";
+		}
 	};
 
 	// comparable
