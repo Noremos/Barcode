@@ -85,8 +85,8 @@ void compiteBarAndBar(bc::BarImg<float>& img, bc::BarImg<float>& mat)
 	{
 		for (int j = 0; j < img.wid(); j++)
 		{
-			float av = round(img.get(j, i)*1000);
-			float bv = round(mat.get(j, i)*1000);
+			float av = round(img.get(j, i)*10000);
+			float bv = round(mat.get(j, i)*10000);
 			assert(av == bv);
 		}
 	}
@@ -122,6 +122,34 @@ bc::BarImg<T> restreToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T maxv
 			auto& p = matr[k];
 			//assert(start <= p.value && p.value <= end);
 			img.minus(p.point, p.value);
+		}
+	}
+	return img;
+}
+
+
+
+template<class T>
+bc::BarImg<T> restre255ToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T minval)
+{
+	auto* it = cont->getItem(0);
+	auto& lines = it->barlines;
+	bc::BarImg<T> img(wid, hei);
+	for (size_t i = 0; i < wid * hei; i++)
+	{
+		img.setLiner(i, minval);
+	}
+
+	for (size_t i = 0; i < lines.size(); i++)
+	{
+		T start = lines[i]->start;
+		T end = start + lines[i]->len;
+		auto& matr = lines[i]->matr;
+		for (size_t k = 0; k < matr.size(); k++)
+		{
+			auto& p = matr[k];
+			//assert(start <= p.value && p.value <= end);
+			img.add(p.point, p.value);
 		}
 	}
 	return img;
@@ -455,13 +483,6 @@ void testBigProblemFloatMats()
 	
 	bc::BarImg<float> imgFromGeo(w, h, 1, (uchar*)vec.data() + off, false, false);
 
-	bc::BarConstructor<float> bcont;
-	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
-	bcont.createBinayMasks = true;
-	bcont.createGraph = false;
-	bcont.returnType = bc::ReturnType::barcode2d;
-	bcont.createNewComponentOnAttach = false;
-	bcont.setStep(255);
 	bc::BarcodeCreator<float> test;
 
 
@@ -470,10 +491,34 @@ void testBigProblemFloatMats()
 	//retFromQGIS->relen();
 	//retFromQGIS->removePorog(3);
 
-	auto* retFromArctic = test.createBarcode(&imgFromGeo, bcont);
-	auto* arcticItem = retFromArctic->getItem(0);
+	float maxs = imgFromGeo.max(); 
+	float mins = imgFromGeo.min();
 
+	//imgFromGeo.addToMat(-mins);
+
+	auto* retFromArctic = test.searchHoles(imgFromGeo.getData(), w, h);
+	auto* arcticItem = retFromArctic->getItem(0);
+	auto img = restre255ToBarimg(retFromArctic, w, h, mins);
 	std::cout << arcticItem->barlines.size() << std::endl;
+
+	//compiteBarAndBar(img, imgFromGeo);
+
+	for (size_t i = 0; i < arcticItem->barlines.size(); i++)
+	{
+		float minT = arcticItem->barlines[i]->start;
+		float maxT = arcticItem->barlines[i]->end();
+
+		float bottomLvl = minT + (maxT - minT) / 10;
+		auto& vecto = arcticItem->barlines[i]->matr;
+		int coi = 0;
+		for (size_t j = 0; j < vecto.size(); j++)
+		{
+			float val = vecto[j].value;
+			if (val >= bottomLvl)
+				++coi;
+		}
+		std::cout << "Ret: " << coi << std::endl;
+	}
 	//float ret = qgis->compireFull(arcticItem, bc::CompireStrategy::CommonToLen);
 	//std::cout << "Ret: " << ret << std::endl;
 }

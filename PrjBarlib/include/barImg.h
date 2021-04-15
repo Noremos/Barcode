@@ -78,9 +78,9 @@ namespace bc {
 	{
 		typedef T* bar_iterator;
 		typedef const T* const_bar_iterator;
-
-	protected:
+	public:
 		T* values = nullptr;
+	protected:
 
 	private:
 		CachedValue<T> cachedMax;

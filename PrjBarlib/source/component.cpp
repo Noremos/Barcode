@@ -7,7 +7,9 @@ template<class T>
 void bc::Component<T>::init(BarcodeCreator<T>* factory)
 {
 	this->factory = factory;
+	index = factory->components.size();
 	factory->components.push_back(this);
+
 	start = factory->curbright;
 	end = factory->curbright;
 	lastVal = factory->curbright;
@@ -52,13 +54,6 @@ bool bc::Component<T>::isContain(point p)
 template<class T>
 void bc::Component<T>::add(const point& p)
 {
-	//	if (lived)
-	//	{
-	//		if (factory->curbright > end)
-	//			end = factory->curbright;
-	//		if (factory->curbright < start)
-	//			start = factory->curbright;
-	//	}
 	assert(lived);
 
 	++getMaxParrent()->totalCount;
@@ -87,19 +82,12 @@ void bc::Component<T>::kill()
 	lived = false;
 	//	if (end < factory->curbright)
 	end = factory->curbright;
-	// assert(len() != 0);
-
-	//	T maxLen = factory->settings.maxLen.getOrDefault(0);
-	//	if (end - start > maxLen)
-	//	{
-	//		end = start + maxLen;
-	//	}
-		//coords->reserve(coords->size());
-		//if (factory->createBin)
-		 //{
-			//for (auto p = coords->begin(); p != coords->end(); ++p)
-			//		p->second = end - p->second;
-		//}
+	 //assert(len() >= 0);
+	//if (end == -9.79209423)
+	//{
+	//	int a = 3;
+	//	a++;
+	//}
 
 	if (bar3d != nullptr)
 		bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));

@@ -118,8 +118,8 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 			if (second->len() == 0)
 			{
 
-				size_t ind = curindex+1;
-				for (;ind - 1 != 0;--ind)
+				size_t ind = curindex + 1;
+				for (; ind - 1 != 0; --ind)
 				{
 					size_t rind = ind - 1;
 					point& p = sortedArr[rind];
@@ -499,7 +499,7 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 //********************************************************************************
 
 template<>
-inline point* BarcodeCreator<uchar>::sort()
+inline point* BarcodeCreator<uchar>::sortPixels(bc::ProcType type)
 {
 	int hist[256];//256
 	int offs[256];//256
@@ -510,7 +510,7 @@ inline point* BarcodeCreator<uchar>::sort()
 	{
 		for (int i = 0; i < workingImg->wid(); ++i)//wid
 		{
-            auto p = workingImg->get(i, j);
+			auto p = workingImg->get(i, j);
 			++hist[p];//можно vector, но хз
 		}
 	}
@@ -528,8 +528,15 @@ inline point* BarcodeCreator<uchar>::sort()
 	{
 		for (int i = 0; i < workingImg->wid(); ++i)//wid
 		{
-            uchar p = workingImg->get(i, j);
-			data[offs[p]++] = point(i, j);
+			uchar p = workingImg->get(i, j);
+			if (type == ProcType::f0t255)
+			{
+				data[offs[p]++] = point(i, j);
+			}
+			else
+			{
+				data[total - offs[p]++] = point(i, j);
+			}
 		}
 	}
 	return data;
@@ -537,7 +544,7 @@ inline point* BarcodeCreator<uchar>::sort()
 
 
 template<class T>
-struct myclass {
+struct myclassFromMin {
 	const bc::DatagridProvider<T>* workingImg;
 	bool operator() (point& a, point& b)
 	{
@@ -546,7 +553,16 @@ struct myclass {
 };
 
 template<class T>
-inline point* BarcodeCreator<T>::sort()
+struct myclassFromMax {
+	const bc::DatagridProvider<T>* workingImg;
+	bool operator() (point& a, point& b)
+	{
+		return workingImg->get(a.x, a.y) > workingImg->get(b.x, b.y);
+	}
+};
+
+template<class T>
+inline point* BarcodeCreator<T>::sortPixels(bc::ProcType type)
 {
 	size_t total = workingImg->length();
 
@@ -554,15 +570,29 @@ inline point* BarcodeCreator<T>::sort()
 	uchar* datatemp = new uchar[total * sizeof(point)];//256
 	point* data = reinterpret_cast<bc::point*>(datatemp);//256
 
-
-
-	myclass<T> cmp;
-	cmp.workingImg = workingImg;
-
+	//point * data = new point[total];
+	
 	for (size_t i = 0; i < total; ++i)//wid
 		data[i] = workingImg->getPointAt(i);
 
-	std::sort(data, data + total, cmp);
+	if (type == ProcType::f0t255)
+	{
+		myclassFromMin<T> cmp;
+		cmp.workingImg = workingImg;
+		std::sort(data, &data[total], cmp);
+	}
+	else
+	{
+		myclassFromMax<T> cmp;
+		cmp.workingImg = workingImg;
+		std::sort(data, data + total, cmp);
+		for (size_t i = 1; i < total - 1; ++i)//wid
+		{
+			float v0 = workingImg->get(data[i-1]);
+			float v2 = workingImg->get(data[i]);
+			assert(v0 >= v2);
+		}
+	}
 
 	return data;
 }
@@ -628,41 +658,7 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType
 	hei = src->hei();
 
 	needDelImg = false;
-	if (type == ProcType::f255t0)
-	{
-		src->maxAndMin(sourceMin, sourceMax);
-		if (originalImg)
-		{
-			// src - входное изобрадение
-			needDelImg = true;
-			bc::BarImg<T>* nimg = new bc::BarImg<T>(wid, hei, 1);
-
-			for (int i = 0; i < wid; ++i)
-			{
-				for (int j = 0; j < hei; ++j)
-				{
-					T& val = src->get(i, j);
-					nimg->set(i, j, sourceMax - val);
-				}
-			}
-			setWorkingImg(nimg);
-		}
-		else
-		{
-			// src - созданное изобрадение, можно менять
-			for (int i = 0; i < wid; ++i)
-			{
-				for (int j = 0; j < hei; ++j)
-				{
-					T& val = src->get(i, j);
-					val = sourceMax - val;
-				}
-			}
-			setWorkingImg(src);
-		}
-	}
-	else
-		setWorkingImg(src);
+	setWorkingImg(src);
 
 
 	totalSize = src->length();
@@ -670,7 +666,7 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType
 	memset(included, 0, totalSize * sizeof(Include<T>));
 
 	//от 255 до 0
-	sortedArr = sort();
+	sortedArr = sortPixels(type);
 	// lastB = 0;
 
 #ifdef USE_OPENCV
@@ -725,7 +721,7 @@ void BarcodeCreator<T>::processComp(Barcontainer<T>* item)
 #endif
 		assert(included[wid * curpix.y + curpix.x]);
 
-	}
+}
 
 	//assert(((void)"ALARM! B0 is not one", lastB == 1));
 
@@ -842,8 +838,8 @@ void BarcodeCreator<T>::reverseCom()
 		{
 			// надо добавить заничя каому потомку
 			COMPP prev = incl;
-            if (prev == nullptr)
-                printf("BAD");
+			if (prev == nullptr)
+				printf("BAD");
 			COMPP prevparent = prev->getNonZeroParent();
 			while (prevparent)
 			{
@@ -905,16 +901,9 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 
 		T len = c->len();
 
-		if (len == 0 || len==INFINITY)
+		if (len == 0 || len == INFINITY)
 			continue;
 
-		if (len < 0)
-		{
-			continue;
-			int a = 0;
-			a += 1;
-		}
-		assert(len > 0);
 
 		size_t size = settings.createBinayMasks ? c->getTotalSize() : 0;
 
@@ -954,10 +943,10 @@ void BarcodeCreator<T>::processTypeF(const barstruct& str, const bc::DatagridPro
 	switch (str.comtype)
 	{
 	case  ComponentType::Component:
-        processComp(item);
+		processComp(item);
 		break;
 	case  ComponentType::Hole:
-        processHole(item);
+		processHole(item);
 		break;
 		//case  ComponentType::FullPrepair:
 		//	ProcessFullPrepair(b, item);
@@ -1108,7 +1097,7 @@ Barcontainer<T>* BarcodeCreator<T>::createSLbarcode(const bcBarImg* src, T foneS
 		sortedArr[off] = temp;
 	}
 	off = len;
-    processHole(cont);
+	processHole(cont);
 
 	delete[] sortedArr;
 	delete[] included;
@@ -1246,26 +1235,29 @@ uchar dif(uchar a, uchar b)
 template<>
 Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int hei)
 {
-    settings.createBinayMasks = true;
+	settings.createBinayMasks = true;
 	settings.createGraph = false;
 	settings.returnType = ReturnType::barcode2d;
 	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
 
-    init(workingImg, ProcType::f0t255);
+	init(workingImg, ProcType::f255t0);
 
+	size_t ds = 0;
 	for (curindex = 0; curindex < totalSize; ++curindex)
 	{
 		auto& val = sortedArr[curindex];
 		curpix = point(val.x, val.y);
 		curbright = workingImg->get(curpix);
-
+		if (curbright == -9.56544495 || curbright == -9.56544495)
+		{
+			std::cout << std::endl;
+		}
 #ifdef VDEBUG
 		VISULA_DEBUG_COMP(totalSize, i);
 #else
 		checkCloserB0();
 #endif
 	}
-
 
 	Barcontainer<float>* item = new Barcontainer<float>();
 

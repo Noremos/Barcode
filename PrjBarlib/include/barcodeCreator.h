@@ -126,7 +126,7 @@ namespace bc {
 		bool checkCloserB0();
 		bool checkCloserB1();
 
-		point* sort();
+		point* sortPixels(bc::ProcType type);
 
 		void clearIncluded();
 

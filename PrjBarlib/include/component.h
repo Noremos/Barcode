@@ -15,6 +15,7 @@ namespace bc
 	{
 	public:
 	protected:
+		int index = 0;
 		size_t totalCount = 0/*, ownSize = 0*/;
 		BarcodeCreator<T>* factory;
 		Component<T>* cachedMaxParent = nullptr;
@@ -50,7 +51,7 @@ namespace bc
 		T len()
 		{
 			//return round(100000 * (end - start)) / 100000;
-			return end - start;
+			return  end>=start ?  end - start: start - end;
 		}
 
 		Component<T>* getNonZeroParent()
