@@ -99,14 +99,14 @@ namespace bc
 		}
 	};
 
-	static bool operator > (BarVec3b c1, BarVec3b c2)
-	{
-		return c1.sum() > c2.sum();
-	}
-	static bool operator < (BarVec3b c1, BarVec3b c2)
-	{
-		return c1.sum() < c2.sum();
-	}
+//	static bool operator > (BarVec3b c1, BarVec3b c2)
+//	{
+//		return c1.sum() > c2.sum();
+//	}
+//	static bool operator < (BarVec3b c1, BarVec3b c2)
+//	{
+//		return c1.sum() < c2.sum();
+//	}
 
 	struct barstruct
 	{

@@ -382,7 +382,7 @@ namespace bc
 			{
 				// TODO
 
-				barcounter<T>* bar3d = nullptr;
+//				barcounter<T>* bar3d = nullptr;
 			}
 			if (expotrBinaryMask)
 			{

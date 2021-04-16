@@ -54,7 +54,7 @@ void bc::Baritem<uchar>::getBettyNumbers(int* bs)
 
 
 template<class T>
-void bc::Baritem<T>::getBettyNumbers(int* bs)
+void bc::Baritem<T>::getBettyNumbers(int* /*bs*/)
 {
 }
 

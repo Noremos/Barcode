@@ -1242,16 +1242,12 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 
 	init(workingImg, ProcType::f255t0);
 
-	size_t ds = 0;
 	for (curindex = 0; curindex < totalSize; ++curindex)
 	{
 		auto& val = sortedArr[curindex];
 		curpix = point(val.x, val.y);
 		curbright = workingImg->get(curpix);
-		if (curbright == -9.56544495 || curbright == -9.56544495)
-		{
-			std::cout << std::endl;
-		}
+
 #ifdef VDEBUG
 		VISULA_DEBUG_COMP(totalSize, i);
 #else

@@ -175,9 +175,9 @@ namespace bc
 		Baritem<T>* getItem(size_t i);
 
 
-		Baritem<T> *exractItem(int index)
+		Baritem<T> *exractItem(size_t index)
 		{
-			if (index >= 0 && index < items.size())
+			if (index < items.size())
 			{
 				auto *item = items[index];
 				items[index] = nullptr;
@@ -188,7 +188,7 @@ namespace bc
 
 		void exractItems(std::vector<Baritem<T> *> extr)
 		{
-			for (int i = 0; i < items.size(); ++i)
+			for (size_t i = 0; i < items.size(); ++i)
 			{
 				if (items[i]!=nullptr)
 					extr.push_back(items[i]);
