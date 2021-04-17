@@ -52,6 +52,7 @@ namespace bc
 		{
 			//return round(100000 * (end - start)) / 100000;
 			return  end>=start ?  end - start: start - end;
+			return end - start;
 		}
 
 		Component<T>* getNonZeroParent()
