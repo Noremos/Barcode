@@ -242,6 +242,8 @@ namespace bc {
 
 		void maxAndMin(T& _min, T& _max) const override
 		{
+			BarImg<T>* ptr = const_cast<BarImg<T>*> (this);
+
 			_max = values[0];
 			_min = values[0];
 			for (size_t i = 1; i < this->length(); i++)
@@ -252,8 +254,10 @@ namespace bc {
 				if (val < _min)
 					_min = val;
 			}
-
+			ptr->cachedMax.set(_max);
+			ptr->cachedMin.set(_min);
 		}
+
 		T max() const
 		{
 			BarImg<T>* ptr = const_cast<BarImg<T>*> (this);

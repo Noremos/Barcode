@@ -1238,8 +1238,14 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 	settings.createBinayMasks = true;
 	settings.createGraph = false;
 	settings.returnType = ReturnType::barcode2d;
+
+	//[y * _wid + x]
+	img[hei * wid - 1] = 9999;//
 	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
 
+//	float maxs, mins;
+//	workingImg->maxAndMin(mins, maxs);
+//	settings.setMaxLen((maxs - mins) / 2);
 	init(workingImg, ProcType::f255t0);
 
 	for (curindex = 0; curindex < totalSize; ++curindex)
