@@ -7,7 +7,8 @@ template<class T>
 void bc::Component<T>::init(BarcodeCreator<T>* factory)
 {
 	this->factory = factory;
-	index = factory->components.size();
+	startIndex = factory->curindex;
+//	index = factory->components.size();
 	factory->components.push_back(this);
 
 	start = factory->curbright;
@@ -107,6 +108,8 @@ void bc::Component<T>::setParrent(bc::Component<T>* parnt)
 template<class T>
 bc::Component<T>::~Component()
 {
+//	factory->components[index] = nullptr;
+
 }
 
 

@@ -14,8 +14,9 @@ namespace bc
 	class Component
 	{
 	public:
+		size_t startIndex = 0;
+		//, index = 0;
 	protected:
-		int index = 0;
 		size_t totalCount = 0/*, ownSize = 0*/;
 		BarcodeCreator<T>* factory;
 		Component<T>* cachedMaxParent = nullptr;

@@ -117,25 +117,18 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 			second->kill();
 			if (second->len() == 0)
 			{
-
-				size_t ind = curindex + 1;
-				for (; ind - 1 != 0; --ind)
+				for (size_t rind = second->startIndex; rind < curindex; ++rind)
 				{
-					size_t rind = ind - 1;
 					point& p = sortedArr[rind];
-					if (workingImg->get(p.x, p.y) == curbright)
+					assert(workingImg->get(p.x, p.y) == curbright);
+					if(included[rind] == second)
 					{
 						// Перебираем предыдущие элементы
-						if (included[rind] == second)
-						{
-							included[rind] = main;
-							main->add(p);
-						}
+						included[rind] = main;
+						main->add(p);
 					}
-					else
-						break;
 				}
-				delete second;
+//				delete second;
 				return main;
 			}
 			else
@@ -267,7 +260,7 @@ COMPP BarcodeCreator<T>::getPorogComp(const point& p)
 		return nullptr;
 
 	const size_t off = static_cast<size_t>(wid) * p.y + p.x;
-	auto& itr = included[off];
+	auto* itr = included[off];
 	if (itr && GETDIFF(curbright, workingImg->get(p.x, p.y)))
 	{
 		return itr->getMaxAliveParrent();
@@ -961,8 +954,8 @@ void BarcodeCreator<T>::processTypeF(const barstruct& str, const bc::DatagridPro
 	if (needDelImg)
 	{
 		delete workingImg;
-		workingImg = nullptr;
 	}
+	workingImg = nullptr;
 
 	delete[] sortedArr;
 	sortedArr = nullptr;
