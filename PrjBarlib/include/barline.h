@@ -8,6 +8,7 @@
 
 #include <unordered_map>
 #include <math.h>
+#include <string>
 
 namespace bc
 {
