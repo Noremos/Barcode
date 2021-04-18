@@ -54,6 +54,7 @@ namespace bc
 		float compareOccurrence(Baritem<T> const* bc, bc::CompireStrategy strat) const;
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 
+		void normalize();
 		void getJsonObejct(std::string &out);
 		void getJsonLinesArray(std::string &out);
 		~Baritem();

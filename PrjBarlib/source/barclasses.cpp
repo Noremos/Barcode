@@ -313,6 +313,26 @@ float bc::Baritem<T>::compareOccurrence(const bc::Baritem<T>* bc, bc::CompireStr
 	return coofsum / totalsum;
 }
 
+template<class T>
+void bc::Baritem<T>::normalize()
+{
+	if (barlines.size() == 0)
+		return;
+
+	T maxi = barlines[0]->start;
+	for (size_t i = 1; i < barlines.size(); ++i)
+	{
+		if (barlines[i]->end() > maxi)
+			maxi = barlines[i]->end();
+	}
+
+	for (size_t i = 0; i < barlines.size(); ++i)
+	{
+		barlines[i]->start /= maxi;
+		barlines[i]->len /= maxi;
+	}
+}
+
 using std::string;
 
 template<class T>
