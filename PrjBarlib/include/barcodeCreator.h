@@ -182,7 +182,7 @@ namespace bc {
 		bc::Barcontainer<T>* createSLbarcode(const bcBarImg* src, T foneStart, T foneEnd, bool createRGBbar);
 
 
-		bc::Barcontainer<T>* searchHoles(float* img, int wid, int hei);
+		bc::Barcontainer<T>* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 
 		virtual ~BarcodeCreator()
 		{

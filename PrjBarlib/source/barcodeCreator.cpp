@@ -1226,7 +1226,7 @@ uchar dif(uchar a, uchar b)
 //}
 
 template<>
-Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int hei)
+Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int hei, float nullVal)
 {
 	settings.createBinayMasks = true;
 	settings.createGraph = false;
@@ -1236,6 +1236,13 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 	img[hei * wid - 1] = 9999;//
 	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
 
+	if (nullVal>-999)
+	{
+		for (size_t i = 0; i < workingImg->length(); ++i)
+		{
+			workingImg->getLiner(i) = -9999;
+		}
+	}
 //	float maxs, mins;
 //	workingImg->maxAndMin(mins, maxs);
 //	settings.setMaxLen((maxs - mins) / 2);
@@ -1263,7 +1270,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 
 
 template<class T>
-Barcontainer<T>* BarcodeCreator<T>::searchHoles(float* /*img*/, int /*wid*/, int /*hei*/)
+Barcontainer<T>* BarcodeCreator<T>::searchHoles(float* /*img*/, int /*wid*/, int /*hei*/, float/* nullVal*/)
 {
 	return nullptr;
 }
