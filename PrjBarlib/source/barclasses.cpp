@@ -319,17 +319,20 @@ void bc::Baritem<T>::normalize()
 	if (barlines.size() == 0)
 		return;
 
-	T maxi = barlines[0]->start;
+	T mini = barlines[0]->start;
+	T maxi = barlines[0]->end();
 	for (size_t i = 1; i < barlines.size(); ++i)
 	{
+		if (barlines[i]->start < mini)
+			mini = barlines[i]->start;
 		if (barlines[i]->end() > maxi)
 			maxi = barlines[i]->end();
 	}
 
 	for (size_t i = 0; i < barlines.size(); ++i)
 	{
-		barlines[i]->start /= maxi;
-		barlines[i]->len /= maxi;
+		barlines[i]->start = (barlines[i]->start - mini) / (maxi - mini);
+		barlines[i]->len = (barlines[i]->len - mini) / (maxi - mini);
 	}
 }
 
