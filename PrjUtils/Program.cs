@@ -8,6 +8,8 @@ public class classInfo
     public string name;
     public string tempType;
 
+    public Destruct destructor = null;
+    public List<Constr> consrts = new List<Constr>();
     public List<func> funcs = new List<func>();
     public List<argInfo> members = new List<argInfo>();
 }
@@ -25,15 +27,29 @@ public class argInfo
     public string defaulValue;
 }
 
-public class func
+
+public class baseFunc
+{
+    public string tempType = "";
+    public bool isOverride;
+    public List<argInfo> args = new List<argInfo>();
+}
+
+public class Constr: baseFunc
+{ }
+
+public class Destruct : baseFunc
+{
+    public bool isVirual;
+}
+
+
+public class func : baseFunc
 {
     public int retType;
     public string name;
-    public string tempType = "";
     public bool isConst;
     public bool isVirual;
-    public bool isOverride;
-    public List<argInfo> args = new List<argInfo>();
 }
 
 
@@ -90,8 +106,8 @@ public class parcInfo
             }
             ++startnd;
         }
-
-        return line[0..(getPozSt(startnd) - 1)];
+        // skip [const]
+        return line[(isSign(0, ps._const)?getPozSt(1):0)..(getPozSt(startnd) - 1)];
     }
 
     public int getLen()
@@ -127,11 +143,13 @@ public enum ps : sbyte
     // "my parser;"         = {word, word, je}          != {[word, _class,] word, je} = not ok
     
     // system symbols (can be only in the base str)
-    _if = 0, // {_if, n, m} = if next n symbls are exists, the next m symbols must be in the stmt else skip m symbls
-    _ifel = 1, // {_if, n, m, e} = if next n symbls are exists, the next m symbols must be in the stmt else 'e' symbls must be in the stmt
-    repitable = 2, // {_if, n} = the next n symbols can be repited some times
-    skip, // skip next symbols check and return true
-    end, // end of stmt (must be in base and inpunt strs)
+    _if = 0,            // {_if, n, m} = if next n symbls are exists, the next m symbols must be in the stmt else skip m symbls
+    _ifel = 1,          // {_ifel, n, m, e} = if next n symbls are exists, the next m symbols must be in the stmt else 'e' symbls must be in the stmt
+    repitable = 2,      // {repitable, n} = the next n symbols can be repited some times
+    skipUntell = 3,     // {skipUntill, OP} = skip all words until the OP wont be found
+    skipUntellSafe = 4,     // {skipUntillSafe, OP1, OP2} = e.g.{skipUntillSafe, '(', ')' } //  s + (3+4)) = OK (Last skob) // s + (3+4) = FAIL
+    skip,               // skip next symbols check and return true
+    end,                // end of stmt (must be in base and inpunt strs)
 
     // the actiual symbols
     word = 10, // any work
@@ -191,7 +209,7 @@ public class parser
             if (inpInd >= inputSig.Length)
                 return false;
 
-            if (baseSig[baseInd] == 0)
+            if (baseSig[baseInd] == ps.op)
             {
                 savePoint.Push((baseInd + 2, inpInd));
                 ++baseInd;
@@ -232,7 +250,7 @@ public class parser
         public void addOp(bool op)
         {
             if (op)
-                sign.Add(0);
+                sign.Add(ps.op);
         }
         public void addVirtual(bool op = false)
         {
@@ -283,7 +301,7 @@ public class parser
         }
         public static ps[] getAbstructFuncpc()
         {
-            //[virual] typePart  v(...) [const]  = 0;
+            //[virual] [const] void [<T>] [*]  v(...) [const] [override] [;] = 0;
 
             sigconstr cont = new sigconstr();
             cont.addVirtual(true);
@@ -298,7 +316,7 @@ public class parser
         }
         public static ps[] getFuncpc()
         {
-            //[virual] typePart  v(...) [const] [override] [;] 
+            // [virual] [const] void [<T>] [*]  v(...) [const] [override] [;]
 
             sigconstr cont = new sigconstr();
             cont.addVirtual(true);
@@ -306,8 +324,36 @@ public class parser
             cont.add(ps.word);
             cont.add(ps.skob_word);
             cont.addConst(true);
-            cont.add(0);
+            cont.add(ps.op);
             cont.add(ps._override);
+            cont.addje(true);
+            cont.addEnd();
+            return cont.sign.ToArray();
+        }
+
+        public static ps[] getConstrpc()
+        {
+            // v(...) [;] 
+
+            sigconstr cont = new sigconstr();
+            cont.add(ps.word);
+            cont.add(ps.skob_word);
+            cont.addje(true);
+            cont.addEnd();
+            return cont.sign.ToArray();
+        }
+        public static ps[] getDestructor()
+        {
+            // [virtual] v(...) [=] [0] [;] 
+
+            sigconstr cont = new sigconstr();
+            cont.addVirtual(true);
+            cont.add(ps.word);
+            cont.add(ps.skob_word);
+            cont.add(ps.op);
+            cont.add(ps.ravn);
+            cont.add(ps.op);
+            cont.add(ps.zero);
             cont.addje(true);
             cont.addEnd();
             return cont.sign.ToArray();
@@ -335,6 +381,68 @@ public class parser
         }
     }
 
+    public bool isConstr()
+    {
+        // v(...) [;]
+        ps[] funcFig = sigconstr.getConstrpc();
+        return compireSigs(funcFig, lineInfo.sign);
+    }
+
+    public bool isDestructor()
+    {
+        // [virual] v(...) [=][0][;]
+        ps[] funcFig = sigconstr.getDestructor();
+        return compireSigs(funcFig, lineInfo.sign);
+    }
+    public Constr getConstr(string className)
+    {
+        if (!isConstr()) return null;
+        Debug.Assert(lineInfo.isSign(0, ps.word));
+        string clname = lineInfo.getSub(0);
+
+        if (className != clname)
+            return null;
+
+        Constr funcInfo = new Constr();
+        Debug.Assert(lineInfo.isSign(1, ps.skob_word));
+
+        string temp = lineInfo.getSub(1);
+        temp = temp[1..(temp.Length - 1)];
+
+        if (processArgs(temp, funcInfo))
+        {
+            return funcInfo;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+
+    public Destruct getDestruct(string className)
+    {
+        if (!isDestructor()) return null;
+        Destruct funcInfo = new Destruct();
+
+
+        int curInd = 0;
+        if (lineInfo.isSign(curInd, ps.virt))
+        {
+            funcInfo.isVirual = true;
+            ++curInd;
+        }
+
+        Debug.Assert(lineInfo.isSign(curInd, ps.word));
+
+        string clDestr = lineInfo.getSub(curInd++);
+
+        if (clDestr[0] != '~' || clDestr[1..] != className)
+            return null;
+
+        Debug.Assert(lineInfo.isSign(curInd, ps.skob_word));
+        return funcInfo;
+    }
 
     public bool isFunc()
     {
@@ -356,7 +464,6 @@ public class parser
         }
 
         string type = lineInfo.getFullType(ref curInd);
-
         funcInfo.retType = Program.getTypeId(type);
 
         Debug.Assert(lineInfo.isSign(curInd, ps.word));
@@ -368,6 +475,20 @@ public class parser
         temp = temp[..(temp.Length - 1)];
         string[] typeargs = temp.Split(',');
 
+        if (processArgs(temp, funcInfo))
+        {
+            return funcInfo;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    bool processArgs(string temp, baseFunc funcInfo)
+    {
+        string[] typeargs = temp.Split(',');
+
         parser argparc = new parser();
         bool tem = false;
         foreach (var _tyarg in typeargs)
@@ -376,8 +497,8 @@ public class parser
             if (tyarg.Length == 0)
                 continue;
 
-            if (tyarg == "bc::CompireStrategy& strat")
-                Console.WriteLine();
+            //if (tyarg == "bc::CompireStrategy& strat")
+            //    Console.WriteLine();
             if (tem)
             {
                 int temEnd = tyarg.IndexOf("*/");
@@ -389,14 +510,12 @@ public class parser
 
             argInfo inf = argparc.getArg();
             if (inf == null)
-                return null;
+                return false;
             Debug.Assert(inf != null);
             funcInfo.args.Add(inf);
-
         }
-        return funcInfo;
+        return true;
     }
-
 
     public bool isAbstructFunc()
     {
@@ -766,7 +885,7 @@ public class parser
             return a.Length != 0;
         }
 
-        static bool check(func a)
+        static bool check(baseFunc a)
         {
             return a != null;
         }
@@ -791,7 +910,7 @@ public class parser
 
             parser parser = new parser();
             int skobs = 0;
-            int funSkob = -1, classSkob = -1;
+            int funSkob = -1, skobsCountWhereClassStarts = -1;
             bool multiComm = false;
 
 
@@ -803,7 +922,7 @@ public class parser
                 while (curTe != ps.end)
                 {
                     if (curTe == neededSkob)
-                        initOfFnd = skobs + 1;
+                        initOfFnd = skobs;
                     if (curTe == ps.fig_skob_op)
                         skobs++;
                     else if (curTe == ps.fig_skob_cl)
@@ -813,11 +932,11 @@ public class parser
 
                 if (skobs == sd)
                     return;
-                if (classSkob != -1)
+                if (skobsCountWhereClassStarts != -1)
                 {
-                    if (skobs < classSkob)
+                    if (skobs < skobsCountWhereClassStarts)
                     {
-                        classSkob = -1;
+                        skobsCountWhereClassStarts = -1;
                         classInfo = null;
                     }
                     // !!!!!!!!!!!!!!!!!!
@@ -833,6 +952,7 @@ public class parser
             {
                 ps curTe = parser.lineInfo.getSign(0);
                 int inde = 1;
+                int startCount = skobs;
                 while (curTe != ps.end)
                 {
                     if (curTe == ps.fig_skob_op)
@@ -841,12 +961,14 @@ public class parser
                         skobs--;
                     curTe = parser.lineInfo.getSign(inde++);
                 }
+                if (startCount <= skobs)
+                    return;
 
-                if (classSkob != -1)
+                if (skobsCountWhereClassStarts != -1)
                 {
-                    if (skobs < classSkob)
+                    if (skobs < skobsCountWhereClassStarts)
                     {
-                        classSkob = -1;
+                        skobsCountWhereClassStarts = -1;
                         classInfo = null;
                     }
                     // !!!!!!!!!!!!!!!!!!
@@ -881,7 +1003,7 @@ public class parser
                     line += sr.ReadLine().Trim();
                 }
 
-                if (line == "class EXPORT Baritem : public Barbase<T>")
+                if (line.Contains("delete[] hist;"))
                     Console.WriteLine();
                 if (!parser.getSignature(line, out multiComm))
                     continue;
@@ -922,8 +1044,10 @@ public class parser
                         classInfo.tempType = templ;
                         templ = "";
                     }
-
-                    checkSkobsFnd(ps.pclass, ref classSkob);
+                    //skobsCountWhereClassStarts = 0;
+                    skobsCountWhereClassStarts = skobs + 1;
+                    checkSkobs();
+                    //checkSkobsFnd(ps.pclass, ref skobsCountWhereClassStarts);
                     continue;
                 }
 
@@ -934,20 +1058,49 @@ public class parser
                 }
                 checkZone(line, ref avlZone);
 
+
                 if (check(classInfo))
                 {
 
-                    if (avlZone && (funSkob == -1))
+                    if (avlZone && (funSkob == -1) && skobs== skobsCountWhereClassStarts)
                     {
                         var membr = parser.getMember();
                         if (check(membr))
                         {
                             int mem = 0;
                             classInfo.members.Add(membr);
-                            checkSkobs();
 
+                            checkSkobs();
                             continue;
                         }
+
+                        var conct = parser.getConstr(classInfo.name);
+                        if (check(conct))
+                        {
+                            if (!parser.lineInfo.contains(ps.je))
+                            {
+                                // Есть тело
+                                funSkob = skobs + 1;
+                            }
+                            classInfo.consrts.Add(conct);
+                            checkSkobs();
+                            continue;
+                        }
+
+                        var destr = parser.getDestruct(classInfo.name);
+                        if (check(destr))
+                        {
+                            if (!parser.lineInfo.contains(ps.je))
+                            {
+                                // Есть тело
+                                funSkob = skobs + 1;
+                            }
+                            Debug.Assert(classInfo.destructor==null);
+                            classInfo.destructor = destr;
+                            checkSkobs();
+                            continue;
+                        }
+
 
                         //"bc::BarRoot<T>* getRootNode()"
                         var func = parser.getFunc();
@@ -960,10 +1113,12 @@ public class parser
                             }
 
                             classInfo.funcs.Add(func);
-                            if (parser.lineInfo.contains(ps.je))
-                                checkSkobs();
-                            else
-                                checkSkobsFnd(ps.skob_word, ref funSkob);
+                            if (!parser.lineInfo.contains(ps.je))
+                            {
+                                // Есть тело
+                                funSkob = skobs+1;
+                            }
+                            checkSkobs();
                             continue;
                         }
                     }
@@ -1068,7 +1223,10 @@ public class parser
                 string filepath = Path.Combine(pathToSource, filename);
                 analysFile(filepath);
             }
+        }
 
+        void prointCppClasses()
+        {
             foreach (var cla in classes)
             {
                 if (cla.tempType?.Length != 0)
@@ -1086,6 +1244,37 @@ public class parser
                         ret += " = " + info.defaulValue;
                     return ret;
                 }
+
+
+                Console.WriteLine("\t// Constructors:");
+
+                foreach (var fun in cla.consrts)
+                {
+                    if (fun.tempType.Length != 0)
+                        Console.WriteLine("\ttemplate<class {0}>", fun.tempType);
+
+                    string ret = "\t";
+                    ret += " " + cla.name + "(";
+
+                    foreach (var arg in fun.args)
+                        ret += getArg(arg) + ", ";
+
+                    if (fun.args.Count != 0)
+                        ret = ret[..(ret.Length - 2)];
+                    ret += ");";
+
+                    Console.WriteLine(ret);
+                    Console.WriteLine("");
+                }
+
+                Console.WriteLine("\t// Desructor:");
+
+                if (cla.destructor != null)
+                {
+                    Console.WriteLine("\t{0}~{1}();",(cla.destructor.isVirual?"virtual ": ""), cla.name);
+                }
+                Console.WriteLine("");
+
 
                 Console.WriteLine("\t// Members:");
 
@@ -1140,7 +1329,6 @@ public class parser
                 Console.WriteLine("");
 
             }
-            Console.WriteLine("Hello World!");
         }
     }
 }
