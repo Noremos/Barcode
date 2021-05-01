@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 public class classInfo
 {
@@ -35,7 +36,7 @@ public class baseFunc
     public List<argInfo> args = new List<argInfo>();
 }
 
-public class Constr: baseFunc
+public class Constr : baseFunc
 { }
 
 public class Destruct : baseFunc
@@ -107,7 +108,7 @@ public class parcInfo
             ++startnd;
         }
         // skip [const]
-        return line[(isSign(0, ps._const)?getPozSt(1):0)..(getPozSt(startnd) - 1)];
+        return line[(isSign(0, ps._const) ? getPozSt(1) : 0)..(getPozSt(startnd) - 1)];
     }
 
     public int getLen()
@@ -136,12 +137,12 @@ public class parcInfo
 public enum ps : sbyte
 {
     op = -1, // -n: next n symb is optional but only if there is actily this n symbols exsists
-    // for example for smt {-2, word, _class, word, je};
+             // for example for smt {-2, word, _class, word, je};
 
     // "my class parser;"   = {word, _class, word, je}  =  {[word, _class,] word, je} = ok
     // "parser;"            = {word, je}                =  {[word, _class,] word, je} = ok
     // "my parser;"         = {word, word, je}          != {[word, _class,] word, je} = not ok
-    
+
     // system symbols (can be only in the base str)
     _if = 0,            // {_if, n, m} = if next n symbls are exists, the next m symbols must be in the stmt else skip m symbls
     _ifel = 1,          // {_ifel, n, m, e} = if next n symbls are exists, the next m symbols must be in the stmt else 'e' symbls must be in the stmt
@@ -261,7 +262,7 @@ public class parser
         public void addType()
         {
             //[const] void <T> [const][*] [const]
-            ps[] typePart = new ps[] {ps.op, ps._const, ps.word,ps.op, ps.tr_skob_word, ps.op, ps._const, ps.op, ps._ref, ps.op, ps._const };
+            ps[] typePart = new ps[] { ps.op, ps._const, ps.word, ps.op, ps.tr_skob_word, ps.op, ps._const, ps.op, ps._ref, ps.op, ps._const };
             sign.AddRange(typePart);
         }
 
@@ -1062,7 +1063,7 @@ public class parser
                 if (check(classInfo))
                 {
 
-                    if (avlZone && (funSkob == -1) && skobs== skobsCountWhereClassStarts)
+                    if (avlZone && (funSkob == -1) && skobs == skobsCountWhereClassStarts)
                     {
                         var membr = parser.getMember();
                         if (check(membr))
@@ -1095,7 +1096,7 @@ public class parser
                                 // Есть тело
                                 funSkob = skobs + 1;
                             }
-                            Debug.Assert(classInfo.destructor==null);
+                            Debug.Assert(classInfo.destructor == null);
                             classInfo.destructor = destr;
                             checkSkobs();
                             continue;
@@ -1116,7 +1117,7 @@ public class parser
                             if (!parser.lineInfo.contains(ps.je))
                             {
                                 // Есть тело
-                                funSkob = skobs+1;
+                                funSkob = skobs + 1;
                             }
                             checkSkobs();
                             continue;
@@ -1223,9 +1224,170 @@ public class parser
                 string filepath = Path.Combine(pathToSource, filename);
                 analysFile(filepath);
             }
+
+            printCClasses();
         }
 
-        void prointCppClasses()
+        static string getArg(argInfo info)
+        {
+            string ret = getTypeFromKey(info.type) + " " + info.name;
+            if (info.defaulValue.Length != 0)
+                ret += " = " + info.defaulValue;
+            return ret;
+        }
+
+        const int maxSize = 100;
+        string getDict(string type)
+        {
+            return type + "* dictFor" + type + "[" + maxSize.ToString() + "];int last" + type + "=0;";
+        }
+
+        static void printCClasses()
+        {
+            string getFirstDict = @"
+
+void getFirstNotNull(void* dict, int maxSize)
+{
+    for(int i=0;i<maxSize;++i)
+        if (dict[i]==0)
+            return i;
+}
+
+void deleteFromDict(void* dict, int handler)
+{
+    dict[handler] = 0;
+}
+";
+
+            // TEPLATE
+            string[] templates = { "uchar", "float", "short" };
+            StringBuilder enumBuilder = new StringBuilder("enum bartype { ");
+            foreach (var t in templates)
+            {
+                enumBuilder.Append(t + ", ");
+            }
+            enumBuilder[enumBuilder.Length - 2] = '}';
+            enumBuilder[enumBuilder.Length - 1] = ';';
+
+
+            string argClassTmp = "bartype classType";
+            string argFuncTmp = "bartype funcType";
+
+            string dicts = "";
+            void addClassToDict(string name, string? temlate = "")
+            {
+                if (temlate.Length != 0)
+                {
+                    foreach (var t in templates)
+                    {
+                        dicts += name + "<" + t + "> * " + name + "_" + t + "_dict[100];\n";
+                    }
+                }
+                else
+                    dicts += name + "* " + name + "dict[100];\n";
+            }
+            string buildConstructorWrapper(string type, string fullArgs, string args, string? temlate = "")
+            {
+                string prefix = "bar_";
+                string impl = "\tint create_" + type + temlate  + fullArgs + "\n\t{\n";
+                addClassToDict(type, temlate);
+                if (temlate.Length != 0)
+                {
+                    foreach (var t in templates)
+                    {
+                        string dictName = type + "_" + t + "_dict";
+                        impl +=
+                            $"\n\t\tif (classType== bartype::{prefix + t})" +
+                             "\n\t\t{" +
+                            $"\n\t\t\tint handler = getFirstNotNull({dictName},100);" +
+                            $"\n\t\t\t{dictName}[handler] = new {type}<{t}>{args};" +
+                            $"\n\t\t\treturn handler;" +
+                             "\n\t\t}\n";
+                    }
+                    impl += "\t}\n";
+                    //        int handled = getFirstNotNull(CLASSdict,100);
+                }
+                else
+                {
+                    string dictName = type + "_dict";
+
+                    impl += "\t{" +
+                            $"\n\t\tint handler = getFirstNotNull({dictName},100);" +
+                            $"\n\t\t{dictName} = new {type}{args};" +
+                            $"\n\t\treturn handler;" +
+                             "\n\t}\n";
+                }
+
+                return impl;
+            }
+            //            @"
+            //if (type==bartype::bar_uchar)
+            //    {
+            //        int handled = getFirstNotNull(CLASSdict,100);
+            //        CLASSdict[handler] = new CLASS<uchar>(...);
+            //        return handler;
+            //}
+            //";
+            string[] voider = { "" };
+
+            Console.WriteLine("extern \"C\" \n{");
+
+            foreach (var cla in classes)
+            {
+                string[] inpls = null;
+
+                Console.WriteLine("// CLASS {0}", cla.name);
+
+
+                Console.WriteLine("\t// Constructors:");
+                foreach (var fun in cla.consrts)
+                {
+
+                    string ret = "";
+                    string realAgrs = "(";
+
+                    int added = 0;
+                    if (cla.tempType?.Length != 0)
+                    {
+                        ret += argClassTmp + ", ";
+                        ++added;
+                    }
+                    if (fun.tempType?.Length != 0)
+                    {
+                        ret += argFuncTmp + ", ";
+                        ++added;
+                    }
+
+                    foreach (var arg in fun.args)
+                    {
+                        ret += getArg(arg) + ", ";
+                        realAgrs += getArg(arg) + ", ";
+
+                        ++added;
+                    }
+                    if (added != 0)
+                        ret = ret[..(ret.Length - 2)];
+                    ret += ")";
+
+                    if (fun.args.Count != 0)
+                        realAgrs = realAgrs[..(realAgrs.Length - 2)];
+                    realAgrs += ")";
+
+
+                    Console.WriteLine(buildConstructorWrapper(cla.name, ret, realAgrs, cla.tempType));
+                    Console.WriteLine("");
+                }
+
+
+                Console.WriteLine("");
+                Console.WriteLine("");
+            }
+            Console.WriteLine(getFirstDict);
+            Console.WriteLine(dicts);
+            Console.WriteLine("}");
+
+        }
+        static void printCppClasses()
         {
             foreach (var cla in classes)
             {
@@ -1271,7 +1433,7 @@ public class parser
 
                 if (cla.destructor != null)
                 {
-                    Console.WriteLine("\t{0}~{1}();",(cla.destructor.isVirual?"virtual ": ""), cla.name);
+                    Console.WriteLine("\t{0}~{1}();", (cla.destructor.isVirual ? "virtual " : ""), cla.name);
                 }
                 Console.WriteLine("");
 
