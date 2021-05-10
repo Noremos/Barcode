@@ -157,6 +157,7 @@ namespace bc
 
 		void sortByLen();
 		void sortBySize();
+		void sortByStart();
 	};
 
 	//template<size_t N>

@@ -827,7 +827,7 @@ void BarcodeCreator<T>::reverseCom()
 		point p = getPoint(i);
 		auto& ccod = workingImg->get(p.x, p.y);// начало конкретно в этом пикселе
 
-		if (settings.createBinayMasks)
+		if (settings.createBinayMasks && !skipAddPointsToParrent)
 		{
 			// надо добавить заничя каому потомку
 			COMPP prev = incl;
@@ -1229,11 +1229,11 @@ template<>
 Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int hei, float nullVal)
 {
 	settings.createBinayMasks = true;
-	settings.createGraph = false;
+	settings.createGraph = true;
 	settings.returnType = ReturnType::barcode2d;
-
+	skipAddPointsToParrent = true;
 	//[y * _wid + x]
-	img[hei * wid - 1] = 9999;//
+	img[hei * wid - 1] = 9999.f;//
 	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
 
 	if (nullVal>-999)

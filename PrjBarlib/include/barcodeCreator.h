@@ -33,6 +33,7 @@ namespace bc {
 #endif
 
 		BarConstructor<T> settings;
+		bool skipAddPointsToParrent = false;
 
 		Include<T>* included = nullptr;
 		const DatagridProvider<T>* workingImg = nullptr;

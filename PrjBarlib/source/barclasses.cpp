@@ -382,6 +382,15 @@ void bc::Baritem<T>::sortBySize()
 }
 
 template<class T>
+void bc::Baritem<T>::sortByStart()
+{
+	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
+		{
+			return a->start > b->start;
+		});
+}
+
+template<class T>
 bc::Baritem<T>::~Baritem()
 {
 	for (auto* bline : barlines)
