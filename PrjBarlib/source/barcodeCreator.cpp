@@ -1242,6 +1242,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 		{
 			workingImg->getLiner(i) = -9999;
 		}
+		nullVal = -9999;
 	}
 //	float maxs, mins;
 //	workingImg->maxAndMin(mins, maxs);
