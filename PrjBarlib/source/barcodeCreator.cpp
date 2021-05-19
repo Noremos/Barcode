@@ -1262,10 +1262,18 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 #endif
 	}
 
+
 	Barcontainer<float>* item = new Barcontainer<float>();
 
 	addItemToCont(item);
 	clearIncluded();
+
+	delete workingImg;
+	workingImg = nullptr;
+
+	delete[] sortedArr;
+	sortedArr = nullptr;
+
 	return item;
 }
 
