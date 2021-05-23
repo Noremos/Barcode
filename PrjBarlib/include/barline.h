@@ -215,7 +215,7 @@ namespace bc
 		float compire3dbars(bc::barline<T>* inc, bc::CompireStrategy cmp)
 		{
 			float t = 0, x2 = 0, y2 = 0;
-			int n = MIN(bar3d->size(), inc->bar3d->size());
+			size_t n = MIN(bar3d->size(), inc->bar3d->size());
 
 			if (cmp == bc::CompireStrategy::compire3dHist)
 			{
