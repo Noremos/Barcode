@@ -639,7 +639,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Install\Python37\include;D:\MyA\Libraries\sources\boost_1_74_0;$(SolutionDir)\PrjBarlib\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Install\Python38\include;D:\MyA\Libraries\sources\boost_1_74_0;$(SolutionDir)\PrjBarlib\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_PYD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BrowseInformation>true</BrowseInformation>
@@ -649,7 +649,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>D:\MyA\Libraries\sources\boost_1_74_0\stage\lib;D:\MyA\Libraries\sources\boost_1_74_0\libs;D:\MyA\Libraries\Libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>python37.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>python38.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>

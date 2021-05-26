@@ -742,7 +742,7 @@ void BarcodeCreator<T>::addItemToCont(Barcontainer<T>* container)
 {
 	if (container != nullptr)
 	{
-		Baritem<T>* lines = new Baritem<T>();
+		Baritem<T>* lines = new Baritem<T>(workingImg->wid());
 
 		switch (settings.returnType)
 		{
@@ -882,7 +882,7 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 	assert(n == 2 || n == 3);
 
 	// якорная линия
-	auto* rootNode = new BarRoot<T>(0, 0);
+	auto* rootNode = new BarRoot<T>(0, 0, workingImg->wid(), nullptr, 0);
 
 	for (COMPP c : components)
 	{
@@ -901,7 +901,7 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		size_t size = settings.createBinayMasks ? c->getTotalSize() : 0;
 
 		auto* bar3d = (n == 3) ? c->bar3d : nullptr;
-		barline<T>* line = c->resline = new barline<T>(c->start, len, bar3d, size, workingImg->wid());
+		barline<T>* line = c->resline = new barline<T>(c->start, len, workingImg->wid(), bar3d, size);
 
 		if (c->parent == nullptr && settings.createGraph)
 		{

@@ -42,11 +42,11 @@ namespace bc
 		}
 		int right()
 		{
-			return x+width;
+			return x + width;
 		}
 		int botton()
 		{
-			return y+height;
+			return y + height;
 		}
 
 		int area()
@@ -99,14 +99,14 @@ namespace bc
 		}
 	};
 
-//	static bool operator > (BarVec3b c1, BarVec3b c2)
-//	{
-//		return c1.sum() > c2.sum();
-//	}
-//	static bool operator < (BarVec3b c1, BarVec3b c2)
-//	{
-//		return c1.sum() < c2.sum();
-//	}
+	//	static bool operator > (BarVec3b c1, BarVec3b c2)
+	//	{
+	//		return c1.sum() > c2.sum();
+	//	}
+	//	static bool operator < (BarVec3b c1, BarVec3b c2)
+	//	{
+	//		return c1.sum() < c2.sum();
+	//	}
 
 	struct barstruct
 	{
@@ -315,6 +315,24 @@ namespace bc
 		}
 	};
 
+
+	template<class T>
+	struct pybarvalue
+	{
+		T value;
+		int x, y;
+
+		pybarvalue()
+		{}
+
+		pybarvalue(int x, int y, T value)
+		{
+			this->x = x;
+			this->y = y;
+			this->value = value;
+		}
+	};
+
 	template<class T>
 	struct barvalue
 	{
@@ -367,18 +385,23 @@ namespace bc
 			int oldX = getX(wid);
 			index = y * wid + oldX;
 		}
+
+		pybarvalue<T> getPyValue(int wid)
+		{
+			return pybarvalue<T>(getX(wid), getY(wid), value);
+		}
 	};
 
 	template<class T>
 	using barvector = std::vector<barvalue<T>>;
 
 	template<class T>
-	using barcounter = std::vector<bar3dvalue<T>> ;
-	
+	using barcounter = std::vector<bar3dvalue<T>>;
+
 	//**********************************************
 
-INIT_TEMPLATE_STRUCT(CachedValue)
-INIT_TEMPLATE_STRUCT(BarConstructor)
+	INIT_TEMPLATE_STRUCT(CachedValue)
+		INIT_TEMPLATE_STRUCT(BarConstructor)
 }
 
 #endif // BARCODE_H

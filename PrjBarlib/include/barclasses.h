@@ -31,9 +31,9 @@ namespace bc
 
 	private:
 		bc::BarRoot<T>* rootNode = nullptr;
-
+		int wid;
 	public:
-		Baritem();
+		Baritem(int wid = 0);
 		Baritem(const Baritem<T>& obj);
 		//    cv::Mat binmap;
 		void add(T st, T len);

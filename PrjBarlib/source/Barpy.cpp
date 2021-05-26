@@ -112,11 +112,10 @@ BOOST_PYTHON_MODULE(barpy)
 	//#define TN(NAME) (std::string(NAME)+"8u").c_str()
 	//#include "pytemplcalsses.h"
 
-	class_<bc::barvalue<TV>>("Matrvalue")
-		.add_property("x", &bc::barvalue<TV>::getX, &bc::barvalue<TV>::setX)
-		.add_property("y", &bc::barvalue<TV>::getY, &bc::barvalue<TV>::setY)
-		.add_property("value", make_getter(&bc::barvalue<TV>::value), make_setter(&bc::barvalue<TV>::value))
-		.def("getPoint",  &bc::barvalue<TV>::getPoint, args("width"))
+	class_<bc::pybarvalue<TV>>("Matrvalue")
+		.add_property("x", make_getter(&bc::pybarvalue<TV>::x), make_setter(&bc::pybarvalue<TV>::x))
+		.add_property("y", make_getter(&bc::pybarvalue<TV>::y), make_setter(&bc::pybarvalue<TV>::y))
+		.add_property("value", make_getter(&bc::pybarvalue<TV>::value), make_setter(&bc::pybarvalue<TV>::value))
 		//.add_property("points", make_getter(&bc::barline::matr))
 		;
 
@@ -127,7 +126,7 @@ BOOST_PYTHON_MODULE(barpy)
 		;
 
 	class_<bc::barline<TV>>("Barline")
-		.def(init<TV, TV>(args("start", "len")))
+		.def(init<TV, TV, int>(args("start", "len", "wid")))
 		.add_property("start", make_getter(&bc::barline<TV>::start), make_setter(&bc::barline<TV>::start))
 		.add_property("len", make_getter(&bc::barline<TV>::len), make_setter(&bc::barline<TV>::len))
 		.def("end", &bc::barline<TV>::end)

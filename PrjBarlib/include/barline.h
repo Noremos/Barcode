@@ -38,11 +38,12 @@ namespace bc
 	public:
 		barline()
 		{
-
+			matWid = 0;
 		}
-		barline(T _start, T _len, barcounter<T>* _barc = nullptr, size_t coordsSize = 0, int wid = 0) : start(_start), len(_len), matWid(wid) {
+		barline(T _start, T _len, int wid, barcounter<T>* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len), matWid(wid) {
 			matr.reserve(coordsSize);
 			bar3d = _barc;
+			assert(matWid != 0);
 		}
 
 		~barline()
@@ -145,7 +146,7 @@ namespace bc
 
 		barline* clone() const
 		{
-			auto temp = new barline(start, len, nullptr);
+			auto temp = new barline(start, len, matWid, nullptr);
 			if (matr.size() != 0)
 			{
 				temp->matr.insert(temp->matr.begin(), matr.begin(), matr.end());
@@ -292,13 +293,13 @@ namespace bc
 				for (size_t i = 0; i < matr.size(); i++)
 				{
 					if (childs.find(matr[i].getPoint(matWid)) == childs.end())
-						l.append(matr[i]);
+						l.append(matr[i].getPyValue(matWid));
 				}
 			}
 			else
 			{
 				for (size_t i = 0; i < matr.size(); i++)
-					l.append(matr[i]);
+					l.append(matr[i].getPyValue(matWid));
 			}
 
 			return l;

@@ -7,7 +7,10 @@ template<class T>
 bc::Barbase<T>::~Barbase() {}
 
 template<class T>
-bc::Baritem<T>::Baritem() {}
+bc::Baritem<T>::Baritem(int wid)
+{
+	this->wid = wid;
+}
 
 template<class T>
 bc::Baritem<T>::Baritem(const bc::Baritem<T>& obj)
@@ -18,7 +21,7 @@ bc::Baritem<T>::Baritem(const bc::Baritem<T>& obj)
 template<class T>
 void bc::Baritem<T>::add(T st, T len)
 {
-	barlines.push_back(new barline<T>(st, len));
+	barlines.push_back(new barline<T>(st, len, wid));
 }
 
 
@@ -74,7 +77,7 @@ template<class T>
 bc::Baritem<T>* bc::Baritem<T>::clone() const
 {
 	std::unordered_map<barline<T>*, barline<T>*> oldNew;
-	Baritem<T>* nb = new Baritem<T>();
+	Baritem<T>* nb = new Baritem<T>(wid);
 	nb->barlines.insert(nb->barlines.begin(), barlines.begin(), barlines.end());
 	bool createGraph = false;
 	if ((barlines.size() > 0 && barlines[0]->parrent != nullptr) || barlines[0]->childrens.size() > 0)
