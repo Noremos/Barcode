@@ -639,7 +639,7 @@ namespace bc {
 			return max;
 		}
 
-		virtual void maxAndMin(T& min, T& max) const
+		void maxAndMin(T& min, T& max) const override
 		{
 			if (this->length() == 0)
 				return;

@@ -43,7 +43,7 @@ void set(bc::barline<uchar>* rt, Bimg8* data)
 	for (size_t k = 0; k < matr.size(); k++)
 	{
 		auto& p = matr[k];
-		data->minus(p.point, p.value);
+		data->minus(p.getPoint(data->wid()), p.value);
 	}
 
 	for (size_t i = 0; i < rt->childrens.size(); i++)
@@ -121,7 +121,7 @@ bc::BarImg<T> restreToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T maxv
 		{
 			auto& p = matr[k];
 			//assert(start <= p.value && p.value <= end);
-			img.minus(p.point, p.value);
+			img.minus(p.getPoint(wid), p.value);
 		}
 	}
 	return img;
@@ -149,7 +149,7 @@ bc::BarImg<T> restre255ToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T m
 		{
 			auto& p = matr[k];
 			//assert(start <= p.value && p.value <= end);
-			img.add(p.point, p.value);
+			img.add(p.getPoint(wid), p.value);
 		}
 	}
 	return img;
@@ -241,7 +241,7 @@ void testf255t0(Bbase8& testimg)
 		for (size_t k = 0; k < matr.size(); k++)
 		{
 			auto& p = matr[k];
-			img.add(p.point, p.value);
+			img.add(p.getPoint(wid), p.value);
 		}
 	}
 

@@ -115,8 +115,8 @@ BOOST_PYTHON_MODULE(barpy)
 	class_<bc::barvalue<TV>>("Matrvalue")
 		.add_property("x", &bc::barvalue<TV>::getX, &bc::barvalue<TV>::setX)
 		.add_property("y", &bc::barvalue<TV>::getY, &bc::barvalue<TV>::setY)
-		.add_property("point", make_getter(&bc::barvalue<TV>::point), make_setter(&bc::barvalue<TV>::point))
 		.add_property("value", make_getter(&bc::barvalue<TV>::value), make_setter(&bc::barvalue<TV>::value))
+		.def("getPoint",  &bc::barvalue<TV>::getPoint, args("width"))
 		//.add_property("points", make_getter(&bc::barline::matr))
 		;
 
