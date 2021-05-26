@@ -68,6 +68,10 @@ namespace bc
 			}
 		}
 
+		int getWid()
+		{
+			return matWid;
+		}
 
 		//bc::Component *comp;
 		//    cv::Mat binmat;
