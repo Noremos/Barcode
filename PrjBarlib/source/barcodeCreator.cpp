@@ -901,7 +901,7 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 		size_t size = settings.createBinayMasks ? c->getTotalSize() : 0;
 
 		auto* bar3d = (n == 3) ? c->bar3d : nullptr;
-		barline<T>* line = c->resline = new barline<T>(c->start, len, bar3d, size);
+		barline<T>* line = c->resline = new barline<T>(c->start, len, bar3d, size, workingImg->wid());
 
 		if (c->parent == nullptr && settings.createGraph)
 		{

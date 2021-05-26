@@ -29,6 +29,7 @@ namespace bc
 		// Main params
 		T start;
 		T len;
+		int matWid;
 
 	private:
 		// System member
@@ -39,7 +40,7 @@ namespace bc
 		{
 
 		}
-		barline(T _start, T _len, barcounter<T>* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len) {
+		barline(T _start, T _len, barcounter<T>* _barc = nullptr, size_t coordsSize = 0, int wid = 0) : start(_start), len(_len), matWid(wid) {
 			matr.reserve(coordsSize);
 			bar3d = _barc;
 		}
@@ -84,7 +85,7 @@ namespace bc
 		{
 			matr->clear();
 			mat.forEach<T>([m = matr](uchar& pixel, const int* pos) -> void {
-				m->push_back(barvalue(bc::point(pos[0], pos[1]), pixel)); });
+				m->push_back(barvalue(pos[0], pos[1], pixel, mat.cols)); });
 		}
 		cv::Rect getCvRect()
 		{
@@ -107,32 +108,32 @@ namespace bc
 			matr.clear();
 
 			for (size_t i = 0; i < mat.getLiner(); i++)
-				matr->push_back(barvalue<T>(mat.getPointAt(i), mat.getLiner(i)));
+				matr->push_back(barvalue<T>(mat.getPointAt(i), mat.getLiner(i), mat._wid));
 		}
 
 		BarRect getBarRect()  const
 		{
 			int l, r, t, d;
-			r = l = matr[0].point.x;
-			t = d = matr[0].point.y;
+			r = l = matr[0].getX(matWid);
+			t = d = matr[0].getY(matWid);
 			for (int j = 0; j < matr.size(); ++j)
 			{
-				if (l > matr[j].point.x)
-					l = matr[j].point.x;
-				if (r < matr[j].point.x)
-					r = matr[j].point.x;
+				if (l > matr[j].getX(matWid))
+					l = matr[j].getX(matWid);
+				if (r < matr[j].getX(matWid))
+					r = matr[j].getX(matWid);
 
-				if (t > matr[j].point.y)
-					t = matr[j].point.y;
-				if (d < matr[j].point.y)
-					d = matr[j].point.y;
+				if (t > matr[j].getY(matWid))
+					t = matr[j].getY(matWid);
+				if (d < matr[j].getY(matWid))
+					d = matr[j].getY(matWid);
 			}
 			return BarRect(l, t, r - l + 1, d - t + 1);
 		}
 
 		void addCoord(const point& first, T bright)
 		{
-			matr.push_back(barvalue<T>(first, bright));
+			matr.push_back(barvalue<T>(first, bright, matWid));
 		}
 
 		//    barline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
@@ -190,7 +191,7 @@ namespace bc
 			{
 				for (barvalue<T>& val : chil->matr)
 				{
-					childs.insert(std::pair< bc::point, bool>(val.point, true));
+					childs.insert(std::pair< bc::point, bool>(val.getPoint(matWid), true));
 				}
 			}
 		}
@@ -286,7 +287,7 @@ namespace bc
 
 				for (size_t i = 0; i < matr.size(); i++)
 				{
-					if (childs.find(matr[i].point) == childs.end())
+					if (childs.find(matr[i].getPoint(matWid)) == childs.end())
 						l.append(matr[i]);
 				}
 			}
@@ -322,16 +323,16 @@ namespace bc
 
 				for (auto iter = matr.begin(); iter != matr.end(); ++iter)
 				{
-					if (childs.find(iter->point) == childs.end())
-						pydict[iter->point] = iter->value;
+					if (childs.find(iter->getPoint(matWid)) == childs.end())
+						pydict[iter->getPoint(matWid)] = iter->value;
 				}
 			}
 			else
 			{
 				for (auto iter = matr.begin(); iter != matr.end(); ++iter)
 				{
-					if (childs.find(iter->point) == childs.end())
-						pydict[iter->point] = iter->value;
+					if (childs.find(iter->getPoint(matWid)) == childs.end())
+						pydict[iter->getPoint(matWid)] = iter->value;
 				}
 			}
 			return pydict;

@@ -318,34 +318,54 @@ namespace bc
 	template<class T>
 	struct barvalue
 	{
-		bc::point point;
+		int index;
 		T value;
 
-		barvalue(bc::point point, T value)
+		barvalue(int x, int y, T value, int wid)
 		{
-			this->point = point;
+			index = y * wid + x;
+			this->value = value;
+		}
+
+		barvalue(bc::point point, T value, int wid)
+		{
+			index = point.y * wid + point.x;
 			this->value = value;
 		}
 
 		barvalue()
 		{ }
 
-		int getX() const
+		bc::point getPoint(int wid)
 		{
-			return point.x;
-		}
-		void setX(int x)
-		{
-			point.x = x;
+			return std::move(bc::point(getX(wid), getY(wid)));
 		}
 
-		int getY() const
+		int getIndex()
 		{
-			return point.y;
+			return index;
 		}
-		void setY(int y)
+
+		int getX(int wid) const
 		{
-			point.y = y;
+			return index % wid;
+		}
+
+		void setX(int x, int wid)
+		{
+			int oldY = getY(wid);
+			index = oldY * wid + x;
+		}
+
+		int getY(int wid) const
+		{
+			return index / wid;
+		}
+
+		void setY(int y, int wid)
+		{
+			int oldX = getX(wid);
+			index = y * wid + oldX;
 		}
 	};
 

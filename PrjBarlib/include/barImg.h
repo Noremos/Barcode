@@ -639,6 +639,21 @@ namespace bc {
 			return max;
 		}
 
+		void maxAndMin(T& min, T& max) const override
+		{
+			if (this->length() == 0)
+				return;
+
+			for (size_t i = 1; i < this->length(); i++)
+			{
+				T t = this->getLiner(i);
+				if (t > max)
+					max = t;
+				if (t < min)
+					min = t;
+			}
+		}
+
 		size_t typeSize() const 
 		{
 			return mat.get_dtype().get_itemsize();
