@@ -351,6 +351,12 @@ namespace bc
 			this->value = value;
 		}
 
+		barvalue(int index, T value)
+		{
+			this->index = index;
+			this->value = value;
+		}
+
 		barvalue()
 		{ }
 

@@ -98,15 +98,15 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 		COMPP newOne = new Component<T>(this, true);
 		main->setParrent(newOne);
 		second->setParrent(newOne);
-		main->kill();
-		second->kill();
+		//main->kill();
+		//second->kill();
 		return newOne;
 	}
 	else
 	{
 		// ***************************************************
 		//if (main->coords->size() < second->coords->size()) //свапаем, если у первого меньше элементов. Нужно для производиельности
-		if (main->start > second->start)
+		if (main->getStart() > second->getStart())
 		{
 			COMPP temp = main;
 			main = second;
@@ -114,21 +114,34 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 		}
 		//	if (second->coords->size()<100)
 		{
-			second->kill();
-			if (second->len() == 0)
+			//second->kill();
+			if (second->getStart() == curbright)
 			{
-				for (size_t rind = second->startIndex; rind < curindex; ++rind)
+#ifdef POINTS_ARE_AVALIBLE
+				for (auto& val : second->resline->matr)
+				{
+					assert(workingImg->get(val.getX(wid), val.getY(wid)) == curbright);
+					assert(included[val.getIndex()] == second);
+
+					main->add(val.getPoint(wid));
+				}
+#else
+
+				for (size_t rind = second->startIndex; rind <= curindex; ++rind)
 				{
 					point& p = sortedArr[rind];
 					assert(workingImg->get(p.x, p.y) == curbright);
-					if(included[rind] == second)
+					if (included[GETPOFF(p)] == second)
 					{
 						// Перебираем предыдущие элементы
-						included[rind] = main;
 						main->add(p);
 					}
 				}
-//				delete second;
+				main->startIndex = MIN(second->startIndex, main->startIndex);
+#endif // POINTS_ARE_AVALIBLE
+				delete second->resline;
+				second->resline = nullptr;
+
 				return main;
 			}
 			else
@@ -156,6 +169,8 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 	for (int i = 0; i < 8; ++i)
 	{
 		point curPoint(curpix + poss[i]);
+		if (curPoint.x == 325 && curPoint.y == 20)
+			printf("");
 		connected = getPorogComp(curPoint);
 		if (connected != nullptr)//существует ли ребро вокруг
 		{
@@ -163,7 +178,7 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 			{
 				first = connected;
 				// if len more then maxlen, kill the component
-				if (curbright - first->start > settings.maxLen.getOrDefault(0))
+				if (curbright - first->getStart() > settings.maxLen.getOrDefault(0))
 				{
 					//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
 					if (settings.killOnMaxLen)
@@ -199,10 +214,6 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 //********************************************************************************
 
 
-template<class T>
-int BarcodeCreator<T>::GETPOFF(const point& p) const {
-	return wid * p.y + p.x;
-}
 
 
 template<class T>
@@ -263,7 +274,8 @@ COMPP BarcodeCreator<T>::getPorogComp(const point& p)
 	auto* itr = included[off];
 	if (itr && GETDIFF(curbright, workingImg->get(p.x, p.y)))
 	{
-		return itr->getMaxAliveParrent();
+		COMPP val = itr->getMaxParrent();
+		return (val != nullptr && val->isAlive() ? val : nullptr);
 	}
 	else
 		return nullptr;
@@ -564,7 +576,7 @@ inline point* BarcodeCreator<T>::sortPixels(bc::ProcType type)
 	point* data = reinterpret_cast<bc::point*>(datatemp);//256
 
 	//point * data = new point[total];
-	
+
 	for (size_t i = 0; i < total; ++i)//wid
 		data[i] = workingImg->getPointAt(i);
 
@@ -581,7 +593,7 @@ inline point* BarcodeCreator<T>::sortPixels(bc::ProcType type)
 		std::sort(data, data + total, cmp);
 		for (size_t i = 1; i < total - 1; ++i)//wid
 		{
-			float v0 = workingImg->get(data[i-1]);
+			float v0 = workingImg->get(data[i - 1]);
 			float v2 = workingImg->get(data[i]);
 			assert(v0 >= v2);
 		}
@@ -706,6 +718,8 @@ void BarcodeCreator<T>::processComp(Barcontainer<T>* item)
 		curpix = sortedArr[curindex];
 		curbright = workingImg->get(curpix.x, curpix.y);
 
+		if (curindex == 2446)//6-7
+			printf("");
 #ifdef VDEBUG
 		VISULA_DEBUG_COMP(totalSize, i);
 #else
@@ -714,7 +728,7 @@ void BarcodeCreator<T>::processComp(Barcontainer<T>* item)
 #endif
 		assert(included[wid * curpix.y + curpix.x]);
 
-}
+	}
 
 	//assert(((void)"ALARM! B0 is not one", lastB == 1));
 
@@ -793,10 +807,8 @@ void BarcodeCreator<T>::clearIncluded()
 {
 	for (COMPP c : components)
 	{
-		if (c != nullptr)
-		{
-			delete c;
-		}
+		assert(c != nullptr);
+		delete c;
 	}
 	components.clear();
 
@@ -806,6 +818,16 @@ void BarcodeCreator<T>::clearIncluded()
 		delete[] included;
 		included = nullptr;
 	}
+
+
+	if (needDelImg)
+	{
+		delete workingImg;
+	}
+	workingImg = nullptr;
+
+	delete[] sortedArr;
+	sortedArr = nullptr;
 }
 
 
@@ -821,59 +843,31 @@ bool compareLines(const barline<T>* i1, const barline<T>* i2)
 template<class T>
 void BarcodeCreator<T>::reverseCom()
 {
-	for (size_t i = 0; i < totalSize; i++)
-	{
-		Include<T>& incl = included[i];
-		point p = getPoint(i);
-		auto& ccod = workingImg->get(p.x, p.y);// начало конкретно в этом пикселе
+	//for (size_t i = 0; i < totalSize; i++)
+	//{
+	//	Include<T>& incl = included[i];
+	//	point p = getPoint(i);
+	//	auto& ccod = workingImg->get(p.x, p.y);// начало конкретно в этом пикселе
 
-		if (settings.createBinayMasks && !skipAddPointsToParrent)
-		{
-			// надо добавить заничя каому потомку
-			COMPP prev = incl;
-			if (prev == nullptr)
-				printf("BAD");
-			COMPP prevparent = prev->getNonZeroParent();
-			while (prevparent)
-			{
-				barline<T>* blineParrent = prevparent->resline;
+	//	if (settings.createBinayMasks && !skipAddPointsToParrent)
+	//	{
+	//		// надо добавить заничя каому потомку
+	//		COMPP prev = incl;
+	//		if (prev == nullptr)
+	//			printf("BAD");
+	//		COMPP prevparent = prev->parent;
+	//		while (prevparent)
+	//		{
+	//			barline<T>* blineParrent = prevparent->resline;
 
-				if (settings.createBinayMasks)
-					blineParrent->addCoord(p, prevparent->end - prev->end);//нам нужно только то время, которое было у съевшего.
+	//			if (settings.createBinayMasks)
+	//				blineParrent->addCoord(p, prevparent->end - prev->end);//нам нужно только то время, которое было у съевшего.
 
-				prev = prevparent;
-				prevparent = prev->getNonZeroParent();
-			}
-		}
-		//blineParrent->end() - ccod = общее время
-		//item->end() - ccod + blineParrent->end() - item->end() = общее время
-		//220 - 10
-		barline<T>* brline = incl->resline;
-		if (settings.createBinayMasks)
-		{
-			if (brline == nullptr)
-			{
-				auto par = incl->getNonZeroParent();
-				if (par)
-				{
-					brline = incl->getNonZeroParent()->resline;
-					assert(incl->len() == 0);
-					assert(brline);
-					brline->addCoord(p, incl->end - ccod);
-					continue;
-				}
-				//ignore zerolen comp
-			}
-			else
-				brline->addCoord(p, incl->end - ccod);
-		}
-
-		// parent always will be (rootNode for root elements
-		COMPP pparent = incl->getNonZeroParent();
-
-		if (settings.createGraph && pparent != nullptr)
-			brline->setParrent(pparent->resline);
-	}
+	//			prev = prevparent;
+	//			prevparent = prev->parent;
+	//		}
+	//	}
+	//}
 }
 
 template<class T>
@@ -886,31 +880,28 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 
 	for (COMPP c : components)
 	{
-		if (c == nullptr)
+		if (c->resline == nullptr)
 			continue;
 
-		if (c->isAlive())
-			c->kill();
+		T len = c->resline->len;
 
-		T len = c->len();
-
-		if (len == 0 || len == INFINITY)
-			continue;
-
-
-		size_t size = settings.createBinayMasks ? c->getTotalSize() : 0;
-
-		auto* bar3d = (n == 3) ? c->bar3d : nullptr;
-		barline<T>* line = c->resline = new barline<T>(c->start, len, workingImg->wid(), bar3d, size);
-
-		if (c->parent == nullptr && settings.createGraph)
+		if (c->parent == nullptr)
 		{
-			line->setParrent(rootNode);
+			assert(c->isAlive());
+			c->kill();
+			if (settings.createGraph)
+				c->resline->setParrent(rootNode);
 		}
-		// TODO
-		/*if (settings.createGraph && incl->parent != nullptr)
-			bline->setParrent(incl->parent->resline);*/
-		lines->add(line);
+		else
+			assert(len != 0);
+
+		assert(!c->isAlive());
+
+
+		if (len == INFINITY)
+			continue;
+
+		lines->add(c->resline);
 	}
 
 	if (settings.createBinayMasks || settings.createGraph)
@@ -951,14 +942,6 @@ void BarcodeCreator<T>::processTypeF(const barstruct& str, const bc::DatagridPro
 		break;
 	}
 
-	if (needDelImg)
-	{
-		delete workingImg;
-	}
-	workingImg = nullptr;
-
-	delete[] sortedArr;
-	sortedArr = nullptr;
 }
 
 template<class T>
@@ -1235,8 +1218,9 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 	//[y * _wid + x]
 	img[hei * wid - 1] = 9999.f;//
 	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
+	this->needDelImg = true;
 
-	if (nullVal>-999)
+	if (nullVal > -999)
 	{
 		for (size_t i = 0; i < workingImg->length(); ++i)
 		{
@@ -1244,9 +1228,9 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 		}
 		nullVal = -9999;
 	}
-//	float maxs, mins;
-//	workingImg->maxAndMin(mins, maxs);
-//	settings.setMaxLen((maxs - mins) / 2);
+	//	float maxs, mins;
+	//	workingImg->maxAndMin(mins, maxs);
+	//	settings.setMaxLen((maxs - mins) / 2);
 	init(workingImg, ProcType::f255t0);
 
 	for (curindex = 0; curindex < totalSize; ++curindex)
@@ -1267,12 +1251,6 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 
 	addItemToCont(item);
 	clearIncluded();
-
-	delete workingImg;
-	workingImg = nullptr;
-
-	delete[] sortedArr;
-	sortedArr = nullptr;
 
 	return item;
 }

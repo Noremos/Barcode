@@ -36,9 +36,9 @@ namespace bc
 		bool isCopy = false;
 
 	public:
-		barline()
+		barline(int wid = 0)
 		{
-			matWid = 0;
+			matWid = wid;
 		}
 		barline(T _start, T _len, int wid, barcounter<T>* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len), matWid(wid) {
 			matr.reserve(coordsSize);
@@ -139,6 +139,10 @@ namespace bc
 		void addCoord(const point& first, T bright)
 		{
 			matr.push_back(barvalue<T>(first, bright, matWid));
+		}
+		void addCoord(barvalue<T> val)
+		{
+			matr.push_back(val);
 		}
 
 		//    barline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}

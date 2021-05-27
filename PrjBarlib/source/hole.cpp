@@ -116,7 +116,7 @@ inline void bc::Hole<T>::add(const point& p)
 template<class T>
 bool bc::Hole<T>::checkValid(point p)
 {
-    if (this->totalCount < 3)
+    if (this->getTotalSize() < 3)
         return false;
 
     if (isValid)

@@ -76,7 +76,11 @@ namespace bc {
 
 		//***************************************************
 
-		int GETPOFF(const point& p) const;
+
+		constexpr int GETPOFF(const point& p) const
+		{
+			return wid * p.y + p.x;
+		}
 
 		constexpr int GETOFF(int x, int y) const {
 			return wid * y + x;

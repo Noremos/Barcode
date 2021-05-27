@@ -6,17 +6,22 @@
 template<class T>
 void bc::Component<T>::init(BarcodeCreator<T>* factory)
 {
-	this->factory = factory;
+#ifndef POINTS_ARE_AVALIBLE
 	startIndex = factory->curindex;
-//	index = factory->components.size();
+#endif // !POINTS_ARE_AVALIBLE
+
+	this->factory = factory;
+	//	index = factory->components.size();
 	factory->components.push_back(this);
 
-	start = factory->curbright;
-	end = factory->curbright;
+	resline = new barline<T>(factory->workingImg->wid());
+	resline->start = factory->curbright;
+	resline->len = 0;
+
 	lastVal = factory->curbright;
 
 	if (factory->settings.returnType == bc::ReturnType::barcode3d)
-		bar3d = new barcounter<T>();
+		resline->bar3d = new barcounter<T>();
 }
 
 template<class T>
@@ -26,10 +31,7 @@ bc::Component<T>::Component(point pix, bc::BarcodeCreator<T>* factory)
 
 	// factory->lastB++;
 
-	//add
-	++totalCount;
-	factory->setInclude(pix, this);
-	++cashedSize;
+	add(pix);
 }
 
 template<class T>
@@ -57,16 +59,22 @@ void bc::Component<T>::add(const point& p)
 {
 	assert(lived);
 
+#ifndef POINTS_ARE_AVALIBLE
 	++getMaxParrent()->totalCount;
+#endif // !POINTS_ARE_AVALIBLE
 
 	factory->setInclude(p, this);
 
+	if (factory->settings.createBinayMasks)
+	{
+		resline->addCoord(p, factory->curbright);
+	}
 	// 3d barcode/ —читаем кол-во добавленных значений
-	if (bar3d != nullptr)
+	if (factory->settings.returnType == ReturnType::barcode3d)
 	{
 		if (factory->curbright != lastVal)
 		{
-			bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
+			resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
 			lastVal = factory->curbright;
 			cashedSize = 0;
 		}
@@ -79,19 +87,22 @@ void bc::Component<T>::kill()
 {
 	if (!lived)
 		return;
-	// --factory->lastB;
 	lived = false;
-	//	if (end < factory->curbright)
-	end = factory->curbright;
-	 //assert(len() >= 0);
-	//if (end == -9.79209423)
-	//{
-	//	int a = 3;
-	//	a++;
-	//}
 
-	if (bar3d != nullptr)
-		bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
+	resline->len = factory->curbright - resline->start;
+
+	if (factory->settings.returnType == ReturnType::barcode3d && factory->curbright != lastVal)
+	{
+		resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
+	}
+
+	if (parent == nullptr && factory->settings.createBinayMasks)
+	{
+		for (size_t i = 0; i < resline->matr.size(); i++)
+		{
+			resline->matr[i].value = factory->curbright - resline->matr[i].value;
+		}
+	}
 
 	lastVal = factory->curbright;
 	cashedSize = 0;
@@ -102,13 +113,38 @@ void bc::Component<T>::setParrent(bc::Component<T>* parnt)
 {
 	assert(parent == nullptr);
 	this->parent = parnt;
+
+#ifndef  POINTS_ARE_AVALIBLE
 	this->parent->totalCount += totalCount;
+#endif // ! POINAS_ARE_AVALIBLE
+
+
+	// at moment when this must be dead
+	assert(lived);
+
+	if (factory->settings.createBinayMasks)
+	{
+		for (size_t i = 0; i < resline->matr.size(); i++)
+		{
+			auto& val = resline->matr[i];
+			// Записываем длину сущщетвования точки
+			resline->matr[i].value = factory->curbright - val.value;
+
+			// Эти точки сичтаются как только что присоединившиеся
+			parnt->resline->addCoord(barvalue<T>(val.getIndex(), factory->curbright));
+		}
+	}
+
+	kill();
+
+	if (factory->settings.createGraph)
+		resline->setParrent(parnt->resline);
 }
 
 template<class T>
 bc::Component<T>::~Component()
 {
-//	factory->components[index] = nullptr;
+	//	factory->components[index] = nullptr;
 
 }
 

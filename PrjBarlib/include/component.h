@@ -2,6 +2,8 @@
 #include <vector>
 #include "barstrucs.h"
 
+
+#define POINTS_ARE_AVALIBLE
 namespace bc
 {
 	template<class T>
@@ -14,25 +16,31 @@ namespace bc
 	class Component
 	{
 	public:
+#ifdef POINTS_ARE_AVALIBLE
+		size_t getTotalSize()
+		{
+			return resline->matr.size();
+		}
+#else
 		size_t startIndex = 0;
-		//, index = 0;
-	protected:
+		size_t getTotalSize()
+		{
+			return totalCount;
+		}
+	private:
 		size_t totalCount = 0/*, ownSize = 0*/;
+#endif // !POINAS_ARE_AVALIBLE
+	protected:
 		BarcodeCreator<T>* factory;
 		Component<T>* cachedMaxParent = nullptr;
-		Component<T>* cachedNonZeroParent = nullptr;
 
 	public:
 		Component<T>* parent = nullptr;
-		barcounter<T>* bar3d = nullptr;
 		barline<T>* resline = nullptr;
 
 	protected:
 		int cashedSize = 0;
 		T lastVal = 0;
-
-	public:
-		T start = 0, end = 0;
 
 	private:
 		bool lived = true;
@@ -44,38 +52,21 @@ namespace bc
 		Component(point pix, BarcodeCreator<T>* factory);
 		Component(BarcodeCreator<T>* factory, bool create = false);
 
+		T getStart()
+		{
+			return resline->start;
+		}
 		bool isAlive()
 		{
 			return lived;
 		}
 
-		T len()
-		{
-			//return round(100000 * (end - start)) / 100000;
-			return  end>=start ?  end - start: start - end;
-			return end - start;
-		}
-
-		Component<T>* getNonZeroParent()
-		{
-			if (parent == nullptr)
-				return nullptr;
-
-			if (cachedNonZeroParent == nullptr)
-			{
-				cachedNonZeroParent = parent;
-			}
-
-			while (cachedNonZeroParent)
-			{
-				if (cachedNonZeroParent->len() != 0)
-					return cachedNonZeroParent;
-
-				cachedNonZeroParent = cachedNonZeroParent->parent;
-			}
-			return cachedNonZeroParent;
-		}
-
+		//T len()
+		//{
+		//	//return round(100000 * (end - start)) / 100000;
+		//	return  abs(resline->len());
+		//	//return end - start;
+		//}
 		//    cv::Mat binmap;
 		Component<T>* getMaxParrent()
 		{
@@ -94,11 +85,6 @@ namespace bc
 			return cachedMaxParent;
 		}
 
-		Component<T> *getMaxAliveParrent()
-		{
-			auto *par = getMaxParrent();
-			return par->isAlive() ? par : nullptr;
-		}
 
 		bool isContain(int x, int y);
 		bool isContain(point p);
@@ -108,10 +94,6 @@ namespace bc
 
 		virtual ~Component();
 
-		size_t getTotalSize()
-		{
-			return totalCount;
-		}
 	};
 
 	//typedef std::unordered_map<point, Component*, pointHash> cmap;

@@ -8,7 +8,7 @@ class Hole : public Component<T>
 {
     bool isOutside = false;
 public:
-
+    T start, end;
     bool isValid = false;
 
     Hole(point p1, point p2, point p3, BarcodeCreator<T>* factory);
