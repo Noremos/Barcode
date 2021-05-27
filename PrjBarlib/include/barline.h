@@ -67,6 +67,7 @@ namespace bc
 			{
 				delete bar3d;
 			}
+			matr.clear();
 		}
 
 		int getWid()
@@ -136,9 +137,14 @@ namespace bc
 			return BarRect(l, t, r - l + 1, d - t + 1);
 		}
 
+		void addCoord(const uint& ind, T bright)
+		{
+			matr.push_back(std::move(barvalue<T>(ind, bright)));
+		}
+
 		void addCoord(const point& first, T bright)
 		{
-			matr.push_back(barvalue<T>(first, bright, matWid));
+			matr.push_back(std::move(barvalue<T>(first, bright, matWid)));
 		}
 		void addCoord(barvalue<T> val)
 		{

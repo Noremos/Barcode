@@ -206,6 +206,7 @@ void test(bool graph, Bbase8& testimg, bool createNew = false)
 	compiteBarAndBar(imgrest, testimg);
 
 	ret->removePorog(100);
+
 	delete ret;
 }
 
@@ -253,6 +254,8 @@ void testf255t0(Bbase8& testimg)
 	//cv::imshow("original", orig);
 	cv::waitKey(1);
 	compiteBarAndBar(img, testimg);
+
+	delete ret;
 }
 
 void testMat(bool graph, Mat testmat, bool createNew = false)
@@ -449,6 +452,7 @@ void testProblemFloatMats()
 	auto* arcticItem = retFromArctic->getItem(0);
 
 
+	delete retFromArctic;
 	//float ret = qgis->compireFull(arcticItem, bc::CompireStrategy::CommonToLen);
 	//std::cout << "Ret: " << ret << std::endl;
 }

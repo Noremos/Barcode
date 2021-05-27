@@ -61,6 +61,22 @@ void bc::Hole<T>::kill()
 }
 
 template<class T>
+inline bool bc::Hole<T>::isContain(int x, int y)
+{
+    if (Component<T>::factory->IS_OUT_OF_REG(x, y))
+        return false;
+    return Component<T>::factory->getComp(Component<T>::factory->GETOFF(x, y)) == this;
+}
+
+template<class T>
+bool bc::Hole<T>::isContain(bc::point p)
+{
+    if (Component<T>::factory->IS_OUT_OF_REG(p.x, p.y))
+        return false;
+    return Component<T>::factory->getComp(Component<T>::factory->GETOFF(p.x, p.y)) == this;
+}
+
+template<class T>
 bool bc::Hole<T>::tryAdd(const point &p)
 {
     if (isValid == false)
@@ -88,7 +104,7 @@ template<class T>
 inline void bc::Hole<T>::add(const point& p)
 {
     bool outDo = isOutside;
-    bc::Component<T>::add(p);
+    bc::Component<T>::add(bc::Component<T>::factory->GETOFF(p.x, p.y));
 //    setB(p);
 
     if (!isOutside)//ребро должно быть на границе

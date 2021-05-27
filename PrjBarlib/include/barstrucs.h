@@ -255,7 +255,7 @@ namespace bc
 			assert(x >= 0);
 			assert(y >= 0);
 
-			return y * static_cast<size_t>(wid) + x;
+			return y * wid + x;
 		}
 
 		point operator+(int* xy)
@@ -336,22 +336,27 @@ namespace bc
 	template<class T>
 	struct barvalue
 	{
-		int index;
+		uint index;
 		T value;
 
 		barvalue(int x, int y, T value, int wid)
 		{
+			assert(x >= 0);
+			assert(y >= 0);
 			index = y * wid + x;
 			this->value = value;
 		}
 
 		barvalue(bc::point point, T value, int wid)
 		{
+			assert(point.x >= 0);
+			assert(point.y >= 0);
+
 			index = point.y * wid + point.x;
 			this->value = value;
 		}
 
-		barvalue(int index, T value)
+		barvalue(uint index, T value)
 		{
 			this->index = index;
 			this->value = value;

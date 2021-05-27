@@ -25,7 +25,7 @@ void bc::Component<T>::init(BarcodeCreator<T>* factory)
 }
 
 template<class T>
-bc::Component<T>::Component(point pix, bc::BarcodeCreator<T>* factory)
+bc::Component<T>::Component(poidex pix, bc::BarcodeCreator<T>* factory)
 {
 	init(factory);
 
@@ -43,19 +43,13 @@ bc::Component<T>::Component(bc::BarcodeCreator<T>* factory, bool /*create*/)
 }
 
 template<class T>
-bool bc::Component<T>::isContain(int x, int y)
+bool bc::Component<T>::isContain(poidex index)
 {
-	return factory->getComp(x, y) == this;
+	return factory->getComp(index) == this;
 }
 
 template<class T>
-bool bc::Component<T>::isContain(point p)
-{
-	return factory->getComp(p) == this;
-}
-
-template<class T>
-void bc::Component<T>::add(const point& p)
+void bc::Component<T>::add(poidex index)
 {
 	assert(lived);
 
@@ -63,11 +57,11 @@ void bc::Component<T>::add(const point& p)
 	++getMaxParrent()->totalCount;
 #endif // !POINTS_ARE_AVALIBLE
 
-	factory->setInclude(p, this);
+	factory->setInclude(index, this);
 
 	if (factory->settings.createBinayMasks)
 	{
-		resline->addCoord(p, factory->curbright);
+		resline->addCoord(index, factory->curbright);
 	}
 	// 3d barcode/ —читаем кол-во добавленных значений
 	if (factory->settings.returnType == ReturnType::barcode3d)

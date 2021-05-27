@@ -34,6 +34,9 @@ public:
     void setShadowOutside(bool outside);
     void setOutside();
     void kill();
+
+    bool isContain(int x, int y);
+    bool isContain(bc::point p);
 };
 
 }

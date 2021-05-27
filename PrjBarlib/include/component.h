@@ -6,6 +6,8 @@
 #define POINTS_ARE_AVALIBLE
 namespace bc
 {
+	typedef uint poidex;
+
 	template<class T>
 	class BarcodeCreator;
 
@@ -49,7 +51,7 @@ namespace bc
 		void init(BarcodeCreator<T>* factory);
 	public:
 
-		Component(point pix, BarcodeCreator<T>* factory);
+		Component(poidex pix, BarcodeCreator<T>* factory);
 		Component(BarcodeCreator<T>* factory, bool create = false);
 
 		T getStart()
@@ -86,9 +88,8 @@ namespace bc
 		}
 
 
-		bool isContain(int x, int y);
-		bool isContain(point p);
-		virtual void add(const point& p);
+		bool isContain(poidex index);
+		virtual void add(poidex index);
 		virtual void kill();
 		virtual void setParrent(Component<T>* parnt);
 

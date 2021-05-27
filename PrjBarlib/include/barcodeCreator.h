@@ -59,10 +59,11 @@ namespace bc {
 
 		bool needDelImg = false;
 		T curbright;
-		size_t curindex;
+		poidex curpoindex;
+		uint curIndexInSortedArr;
 		point curpix;
-		int wid;
-		int hei;
+		uint wid;
+		uint hei;
 		T sourceMax;
 		T sourceMin;
 		// int lastB;
@@ -72,17 +73,19 @@ namespace bc {
 		friend class Baritem<T>;
 
 		size_t totalSize = 0;
-		point* sortedArr;
+		poidex* sortedArr;
 
 		//***************************************************
-
-
-		constexpr int GETPOFF(const point& p) const
+		constexpr bool IS_OUT_OF_REG(int x, int y)
+		{
+			return x < 0 || y < 0 || x >= wid || y >= hei;
+		}
+		int GETPOFF(const point& p) const
 		{
 			return wid * p.y + p.x;
 		}
 
-		constexpr int GETOFF(int x, int y) const {
+		int GETOFF(uint x, uint y) const {
 			return wid * y + x;
 		}
 
@@ -91,38 +94,45 @@ namespace bc {
 			return (a > b ? a - b : b - a) <= this->settings.getMaxStepPorog();
 		}
 
-		point getPoint(size_t i) const
+		point getPoint(uint i) const
 		{
-			return point(static_cast<int>(i % (size_t)wid), static_cast<int>(i / (size_t)wid));
+			return point(i % wid, i / wid);
 		}
 
 		//#define GETPOFF(P) (this->wid*P.y+P.x)
 		//#define GETOFF(X, Y) (this->wid*y+x)
 
-		bool isContain(int x, int y) const;
-		bool isContain(const point& p, bool valid) const;
-		bool isContain(const point& p) const;
+		bool isContain(poidex ind) const
+		{
+			return included[ind] != nullptr;
+		}
 
-		void setInclude(int x, int y, COMPP comp);
-		void setInclude(const point& p, COMPP comp);
+		inline void setInclude(poidex ind, COMPP comp)
+		{
+			included[ind] = comp;
+		}
 
-		//inline void setInclude(int x, int y, COMPP comp)
-		//{
-		//	setInclude(x, y, comp);
-		//}
+		inline COMPP getComp(poidex ind)
+		{
+			auto itr = included[ind];
+			return itr ? itr->getMaxParrent() : nullptr;
+		}
 
-		//inline void setInclude(const point& p, COMPP comp)
-		//{
-		//	setInclude(p, comp);
-		//}
 
-		COMPP getComp(int x, int y);
-		COMPP getComp(const point& p);
-		COMPP getPorogComp(const point& p);
+		COMPP getPorogComp(const point& p, poidex index);
 
 		Include<T>* getInclude(size_t pos);
 
-		HOLEP getHole(int x, int y);
+		// ONLY FOR HOLE
+		bool isContain(const point& p) const
+		{
+			if (p.x < 0 || p.y < 0 || p.x >= wid || p.y >= hei)
+				return false;
+
+			return included[wid * p.y + p.x] != nullptr;
+		}
+		
+		HOLEP getHole(uint x, uint y);
 		HOLEP getHole(const point& p);
 
 		COMPP attach(COMPP first, COMPP second);
@@ -131,7 +141,7 @@ namespace bc {
 		bool checkCloserB0();
 		bool checkCloserB1();
 
-		point* sortPixels(bc::ProcType type);
+		poidex* sortPixels(bc::ProcType type);
 
 		void clearIncluded();
 
@@ -171,19 +181,6 @@ namespace bc {
 			}
 			return cont;
 		}*/
-
-		[[deprecated]]
-		bc::Barcontainer<T>* createBarcode(bcBarImg* img, const std::vector<barstruct>& structure);
-
-		[[deprecated]]
-		bc::Barcontainer<T>* createBarcode(bcBarImg* img, const barstruct* structure, int size);
-
-		[[deprecated]]
-		bc::Barcontainer<T>* createSLbarcode(const bcBarImg* src, T foneStart, T foneEnd, Barcontainer<T>* cont = nullptr);
-
-		[[deprecated]]
-		bc::Barcontainer<T>* createSLbarcode(const bcBarImg* src, T foneStart, T foneEnd, bool createRGBbar);
-
 
 		bc::Barcontainer<T>* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 
