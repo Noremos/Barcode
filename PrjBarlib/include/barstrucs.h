@@ -360,12 +360,12 @@ namespace bc
 		barvalue()
 		{ }
 
-		bc::point getPoint(int wid)
+		bc::point getPoint(int wid) const
 		{
 			return std::move(bc::point(getX(wid), getY(wid)));
 		}
 
-		int getIndex()
+		int getIndex() const
 		{
 			return index;
 		}
@@ -392,7 +392,7 @@ namespace bc
 			index = y * wid + oldX;
 		}
 
-		pybarvalue<T> getPyValue(int wid)
+		pybarvalue<T> getPyValue(int wid) const
 		{
 			return pybarvalue<T>(getX(wid), getY(wid), value);
 		}

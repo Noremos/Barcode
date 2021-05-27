@@ -151,8 +151,6 @@ namespace bc {
 		void processFULL(const barstruct& str, const bc::DatagridProvider<T>* img, bc::Barcontainer<T>* item);
 		void addItemToCont(Barcontainer<T>* item);
 
-		void reverseCom();
-
 		void computeNdBarcode(Baritem<T>* lines, int n);
 
 	public:

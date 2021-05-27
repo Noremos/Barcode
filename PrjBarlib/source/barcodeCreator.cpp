@@ -118,7 +118,7 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 			if (second->getStart() == curbright)
 			{
 #ifdef POINTS_ARE_AVALIBLE
-				for (auto& val : second->resline->matr)
+				for (const auto& val : second->resline->matr)
 				{
 					assert(workingImg->get(val.getX(wid), val.getY(wid)) == curbright);
 					assert(included[val.getIndex()] == second);
@@ -840,35 +840,6 @@ bool compareLines(const barline<T>* i1, const barline<T>* i2)
 	return (i1->len > i2->len);
 }
 
-template<class T>
-void BarcodeCreator<T>::reverseCom()
-{
-	//for (size_t i = 0; i < totalSize; i++)
-	//{
-	//	Include<T>& incl = included[i];
-	//	point p = getPoint(i);
-	//	auto& ccod = workingImg->get(p.x, p.y);// начало конкретно в этом пикселе
-
-	//	if (settings.createBinayMasks && !skipAddPointsToParrent)
-	//	{
-	//		// надо добавить заничя каому потомку
-	//		COMPP prev = incl;
-	//		if (prev == nullptr)
-	//			printf("BAD");
-	//		COMPP prevparent = prev->parent;
-	//		while (prevparent)
-	//		{
-	//			barline<T>* blineParrent = prevparent->resline;
-
-	//			if (settings.createBinayMasks)
-	//				blineParrent->addCoord(p, prevparent->end - prev->end);//нам нужно только то время, которое было у съевшего.
-
-	//			prev = prevparent;
-	//			prevparent = prev->parent;
-	//		}
-	//	}
-	//}
-}
 
 template<class T>
 void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
@@ -902,11 +873,6 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 			continue;
 
 		lines->add(c->resline);
-	}
-
-	if (settings.createBinayMasks || settings.createGraph)
-	{
-		reverseCom();
 	}
 
 	if (settings.createGraph)

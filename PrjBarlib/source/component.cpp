@@ -98,9 +98,9 @@ void bc::Component<T>::kill()
 
 	if (parent == nullptr && factory->settings.createBinayMasks)
 	{
-		for (size_t i = 0; i < resline->matr.size(); i++)
+		for (barvalue<T>& a : resline->matr)
 		{
-			resline->matr[i].value = factory->curbright - resline->matr[i].value;
+			a.value = factory->curbright - a.value;
 		}
 	}
 
@@ -124,11 +124,11 @@ void bc::Component<T>::setParrent(bc::Component<T>* parnt)
 
 	if (factory->settings.createBinayMasks)
 	{
-		for (size_t i = 0; i < resline->matr.size(); i++)
+		parnt->resline->matr.reserve(parnt->resline->matr.size() + resline->matr.size() + 1);
+		for (barvalue<T>& val : resline->matr)
 		{
-			auto& val = resline->matr[i];
 			// Записываем длину сущщетвования точки
-			resline->matr[i].value = factory->curbright - val.value;
+			val.value = factory->curbright - val.value;
 
 			// Эти точки сичтаются как только что присоединившиеся
 			parnt->resline->addCoord(barvalue<T>(val.getIndex(), factory->curbright));
