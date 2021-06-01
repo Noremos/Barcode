@@ -816,7 +816,7 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 
 		lines->add(c->resline);
 	}
-
+	lines->barlines.shrink_to_fit();
 	if (settings.createGraph)
 	{
 		lines->setRootNode(rootNode);

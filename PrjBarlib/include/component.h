@@ -39,7 +39,7 @@ namespace bc
 	public:
 		Component<T>* parent = nullptr;
 		barline<T>* resline = nullptr;
-
+		bardynaminvector<barvalue<T>> vec;
 	protected:
 		int cashedSize = 0;
 		T lastVal = 0;

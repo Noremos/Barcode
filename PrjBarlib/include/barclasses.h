@@ -19,7 +19,7 @@ namespace bc
 		virtual ~Barbase();
 	};
 
-	
+
 	template<class T>
 	using barlinevector = std::vector<bc::barline<T>*>;
 
@@ -27,7 +27,7 @@ namespace bc
 	class EXPORT Baritem : public Barbase<T>
 	{
 	public:
-		barlinevector<T> barlines;
+		barstaticvector<bc::barline<T>*> barlines;
 
 	private:
 		bc::BarRoot<T>* rootNode = nullptr;

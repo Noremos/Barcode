@@ -127,6 +127,7 @@ void bc::Component<T>::setParrent(bc::Component<T>* parnt)
 			// Эти точки сичтаются как только что присоединившиеся
 			parnt->resline->addCoord(barvalue<T>(val.getIndex(), factory->curbright));
 		}
+		//parnt->resline->matr.shrink_to_fit();
 	}
 
 	kill();

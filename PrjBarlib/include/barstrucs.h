@@ -399,12 +399,73 @@ namespace bc
 
 		pybarvalue<T> getPyValue(int wid) const
 		{
-			return pybarvalue<T>(getX(wid), getY(wid), value);
+			return std::move(pybarvalue<T>(getX(wid), getY(wid), value));
 		}
 	};
 
 	template<class T>
-	using barvector = std::vector<barvalue<T>>;
+	struct barstaticvector
+	{
+		barstaticvector(T* data, size_t size)
+		{
+			this->data = data;
+			this->size = size;
+		}
+		T* data;
+		size_t size;
+
+		T& get(size_t pos)
+		{
+			return data[pos];
+		}
+	};
+
+	template<class T>
+	struct bardynaminvector
+	{
+		T* data;
+		size_t size;
+		size_t capasity = 10;
+
+		bardynaminvector(size_t cap = 10)
+		{
+			capasity = cap;
+			data = new T[cap];
+		}
+
+		~bardynaminvector()
+		{
+			if (data)
+				delete[] data;
+		}
+
+		void reallocate()
+		{
+			T* back = data;
+			capasity *= 1.5;
+			data = new T[capasity];
+			memcpy(data, back, (size - 1) * sizeof(T));
+			delete[] back;
+		}
+
+		void add(T& val)
+		{
+			++size;
+			if (size >= capasity)
+				reallocate();
+			data[size] = val;
+		}
+
+		// После вызова этой функции данная структура не должна больше использоваться
+		barstaticvector<T>& getStaticBArvector()
+		{
+			auto & vel = barstaticvector<T>(data, size));
+			data = nullptr;
+			size = 0;
+			capasity = 0;
+			return std::move(vel);
+		}
+	};
 
 	template<class T>
 	using barcounter = std::vector<bar3dvalue<T>>;
@@ -412,7 +473,7 @@ namespace bc
 	//**********************************************
 
 	INIT_TEMPLATE_STRUCT(CachedValue)
-		INIT_TEMPLATE_STRUCT(BarConstructor)
+	INIT_TEMPLATE_STRUCT(BarConstructor)
 }
 
 #endif // BARCODE_H

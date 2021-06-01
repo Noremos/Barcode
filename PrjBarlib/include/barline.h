@@ -21,7 +21,7 @@ namespace bc
 		size_t numInParet = 0;
 
 		// Binary mask
-		bc::barvector<T> matr;
+		bc::barstaticvector<T> matr;
 
 		// 3d barcode
 		barcounter<T>* bar3d = nullptr;
@@ -41,7 +41,7 @@ namespace bc
 			matWid = wid;
 		}
 		barline(T _start, T _len, int wid, barcounter<T>* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len), matWid(wid) {
-			matr.reserve(coordsSize);
+			//matr.reserve(coordsSize);
 			bar3d = _barc;
 			assert(matWid != 0);
 		}

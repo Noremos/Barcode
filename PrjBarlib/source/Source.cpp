@@ -210,6 +210,47 @@ void test(bool graph, Bbase8& testimg, bool createNew = false)
 	delete ret;
 }
 
+
+void loadAndTest(std::string path)
+{
+	bc::BarConstructor<uchar> bcont;
+	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.createBinayMasks = true;
+	bcont.createGraph = false;
+	bcont.returnType = bc::ReturnType::barcode2d;
+	bcont.createNewComponentOnAttach = false;
+	bcont.setStep(255);
+
+	bc::BarcodeCreator<uchar> test;
+
+	Mat testmat = cv::imread("D:\\Programs\\C++\\Barcode\\PrjTests\\data\\tests\\as10.png", cv::IMREAD_GRAYSCALE);
+
+	bc::BarMat<uchar> matt(testmat);
+	auto* ret = test.createBarcode(&matt, bcont);
+
+	//testimg.diagReverce = false;
+	uchar max, min;
+	matt.maxAndMin(min, max);
+
+	Bimg8 imgrest(1, 1);
+	imgrest = restreToBarimg(ret, matt.wid(), matt.hei(), max);
+
+	Mat orig = bc::convertProvider2Mat(&matt);
+	Mat res = bc::convertProvider2Mat(&imgrest);
+
+	cv::namedWindow("orig", cv::WINDOW_NORMAL);
+	cv::imshow("orig", orig);
+	cv::namedWindow("restored", cv::WINDOW_NORMAL);
+	cv::imshow("restored", res);
+	cv::waitKey(1);
+	compiteBarAndBar(imgrest, matt);
+	cv::waitKey(0);
+
+	ret->removePorog(100);
+
+	delete ret;
+}
+
 void testf255t0(Bbase8& testimg)
 {
 	bc::BarConstructor<uchar> bcont;
@@ -650,20 +691,20 @@ int main()
 	//testInitFromMat();
 
 	printf("raw data tests: star...");
-	checkImgFromData2();
-	checkImgFromData3();
-	checkImgFromData4();
-	checkImgFromData5();
-	checkImgFromData6();
+	//checkImgFromData2();
+	//checkImgFromData3();
+	//checkImgFromData4();
+	//checkImgFromData5();
+	//checkImgFromData6();
 	printf("done\n\n");
 
 	printf("mat tests: star...");
 	//checkSingleMat();
-	testMats();
+	//testMats();
 	printf("done\n\n");
 	
 	printf("maxLen test: sart...\n");
-	testMaxLen();
+	//testMaxLen();
 	printf("done\n\n");
 
 	printf("BigImg test: sart...\n");
@@ -671,7 +712,7 @@ int main()
 	printf("done\n\n");
 
 	printf("Check fix for zero len: sart...\n");
-	checkSameVals();
+	//checkSameVals();
 	printf("done\n\n");
 
 	/*printf("Check float imgs: sart...\n");
@@ -679,11 +720,13 @@ int main()
 	printf("done\n\n");*/
 
 	printf("Check problem float imgs: sart...\n");
-	testProblemFloatMats();
+	//testProblemFloatMats();
 	printf("done\n\n");
 
 	printf("Check big problem float imgs: sart...\n");
 	//testBigProblemFloatMats();
 	printf("done\n\n");
+
+	loadAndTest("");
 	return 0;
 }
