@@ -355,7 +355,11 @@ namespace bc
 			index = point.y * wid + point.x;
 			this->value = value;
 		}
-
+		void reinit(const bc::point& point, T value, int wid)
+		{
+			index = point.y * wid + point.x;
+			this->value = value;
+		}
 		barvalue(uint index, T value)
 		{
 			this->index = index;
@@ -406,63 +410,114 @@ namespace bc
 	template<class T>
 	struct barstaticvector
 	{
+	protected:
+		T* data;
+		size_t _size;
+
+	public:
 		barstaticvector(T* data, size_t size)
 		{
 			this->data = data;
-			this->size = size;
+			this->_size = size;
 		}
-		T* data;
-		size_t size;
 
-		T& get(size_t pos)
+		barstaticvector(size_t size)
+		{
+			assert(size > 0);
+			this->data = new T[size];
+			this->_size = size;
+		}
+
+		T& get(size_t pos) const
 		{
 			return data[pos];
 		}
+
+		T& operator[](size_t pos) const
+		{
+			return data[pos];
+		}
+
+		size_t size() const
+		{
+			return _size;
+		}
+
+		void reallocateUnsaved(size_t newCap)
+		{
+			_size = newCap;
+			delete[] data;
+			data = new T[_size];
+		}
+
+		void reallocateSaved(size_t newCap)
+		{
+			T* back = data;
+			data = new T[newCap];
+			memcpy(data, back, (_size - 1) * sizeof(T));
+			_size = newCap;
+			delete[] back;
+		}
+
+		void clear()
+		{
+			if (data)
+			{
+				delete[] data;
+				data = nullptr;
+			}
+		}
+
+		barstaticvector& clone() const
+		{
+			barstaticvector& newone(_size)
+			memccpy(newone.data, this->data, _size * sizeof(T));
+			return std::move(newone);
+		}
+
+		~barstaticvector()
+		{
+			clear();
+		}
+
+		T* begin() { return &data[0]; }
+		const T* begin() const { return &data[0]; }
+		T* end() { return &data[_size]; }
+		const T* end() const { return &data[_size]; }
 	};
 
 	template<class T>
-	struct bardynaminvector
+	struct bardynamicvector : public barstaticvector
 	{
-		T* data;
-		size_t size;
-		size_t capasity = 10;
+	private:
+		size_t capacity = 10;
 
-		bardynaminvector(size_t cap = 10)
+	public:
+		bardynamicvector(size_t cap = 10) : barstaticvector(new T[cap], cap)
 		{
-			capasity = cap;
-			data = new T[cap];
+			capacity = cap;
 		}
 
-		~bardynaminvector()
+		~bardynamicvector()
 		{
-			if (data)
-				delete[] data;
-		}
-
-		void reallocate()
-		{
-			T* back = data;
-			capasity *= 1.5;
-			data = new T[capasity];
-			memcpy(data, back, (size - 1) * sizeof(T));
-			delete[] back;
+			clear();
 		}
 
 		void add(T& val)
 		{
-			++size;
-			if (size >= capasity)
-				reallocate();
-			data[size] = val;
+			++barstaticvector::size;
+			if (barstaticvector::size >= capacity)
+				barstaticvector::reallocateSaved(capacity * 1.5);
+			barstaticvector::data[barstaticvector::size] = val;
 		}
 
 		// После вызова этой функции данная структура не должна больше использоваться
-		barstaticvector<T>& getStaticBArvector()
+		barstaticvector<T>& getStaticBArvector() const
 		{
 			auto & vel = barstaticvector<T>(data, size));
 			data = nullptr;
 			size = 0;
-			capasity = 0;
+			capacity = 0;
 			return std::move(vel);
 		}
 	};

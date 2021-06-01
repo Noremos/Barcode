@@ -40,7 +40,7 @@ namespace bc
 		{
 			matWid = wid;
 		}
-		barline(T _start, T _len, int wid, barcounter<T>* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len), matWid(wid) {
+		barline(T _start, T _len, int wid, barcounter<T>* _barc = nullptr, size_t coordsSize = 1) : start(_start), len(_len), matWid(wid) {
 			//matr.reserve(coordsSize);
 			bar3d = _barc;
 			assert(matWid != 0);
@@ -111,10 +111,10 @@ namespace bc
 
 		void setFromBarImg(const bc::BarImg<T>& mat)
 		{
-			matr.clear();
+			matr.reallocateUnsaved(mat.getLiner())
 
 			for (size_t i = 0; i < mat.getLiner(); i++)
-				matr->push_back(barvalue<T>(mat.getPointAt(i), mat.getLiner(i), mat._wid));
+				matr[i].reinit(mat.getPointAt(i), mat.getLiner(i), mat._wid));
 		}
 
 		BarRect getBarRect()  const
@@ -134,22 +134,22 @@ namespace bc
 				if (d < matr[j].getY(matWid))
 					d = matr[j].getY(matWid);
 			}
-			return BarRect(l, t, r - l + 1, d - t + 1);
+			return std::move(BarRect(l, t, r - l + 1, d - t + 1));
 		}
 
-		void addCoord(const uint& ind, T bright)
-		{
-			matr.push_back(std::move(barvalue<T>(ind, bright)));
-		}
+		// void addCoord(const uint& ind, T bright)
+		// {
+		// 	matr.push_back(std::move(barvalue<T>(ind, bright)));
+		// }
 
-		void addCoord(const point& first, T bright)
-		{
-			matr.push_back(std::move(barvalue<T>(first, bright, matWid)));
-		}
-		void addCoord(barvalue<T> val)
-		{
-			matr.push_back(val);
-		}
+		// void addCoord(const point& first, T bright)
+		// {
+		// 	matr.push_back(std::move(barvalue<T>(first, bright, matWid)));
+		// }
+		// void addCoord(barvalue<T> val)
+		// {
+		// 	matr.push_back(val);
+		// }
 
 		//    barline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
 
@@ -159,7 +159,7 @@ namespace bc
 			auto temp = new barline(start, len, matWid, nullptr);
 			if (matr.size() != 0)
 			{
-				temp->matr.insert(temp->matr.begin(), matr.begin(), matr.end());
+				temp->matr = matr.clone();
 			}
 			temp->isCopy = true;
 
@@ -283,10 +283,10 @@ namespace bc
 			y2 = sqrtf(y2);
 			t = acosf(t / (x2 * y2));
 
-            const float PI = acosf(-1.0f) / 2;
+			const float PI = acosf(-1.0f) / 2;
 			if (isnan(t))
 				return 1.f;
-            return  abs(roundf(1000.f * (PI - t) / PI) / 1000.f);
+			return  abs(roundf(1000.f * (PI - t) / PI) / 1000.f);
 		}
 
 #ifdef _PYD

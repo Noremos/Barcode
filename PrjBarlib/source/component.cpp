@@ -25,7 +25,7 @@ void bc::Component<T>::init(BarcodeCreator<T>* factory)
 }
 
 template<class T>
-bc::Component<T>::Component(poidex pix, bc::BarcodeCreator<T>* factory)
+bc::Component<T>::Component(poidex pix, bc::BarcodeCreator<T>* factory) : tempvec(20)
 {
 	init(factory);
 
@@ -35,7 +35,7 @@ bc::Component<T>::Component(poidex pix, bc::BarcodeCreator<T>* factory)
 }
 
 template<class T>
-bc::Component<T>::Component(bc::BarcodeCreator<T>* factory, bool /*create*/)
+bc::Component<T>::Component(bc::BarcodeCreator<T>* factory, bool /*create*/) : tempvec(20)
 {
 	init(factory);
 
@@ -61,7 +61,7 @@ void bc::Component<T>::add(poidex index)
 
 	if (factory->settings.createBinayMasks)
 	{
-		resline->addCoord(index, factory->curbright);
+		tempvec.add(barvalue<T>(index, factory->curbright));
 	}
 	// 3d barcode/ —читаем кол-во добавленных значений
 	if (factory->settings.returnType == ReturnType::barcode3d)
@@ -119,6 +119,7 @@ void bc::Component<T>::setParrent(bc::Component<T>* parnt)
 	if (factory->settings.createBinayMasks)
 	{
 		parnt->resline->matr.reserve(parnt->resline->matr.size() + resline->matr.size() + 1);
+		resline->matr.reallocateUnsaved(parnt->resline->matr.size() + resline->matr.size() + 1);
 		for (barvalue<T>& val : resline->matr)
 		{
 			// Записываем длину сущщетвования точки
