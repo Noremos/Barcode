@@ -649,40 +649,40 @@ int main()
 	// TODO Move it to test project
 	//testInitFromMat();
 
-	printf("raw data tests: star...");
-	checkImgFromData2();
-	checkImgFromData3();
-	checkImgFromData4();
-	checkImgFromData5();
-	checkImgFromData6();
-	printf("done\n\n");
+	//printf("raw data tests: star...");
+	//checkImgFromData2();
+	//checkImgFromData3();
+	//checkImgFromData4();
+	//checkImgFromData5();
+	//checkImgFromData6();
+	//printf("done\n\n");
 
-	printf("mat tests: star...");
+	//printf("mat tests: star...");
 	//checkSingleMat();
-	testMats();
-	printf("done\n\n");
-	
-	printf("maxLen test: sart...\n");
-	testMaxLen();
-	printf("done\n\n");
+	//testMats();
+	//printf("done\n\n");
+	//
+	//printf("maxLen test: sart...\n");
+	//testMaxLen();
+	//printf("done\n\n");
 
 	printf("BigImg test: sart...\n");
 	checkBigImg();
 	printf("done\n\n");
 
-	printf("Check fix for zero len: sart...\n");
-	checkSameVals();
-	printf("done\n\n");
+	//printf("Check fix for zero len: sart...\n");
+	//checkSameVals();
+	//printf("done\n\n");
 
 	/*printf("Check float imgs: sart...\n");
 	testFloatMats();
 	printf("done\n\n");*/
 
-	printf("Check problem float imgs: sart...\n");
-	testProblemFloatMats();
-	printf("done\n\n");
+	//printf("Check problem float imgs: sart...\n");
+	//testProblemFloatMats();
+	//printf("done\n\n");
 
-	printf("Check big problem float imgs: sart...\n");
+	//printf("Check big problem float imgs: sart...\n");
 	//testBigProblemFloatMats();
 	printf("done\n\n");
 	return 0;

@@ -150,15 +150,15 @@ namespace bc {
 		void VISULA_DEBUG_COMP();
 
 
-		void init(const bc::DatagridProvider<T>* src, const  ProcType& type);
+		void init(const bc::DatagridProvider<T>* src, ProcType &type);
 
 		void processComp(Barcontainer<T>* item = nullptr);
 		void processHole(Barcontainer<T>* item = nullptr);
 		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
 
-		void processTypeF(const barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
+		void processTypeF(barstruct &str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
 
-		void processFULL(const barstruct& str, const bc::DatagridProvider<T>* img, bc::Barcontainer<T>* item);
+		void processFULL(barstruct &str, const bc::DatagridProvider<T>* img, bc::Barcontainer<T>* item);
 		void addItemToCont(Barcontainer<T>* item);
 
 		void computeNdBarcode(Baritem<T>* lines, int n);
@@ -186,7 +186,7 @@ namespace bc {
 
 		virtual ~BarcodeCreator()
 		{
-			clearIncluded();
+//			clearIncluded();
 #ifdef USE_OPENCV
 			colors.clear();
 #endif // USE_OPENCV

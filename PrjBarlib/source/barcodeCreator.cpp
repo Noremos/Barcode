@@ -471,20 +471,17 @@ inline poidex* BarcodeCreator<uchar>::sortPixels(bc::ProcType type)
 		offs[i] = hist[i - 1];
 	}
 
-	size_t total = workingImg->length();
 
-	poidex* data = new poidex[total];//256
-	for (size_t i = 0; i < total; i++)
+	poidex* data = new poidex[totalSize + 1];//256
+	for (size_t i = 0; i < totalSize; i++)
 	{
 		uchar p = workingImg->getLiner(i);
-		if (type == ProcType::f0t255)
-		{
-			data[offs[p]++] = i;
-		}
-		else
-		{
-			data[total - offs[p]++] = i;
-		}
+		data[offs[p]++] = i;
+	}
+
+	if (type == ProcType::f255t0)
+	{
+		std::reverse(data, data + totalSize);
 	}
 	return data;
 }
@@ -511,28 +508,26 @@ struct myclassFromMax {
 template<class T>
 inline poidex* BarcodeCreator<T>::sortPixels(bc::ProcType type)
 {
-	size_t total = workingImg->length();
-
 	// do this hack to skip constructor calling for every point
-	poidex* data = new poidex[total + 1];//256
+	poidex* data = new poidex[totalSize + 1];//256
 
 	//point * data = new point[total];
 
-	for (size_t i = 0; i < total; ++i)//wid
+	for (size_t i = 0; i < totalSize; ++i)//wid
 		data[i] = i;
 
 	if (type == ProcType::f0t255)
 	{
 		myclassFromMin<T> cmp;
 		cmp.workingImg = workingImg;
-		std::sort(data, &data[total], cmp);
+		std::sort(data, &data[totalSize], cmp);
 	}
 	else
 	{
 		myclassFromMax<T> cmp;
 		cmp.workingImg = workingImg;
-		std::sort(data, data + total, cmp);
-		for (size_t i = 1; i < total - 1; ++i)//wid
+		std::sort(data, data + totalSize, cmp);
+		for (size_t i = 1; i < totalSize - 1; ++i)//wid
 		{
 			float v0 = workingImg->getLiner(data[i - 1]);
 			float v2 = workingImg->getLiner(data[i]);
@@ -598,13 +593,32 @@ inline poidex* BarcodeCreator<T>::sortPixels(bc::ProcType type)
 
 
 template<class T>
-void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, const  ProcType& type)
+void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src,  ProcType& type)
 {
 	wid = src->wid();
 	hei = src->hei();
 
 	needDelImg = false;
-	setWorkingImg(src);
+
+	if (type == ProcType::invertf0)
+	{
+		T mmin = 0, mmax = 0;
+		src->maxAndMin(mmin, mmax);
+		bc::BarImg<T> *newone = new BarImg<T>(src->wid(), src->hei());
+		for (size_t i = 0; i < src->length(); ++i)
+		{
+			newone->setLiner(i, mmax - src->getLiner(i));
+		}
+
+		if (!originalImg)
+			delete src;
+
+		originalImg = false;
+		type = ProcType::f0t255;
+		setWorkingImg(newone);
+	}
+	else
+		setWorkingImg(src);
 
 
 	totalSize = src->length();
@@ -828,7 +842,7 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 }
 
 template<class T>
-void BarcodeCreator<T>::processTypeF(const barstruct& str, const bc::DatagridProvider<T>* src, Barcontainer<T>* item)
+void BarcodeCreator<T>::processTypeF(barstruct& str, const bc::DatagridProvider<T>* src, Barcontainer<T>* item)
 {
 	init(src, str.proctype);
 
@@ -853,7 +867,7 @@ void BarcodeCreator<T>::processTypeF(const barstruct& str, const bc::DatagridPro
 }
 
 template<class T>
-void BarcodeCreator<T>::processFULL(const barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item)
+void BarcodeCreator<T>::processFULL( barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item)
 {
 	bool rgb = (img->channels() != 1);
 	originalImg = true;
@@ -903,7 +917,7 @@ bc::Barcontainer<T>* BarcodeCreator<T>::createBarcode(const bc::DatagridProvider
 
 	Barcontainer<T>* cont = new Barcontainer<T>();
 
-	for (const auto& it : settings.structure)
+	for (auto& it : settings.structure)
 	{
 		processFULL(it, img, cont);
 	}
@@ -1031,7 +1045,8 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 	//	float maxs, mins;
 	//	workingImg->maxAndMin(mins, maxs);
 	//	settings.setMaxLen((maxs - mins) / 2);
-	init(workingImg, ProcType::f255t0);
+	auto prec = ProcType::f255t0;
+	init(workingImg, prec);
 
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < totalSize; ++curIndexInSortedArr)
 	{

@@ -63,7 +63,7 @@ namespace bc
 	enum class EXPORT CompireStrategy { CommonToSum, CommonToLen, compire3dHist, compire3dBrightless, FromMethod, Complex, Temp1, Temp2 };
 
 	enum class ComponentType { Component, Hole, FullPrepair, PrepairComp };
-	enum class ProcType { f0t255, f255t0, experement };
+	enum class ProcType { f0t255, f255t0, invertf0, experement };
 	enum class ColorType { gray, rgb, native };
 
 	enum class ReturnType { barcode2d, barcode3d };
