@@ -127,11 +127,11 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 				}
 #else
 
-				for (size_t rind = second->startIndex; rind <= curindex; ++rind)
+				for (size_t rind = second->startIndex; rind <= curIndexInSortedArr; ++rind)
 				{
-					point& p = sortedArr[rind];
-					assert(workingImg->get(p.x, p.y) == curbright);
-					if (included[GETPOFF(p)] == second)
+					poidex& p = sortedArr[rind];
+					//assert(workingImg->get(p.x, p.y) == curbright);
+					if (included[p] == second)
 					{
 						// Перебираем предыдущие элементы
 						main->add(p);

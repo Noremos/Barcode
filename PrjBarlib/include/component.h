@@ -3,7 +3,7 @@
 #include "barstrucs.h"
 
 
-#define POINTS_ARE_AVAILABLE
+//#define POINTS_ARE_AVAILABLE
 namespace bc
 {
 	typedef uint poidex;

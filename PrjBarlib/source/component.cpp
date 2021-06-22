@@ -7,7 +7,7 @@ template<class T>
 void bc::Component<T>::init(BarcodeCreator<T>* factory)
 {
 #ifndef POINTS_ARE_AVAILABLE
-	startIndex = factory->curindex;
+	startIndex = factory->curIndexInSortedArr;
 #endif // !POINTS_ARE_AVAILABLE
 
 	this->factory = factory;
