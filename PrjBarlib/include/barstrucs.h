@@ -140,7 +140,7 @@ namespace bc
 		ReturnType returnType;
 
 		bool createGraph = false;
-		bool createBinayMasks = false;
+		bool createBinaryMasks = false;
 		bool createNewComponentOnAttach = false;
 		bool killOnMaxLen = false;
 
@@ -156,9 +156,9 @@ namespace bc
 		void checkCorrect() const
 		{
 			//if (returnType == ReturnType::barcode2d || returnType == ReturnType::barcode3d)
-			//	createBinayMasks = true;
+			//	createBinaryMasks = true;
 
-			//if (createGraph && !createBinayMasks)
+			//if (createGraph && !createBinaryMasks)
 			//	throw std::exception();
 
 			if (structure.size() == 0)
@@ -167,7 +167,7 @@ namespace bc
 			//getStepPorog();
 		}
 
-		// разница соединяемх значений должна быть меньше этого значения
+		// разница соединяемых значений должна быть меньше этого значения
 		T getMaxStepPorog() const
 		{
 			return stepPorog.getOrDefault(0);

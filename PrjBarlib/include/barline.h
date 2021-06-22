@@ -16,9 +16,9 @@ namespace bc
 	struct EXPORT barline
 	{
 		// Graph
-		std::vector<barline<T>*> childrens;
-		barline<T>* parrent = nullptr;
-		size_t numInParet = 0;
+		std::vector<barline<T>*> children;
+		barline<T>* parent = nullptr;
+		size_t numberInParent = 0;
 
 		// Binary mask
 		bc::barvector<T> matr;
@@ -48,19 +48,19 @@ namespace bc
 
 		~barline()
 		{
-			// canBeDleted - у копии, копи¤ не может удал¤ть детей. ј оригинал может
+			// canBeDeleted - у копии, копия не может удалять детей. ј оригинал может
 			if (!isCopy)
 			{
-				if (parrent && parrent->childrens.size() > numInParet && parrent->childrens[numInParet] == this)
+				if (parent && parent->children.size() > numberInParent && parent->children[numberInParent] == this)
 				{
-					parrent->childrens[numInParet] = nullptr;
+					parent->children[numberInParent] = nullptr;
 				}
-				for (size_t i = 0; i < childrens.size(); ++i)
+				for (size_t i = 0; i < children.size(); ++i)
 				{
 					// not null, not parent on any child
-					if (childrens[i])
-						childrens[i]->parrent = nullptr;
-					//delete childrens[i];
+					if (children[i])
+						children[i]->parent = nullptr;
+					//delete children[i];
 				}
 			}
 			if (bar3d != nullptr)
@@ -171,15 +171,15 @@ namespace bc
 			return temp;
 		}
 
-		void setParrent(barline<T>* node)
+		void setparent(barline<T>* node)
 		{
-			assert(parrent == nullptr || parrent == node);
-			if (this->parrent == node)
+			assert(parent == nullptr || parent == node);
+			if (this->parent == node)
 				return;
 
-			this->parrent = node;
-			numInParet = parrent->childrens.size();
-			parrent->childrens.push_back(this);
+			this->parent = node;
+			numberInParent = parent->children.size();
+			parent->children.push_back(this);
 		}
 
 		T end() const
@@ -202,7 +202,7 @@ namespace bc
 
 		void getChildsMatr(std::unordered_map<bc::point, bool, bc::pointHash>& childs)
 		{
-			for (barline<T>* chil : this->childrens)
+			for (barline<T>* chil : this->children)
 			{
 				for (barvalue<T>& val : chil->matr)
 				{
@@ -367,7 +367,7 @@ namespace bc
 		bp::list getChildren()
 		{
 			bp::list list;
-			for (barline<T>* child : childrens)
+			for (barline<T>* child : children)
 				list.append(child);
 
 			return list;
@@ -375,7 +375,7 @@ namespace bc
 
 		bc::barline<T>* getParent()
 		{
-			return this->parrent;
+			return this->parent;
 		}
 #endif // _PYD
 
@@ -391,9 +391,9 @@ namespace bc
 			{
 				// TODO
 
-				// numInParet = 0;
-				// parrent = nullptr;
-				// childrens;
+				// numberInParent = 0;
+				// parent = nullptr;
+				// children;
 			}
 			if (export3dbar && bar3d)
 			{
@@ -403,7 +403,7 @@ namespace bc
 			}
 			if (expotrBinaryMask)
 			{
-				// TOOD
+				// TODO
 
 				// matr
 			}

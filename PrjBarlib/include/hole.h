@@ -22,7 +22,7 @@ public:
 //        inline bool getOutside() { return isOutside;}
 //    void addAround();
     bool tryAdd(const point &p);
-    //add withot cheks. NOT SAFE. not add if valid
+    //add withot checks. NOT SAFE. not add if valid
     void add(const point &p);
     //************************************************************************//
     bool checkValid(point p);

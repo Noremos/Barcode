@@ -715,12 +715,12 @@ namespace bc {
 		double coof = 1.0 / source.channels();
 		for (size_t i = 0; i < source.length(); ++i)
 		{
-			double acum = 0;
+			double accum = 0;
 			for (int c = 0; c < source.channels(); c++)
 			{
-				acum += source.getLiner(i, c) * coof;
+				accum += source.getLiner(i, c) * coof;
 			}
-			dest.setLiner(i, acum);
+			dest.setLiner(i, accum);
 		}
 	}
 	//template<class T, class U>

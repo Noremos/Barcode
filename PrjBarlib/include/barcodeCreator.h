@@ -33,7 +33,7 @@ namespace bc {
 #endif
 
 		BarConstructor<T> settings;
-		bool skipAddPointsToParrent = false;
+		bool skipAddPointsToParent = false;
 
 		Include<T>* included = nullptr;
 		const DatagridProvider<T>* workingImg = nullptr;
@@ -115,7 +115,7 @@ namespace bc {
 		inline COMPP getComp(poidex ind)
 		{
 			auto itr = included[ind];
-			return itr ? itr->getMaxParrent() : nullptr;
+			return itr ? itr->getMaxparent() : nullptr;
 		}
 
 
@@ -146,8 +146,8 @@ namespace bc {
 		void clearIncluded();
 
 		void draw(std::string name = "test");
-		void VISULA_DEBUG();
-		void VISULA_DEBUG_COMP();
+		void VISUAL_DEBUG();
+		void VISUAL_DEBUG_COMP();
 
 
 		void init(const bc::DatagridProvider<T>* src, ProcType &type);
@@ -224,34 +224,34 @@ namespace bc {
 	};
 
 	template<class T>
-	static Barcontainer<T>* createBarcode(bc::BarType type, const bc::DatagridProvider<T>* img, BarConstructor<T>& strct)
+	static Barcontainer<T>* createBarcode(bc::BarType type, const bc::DatagridProvider<T>* img, BarConstructor<T>& _struct)
 	{
 		switch (type)
 		{
 		case bc::BarType::bc_byte:
 		{
 			BarcodeCreator<ushort> t;
-			return t.createBarcode(img, strct);
+			return t.createBarcode(img, _struct);
 		}
 		case bc::BarType::bc_float:
 		{
 			BarcodeCreator<float> t;
-			return t.createBarcode(img, strct);
+			return t.createBarcode(img, _struct);
 		}
 		case bc::BarType::bc_int:
 		{
 			BarcodeCreator<int> t;
-			return t.createBarcode(img, strct);
+			return t.createBarcode(img, _struct);
 		}
 		case bc::BarType::bc_short:
 		{
 			BarcodeCreator<short> t;
-			return t.createBarcode(img, strct);
+			return t.createBarcode(img, _struct);
 		}
 		case bc::BarType::bc_ushort:
 		{
 			BarcodeCreator<ushort> t;
-			return t.createBarcode(img, strct);
+			return t.createBarcode(img, _struct);
 		}
 		default:
 			return nullptr;

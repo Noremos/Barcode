@@ -88,7 +88,7 @@
 //		.def("setPorogStep", &bc::BarConstructor<TV>::setStep, args("porog"))
 //		.def("setMaxLen", &bc::BarConstructor<TV>::setMaxLen, args("len"))
 //		.add_property("returnType", &bc::BarConstructor<TV>::returnType, make_setter(&bc::BarConstructor<TV>::returnType))
-//		.add_property("createBinaryMasks", &bc::BarConstructor<TV>::createBinayMasks, make_setter(&bc::BarConstructor<TV>::createBinayMasks))
+//		.add_property("createBinaryMasks", &bc::BarConstructor<TV>::createBinaryMasks, make_setter(&bc::BarConstructor<TV>::createBinaryMasks))
 //		.add_property("createGraph", &bc::BarConstructor<TV>::createGraph, make_setter(&bc::BarConstructor<TV>::createGraph))
 //		.add_property("createNewComponentOnAttach", &bc::BarConstructor<TV>::createNewComponentOnAttach, make_setter(&bc::BarConstructor<TV>::createNewComponentOnAttach))
 //		;

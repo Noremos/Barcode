@@ -42,7 +42,7 @@ class Backend : public QObject
 
      bool drawProcents = false;
     int len = -1;
-    bool parceJson(QString path, QString prjPath);
+    bool parseJson(QString path, QString prjPath);
 public:
     static bool useOneBar;
     static bool useRgbBar;

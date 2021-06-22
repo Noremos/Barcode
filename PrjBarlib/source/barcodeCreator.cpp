@@ -96,8 +96,8 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 	if (settings.createNewComponentOnAttach && (double)MIN(main->getTotalSize(), second->getTotalSize()) / totalSize > 0.05)
 	{
 		COMPP newOne = new Component<T>(this, true);
-		main->setParrent(newOne);
-		second->setParrent(newOne);
+		main->setparent(newOne);
+		second->setparent(newOne);
 		//main->kill();
 		//second->kill();
 		return newOne;
@@ -117,7 +117,7 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 			//second->kill();
 			if (second->getStart() == curbright)
 			{
-#ifdef POINTS_ARE_AVALIBLE
+#ifdef POINTS_ARE_AVAILABLE
 				for (const auto& val : second->resline->matr)
 				{
 					assert(workingImg->get(val.getX(wid), val.getY(wid)) == curbright);
@@ -138,7 +138,7 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 					}
 				}
 				main->startIndex = MIN(second->startIndex, main->startIndex);
-#endif // POINTS_ARE_AVALIBLE
+#endif // POINTS_ARE_AVAILABLE
 				delete second->resline;
 				second->resline = nullptr;
 
@@ -146,7 +146,7 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 			}
 			else
 			{
-				second->setParrent(main);
+				second->setparent(main);
 			}
 			//возращаем единую компоненту.
 			return main;
@@ -225,7 +225,7 @@ COMPP BarcodeCreator<T>::getPorogComp(const point& p, poidex index)
 	auto* itr = included[index];
 	if (itr && GETDIFF(curbright, workingImg->get(p.x, p.y)))
 	{
-		COMPP val = itr->getMaxParrent();
+		COMPP val = itr->getMaxparent();
 		return (val != nullptr && val->isAlive() ? val : nullptr);
 	}
 	else
@@ -247,14 +247,14 @@ HOLEP BarcodeCreator<T>::getHole(uint x, uint y)
 		return nullptr;
 
 	auto itr = included[wid * y + x];
-	return dynamic_cast<HOLEP>(itr ? itr->getMaxParrent() : nullptr);
+	return dynamic_cast<HOLEP>(itr ? itr->getMaxparent() : nullptr);
 }
 
 template<class T>
 HOLEP BarcodeCreator<T>::getHole(const point& p)
 {
 	auto itr = included[wid * p.y + p.x];
-	return dynamic_cast<HOLEP>(itr ? itr->getMaxParrent() : nullptr);
+	return dynamic_cast<HOLEP>(itr ? itr->getMaxparent() : nullptr);
 }
 
 
@@ -653,7 +653,7 @@ void BarcodeCreator<T>::processHole(Barcontainer<T>* item)
 		/*	if (i == 25)
 				qDebug() << "";*/
 #ifdef VDEBUG
-		VISULA_DEBUG(totalSize, i);
+		VISUAL_DEBUG(totalSize, i);
 #else
 		checkCloserB1();
 #endif
@@ -677,7 +677,7 @@ void BarcodeCreator<T>::processComp(Barcontainer<T>* item)
 		curbright = workingImg->get(curpix.x, curpix.y);
 
 #ifdef VDEBUG
-		VISULA_DEBUG_COMP(totalSize, i);
+		VISUAL_DEBUG_COMP(totalSize, i);
 #else
 		checkCloserB0();
 
@@ -733,7 +733,7 @@ void BarcodeCreator<T>::addItemToCont(Barcontainer<T>* container)
 }
 
 template<class T>
-void BarcodeCreator<T>::VISULA_DEBUG()
+void BarcodeCreator<T>::VISUAL_DEBUG()
 {
 	checkCloserB1();
 #ifdef USE_OPENCV
@@ -746,7 +746,7 @@ void BarcodeCreator<T>::VISULA_DEBUG()
 }
 
 template<class T>
-void BarcodeCreator<T>::VISULA_DEBUG_COMP()
+void BarcodeCreator<T>::VISUAL_DEBUG_COMP()
 {
 	checkCloserB0();
 #ifdef USE_OPENCV
@@ -817,7 +817,7 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 			assert(c->isAlive());
 			c->kill();
 			if (settings.createGraph)
-				c->resline->setParrent(rootNode);
+				c->resline->setparent(rootNode);
 		}
 		else
 			assert(len != 0);
@@ -1025,10 +1025,10 @@ uchar dif(uchar a, uchar b)
 template<>
 Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int hei, float nullVal)
 {
-	settings.createBinayMasks = true;
+	settings.createBinaryMasks = true;
 	settings.createGraph = true;
 	settings.returnType = ReturnType::barcode2d;
-	skipAddPointsToParrent = true;
+	skipAddPointsToParent = true;
 	//[y * _wid + x]
 	img[hei * wid - 1] = 9999.f;//
 	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
@@ -1055,7 +1055,7 @@ Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int
 		curbright = workingImg->get(curpix);
 
 #ifdef VDEBUG
-		VISULA_DEBUG_COMP(totalSize, i);
+		VISUAL_DEBUG_COMP(totalSize, i);
 #else
 		checkCloserB0();
 #endif

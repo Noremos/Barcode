@@ -6,9 +6,9 @@
 template<class T>
 void bc::Component<T>::init(BarcodeCreator<T>* factory)
 {
-#ifndef POINTS_ARE_AVALIBLE
+#ifndef POINTS_ARE_AVAILABLE
 	startIndex = factory->curindex;
-#endif // !POINTS_ARE_AVALIBLE
+#endif // !POINTS_ARE_AVAILABLE
 
 	this->factory = factory;
 	//	index = factory->components.size();
@@ -53,13 +53,13 @@ void bc::Component<T>::add(poidex index)
 {
 	assert(lived);
 
-#ifndef POINTS_ARE_AVALIBLE
-	++getMaxParrent()->totalCount;
-#endif // !POINTS_ARE_AVALIBLE
+#ifndef POINTS_ARE_AVAILABLE
+	++getMaxparent()->totalCount;
+#endif // !POINTS_ARE_AVAILABLE
 
 	factory->setInclude(index, this);
 
-	if (factory->settings.createBinayMasks)
+	if (factory->settings.createBinaryMasks)
 	{
 		resline->addCoord(index, factory->curbright);
 	}
@@ -90,7 +90,7 @@ void bc::Component<T>::kill()
 		resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
 	}
 
-	if (parent == nullptr && factory->settings.createBinayMasks)
+	if (parent == nullptr && factory->settings.createBinaryMasks)
 	{
 		for (barvalue<T>& a : resline->matr)
 		{
@@ -103,20 +103,20 @@ void bc::Component<T>::kill()
 }
 
 template<class T>
-void bc::Component<T>::setParrent(bc::Component<T>* parnt)
+void bc::Component<T>::setparent(bc::Component<T>* parnt)
 {
 	assert(parent == nullptr);
 	this->parent = parnt;
 
-#ifndef  POINTS_ARE_AVALIBLE
+#ifndef  POINTS_ARE_AVAILABLE
 	this->parent->totalCount += totalCount;
-#endif // ! POINAS_ARE_AVALIBLE
+#endif // ! POINTS_ARE_AVAILABLE
 
 
 	// at moment when this must be dead
 	assert(lived);
 
-	if (factory->settings.createBinayMasks)
+	if (factory->settings.createBinaryMasks)
 	{
 		parnt->resline->matr.reserve(parnt->resline->matr.size() + resline->matr.size() + 1);
 		for (barvalue<T>& val : resline->matr)
@@ -132,7 +132,7 @@ void bc::Component<T>::setParrent(bc::Component<T>* parnt)
 	kill();
 
 	if (factory->settings.createGraph)
-		resline->setParrent(parnt->resline);
+		resline->setparent(parnt->resline);
 }
 
 template<class T>
