@@ -106,7 +106,6 @@
   <ItemGroup>
     <ClCompile Include="source\barcodeCreator.cpp" />
     <ClCompile Include="source\barclasses.cpp" />
-    <ClCompile Include="source\barImg.cpp" />
     <ClCompile Include="source\Barpy.cpp" />
     <ClCompile Include="source\Component.cpp" />
     <ClCompile Include="source\Hole.cpp" />

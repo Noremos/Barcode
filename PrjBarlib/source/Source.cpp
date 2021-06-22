@@ -85,8 +85,8 @@ void compiteBarAndBar(bc::BarImg<float>& img, bc::BarImg<float>& mat)
 	{
 		for (int j = 0; j < img.wid(); j++)
 		{
-			float av = round(img.get(j, i)*10000);
-			float bv = round(mat.get(j, i)*10000);
+			float av = round(img.get(j, i) * 10000);
+			float bv = round(mat.get(j, i) * 10000);
 			assert(av == bv);
 		}
 	}
@@ -107,7 +107,7 @@ bc::BarImg<T> restoreToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T max
 	auto* it = cont->getItem(0);
 	auto& lines = it->barlines;
 	bc::BarImg<T> img(wid, hei);
-	for (size_t i = 0; i < wid*hei; i++)
+	for (size_t i = 0; i < wid * hei; i++)
 	{
 		img.setLiner(i, maxval);
 	}
@@ -359,7 +359,7 @@ void checkSingleMat()
 }
 void testMats(bool createNew = false)
 {
-	string testsuit[]{"as.png", "as3.png", "as4.png","as2.png","as1.png" };
+	string testsuit[]{ "as.png", "as3.png", "as4.png","as2.png","as1.png" };
 	for (auto& test : testsuit)
 	{
 		Mat testmat = cv::imread((string)"../PrjTests/data/tests/" + test, cv::IMREAD_GRAYSCALE);
@@ -405,9 +405,9 @@ void testProblemFloatMats()
 {
 	std::string pathFromGeo = "D:\\Programs\\Python\\barcode\\experiments\\geo\\imgs_one\\imgOut0.bf";
 
-		std::string pathArctic = "D:\\Programs\\QT\\ArctivViewer\\ArcticViewer\\temp\\out.fd";
+	std::string pathArctic = "D:\\Programs\\QT\\ArctivViewer\\ArcticViewer\\temp\\out.fd";
 
-	std::vector<char> vec,vec2;
+	std::vector<char> vec, vec2;
 
 	readImg(pathFromGeo, vec);
 	bc::BarImg<float> imgFromGeo((int)60, (int)60, 1, (uchar*)vec.data() + 2, false, false);
@@ -445,7 +445,7 @@ void testProblemFloatMats()
 	//auto* qgis = retFromQGIS->getItem(0);
 	//retFromQGIS->relen();
 	//retFromQGIS->removePorog(3);
-	
+
 	auto* retFromArctic = test.createBarcode(&findedImg, bcont);
 	retFromArctic->relen();
 	retFromArctic->removePorog(3);
@@ -465,7 +465,7 @@ void testBigProblemFloatMats()
 	std::vector<char> vec;
 
 	readImg(pathBig, vec);
-	
+
 	int w = 60, h = 60;
 	int off = 2;
 	if (vec[0] == 'b')
@@ -484,7 +484,7 @@ void testBigProblemFloatMats()
 		h = con1.ival;
 		off = 9;
 	}
-	
+
 	bc::BarImg<float> imgFromGeo(w, h, 1, (uchar*)vec.data() + off, false, false);
 
 	bc::BarcodeCreator<float> test;
@@ -495,7 +495,7 @@ void testBigProblemFloatMats()
 	//retFromQGIS->relen();
 	//retFromQGIS->removePorog(3);
 
-	float maxs = imgFromGeo.max(); 
+	float maxs = imgFromGeo.max();
 	float mins = imgFromGeo.min();
 
 	//imgFromGeo.addToMat(-mins);
@@ -530,7 +530,7 @@ void testBigProblemFloatMats()
 
 void testFloatMats()
 {
-	for(int i=0;i<24;++i)
+	for (int i = 0; i < 24; ++i)
 	{
 		std::string path = "D:\\Programs\\Python\\barcode\\experiments\\geo\\imgs\\imgOut";
 		path += std::to_string(i);
@@ -557,7 +557,7 @@ void testFloatMats()
 
 		bc::Barcontainer<float>* sdd = (bc::Barcontainer<float>*)ret->clone();
 		float re = sdd->compireFull(ret, bc::CompireStrategy::compire3dBrightless);
-		
+
 		bc::BarImg<float> retimg = restoreToBarimg(sdd, 60, 60, baseimg.max());
 
 		compiteBarAndBar(retimg, baseimg);
@@ -595,7 +595,48 @@ void checkBigImg()
 	auto* ret = test.createBarcode(&mf, bcont);
 	auto t2 = high_resolution_clock::now();
 	auto ms_int = duration_cast<milliseconds>(t2 - t1);
-	std::cout << "time:" << (double)(ms_int.count())/1000 << std::endl;
+	std::cout << "time:" << (double)(ms_int.count()) / 1000 << std::endl;
+	delete ret;
+}
+
+void caclSize(bc::Barcontainer<uchar>* ret)
+{
+	auto* item = ret->getItem(0);
+	int totalSize = 0;
+	totalSize += sizeof(*item) + 8;
+	int more = 0;
+	for (size_t i = 0; i < item->barlines.size(); i++)
+	{
+		int locsize = item->barlines[i]->matr.capacity() * sizeof(item->barlines[i]->matr[0]);
+		more += locsize - item->barlines[i]->matr.size() * sizeof(item->barlines[i]->matr[0]);
+
+		if (locsize / 1024 / 1024 > 0)
+			std::cout << "loc size is:" << locsize / 1024 / 1024 << std::endl;
+		totalSize += sizeof(*item->barlines[i]) + 8 + locsize;
+	}
+	std::cout << "Size is:" << totalSize / 1024 / 1024 << std::endl;
+	std::cout << "Oversize is:" << more / 1024 / 1024 << std::endl;
+}
+
+void testImg(string path)
+{
+	bc::BarConstructor<uchar> bcont;
+	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.createBinaryMasks = true;
+	bcont.createGraph = false;
+	bcont.returnType = bc::ReturnType::barcode2d;
+	bcont.createNewComponentOnAttach = false;
+	bcont.setStep(255);
+
+	bc::BarcodeCreator<uchar>* test = new bc::BarcodeCreator<uchar>();
+
+	Mat testmat = cv::imread(path, cv::IMREAD_GRAYSCALE);
+	//Mat testmat = cv::imread((string)"D:\\Programs\\Python\\barcode\\lenna.png", cv::IMREAD_GRAYSCALE);
+	bc::BarMat<uchar> mf(testmat);
+
+	auto* ret = test->createBarcode(&mf, bcont);
+	delete test;
+	caclSize(ret);
 	delete ret;
 }
 
@@ -684,6 +725,8 @@ int main()
 
 	//printf("Check big problem float imgs: sart...\n");
 	//testBigProblemFloatMats();
-	printf("done\n\n");
+	//printf("done\n\n");
+
+	testImg("../PrjTests/data/city.png");//bigimg.jpg
 	return 0;
 }
