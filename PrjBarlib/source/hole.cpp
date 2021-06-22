@@ -12,7 +12,7 @@ template<class T>
 bc::Hole<T>::Hole(point p1, point p2, point p3, BarcodeCreator<T> *factory) : Component<T>(factory)
 {
     isValid = true;
-//    zeorStart = p1;
+//    zeroStart = p1;
     // ++factory->lastB;
 
     add(p1);

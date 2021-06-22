@@ -66,10 +66,10 @@ void bc::Baritem<T>::getBettyNumbers(int* /*bs*/)
 //template<class T>
 //void cloneGraph(bc::barline<T>* old, bc::barline<T>* newone)
 //{
-//	for (size_t i = 0; i < old->childrens.size(); i++)
+//	for (size_t i = 0; i < old->children.size(); i++)
 //	{
-//		cloneGraph(old->childrens[i], newone->childrens[i]);
-//		old->childrens[i] = newone->childrens[i]->clone();
+//		cloneGraph(old->children[i], newone->children[i]);
+//		old->children[i] = newone->children[i]->clone();
 //	}
 //}
 
@@ -80,7 +80,7 @@ bc::Baritem<T>* bc::Baritem<T>::clone() const
 	Baritem<T>* nb = new Baritem<T>(wid);
 	nb->barlines.insert(nb->barlines.begin(), barlines.begin(), barlines.end());
 	bool createGraph = false;
-	if ((barlines.size() > 0 && barlines[0]->parrent != nullptr) || barlines[0]->childrens.size() > 0)
+	if ((barlines.size() > 0 && barlines[0]->parent != nullptr) || barlines[0]->children.size() > 0)
 		createGraph = true;
 
 	for (size_t i = 0, total = nb->barlines.size(); i < total; ++i)
@@ -96,10 +96,10 @@ bc::Baritem<T>* bc::Baritem<T>::clone() const
 		for (size_t i = 0, total = nb->barlines.size(); i < total; ++i)
 		{
 			auto* nline = nb->barlines[i];
-			nline->parrent = oldNew[nline->parrent];
+			nline->parent = oldNew[nline->parent];
 
-			for (size_t i = 0; i < nline->childrens.size(); i++)
-				nline->childrens[i] = oldNew[nline->childrens[i]];
+			for (size_t i = 0; i < nline->children.size(); i++)
+				nline->children[i] = oldNew[nline->children[i]];
 		}
 	}
 	return nb;

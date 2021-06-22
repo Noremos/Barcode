@@ -46,9 +46,9 @@ void set(bc::barline<uchar>* rt, Bimg8* data)
 		data->minus(p.getPoint(data->wid()), p.value);
 	}
 
-	for (size_t i = 0; i < rt->childrens.size(); i++)
+	for (size_t i = 0; i < rt->children.size(); i++)
 	{
-		::set(rt->childrens[i], data);
+		::set(rt->children[i], data);
 	}
 }
 
@@ -102,7 +102,7 @@ void testInitFromMat()
 
 
 template<class T>
-bc::BarImg<T> restreToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T maxval)
+bc::BarImg<T> restoreToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T maxval)
 {
 	auto* it = cont->getItem(0);
 	auto& lines = it->barlines;
@@ -130,7 +130,7 @@ bc::BarImg<T> restreToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T maxv
 
 
 template<class T>
-bc::BarImg<T> restre255ToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T minval)
+bc::BarImg<T> restore255ToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T minval)
 {
 	auto* it = cont->getItem(0);
 	auto& lines = it->barlines;
@@ -155,7 +155,7 @@ bc::BarImg<T> restre255ToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T m
 	return img;
 }
 
-Bimg8 restreToBarimgFromGraph(bc::Barcontainer<uchar>* cont, int wid, int hei, uchar maxval)
+Bimg8 restoreToBarimgFromGraph(bc::Barcontainer<uchar>* cont, int wid, int hei, uchar maxval)
 {
 	auto* it = cont->getItem(0);
 	auto& lines = it->barlines;
@@ -171,7 +171,7 @@ void test(bool graph, Bbase8& testimg, bool createNew = false)
 {
 	bc::BarConstructor<uchar> bcont;
 	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
-	bcont.createBinayMasks = true;
+	bcont.createBinaryMasks = true;
 	bcont.createGraph = graph;
 	bcont.returnType = bc::ReturnType::barcode2d;
 	bcont.createNewComponentOnAttach = createNew;
@@ -188,11 +188,11 @@ void test(bool graph, Bbase8& testimg, bool createNew = false)
 	Bimg8 imgrest(1, 1);
 	if (graph)
 	{
-		imgrest = restreToBarimgFromGraph(ret, testimg.wid(), testimg.hei(), max);
+		imgrest = restoreToBarimgFromGraph(ret, testimg.wid(), testimg.hei(), max);
 	}
 	else
 	{
-		imgrest = restreToBarimg(ret, testimg.wid(), testimg.hei(), max);
+		imgrest = restoreToBarimg(ret, testimg.wid(), testimg.hei(), max);
 	}
 
 	Mat orig = bc::convertProvider2Mat(&testimg);
@@ -214,7 +214,7 @@ void testf255t0(Bbase8& testimg)
 {
 	bc::BarConstructor<uchar> bcont;
 	bcont.addStructure(bc::ProcType::f255t0, bc::ColorType::gray, bc::ComponentType::Component);
-	bcont.createBinayMasks = true;
+	bcont.createBinaryMasks = true;
 	bcont.createGraph = false;
 	bcont.returnType = bc::ReturnType::barcode2d;
 	bcont.createNewComponentOnAttach = false;
@@ -403,7 +403,7 @@ union conv
 
 void testProblemFloatMats()
 {
-	std::string pathFromGeo = "D:\\Programs\\Python\\barcode\\experements\\geo\\imgs_one\\imgOut0.bf";
+	std::string pathFromGeo = "D:\\Programs\\Python\\barcode\\experiments\\geo\\imgs_one\\imgOut0.bf";
 
 		std::string pathArctic = "D:\\Programs\\QT\\ArctivViewer\\ArcticViewer\\temp\\out.fd";
 
@@ -433,7 +433,7 @@ void testProblemFloatMats()
 
 	bc::BarConstructor<float> bcont;
 	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
-	bcont.createBinayMasks = false;
+	bcont.createBinaryMasks = false;
 	bcont.createGraph = false;
 	bcont.returnType = bc::ReturnType::barcode3d;
 	bcont.createNewComponentOnAttach = false;
@@ -502,7 +502,7 @@ void testBigProblemFloatMats()
 
 	auto* retFromArctic = test.searchHoles(imgFromGeo.getData(), w, h);
 	auto* arcticItem = retFromArctic->getItem(0);
-	auto img = restre255ToBarimg(retFromArctic, w, h, mins);
+	auto img = restore255ToBarimg(retFromArctic, w, h, mins);
 	std::cout << arcticItem->barlines.size() << std::endl;
 
 	//compiteBarAndBar(img, imgFromGeo);
@@ -532,7 +532,7 @@ void testFloatMats()
 {
 	for(int i=0;i<24;++i)
 	{
-		std::string path = "D:\\Programs\\Python\\barcode\\experements\\geo\\imgs\\imgOut";
+		std::string path = "D:\\Programs\\Python\\barcode\\experiments\\geo\\imgs\\imgOut";
 		path += std::to_string(i);
 		path += ".bf";
 		std::ifstream input(path, std::ios::binary);
@@ -546,7 +546,7 @@ void testFloatMats()
 
 		bc::BarConstructor<float> bcont;
 		bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
-		bcont.createBinayMasks = true;
+		bcont.createBinaryMasks = true;
 		bcont.createGraph = false;
 		bcont.returnType = bc::ReturnType::barcode3d;
 		bcont.createNewComponentOnAttach = false;
@@ -558,7 +558,7 @@ void testFloatMats()
 		bc::Barcontainer<float>* sdd = (bc::Barcontainer<float>*)ret->clone();
 		float re = sdd->compireFull(ret, bc::CompireStrategy::compire3dBrightless);
 		
-		bc::BarImg<float> retimg = restreToBarimg(sdd, 60, 60, baseimg.max());
+		bc::BarImg<float> retimg = restoreToBarimg(sdd, 60, 60, baseimg.max());
 
 		compiteBarAndBar(retimg, baseimg);
 
@@ -574,7 +574,7 @@ void checkBigImg()
 {
 	bc::BarConstructor<uchar> bcont;
 	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
-	bcont.createBinayMasks = true;
+	bcont.createBinaryMasks = true;
 	bcont.createGraph = false;
 	bcont.returnType = bc::ReturnType::barcode2d;
 	bcont.createNewComponentOnAttach = false;
@@ -603,7 +603,7 @@ void testMaxLen()
 {
 	bc::BarcodeCreator<uchar> bc;
 	bc::BarConstructor<uchar> constr;
-	constr.createBinayMasks = true;
+	constr.createBinaryMasks = true;
 	constr.createGraph = false;
 	constr.createNewComponentOnAttach = false;
 	constr.returnType = bc::ReturnType::barcode2d;
@@ -616,7 +616,7 @@ void testMaxLen()
 
 	auto varcode = bc.createBarcode(&gray, constr);
 
-	Bimg8 sd = restreToBarimg(varcode, gray.wid(), gray.hei(), gray.max());
+	Bimg8 sd = restoreToBarimg(varcode, gray.wid(), gray.hei(), gray.max());
 	compiteBarAndBar(sd, gray);
 }
 
@@ -624,7 +624,7 @@ void checkSameVals()
 {
 	bc::BarcodeCreator<uchar> bc;
 	bc::BarConstructor<uchar> constr;
-	constr.createBinayMasks = true;
+	constr.createBinaryMasks = true;
 	constr.createGraph = false;
 	constr.createNewComponentOnAttach = false;
 	constr.returnType = bc::ReturnType::barcode2d;
@@ -662,27 +662,27 @@ int main()
 	testMats();
 	printf("done\n\n");
 	
-	printf("maxLen test: sart...\n");
+	printf("maxLen test: start...\n");
 	testMaxLen();
 	printf("done\n\n");
 
-	printf("BigImg test: sart...\n");
+	printf("BigImg test: start...\n");
 	checkBigImg();
 	printf("done\n\n");
 
-	printf("Check fix for zero len: sart...\n");
+	printf("Check fix for zero len: start...\n");
 	checkSameVals();
 	printf("done\n\n");
 
-	/*printf("Check float imgs: sart...\n");
+	/*printf("Check float imgs: start...\n");
 	testFloatMats();
 	printf("done\n\n");*/
 
-	printf("Check problem float imgs: sart...\n");
+	printf("Check problem float imgs: start...\n");
 	testProblemFloatMats();
 	printf("done\n\n");
 
-	printf("Check big problem float imgs: sart...\n");
+	printf("Check big problem float imgs: start...\n");
 	//testBigProblemFloatMats();
 	printf("done\n\n");
 	return 0;

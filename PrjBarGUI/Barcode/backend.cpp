@@ -47,7 +47,7 @@ std::vector<barstruct> Backend::getBarStr()
     return vec;
 }
 
-bool Backend::parceJson(QString filePath, QString prjPath)
+bool Backend::parseJson(QString filePath, QString prjPath)
 {
     QFile file;
     file.setFileName(filePath);
@@ -254,7 +254,7 @@ bool Backend::openProject(QString prjFilePath)
 
     //to works
     path.remove(pos, path.length() - pos);
-    if (!parceJson(prjFilePath+"", path))
+    if (!parseJson(prjFilePath+"", path))
         return false;
 
     imgLoaded = (file.exists(path + "/source.png"));

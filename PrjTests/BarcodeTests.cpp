@@ -14,9 +14,9 @@ namespace BarcodeTests
 
 			bc::BarConstructor<uchar> bcont;
 			bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
-			bcont.createBinayMasks = false;
+			bcont.createBinaryMasks = false;
 			bcont.createGraph = false;
-			bcont.createBinayMasks = false;
+			bcont.createBinaryMasks = false;
 			bcont.returnType = bc::ReturnType::barcode2d;
 			//bcont.setMaxPorog(1);
 			//bcont.maxTypeValue.set(255);

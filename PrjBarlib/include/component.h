@@ -3,7 +3,7 @@
 #include "barstrucs.h"
 
 
-#define POINTS_ARE_AVALIBLE
+#define POINTS_ARE_AVAILABLE
 namespace bc
 {
 	typedef uint poidex;
@@ -18,7 +18,7 @@ namespace bc
 	class Component
 	{
 	public:
-#ifdef POINTS_ARE_AVALIBLE
+#ifdef POINTS_ARE_AVAILABLE
 		size_t getTotalSize()
 		{
 			return resline->matr.size();
@@ -31,7 +31,7 @@ namespace bc
 		}
 	private:
 		size_t totalCount = 0/*, ownSize = 0*/;
-#endif // !POINAS_ARE_AVALIBLE
+#endif // !POINTS_ARE_AVAILABLE
 	protected:
 		BarcodeCreator<T>* factory;
 		Component<T>* cachedMaxParent = nullptr;
@@ -70,7 +70,7 @@ namespace bc
 		//	//return end - start;
 		//}
 		//    cv::Mat binmap;
-		Component<T>* getMaxParrent()
+		Component<T>* getMaxparent()
 		{
 			if (parent == nullptr)
 				return this;
@@ -91,7 +91,7 @@ namespace bc
 		bool isContain(poidex index);
 		virtual void add(poidex index);
 		virtual void kill();
-		virtual void setParrent(Component<T>* parnt);
+		virtual void setparent(Component<T>* parnt);
 
 		virtual ~Component();
 
