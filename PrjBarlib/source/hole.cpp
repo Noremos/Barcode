@@ -145,6 +145,7 @@ bool bc::Hole<T>::checkValid(point p)
     for (size_t i = 0; i < 8; ++i)
     {
         //Она соединяется только с соседними ближйми ребрами
+        //FIXME Same expression on both sides of '||'.
         if (this->isContain(p + poss[i]) && (this->isContain(p + poss[i + 1]) || this->isContain(p + poss[i + 1])))//есть ли нужное ребро
         {
             isValid = true;
