@@ -611,7 +611,10 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src,  ProcType& type
 		}
 
 		if (!originalImg)
+		{
 			delete src;
+			src = nullptr;
+		}
 
 		originalImg = false;
 		type = ProcType::f0t255;
@@ -621,7 +624,7 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src,  ProcType& type
 		setWorkingImg(src);
 
 
-	totalSize = src->length();
+	totalSize = workingImg->length();
 	included = new Include<T>[totalSize];
 	memset(included, 0, totalSize * sizeof(Include<T>));
 
