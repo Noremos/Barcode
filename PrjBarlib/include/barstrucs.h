@@ -9,6 +9,8 @@
 
 #include "include_cv.h"
 
+#define BARVALUE_RAM_OPTIMIZATION
+
 namespace bc
 {
 
@@ -333,26 +335,35 @@ namespace bc
 		}
 	};
 
+#define OPTTIF((A), (B)) #ifdef BARVALUE_RAM_OPTIMIZATION (A) #else (B)
+
 	template<class T>
 	struct barvalue
 	{
+#ifdef BARVALUE_RAM_OPTIMIZATION
+		const uint MAX_WID = 65535;
 		uint index;
+#else
+		uint x;
+		uint y;
+#endif
 		T value;
 
-		barvalue(int x, int y, T value, int wid)
+		barvalue(int x, int y, T value)
 		{
 			assert(x >= 0);
 			assert(y >= 0);
-			index = y * wid + x;
+			OPTTIF(index = y * MAX_WID + x, this->x = x; this->y = y);
 			this->value = value;
 		}
 
-		barvalue(bc::point point, T value, int wid)
+		barvalue(bc::point point, T value)
 		{
 			assert(point.x >= 0);
 			assert(point.y >= 0);
 
-			index = point.y * wid + point.x;
+			OPTTIF(index = point.y * MAX_WID + point.x,
+					x = point.x; y = point.y);
 			this->value = value;
 		}
 
@@ -365,41 +376,39 @@ namespace bc
 		barvalue()
 		{ }
 
-		bc::point getPoint(int wid) const
+		bc::point getPoint() const
 		{
-			return std::move(bc::point(getX(wid), getY(wid)));
+			return std::move(bc::point(getX(), getY()));
 		}
 
-		int getIndex() const
+		int getIndex(int wid = 0) const
 		{
-			return index;
+			return OPTTIF(index, y * wid + x);
 		}
 
-		int getX(int wid) const
+		int getX() const
 		{
-			return index % wid;
+			return OPTTIF(index % MAX_WID, x);
 		}
 
-		void setX(int x, int wid)
+		void setX(int x)
 		{
-			int oldY = getY(wid);
-			index = oldY * wid + x;
+			OPTTIF(index = getY() * MAX_WID + x, this->x = x);
 		}
 
-		int getY(int wid) const
+		int getY() const
 		{
-			return index / wid;
+			return OPTTIF(index / MAX_WID, y);
 		}
 
-		void setY(int y, int wid)
+		void setY(int y)
 		{
-			int oldX = getX(wid);
-			index = y * wid + oldX;
+			OPTTIF(index = y * MAX_WID + getX(), this->y = y);
 		}
 
-		pybarvalue<T> getPyValue(int wid) const
+		pybarvalue<T> getPyValue() const
 		{
-			return pybarvalue<T>(getX(wid), getY(wid), value);
+			return pybarvalue<T>(getX(), getY(), value);
 		}
 	};
 

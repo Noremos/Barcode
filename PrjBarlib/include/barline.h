@@ -120,19 +120,19 @@ namespace bc
 		BarRect getBarRect()  const
 		{
 			int l, r, t, d;
-			r = l = matr[0].getX(matWid);
-			t = d = matr[0].getY(matWid);
+			r = l = matr[0].getX();
+			t = d = matr[0].getY();
 			for (int j = 0; j < matr.size(); ++j)
 			{
-				if (l > matr[j].getX(matWid))
-					l = matr[j].getX(matWid);
-				if (r < matr[j].getX(matWid))
-					r = matr[j].getX(matWid);
+				if (l > matr[j].getX())
+					l = matr[j].getX();
+				if (r < matr[j].getX())
+					r = matr[j].getX();
 
-				if (t > matr[j].getY(matWid))
-					t = matr[j].getY(matWid);
-				if (d < matr[j].getY(matWid))
-					d = matr[j].getY(matWid);
+				if (t > matr[j].getY())
+					t = matr[j].getY();
+				if (d < matr[j].getY())
+					d = matr[j].getY();
 			}
 			return BarRect(l, t, r - l + 1, d - t + 1);
 		}
@@ -144,7 +144,7 @@ namespace bc
 
 		void addCoord(const point& first, T bright)
 		{
-			matr.push_back(std::move(barvalue<T>(first, bright, matWid)));
+			matr.push_back(std::move(barvalue<T>(first, bright)));
 		}
 		void addCoord(barvalue<T> val)
 		{
@@ -200,13 +200,21 @@ namespace bc
 			return matr[index];
 		}
 
+		bc::point getPointValue(size_t index) const
+		{
+			if (index >= matr.size())
+				index = index % matr.size();
+
+			return matr[index].getPoint();
+		}
+
 		void getChildsMatr(std::unordered_map<bc::point, bool, bc::pointHash>& childs)
 		{
 			for (barline<T>* chil : this->children)
 			{
 				for (barvalue<T>& val : chil->matr)
 				{
-					childs.insert(std::pair< bc::point, bool>(val.getPoint(matWid), true));
+					childs.insert(std::pair< bc::point, bool>(val.getPoint(), true));
 				}
 			}
 		}
@@ -302,14 +310,14 @@ namespace bc
 
 				for (size_t i = 0; i < matr.size(); i++)
 				{
-					if (childs.find(matr[i].getPoint(matWid)) == childs.end())
-						l.append(matr[i].getPyValue(matWid));
+					if (childs.find(matr[i].getPoint()) == childs.end())
+						l.append(matr[i].getPyValue());
 				}
 			}
 			else
 			{
 				for (size_t i = 0; i < matr.size(); i++)
-					l.append(matr[i].getPyValue(matWid));
+					l.append(matr[i].getPyValue());
 			}
 
 			return l;
@@ -338,16 +346,16 @@ namespace bc
 
 				for (auto iter = matr.begin(); iter != matr.end(); ++iter)
 				{
-					if (childs.find(iter->getPoint(matWid)) == childs.end())
-						pydict[iter->getPoint(matWid)] = iter->value;
+					if (childs.find(iter->getPoint()) == childs.end())
+						pydict[iter->getPoint()] = iter->value;
 				}
 			}
 			else
 			{
 				for (auto iter = matr.begin(); iter != matr.end(); ++iter)
 				{
-					if (childs.find(iter->getPoint(matWid)) == childs.end())
-						pydict[iter->getPoint(matWid)] = iter->value;
+					if (childs.find(iter->getPoint()) == childs.end())
+						pydict[iter->getPoint()] = iter->value;
 				}
 			}
 			return pydict;
