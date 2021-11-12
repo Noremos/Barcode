@@ -12,11 +12,6 @@ bc::Baritem<T>::Baritem(int wid)
 	this->wid = wid;
 }
 
-template<class T>
-bc::Baritem<T>::Baritem(const bc::Baritem<T>& obj)
-{
-	barlines.insert(barlines.begin(), obj.barlines.begin(), obj.barlines.end());
-}
 
 template<class T>
 void bc::Baritem<T>::add(T st, T len)
@@ -36,7 +31,7 @@ T bc::Baritem<T>::sum() const
 {
 	T ssum = 0;
 	for (const barline<T>* l : barlines)
-		ssum += l->len;
+		ssum += l->len();
 
 	return ssum;
 }
@@ -110,8 +105,8 @@ T bc::Baritem<T>::maxLen() const
 {
 	T max = 0;
 	for (const barline<T>* l : barlines)
-		if (l->len > max)
-			max = l->len;
+		if (l->len() > max)
+			max = l->len();
 
 	return max;
 }
@@ -143,7 +138,7 @@ void bc::Baritem<T>::removePorog(const T porog)
 	for (size_t i = 0; i < barlines.size(); i++)
 	{
 		barline<T>* line = barlines[i];
-		if (line->len >= porog)
+		if (line->len() >= porog)
 			res.push_back(line);
 		else// if (line->isCopy)
 			delete line;
@@ -180,7 +175,7 @@ float findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat)
 		T st = MAX(X->start, Y->start);
 		T ed = MIN(X->end(), Y->end());
         minlen = static_cast<float>(ed - st);
-        maxlen = static_cast<float>(MAX(X->len, Y->len));
+        maxlen = static_cast<float>(MAX(X->len(), Y->len()));
 	}
 	else
 	{
@@ -200,7 +195,7 @@ void soirBarlens(bc::barlinevector<T>& barl)
 {
 	std::sort(barl.begin(), barl.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
 		{
-			return a->len > b->len;
+			return a->len() > b->len();
 		});
 }
 
@@ -235,7 +230,7 @@ float bc::Baritem<T>::compireBestRes(const bc::Baritem<T>* bc, bc::CompireStrate
 				if (coof > maxCoof)
 				{
 					maxCoof = coof;
-					maxsum = (float)(Xbarlines[i]->len + Ybarlines[j]->len);
+					maxsum = (float)(Xbarlines[i]->len() + Ybarlines[j]->len());
 					ik = i;
 					jk = j;
 				}
@@ -270,7 +265,7 @@ float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy 
 		if (coof < 0)
 			continue;
 
-        float xysum = static_cast<float>(Xbarlines[i]->len + Ybarlines[i]->len);
+        float xysum = static_cast<float>(Xbarlines[i]->len() + Ybarlines[i]->len());
 		totalsum += xysum;
 		tcoof += xysum * coof;
 	}
@@ -305,7 +300,7 @@ float bc::Baritem<T>::compareOccurrence(const bc::Baritem<T>* bc, bc::CompireStr
 			if (coof > maxCoof)
 			{
 				maxCoof = coof;
-				maxsum = (float)(Xbarlines[re]->len + Ybarlines[j]->len);
+				maxsum = (float)(Xbarlines[re]->len() + Ybarlines[j]->len());
 				jk = j;
 			}
 		}
@@ -335,7 +330,7 @@ void bc::Baritem<T>::normalize()
 	for (size_t i = 0; i < barlines.size(); ++i)
 	{
 		barlines[i]->start = (barlines[i]->start - mini) / (maxi - mini);
-		barlines[i]->len = (barlines[i]->len - mini) / (maxi - mini);
+		barlines[i]->m_end = barlines[i]->start + (barlines[i]->len() - mini) / (maxi - mini);
 	}
 }
 
@@ -565,3 +560,21 @@ bc::Barcontainer<T>::Barcontainer::~Barcontainer()
 INIT_TEMPLATE_TYPE(bc::Barbase)
 INIT_TEMPLATE_TYPE(bc::Baritem)
 INIT_TEMPLATE_TYPE(bc::Barcontainer)
+
+#ifdef USE_OPENCV
+
+
+//-------------BARIMG
+template<>
+barvec3b& bc::BarMat<barvec3b>::get(int x, int y) const
+{
+	return *reinterpret_cast<barvec3b*>(&mat.at<cv::Vec3b>(y, x));
+}
+
+template<class T>
+T& bc::BarMat<T>::get(int x, int y) const
+{
+	return mat.at<T>(y, x);
+}
+#endif // USE_OPENCV
+

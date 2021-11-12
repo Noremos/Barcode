@@ -90,8 +90,9 @@ namespace bc
 
 		bool isContain(poidex index);
 		virtual void add(poidex index);
+		virtual void add(poidex index, const point p);
 		virtual void kill();
-		virtual void setparent(Component<T>* parnt);
+		virtual void setParent(Component<T>* parnt);
 
 		virtual ~Component();
 

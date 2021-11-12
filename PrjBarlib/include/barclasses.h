@@ -34,7 +34,49 @@ namespace bc
 		int wid;
 	public:
 		Baritem(int wid = 0);
-		Baritem(const Baritem<T>& obj);
+
+		//copy constr
+		Baritem(Baritem const& obj) {
+			this->rootNode = obj.rootNode;
+			this->wid = obj.wid;
+
+			for (auto* barval : obj.barlines)
+			{
+				this->barlines.push_back(barval->clone());
+			}
+		}
+
+		// copy
+		void operator=(Baritem const& obj)
+		{
+			this->rootNode = obj.rootNode;
+			this->wid = obj.wid;
+
+			for (auto* barval : obj.barlines)
+			{
+				this->barlines.push_back(barval->clone());
+			}
+		}
+
+		// move costr
+		Baritem(Baritem&& obj) {
+
+			this->rootNode = std::exchange(obj.rootNode, nullptr);
+			this->wid = obj.wid;
+
+			this->barlines = obj.barlines;
+			obj.barlines.clear();
+		}
+
+		// move assign
+		void operator=(Baritem&& obj) {
+			this->rootNode = std::exchange(obj.rootNode, nullptr);
+			this->wid = obj.wid;
+
+			this->barlines = obj.barlines;
+			obj.barlines.clear();
+		}
+
 		//    cv::Mat binmap;
 		void add(T st, T len);
 		void add(barline<T>* line);
@@ -70,13 +112,13 @@ namespace bc
 
 		T getMax()
 		{
-			T max = 0;
+			T _max{ 0 };
 			for (auto* b : this->barlines)
 			{
-				if (b->start + b->len > max)
-					max = b->start + b->len;
+				if (b->start + b->len() > _max)
+					_max = b->start + b->len();
 			}
-			return max;
+			return _max;
 		}
 
 #ifdef _PYD
@@ -88,7 +130,7 @@ namespace bc
 			memset(hist, 0, maxLen * sizeof(int));
 
 			for (size_t i = 0; i < barlines.size(); i++)
-				++hist[(uchar)barlines[i]->len];
+				++hist[static_cast<int>(barlines[i]->len())];
 
 			bp::list pyhist;
 			for (size_t i = 0; i < maxLen; i++)

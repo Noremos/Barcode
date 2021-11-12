@@ -28,7 +28,8 @@ namespace bc
 
 		// Main params
 		T start;
-		T len;
+		//T len;
+		T m_end;
 		int matWid;
 
 	private:
@@ -40,10 +41,99 @@ namespace bc
 		{
 			matWid = wid;
 		}
-		barline(T _start, T _len, int wid, barcounter<T>* _barc = nullptr, size_t coordsSize = 0) : start(_start), len(_len), matWid(wid) {
+		barline(T _start, T _end, int wid, barcounter<T>* _barc = nullptr, size_t coordsSize = 0) : start(_start), m_end(_end), matWid(wid)
+		{
 			matr.reserve(coordsSize);
 			bar3d = _barc;
 			assert(matWid != 0);
+		}
+
+		//copy const
+		barline(barline const& obj)
+		{
+			this->start = obj.start;
+			this->m_end = obj.m_end;
+			this->matWid = obj.matWid;
+			this->numberInParent = obj.numberInParent;
+			this->parent = obj.parent;
+			this->children = obj.children;
+
+			if (obj.matr.size() != 0)
+			{
+				this->matr.insert(this->matr.begin(), obj.matr.begin(), obj.matr.end());
+			}
+			this->isCopy = true;
+
+			if (obj.bar3d != nullptr)
+			{
+				this->bar3d = new barcounter<T>();
+				this->bar3d->insert(this->bar3d->begin(), obj.bar3d->begin(), obj.bar3d->end());
+			}
+		}
+
+		// copy
+		void operator=(barline const& obj)
+		{
+			this->start = obj.start;
+			this->m_end = obj.m_end;
+			this->matWid = obj.matWid;
+
+			this->numberInParent = obj.numberInParent;
+			this->parent = obj.parent;
+			this->children = obj.children;
+
+			if (obj.matr.size() != 0)
+				this->matr.insert(this->matr.begin(), obj.matr.begin(), obj.matr.end());
+
+			this->isCopy = true;
+
+			if (obj.bar3d != nullptr)
+			{
+				this->bar3d = new barcounter<T>();
+				this->bar3d->insert(this->bar3d->begin(), obj.bar3d->begin(), obj.bar3d->end());
+			}
+		}
+
+		// move costr
+		barline(barline&& obj) {
+			this->start = obj.start;
+			this->m_end = obj.m_end;
+			this->matWid = obj.matWid;
+
+			this->numberInParent = obj.numberInParent;
+			this->parent = std::exchange(obj.parent, nullptr);
+			this->children = std::exchange(obj.children, nullptr);
+			this->isCopy = false;
+
+			if (obj.matr.size() != 0)
+			{
+				this->matr = obj.mart;
+				obj.mart.clear();
+			}
+
+			this->bar3d = obj.bar3d;
+			obj.bar3d = nullptr;
+		}
+
+		// move assign
+		void operator=(barline&& obj)
+		{
+			this->start = obj.start;
+			this->m_end = obj.m_end;
+			this->matWid = obj.matWid;
+			this->isCopy = false;
+
+			this->numberInParent = obj.numberInParent;
+			this->parent = std::exchange(obj.parent, nullptr);
+			this->children = std::exchange(obj.children, nullptr);
+
+			if (obj.matr.size() != 0)
+			{
+				this->matr = obj.mart;
+				obj.mart.clear();
+			}
+
+			this->bar3d = obj.bar3d;
 		}
 
 		~barline()
@@ -137,15 +227,11 @@ namespace bc
 			return BarRect(l, t, r - l + 1, d - t + 1);
 		}
 
-		void addCoord(const uint& ind, T bright)
-		{
-			matr.push_back(std::move(barvalue<T>(ind, bright)));
-		}
-
 		void addCoord(const point& first, T bright)
 		{
 			matr.push_back(std::move(barvalue<T>(first, bright)));
 		}
+
 		void addCoord(barvalue<T> val)
 		{
 			matr.push_back(val);
@@ -156,7 +242,12 @@ namespace bc
 
 		barline* clone() const
 		{
-			auto temp = new barline(start, len, matWid, nullptr);
+			barline* temp = new barline(start, m_end, matWid, nullptr);
+			
+			temp->numberInParent = this->numberInParent;
+			temp->parent = this->parent;
+			temp->children = this->children;
+
 			if (matr.size() != 0)
 			{
 				temp->matr.insert(temp->matr.begin(), matr.begin(), matr.end());
@@ -182,9 +273,14 @@ namespace bc
 			parent->children.push_back(this);
 		}
 
+		T len() const
+		{
+			return m_end > start ? m_end - start : start - m_end;
+		}
+
 		T end() const
 		{
-			return start + len;
+			return m_end;
 		}
 
 		size_t getPointsSize() const
@@ -251,21 +347,21 @@ namespace bc
 				for (size_t i = 0; i < bar3d->size(); ++i)
 				{
 					bc::bar3dvalue<T>& b = bar3d->at(i);
-					s0[(uchar)b.value] = b.count;
+					s0[(int)b.value] = b.count;
 					x2 += b.count * b.count;
 				}
-			
+
 				T s1[255];
 				memset(&s1, 0, 255 * sizeof(T));
 				for (size_t i = 0; i < inc->bar3d->size(); ++i)
 				{
 					bc::bar3dvalue<T>& b = inc->bar3d->at(i);
-					s1[(uchar)b.value] = b.count;
+					s1[(int)b.value] = b.count;
 					y2 += b.count * b.count;
 				}
 
 				for (size_t i = 0; i < 255; i++)
-					t += s0[i] * s1[i];
+					t += static_cast<float>(s0[i] * s1[i]);
 			}
 			else if (cmp == bc::CompireStrategy::compire3dBrightless)
 			{
@@ -291,10 +387,10 @@ namespace bc
 			y2 = sqrtf(y2);
 			t = acosf(t / (x2 * y2));
 
-            const float PI = acosf(-1.0f) / 2;
+			const float PI = acosf(-1.0f) / 2;
 			if (isnan(t))
 				return 1.f;
-            return  abs(roundf(1000.f * (PI - t) / PI) / 1000.f);
+			return  abs(roundf(1000.f * (PI - t) / PI) / 1000.f);
 		}
 
 #ifdef _PYD
@@ -387,12 +483,12 @@ namespace bc
 		}
 #endif // _PYD
 
-		void getJsonObject(std::string &outObj,
-						   bool exportGraph = false,
-						   bool export3dbar = false,
-						   bool expotrBinaryMask = false)
+		void getJsonObject(std::string& outObj,
+			bool exportGraph = false,
+			bool export3dbar = false,
+			bool expotrBinaryMask = false)
 		{
-//			std::string nl = "\r\n";
+			//			std::string nl = "\r\n";
 			outObj += "{";
 
 			if (exportGraph)
@@ -416,13 +512,13 @@ namespace bc
 				// matr
 			}
 
-			outObj += "start:"+ std::to_string(start);
-			outObj += ", len:"+ std::to_string(len) + "}";
+			outObj += "start:" + std::to_string(static_cast<float>((start)));
+			outObj += ", len:" + std::to_string(static_cast<float>(len())) + "}";
 		}
 
 		bool is3dmoreing() const
 		{
-			float d = this->len / 256;
+			float d = this->len() / 256;
 			int coos[256];
 			for (size_t i = 0; i < bar3d->size(); ++i)
 			{
@@ -447,7 +543,7 @@ namespace bc
 
 			return true;
 		}
-	};
+		};
 
 	// comparable
 	template<class T>
@@ -455,4 +551,4 @@ namespace bc
 
 	template<class T>
 	using BarRoot = barline<T>;
-}
+	}

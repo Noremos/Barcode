@@ -16,7 +16,7 @@ void bc::Component<T>::init(BarcodeCreator<T>* factory)
 
 	resline = new barline<T>(factory->workingImg->wid());
 	resline->start = factory->curbright;
-	resline->len = 0;
+	resline->m_end = factory->curbright;
 
 	lastVal = factory->curbright;
 
@@ -49,11 +49,12 @@ bool bc::Component<T>::isContain(poidex index)
 }
 
 template<class T>
-void bc::Component<T>::add(poidex index)
+void bc::Component<T>::add(poidex index, const point p)
 {
 	assert(lived);
 
 #ifndef POINTS_ARE_AVAILABLE
+	assert(getMaxparent() == this);
 	++getMaxparent()->totalCount;
 #endif // !POINTS_ARE_AVAILABLE
 
@@ -61,10 +62,10 @@ void bc::Component<T>::add(poidex index)
 
 	if (factory->settings.createBinaryMasks)
 	{
-		resline->addCoord(index, factory->curbright);
+		resline->addCoord(p, factory->curbright);
 	}
 	// 3d barcode/ —читаем кол-во добавленных значений
-	if (factory->settings.returnType == ReturnType::barcode3d)
+	if (factory->settings.returnType == ReturnType::barcode3dold)
 	{
 		if (factory->curbright != lastVal)
 		{
@@ -74,6 +75,20 @@ void bc::Component<T>::add(poidex index)
 		}
 		++cashedSize;
 	}
+	else if (factory->settings.returnType == ReturnType::barcode3d)
+	{
+		if (factory->curbright != lastVal)
+		{
+			resline->bar3d->push_back(bar3dvalue<T>(lastVal, totalCount));
+			lastVal = factory->curbright;
+		}
+	}
+}
+
+template<class T>
+void bc::Component<T>::add(poidex index)
+{
+	this->add(index, factory->curpix);
 }
 
 template<class T>
@@ -83,7 +98,7 @@ void bc::Component<T>::kill()
 		return;
 	lived = false;
 
-	resline->len = factory->curbright - resline->start;
+	resline->m_end = factory->curbright;
 
 	if (factory->settings.returnType == ReturnType::barcode3d && factory->curbright != lastVal)
 	{
@@ -103,15 +118,15 @@ void bc::Component<T>::kill()
 }
 
 template<class T>
-void bc::Component<T>::setparent(bc::Component<T>* parnt)
+void bc::Component<T>::setParent(bc::Component<T>* parnt)
 {
 	assert(parent == nullptr);
 	this->parent = parnt;
 
 #ifndef  POINTS_ARE_AVAILABLE
 	this->parent->totalCount += totalCount;
+	parnt->startIndex = MIN(parnt->startIndex, startIndex);
 #endif // ! POINTS_ARE_AVAILABLE
-
 
 	// at moment when this must be dead
 	assert(lived);
@@ -125,7 +140,7 @@ void bc::Component<T>::setparent(bc::Component<T>* parnt)
 			val.value = factory->curbright - val.value;
 
 			// Эти точки сичтаются как только что присоединившиеся
-			parnt->resline->addCoord(barvalue<T>(val.getIndex(), factory->curbright));
+			parnt->resline->addCoord(barvalue<T>(val.getPoint(), factory->curbright));
 		}
 	}
 

@@ -41,7 +41,6 @@ namespace bc {
 
 
 		virtual T& get(int x, int y) const = 0;
-		virtual T& get(int x, int y, int z) const = 0;
 
 		virtual T& get(point& p) const
 		{
@@ -57,11 +56,6 @@ namespace bc {
 		virtual T& getLiner(size_t pos) const
 		{
 			return get((int)(pos % wid()), (int)(pos / wid()));
-		}
-
-		virtual T& getLiner(size_t pos, int chnl) const
-		{
-			return get((int)(pos % wid()), (int)(pos / wid()), chnl);
 		}
 
 		point getPointAt(size_t iter) const
@@ -83,8 +77,8 @@ namespace bc {
 	protected:
 
 	private:
-		CachedValue<T> cachedMax;
-		CachedValue<T> cachedMin;
+		mutable CachedValue<T> cachedMax;
+		mutable CachedValue<T> cachedMin;
 
 		int _wid;
 		int _hei;
@@ -242,8 +236,6 @@ namespace bc {
 
 		void maxAndMin(T& _min, T& _max) const override
 		{
-			BarImg<T>* ptr = const_cast<BarImg<T>*> (this);
-
 			_max = values[0];
 			_min = values[0];
 			for (size_t i = 1; i < this->length(); i++)
@@ -254,16 +246,13 @@ namespace bc {
 				if (val < _min)
 					_min = val;
 			}
-			ptr->cachedMax.set(_max);
-			ptr->cachedMin.set(_min);
+			cachedMax.set(_max);
+			cachedMin.set(_min);
 		}
 
 		T max() const
 		{
-			BarImg<T>* ptr = const_cast<BarImg<T>*> (this);
-
-			// byaka. change member in const function
-			if (ptr->cachedMax.isCached)
+			if (cachedMax.isCached)
 				return cachedMax.val;
 
 			T _max = values[0];
@@ -274,15 +263,13 @@ namespace bc {
 					_max = val;
 			}
 
-			ptr->cachedMax.set(_max);
+			cachedMax.set(_max);
 			return _max;
 		}
 
 		T min() const
 		{
-			BarImg* ptr = const_cast<BarImg*> (this);
-
-			if (ptr->cachedMin.isCached)
+			if (cachedMin.isCached)
 				return cachedMin.val;
 
 			T _min = values[0];
@@ -292,17 +279,15 @@ namespace bc {
 					_min = values[i];
 			}
 
-			ptr->cachedMin.set(_min);
+			cachedMin.set(_min);
 			return _min;
 		}
 
 		T MaxMinMin() const
 		{
-			BarImg* ptr = const_cast<BarImg*> (this);
-
-			if (ptr->cachedMin.isCached && ptr->cachedMax.isCached)
+			if (cachedMin.isCached && cachedMax.isCached)
 			{
-				return ptr->cachedMax.val - ptr->cachedMin.val;
+				return cachedMax.val - cachedMin.val;
 			}
 
 			T _min = values[0];
@@ -315,8 +300,8 @@ namespace bc {
 				if (values[i] > _max)
 					_max = values[i];
 			}
-			ptr->cachedMin.set(_min);
-			ptr->cachedMax.set(_max);
+			cachedMin.set(_min);
+			cachedMax.set(_max);
 
 			return _max - _min;
 		}
@@ -359,14 +344,6 @@ namespace bc {
 			//	return values[x * _wid + y];
 			//else
 			return values[y * _wid + x];
-		}
-
-		inline T& get(int x, int y, int z) const override
-		{
-			//if (diagReverce)
-			//	return values[x * _wid + y];
-			//else
-			return values[y * _wid + x + z];
 		}
 
 		inline void set(int x, int y, T val)
@@ -524,16 +501,17 @@ namespace bc {
 
 
 
-
-
 #ifdef USE_OPENCV
 	template <class T>
 	class BarMat : public DatagridProvider<T>
 	{
+		mutable CachedValue<T> cachedMax;
+		mutable CachedValue<T> cachedMin;
 	public:
 		Mat& mat;
 		BarMat(Mat& _mat) : mat(_mat)
 		{ }
+
 		int wid() const
 		{
 			return mat.cols;
@@ -549,28 +527,34 @@ namespace bc {
 			return mat.channels();
 		}
 
-		T& get(int x, int y) const
-		{
-			return mat.at<T>(y, x);
-		}
+		T& get(int x, int y) const;
 
-		T& get(int x, int y, int z) const
-		{
-			return mat.at<T>(y, x, z);
-		}
-
+		
 		void maxAndMin(T& min, T& max) const override
 		{
+			if (cachedMin.isCached && cachedMax.isCached)
+			{
+				min = cachedMin.val;
+				max = cachedMax.val;
+			}
+
 			double amin, amax;
 			cv::minMaxLoc(mat, &amin, &amax);
-			min = amin;
-			max = amax;
+			min = static_cast<T>(amin);
+			max = static_cast<T>(amax);
 		}
+
 		T max() const
 		{
+			if (cachedMax.isCached)
+			{
+				return cachedMax.val;
+			}
 			double min, max;
 			cv::minMaxLoc(mat, &min, &max);
 
+			cachedMax.set(static_cast<T>(max));
+			cachedMin.set(static_cast<T>(min));
 			return static_cast<T>(max);
 		}
 
@@ -613,13 +597,7 @@ namespace bc {
 
 		T& get(int x, int y) const
 		{
-
 			return *reinterpret_cast<T*>(mat.get_data() + y * strides[0] + x * strides[1]);
-		}
-
-		T& get(int x, int y, int z) const
-		{
-			return *reinterpret_cast<T*>(mat.get_data() + y * strides[0] + x * strides[1] + z* strides[2]);
 		}
 
 		T max() const
@@ -711,15 +689,12 @@ namespace bc {
 	{
 		assert(dest.channels() == 1);
 		dest.resize(source.wid(), source.hei());
-
-		double coof = 1.0 / source.channels();
+		int chnls = source.channels();
+		double coof = 1.0 /chnls;
 		for (size_t i = 0; i < source.length(); ++i)
 		{
-			double accum = 0;
-			for (int c = 0; c < source.channels(); c++)
-			{
-				accum += source.getLiner(i, c) * coof;
-			}
+			float accum = 0;
+			accum += static_cast<float>(source.getLiner(i));
 			dest.setLiner(i, accum);
 		}
 	}

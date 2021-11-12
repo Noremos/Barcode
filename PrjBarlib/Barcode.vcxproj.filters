@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="source\Barpy.cpp" />
+    <ClCompile Include="source\Source.cpp" />
+    <ClCompile Include="source\barclasses.cpp">
+      <Filter>classes</Filter>
+    </ClCompile>
+    <ClCompile Include="source\barcodeCreator.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Component.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Hole.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\pytemplcalsses.h" />
+    <ClInclude Include="include\barline.h">
+      <Filter>classes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\barImg.h">
+      <Filter>classes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\barclasses.h">
+      <Filter>classes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\barcodeCreator.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="include\barstrucs.h">
+      <Filter>classes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Component.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="include\include_py.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\include_cv.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\presets.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Hole.h">
+      <Filter>main</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
+    <None Include="main.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="classes">
+      <UniqueIdentifier>{224ee232-8999-4f78-9cea-9dee7b2f78a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main">
+      <UniqueIdentifier>{7354a58a-37aa-4e44-b6d9-da0a5f894e42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{df8989af-ec65-4440-808d-4d6fe21de29b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

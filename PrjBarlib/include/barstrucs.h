@@ -14,6 +14,174 @@
 namespace bc
 {
 
+	template<class T, uint N>
+	struct EXPORT barVector
+	{
+	protected:
+		T vecdata[N];
+	public:
+		barVector()
+		{
+			memset(vecdata, 0, N * sizeof(T));
+		}
+
+		barVector<T, N>(int v)
+		{
+			memset(vecdata, v, N * sizeof(T));
+		}
+
+		barVector<T, N>(const barVector<T, N>& copy)
+		{
+			memcpy(vecdata, copy.vecdata, N * sizeof(T));
+		}
+
+
+		// Overloaded assignment
+		auto& operator= (const barVector<T, N>& fraction)
+		{
+			memcpy(vecdata, fraction.vecdata, N * sizeof(T));
+			return *this;
+		}
+
+
+		auto& operator= (int fraction)
+		{
+			memset(vecdata, fraction, N * sizeof(T));
+			return *this;
+		}
+
+		explicit operator int() const
+		{
+			int avg = 0;
+			for (size_t i = 0; i < N; i++)
+			{
+				avg += vecdata[i];
+			}
+			return avg / N;
+		}
+
+		explicit operator float() const
+		{
+			float avg = 0;
+			for (size_t i = 0; i < N; i++)
+			{
+				avg += vecdata[i];
+			}
+			return avg / N;
+		}
+
+		template<class KJ>
+		auto operator-(const KJ R) const
+		{
+			KJ res{};
+			for (size_t i = 0; i < N; i++)
+			{
+				res.vecdata[i] = vecdata[i] - R.vecdata[i];
+			}
+
+			return res;
+		}
+
+		auto &operator-=(const barVector<T, N>& R)
+		{
+			for (size_t i = 0; i < N; i++)
+			{
+				vecdata[i] -= R.vecdata[i];
+			}
+
+			return *this;
+		}
+
+		auto operator+(const barVector<T, N>& R)
+		{
+			barVector<T, N> res;
+			for (size_t i = 0; i < N; i++)
+			{
+				res.vecdata[i] = vecdata[i] + R.vecdata[i];
+			}
+
+			return res;
+		}
+
+		auto& operator+=(const barVector<T, N>& R)
+		{
+			for (size_t i = 0; i < N; i++)
+			{
+				vecdata[i] += R.vecdata[i];
+			}
+
+			return *this;
+		}
+
+		bool operator> (const barVector<T, N>& fraction) const
+		{
+			return (float)(*this) > (float)fraction;
+		}
+
+		bool operator< (const barVector<T, N>& fraction) const
+		{
+			return (float)(*this) < (float)fraction;
+		}
+
+		bool operator <= (const barVector<T, N>& fraction) const
+		{
+			return (float)(*this) <= (float)fraction;
+		}
+
+		bool operator >= (const barVector<T, N>& fraction) const
+		{
+			return (float)(*this) >= (float)fraction;
+		}
+
+		bool operator== (const barVector<T, N>& fraction) const
+		{
+			return memcmp(vecdata, fraction.vecdata, N * sizeof(T)) == 0;
+		}
+
+		bool operator!= (const barVector<T, N>& fraction) const
+		{
+			return memcmp(vecdata, fraction.vecdata, N * sizeof(T)) != 0;
+		}
+
+		barVector<T, N> operator/ (const barVector<T, N>& fraction) const
+		{
+			std::exception();
+			return fraction;
+		}
+
+		barVector<T, N> operator* (const barVector<T, N>& fraction) const
+		{
+			std::exception();
+			return fraction;
+		}
+
+		T& operator[](uint index)
+		{
+			assert(index < N);
+			return vecdata[index];
+		}
+
+		T operator[](uint index) const
+		{
+			assert(index < N);
+			return vecdata[index];
+		}
+	};
+
+	struct barRGB : public barVector<uchar, 3>
+	{
+		uchar getR() { return this->vecdata[0]; }
+		uchar getG() { return this->vecdata[1]; }
+		uchar getB() { return this->vecdata[2]; }
+	};
+
+	struct barBGR : public barVector<uchar, 3>
+	{
+		uchar getB() { return this->vecdata[0]; }
+		uchar getG() { return this->vecdata[1]; }
+		uchar getR() { return this->vecdata[2]; }
+	};
+
 	template<class T>
 	struct EXPORT CachedValue
 	{
@@ -62,45 +230,6 @@ namespace bc
 		}
 	};
 
-	struct EXPORT BarVec3b
-	{
-	public:
-		uchar vls[3];
-		uchar r()
-		{
-			return vls[2];
-		}
-		uchar g()
-		{
-			return vls[1];
-		}
-		uchar b()
-		{
-			return vls[0];
-		}
-		int sum()
-		{
-			return (int)vls[0] + vls[1] + vls[2];
-		}
-
-		inline BarVec3b()
-		{
-			memset(vls, 0, 3);
-		}
-
-		inline BarVec3b(uchar _r, uchar _g, uchar _b)
-		{
-			vls[0] = _b;
-			vls[1] = _g;
-			vls[2] = _r;
-		}
-		uchar operator[](std::size_t idx)
-		{
-			assert(idx <= 2);
-			return vls[idx];
-		}
-	};
-
 	//	static bool operator > (BarVec3b c1, BarVec3b c2)
 	//	{
 	//		return c1.sum() > c2.sum();
@@ -117,7 +246,7 @@ namespace bc
 		ColorType coltype;
 		barstruct()
 		{
-			comtype = ComponentType::Hole;
+			comtype = ComponentType::Component;
 			proctype = ProcType::f0t255;
 			coltype = ColorType::gray;
 		}
@@ -143,11 +272,13 @@ namespace bc
 
 		bool createGraph = false;
 		bool createBinaryMasks = false;
-		bool createNewComponentOnAttach = false;
+		AttachMode attachMode = AttachMode::firstEatSecond;
+		//ProcessStrategy processMode = ProcessStrategy::brightness;
 		bool killOnMaxLen = false;
 
 #ifdef USE_OPENCV
 		bool visualize = false;
+		int waitK = 1;
 #endif // USE_OPENCV
 
 		inline void addStructure(ProcType pt, ColorType colT, ComponentType comT)
@@ -335,13 +466,17 @@ namespace bc
 		}
 	};
 
-#define OPTTIF((A), (B)) #ifdef BARVALUE_RAM_OPTIMIZATION (A) #else (B)
+#ifdef BARVALUE_RAM_OPTIMIZATION
+	const uint MAX_WID = 65535;
+#define OPTTIF(A, B) (A)
+#else
+#define OPTTIF((A), (B)) (B)
+#endif
 
 	template<class T>
 	struct barvalue
 	{
 #ifdef BARVALUE_RAM_OPTIMIZATION
-		const uint MAX_WID = 65535;
 		uint index;
 #else
 		uint x;
@@ -357,28 +492,61 @@ namespace bc
 			this->value = value;
 		}
 
-		barvalue(bc::point point, T value)
+		barvalue(bc::point p, T value)
 		{
-			assert(point.x >= 0);
-			assert(point.y >= 0);
+			assert(p.x >= 0);
+			assert(p.y >= 0);
 
-			OPTTIF(index = point.y * MAX_WID + point.x,
-					x = point.x; y = point.y);
+			OPTTIF(index = p.y * MAX_WID + p.x,
+				x = p.x; y = p.y);
 			this->value = value;
 		}
 
-		barvalue(uint index, T value)
-		{
-			this->index = index;
-			this->value = value;
-		}
 
 		barvalue()
 		{ }
 
+		barvalue(const barvalue& other) /*: s(other.s)*/
+		{
+			OPTTIF(index = this->index = other.index, this->x = other.x; this->y = other.y);
+			this->value = other.value;
+		}
+
+		barvalue(barvalue&& other) /*: s(std::move(o.s))*/
+		{
+			OPTTIF(this->index = other.index, this->x = other.x; this->y = other.y);
+			this->value = other.value;
+		}
+
+		// copy assignment
+		barvalue& operator=(const barvalue& other)
+		{
+			// Guard self assignment
+			if (this == &other)
+				return *this;
+
+			OPTTIF(this->index = other.index, this->x = other.x; this->y = other.y);
+			this->value = other.value;
+
+			return *this;
+		}
+
+		// move assignment
+		barvalue& operator=(barvalue&& other) noexcept
+		{
+			// Guard self assignment
+			if (this == &other)
+				return *this; // delete[]/size=0 would also be ok
+
+			OPTTIF(this->index = other.index, this->x = other.x; this->y = other.y);
+			this->value = other.value;
+
+			return *this;
+		}
+
 		bc::point getPoint() const
 		{
-			return std::move(bc::point(getX(), getY()));
+			return bc::point(getX(), getY());
 		}
 
 		int getIndex(int wid = 0) const

@@ -16,6 +16,42 @@
 
 namespace bc {
 
+	struct indexCov
+	{
+		poidex offset = 0;
+		float dist = 0;
+		bool vert = true;
+		indexCov(uint _offset = 0, float _dist = 0, bool _vert = true) : offset(_offset), dist(_dist), vert(_vert)
+		{}
+
+		bc::point getNextPoint(bc::point p)
+		{
+			return vert ? bc::point(p.x + 1, p.y) : bc::point(p.x, p.y + 1);
+		}
+
+		inline static float safeDiffSqr(const float& a, const float& b)
+		{
+			return a > b ? ((a - b) * (a - b)) : ((b - a) * (b - a));
+		}
+
+		template<class TK, uint N>
+		inline static float val_distance(const barVector<TK, N>& fisrt, const barVector<TK, N>& second)
+		{
+			float dist = 0;
+			for (uint i = 0; i < N; ++i)
+			{
+				dist += safeDiffSqr(static_cast<float>(second[i]), static_cast<float>(fisrt[i]));
+			}
+			return sqrtf(dist);
+		}
+
+		template<class TK>
+		inline static float val_distance(const TK& a, const TK& b)
+		{
+			return a > b ? (a - b) : (b - a);
+		}
+	};
+
 	template<class T>
 	using Include = Component<T>*;
 
@@ -25,7 +61,6 @@ namespace bc {
 		typedef bc::DatagridProvider<T> bcBarImg;
 
 		bool originalImg = true;
-	public:
 		std::vector<COMPP> components;
 	private:
 #ifdef USE_OPENCV
@@ -62,8 +97,8 @@ namespace bc {
 		poidex curpoindex;
 		uint curIndexInSortedArr;
 		point curpix;
-		uint wid;
-		uint hei;
+		int wid;
+		int hei;
 		T sourceMax;
 		T sourceMin;
 		// int lastB;
@@ -73,7 +108,7 @@ namespace bc {
 		friend class Baritem<T>;
 
 		size_t totalSize = 0;
-		poidex* sortedArr;
+		poidex* sortedArr = nullptr;
 
 		//***************************************************
 		constexpr bool IS_OUT_OF_REG(int x, int y)
@@ -121,7 +156,7 @@ namespace bc {
 
 		COMPP getPorogComp(const point& p, poidex index);
 
-		Include<T>* getInclude(size_t pos);
+		COMPP getInclude(size_t pos);
 
 		// ONLY FOR HOLE
 		bool isContain(const point& p) const
@@ -131,7 +166,7 @@ namespace bc {
 
 			return included[wid * p.y + p.x] != nullptr;
 		}
-		
+
 		HOLEP getHole(uint x, uint y);
 		HOLEP getHole(const point& p);
 
@@ -141,7 +176,7 @@ namespace bc {
 		bool checkCloserB0();
 		bool checkCloserB1();
 
-		poidex* sortPixels(bc::ProcType type);
+		void sortPixels(bc::ProcType type);
 
 		void clearIncluded();
 
@@ -150,15 +185,15 @@ namespace bc {
 		void VISUAL_DEBUG_COMP();
 
 
-		void init(const bc::DatagridProvider<T>* src, ProcType &type);
+		void init(const bc::DatagridProvider<T>* src, ProcType& type, ComponentType& comp);
 
 		void processComp(Barcontainer<T>* item = nullptr);
 		void processHole(Barcontainer<T>* item = nullptr);
 		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
 
-		void processTypeF(barstruct &str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
+		void processTypeF(barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
 
-		void processFULL(barstruct &str, const bc::DatagridProvider<T>* img, bc::Barcontainer<T>* item);
+		void processFULL(barstruct& str, const bc::DatagridProvider<T>* img, bc::Barcontainer<T>* item);
 		void addItemToCont(Barcontainer<T>* item);
 
 		void computeNdBarcode(Baritem<T>* lines, int n);
@@ -166,6 +201,10 @@ namespace bc {
 	public:
 		BarcodeCreator()
 		{
+		}
+		BarcodeCreator(const BarcodeCreator&)
+		{
+
 		}
 
 		bc::Barcontainer<T>* createBarcode(const bc::DatagridProvider<T>* img, const BarConstructor<T>& structure);
@@ -184,9 +223,10 @@ namespace bc {
 
 		bc::Barcontainer<T>* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 
+
 		virtual ~BarcodeCreator()
 		{
-//			clearIncluded();
+			//			clearIncluded();
 #ifdef USE_OPENCV
 			colors.clear();
 #endif // USE_OPENCV
@@ -194,33 +234,16 @@ namespace bc {
 
 #ifdef _PYD
 
-		bc::Barcontainer<T>* createBarcode(bn::ndarray& img, bc::BarConstructor<T>& structure)
-		{
-			//auto shape = img.get_shape();
-
-			/*	int type = cv_8uc1;
-				if (img.get_nd() == 3 && img.shape[2] == 3)
-					image = &barimg<bcvec3b>(shape[0], shape[1], img.get_data());
-				else if float
-					barimg image(shape[0], shape[1], img.get_data());*/
-
-					//cv::imshow("test", image);
-					//cv::waitkey(0);
-			bc::BarNdarray<T> image(img);
-			//try
-			//{
-			return createBarcode(&image, structure);
-			//}
-			//catch (const std::exception& ex)
-			//{
-				//printf("ERROR");
-				//printf(ex.what());
-			//}
-
-			//bc::BarImg<T> image(img.shape(1), img.shape(0), img.get_nd(), (uchar*)img.get_data(), false, false);
-			//return createBarcode(&image, structure);
-		}
+		bc::Barcontainer<T>* createBarcode(bn::ndarray& img, bc::BarConstructor<T>& structure);
 #endif // _PYD
+
+		///////////GEOMETRY
+	private:
+		void processCompByRadius(Barcontainer<T>* item);
+		
+
+
+		std::unique_ptr<indexCov> geometrySortedArr;
 	};
 
 	template<class T>

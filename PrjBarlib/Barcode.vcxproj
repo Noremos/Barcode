@@ -379,7 +379,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)\PrjBarlib\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <PreprocessorDefinitions>USE_OPENCV;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_OPENCV;VDEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>

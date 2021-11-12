@@ -43,7 +43,7 @@ void set(bc::barline<uchar>* rt, Bimg8* data)
 	for (size_t k = 0; k < matr.size(); k++)
 	{
 		auto& p = matr[k];
-		data->minus(p.getPoint(data->wid()), p.value);
+		data->minus(p.getPoint(), p.value);
 	}
 
 	for (size_t i = 0; i < rt->children.size(); i++)
@@ -115,13 +115,13 @@ bc::BarImg<T> restoreToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T max
 	for (size_t i = 0; i < lines.size(); i++)
 	{
 		T start = lines[i]->start;
-		T end = start + lines[i]->len;
+		T end = start + lines[i]->len();
 		auto& matr = lines[i]->matr;
 		for (size_t k = 0; k < matr.size(); k++)
 		{
 			auto& p = matr[k];
 			//assert(start <= p.value && p.value <= end);
-			img.minus(p.getPoint(wid), p.value);
+			img.minus(p.getPoint(), p.value);
 		}
 	}
 	return img;
@@ -143,13 +143,13 @@ bc::BarImg<T> restore255ToBarimg(bc::Barcontainer<T>* cont, int wid, int hei, T 
 	for (size_t i = 0; i < lines.size(); i++)
 	{
 		T start = lines[i]->start;
-		T end = start + lines[i]->len;
+		T end = start + lines[i]->len();
 		auto& matr = lines[i]->matr;
 		for (size_t k = 0; k < matr.size(); k++)
 		{
 			auto& p = matr[k];
 			//assert(start <= p.value && p.value <= end);
-			img.add(p.getPoint(wid), p.value);
+			img.add(p.getPoint(), p.value);
 		}
 	}
 	return img;
@@ -167,14 +167,14 @@ Bimg8 restoreToBarimgFromGraph(bc::Barcontainer<uchar>* cont, int wid, int hei, 
 	return img;
 }
 
-void test(bool graph, Bbase8& testimg, bool createNew = false)
+void test(bool graph, Bbase8& testimg, bc::AttachMode createNew = bc::AttachMode::firstEatSecond)
 {
 	bc::BarConstructor<uchar> bcont;
 	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
 	bcont.createBinaryMasks = true;
 	bcont.createGraph = graph;
 	bcont.returnType = bc::ReturnType::barcode2d;
-	bcont.createNewComponentOnAttach = createNew;
+	bcont.attachMode = createNew;
 	bcont.setStep(255);
 
 	bc::BarcodeCreator<uchar> test;
@@ -217,7 +217,6 @@ void testf255t0(Bbase8& testimg)
 	bcont.createBinaryMasks = true;
 	bcont.createGraph = false;
 	bcont.returnType = bc::ReturnType::barcode2d;
-	bcont.createNewComponentOnAttach = false;
 	bcont.setStep(255);
 
 	bc::BarcodeCreator<uchar> test;
@@ -234,7 +233,7 @@ void testf255t0(Bbase8& testimg)
 	int wid = testimg.wid();
 	int hei = testimg.hei();
 	Bimg8 img(wid, hei);
-	memset(img.getData(), 0, static_cast<size_t>(wid) * hei);
+	memset(img.getData(), 0, static_cast<size_t>(wid) * hei * sizeof(uchar));
 
 	for (size_t i = 0; i < lines.size(); i++)
 	{
@@ -242,7 +241,7 @@ void testf255t0(Bbase8& testimg)
 		for (size_t k = 0; k < matr.size(); k++)
 		{
 			auto& p = matr[k];
-			img.add(p.getPoint(wid), p.value);
+			img.add(p.getPoint(), p.value);
 		}
 	}
 
@@ -258,7 +257,7 @@ void testf255t0(Bbase8& testimg)
 	delete ret;
 }
 
-void testMat(bool graph, Mat testmat, bool createNew = false)
+void testMat(bool graph, Mat testmat, bc::AttachMode createNew = bc::AttachMode::firstEatSecond)
 {
 	Bmat8 img(testmat);
 	test(graph, img, createNew);
@@ -357,7 +356,7 @@ void checkSingleMat()
 	testMat(false, temp);
 	testMat(true, temp);
 }
-void testMats(bool createNew = false)
+void testMats(bc::AttachMode createNew = bc::AttachMode::firstEatSecond)
 {
 	string testsuit[]{ "as.png", "as3.png", "as4.png","as2.png","as1.png" };
 	for (auto& test : testsuit)
@@ -436,7 +435,6 @@ void testProblemFloatMats()
 	bcont.createBinaryMasks = false;
 	bcont.createGraph = false;
 	bcont.returnType = bc::ReturnType::barcode3d;
-	bcont.createNewComponentOnAttach = false;
 	bcont.setStep(255);
 	bc::BarcodeCreator<float> test;
 
@@ -549,7 +547,6 @@ void testFloatMats()
 		bcont.createBinaryMasks = true;
 		bcont.createGraph = false;
 		bcont.returnType = bc::ReturnType::barcode3d;
-		bcont.createNewComponentOnAttach = false;
 		bcont.setStep(255);
 
 		bc::BarcodeCreator<float> test;
@@ -577,7 +574,6 @@ void checkBigImg()
 	bcont.createBinaryMasks = true;
 	bcont.createGraph = false;
 	bcont.returnType = bc::ReturnType::barcode2d;
-	bcont.createNewComponentOnAttach = false;
 	bcont.setStep(255);
 
 	bc::BarcodeCreator<uchar> test;
@@ -621,11 +617,10 @@ void caclSize(bc::Barcontainer<uchar>* ret)
 void testImg(string path)
 {
 	bc::BarConstructor<uchar> bcont;
-	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::RadiusComp);
 	bcont.createBinaryMasks = true;
 	bcont.createGraph = false;
 	bcont.returnType = bc::ReturnType::barcode2d;
-	bcont.createNewComponentOnAttach = false;
 	bcont.setStep(255);
 
 	bc::BarcodeCreator<uchar>* test = new bc::BarcodeCreator<uchar>();
@@ -646,7 +641,6 @@ void testMaxLen()
 	bc::BarConstructor<uchar> constr;
 	constr.createBinaryMasks = true;
 	constr.createGraph = false;
-	constr.createNewComponentOnAttach = false;
 	constr.returnType = bc::ReturnType::barcode2d;
 	constr.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
 	constr.setStep(255);
@@ -667,7 +661,6 @@ void checkSameVals()
 	bc::BarConstructor<uchar> constr;
 	constr.createBinaryMasks = true;
 	constr.createGraph = false;
-	constr.createNewComponentOnAttach = false;
 	constr.returnType = bc::ReturnType::barcode2d;
 	constr.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
 	constr.setStep(255);
@@ -683,6 +676,82 @@ void checkSameVals()
 	auto varcode = bc.createBarcode(&img, constr);
 
 	assert(varcode->getItem(0)->barlines.size() == 1);
+}
+//using mytesttye = uchar;
+using mytesttye = barvec3b;
+
+void testSimple()
+{
+	bc::BarcodeCreator<mytesttye> bc;
+	bc::BarConstructor<mytesttye> constr;
+	constr.createBinaryMasks = true;
+	constr.createGraph = false;
+	constr.returnType = bc::ReturnType::barcode2d;
+	constr.addStructure(bc::ProcType::f0t255, bc::ColorType::native, bc::ComponentType::RadiusComp);
+	constr.attachMode = bc::AttachMode::firstEatSecond;
+	constr.visualize = false;
+	constr.waitK = 0;
+
+	constr.killOnMaxLen = true;
+	constr.setMaxLen(20);
+
+	//Mat testmat = cv::imread((string)"D:/Programs/Python/barcode/roofs/ident-ss1.png", cv::IMREAD_GRAYSCALE);
+
+//Mat testmat = cv::imread((string)"D:/Programs/Python/barcode/roofs/imgs/5m.bmp", cv::IMREAD_COLOR);
+	Mat testmat = cv::imread((string)"D:\\Programs\\Python\\barcode\\roofs\\imgs\\8.bmp", cv::IMREAD_COLOR);
+	//Mat testmat = cv::imread((string)"D:\\Programs\\Python\\barcode\\roofs\\t2\\ident-ss1.png", cv::IMREAD_COLOR);
+	Mat grayMat = testmat;
+	//cv::cvtColor(testmat, grayMat, cv::COLOR_BGR2GRAY);
+	//grayMat = 255 - grayMat;
+	bc::BarMat<mytesttye> gray(testmat);
+
+
+	cv::namedWindow("src", cv::WINDOW_NORMAL);
+	cv::imshow("src", grayMat);
+	cv::waitKey(1);
+
+	auto varcode = bc.createBarcode(&gray, constr);
+
+	auto item = varcode->getItem(0);
+	item->sortBySize();
+	int st = 0;//17
+	Mat testmattestmat;;
+
+	while (true)
+	{
+		auto bar = item->barlines[st];
+		testmat.copyTo(testmattestmat);
+
+		for (size_t i = 0; i < bar->getPointsSize(); i++)
+		{
+			int x = bar->getPoint(i).getX();
+			int y = bar->getPoint(i).getY();
+			testmattestmat.at<cv::Vec3b>(y, x)[0] = 125;
+			testmattestmat.at<cv::Vec3b>(y, x)[1] = 125;
+			testmattestmat.at<cv::Vec3b>(y, x)[0] = 255;
+		}
+		cv::namedWindow("r", cv::WINDOW_NORMAL);
+		cv::imshow("r", testmattestmat);
+		int k = cv::waitKey(0);
+
+		if (k == 100 || k == 68)// D d
+		{
+			st += 1;
+			if (st >= item->barlines.size())
+			{
+				st--;
+			}
+		}
+		if (k == 97 || k == 65)// : # A a
+		{
+			--st;
+			if (st < 0)
+				st = 0;
+		}
+
+		if (k == 27)
+			break;
+	}
 }
 
 int main()
@@ -727,6 +796,10 @@ int main()
 	//testBigProblemFloatMats();
 	//printf("done\n\n");
 
-	testImg("../PrjTests/data/city.png");//bigimg.jpg
+	//testImg("../PrjTests/data/city.png");//bigimg.jpg
+	//testImg("D:\\Programs\\Python\\barcode\\roofs\\t2\\ident.png");//bigimg.jpg
+
+
+	testSimple();
 	return 0;
 }
