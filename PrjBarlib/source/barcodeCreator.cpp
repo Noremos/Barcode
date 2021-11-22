@@ -172,15 +172,15 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 
 	case AttachMode::createNew:
 		//if ((double)MIN(main->getTotalSize(), second->getTotalSize()) / totalSize > 0.05)
-		{
-			COMPP newOne = new Component<T>(this, true);
-			main->setParent(newOne);
-			second->setParent(newOne);
-			//main->kill();
-			//second->kill();
-			return newOne;
-		}
-		// else pass down
+	{
+		COMPP newOne = new Component<T>(this, true);
+		main->setParent(newOne);
+		second->setParent(newOne);
+		//main->kill();
+		//second->kill();
+		return newOne;
+	}
+	// else pass down
 
 	case AttachMode::firstEatSecond:
 	default:
@@ -343,7 +343,7 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 	{
 		p1 = curpix + poss[i];
 
-		if (IS_OUT_OF_REG(p1.x, p1.y < 0))
+		if (IS_OUT_OF_REG(p1.x, p1.y))
 			continue;
 
 		poidex pind1 = p1.getLiner(wid);
@@ -429,10 +429,11 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 	for (int i = 0; i < 16; ++i)
 	{
 		point curp = curpix + poss[i % 8];
+
 		if (isContain(curp))
 		{
-			//получена дыра
 			Hole<T>* h_t = getHole(curp);
+			//получена дыра
 			if (h_t == hr)
 				continue;
 
@@ -448,9 +449,9 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 			{
 				if (h2 != nullptr && !h2->isValid)
 				{
-					new Hole<T>(curpix, curp, next, this);
 					delete h_t;
 					delete h2;
+					new Hole<T>(curpix, curp, next, this);
 				}
 				else if (hr->tryAdd(curp))
 					delete h_t;
@@ -529,7 +530,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider<T>* workingImg, size
 	}
 
 	//last height line
-	for (int h = 0; h <lastH; ++h)
+	for (int h = 0; h < lastH; ++h)
 	{
 		T cur = workingImg->get(lastW, h);
 		T nextW = workingImg->get(lastW, h + 1);
@@ -539,7 +540,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider<T>* workingImg, size
 
 	std::sort(data, data + totalSize, [](const indexCov& a, const indexCov& b) {
 		return a.dist < b.dist;
-	});
+		});
 	return data;
 }
 
@@ -879,8 +880,9 @@ void BarcodeCreator<T>::clearIncluded()
 {
 	for (COMPP c : components)
 	{
-		assert(c != nullptr);
-		delete c;
+		//assert(c != nullptr);
+		if (c != nullptr)
+			delete c;
 	}
 	components.clear();
 
@@ -927,7 +929,7 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 
 	for (COMPP c : components)
 	{
-		if (c->resline == nullptr)
+		if (c == nullptr || c->resline == nullptr)
 			continue;
 
 		T len = c->resline->len();

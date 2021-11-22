@@ -7,6 +7,7 @@ template<class T>
 class Hole : public Component<T>
 {
     bool isOutside = false;
+    int index = 0;
 public:
     T start, end;
     bool isValid = false;

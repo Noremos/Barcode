@@ -43,9 +43,9 @@ namespace bc
 	protected:
 		int cashedSize = 0;
 		T lastVal = 0;
+		bool lived = true;
 
 	private:
-		bool lived = true;
 		//0 - nan
 
 		void init(BarcodeCreator<T>* factory);
