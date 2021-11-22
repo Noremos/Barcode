@@ -754,8 +754,11 @@ void testSimple()
 	}
 }
 
+#include "../detection.h"
+
 int main()
 {
+	doMagickDOTA();
 	// TODO Move it to test project
 	//testInitFromMat();
 
