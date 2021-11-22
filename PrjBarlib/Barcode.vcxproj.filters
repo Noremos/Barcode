@@ -48,6 +48,7 @@
     <ClInclude Include="include\Hole.h">
       <Filter>main</Filter>
     </ClInclude>
+    <ClInclude Include="detection.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
