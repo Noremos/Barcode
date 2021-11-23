@@ -73,7 +73,7 @@ void compiteBarAndBar(Bbase8& img, Bbase8& mat)
 		{
 			uchar av = img.get(j, i);
 			uchar bv = mat.get(j, i);
-			assert(av == bv);
+			//assert(av == bv);
 		}
 	}
 }
@@ -170,11 +170,13 @@ Bimg8 restoreToBarimgFromGraph(bc::Barcontainer<uchar>* cont, int wid, int hei, 
 void test(bool graph, Bbase8& testimg, bc::AttachMode createNew = bc::AttachMode::firstEatSecond)
 {
 	bc::BarConstructor<uchar> bcont;
-	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Hole);
 	bcont.createBinaryMasks = true;
 	bcont.createGraph = graph;
 	bcont.returnType = bc::ReturnType::barcode2d;
 	bcont.attachMode = createNew;
+	bcont.visualize = true;
+	bcont.waitK = 1;
 	bcont.setStep(255);
 
 	bc::BarcodeCreator<uchar> test;
@@ -758,13 +760,13 @@ void testSimple()
 
 int main()
 {
-	doMagickDOTA();
+	//doMagickDOTA();
 	// TODO Move it to test project
 	//testInitFromMat();
 
 	//printf("raw data tests: star...");
 	//checkImgFromData2();
-	//checkImgFromData3();
+	checkImgFromData3();
 	//checkImgFromData4();
 	//checkImgFromData5();
 	//checkImgFromData6();
@@ -803,6 +805,6 @@ int main()
 	//testImg("D:\\Programs\\Python\\barcode\\roofs\\t2\\ident.png");//bigimg.jpg
 
 
-	testSimple();
+	//testSimple();
 	return 0;
 }

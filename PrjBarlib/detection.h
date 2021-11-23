@@ -21,9 +21,12 @@ namespace fs = std::filesystem;
 typedef cv::Point3_<uint8_t> Pixel;
 using std::string;
 
-int pr = 30; bool normA = true;
+int pr = 20; bool normA = true;
 
-const int N = 16;
+const int N = 9;
+
+std::unordered_map<string, int> categorues;
+
 
 class barclassificator
 {
@@ -46,16 +49,18 @@ public:
 	bool check(bc::Baritem<uchar>* bar0, bc::Baritem<uchar>* bar255, int type)
 	{
 		auto cp = bc::CompireStrategy::CommonToLen;
-		float res = classes[type].compireFull(bar0, cp) * 0.5;
-		res += classes[type + N].compireFull(bar255, cp) * 0.5;
-		if (res > 0.9)
-			return true;
+		float res = 0;
+
+		//res = classes[type].compireBest(bar0, cp) * 0.5;
+		//res += classes[type + N].compireBest(bar255, cp) * 0.5;
+		//if (res > 0.9)
+		//	return true;
 
 		int maxInd = type;
 		float maxP = res;
 		for (size_t i = 0; i < N; i++)
 		{
-			float ps = classes[type].compireFull(bar0, cp) * 0.5 + classes[type + N].compireFull(bar255, cp) * 0.5;
+			float ps = classes[i].compireBest(bar0, cp) * 0.5 + classes[i + N].compireBest(bar255, cp) * 0.5;
 			if (ps > maxP)
 			{
 				maxP = ps;
@@ -113,28 +118,13 @@ inline bool exists(const std::string& name) {
 	return (stat(name.c_str(), &buffer) == 0);
 }
 
+void getCategories()
+{
+
+}
+
 void getSet(string path, barclassificator& data, char diff = '0')
 {
-	string whiteList = "plane, ship, storage tank, tennis court, basketball court, bridge, small vehicle, helicopter, container crane";
-
-	std::vector<string> splited;
-	split(whiteList, splited);
-
-	std::unordered_map<string, int> categorues;
-	int l = 0;
-	for (auto& c : splited)
-	{
-		int soff = c[0] == ' ' ? 1 : 0;
-		for (size_t i = 1; i < c.length(); i++)
-		{
-			if (c[i] == ' ')
-			{
-				c[i] = '-';
-			}
-		}
-		categorues[c.substr(soff)] = l;
-	}
-
 
 	BarcodeCreator<uchar> bc;
 	int categoruesSize = 0;
@@ -160,12 +150,14 @@ void getSet(string path, barclassificator& data, char diff = '0')
 	consrt.visualize = false;
 	consrt.waitK = 1;
 	using recursive_directory_iterator = fs::recursive_directory_iterator;
-
+	int k = 0;
 	for (const auto& dirEntry : recursive_directory_iterator(coords))
 	{
 		string coordsPath = dirEntry.path().string();//D:\Programs\C++\Barcode\analysis\datasets\DOTA\labels\P0013.txt
-		std::cout << coordsPath << "...";
-
+		std::cout << coordsPath << "..." << endl;
+		//k++;
+		//if (k == 5000)
+		//	break;
 		string	imgpath = coordsPath;
 		replace(imgpath, labelSubpath, subpath);
 		replace(imgpath, "txt", "png");
@@ -195,19 +187,22 @@ void getSet(string path, barclassificator& data, char diff = '0')
 			string s = (lids[8]);
 			if (lids[9][0] == diff)
 				continue;
-			if (categorues.find(s) == categorues.end())
-			{
-				/*				if (categorues.size() >= itmsLimit)
-									continue;*/
 
-				categorues.insert(std::pair<string, int>(s, categoruesSize++));
-			}
+			auto r = categorues.find(s);
+			if (r == categorues.end())
+				continue;
 
-			int index = categorues[s];
+			int index = r->second;
 
 			int x = atoi(lids[0].c_str());
 			int y = atoi(lids[1].c_str());
-			cv::Rect ds(x, y, atoi(lids[2].c_str()) - x, atoi(lids[5].c_str()) - y);
+			int xend = atoi(lids[2].c_str());
+			int yend = atoi(lids[5].c_str());
+
+			if (yend >= source.rows || xend >= source.cols)
+				continue;
+
+			cv::Rect ds(x, y, xend - x, yend - y);
 			cv::Mat m = source(ds);
 			cv::resize(m, m, cv::Size(32, 32));
 			bc::BarMat<uchar> wrapper(m);
@@ -226,6 +221,26 @@ void doMagickDOTA()
 	barclassificator validation;
 
 
+	string whiteList = "plane, ship, storage tank, tennis court, basketball court, bridge, small vehicle, helicopter, container crane";
+
+	std::vector<string> splited;
+	split(whiteList, splited, ',');
+	categorues.clear();
+	int l = 0;
+	for (auto& c : splited)
+	{
+		int soff = c[0] == ' ' ? 1 : 0;
+		for (size_t i = 1; i < c.length(); i++)
+		{
+			if (c[i] == ' ')
+			{
+				c[i] = '-';
+			}
+		}
+		categorues[c.substr(soff)] = l++;
+	}
+
+
 	string pathtrain = "D:\\Learning\\papers\\CO2\\train";
 	string pathvalidation = "D:\\Learning\\papers\\CO2\\validation";
 
@@ -236,6 +251,7 @@ void doMagickDOTA()
 	bc::Barcontainer<uchar> testcont;
 	int correct = 0;
 	int total = 0;
+	int cTotal = 0, cCurrect = 0;
 	for (size_t i = 0; i < N; i++)
 	{
 		auto& barc0 = validation.classes[i];
@@ -250,11 +266,31 @@ void doMagickDOTA()
 			}
 			++total;
 		}
-		std::cout << " done for" << i << ": " << correct << "/" << total << std::endl;
+		cTotal += total;
+		cCurrect += correct;
+		std::cout << " done for " << splited[i] << ": " << correct << "/" << total << std::endl;
+		correct = 0;
+		total = 0;
 	}
 
+	std::cout << "\nTotal: " << cCurrect << "/" << cTotal << std::endl;
 	system("pause");
 }
+
+/*
+
+ done for plane: 0/80
+ done for  ship: 70/559
+ done for  storage-tank: 229/1052
+ done for  tennis-court: 1/17
+ done for  basketball-court: 1/8
+ done for  bridge: 0/39
+ done for  small-vehicle: 28203/33033
+ done for  helicopter: 0/1
+ done for  container-crane: 0/0
+
+Total: 28504/34789
+*/
 //
 //int main(int argc, char* argv[])
 //{

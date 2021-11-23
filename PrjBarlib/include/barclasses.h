@@ -246,6 +246,7 @@ namespace bc
 		void preprocessBar(T const& porog, bool normalize);
 
 		float compireFull(const Barbase<T>* bc, bc::CompireStrategy strat) const;
+		float compireBest(const Baritem<T>* bc, bc::CompireStrategy strat) const;
 
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		~Barcontainer();
