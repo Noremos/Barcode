@@ -60,7 +60,12 @@ void BarcodeCreator<T>::draw(std::string name)
 		//		}
 		//		else
 		{
-			col = colors[(size_t)comp % size];
+			Hole<T>* hd = dynamic_cast<Hole<T>*>(comp);
+			if (hd && hd->getIsOutside())
+				col = cv::Vec3b(0, 0, 0);
+			else
+				col = colors[(size_t)comp % size];
+
 			marc = cv::MARKER_TILTED_CROSS;
 		}
 

@@ -11,6 +11,7 @@ class Hole : public Component<T>
 public:
     T start, end;
     bool isValid = false;
+    pmap crossHoles;
 
     Hole(point p1, point p2, point p3, BarcodeCreator<T>* factory);
     Hole(point p1, BarcodeCreator<T>* factory);

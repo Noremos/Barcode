@@ -431,6 +431,9 @@ namespace bc
 		}
 	};
 
+	typedef std::unordered_map<point, bool, pointHash> pmap;
+	typedef std::pair<point, bool> ppair;
+
 	template<class T>
 	struct bar3dvalue
 	{
@@ -589,7 +592,7 @@ namespace bc
 	//**********************************************
 
 	INIT_TEMPLATE_STRUCT(CachedValue)
-		INIT_TEMPLATE_STRUCT(BarConstructor)
+	INIT_TEMPLATE_STRUCT(BarConstructor)
 }
 
 #endif // BARCODE_H

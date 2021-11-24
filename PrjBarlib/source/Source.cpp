@@ -603,15 +603,21 @@ void caclSize(bc::Barcontainer<uchar>* ret)
 void testImg(string path)
 {
 	bc::BarConstructor<uchar> bcont;
-	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::RadiusComp);
+	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Hole);
 	bcont.createBinaryMasks = true;
 	bcont.createGraph = false;
 	bcont.returnType = bc::ReturnType::barcode2d;
+	bcont.waitK = 1;
+	bcont.visualize = true;
 	bcont.setStep(255);
 
 	bc::BarcodeCreator<uchar>* test = new bc::BarcodeCreator<uchar>();
 
 	Mat testmat = cv::imread(path, cv::IMREAD_GRAYSCALE);
+
+	cv::namedWindow("maintest", cv::WINDOW_NORMAL);
+	cv::imshow("maintest", testmat);
+	cv::waitKey(0);
 	//Mat testmat = cv::imread((string)"D:\\Programs\\Python\\barcode\\lenna.png", cv::IMREAD_GRAYSCALE);
 	bc::BarMat<uchar> mf(testmat);
 
@@ -786,7 +792,7 @@ int main()
 	//printf("done\n\n");
 
 	//testImg("../PrjTests/data/city.png");//bigimg.jpg
-	//testImg("D:\\Programs\\Python\\barcode\\roofs\\t2\\ident.png");//bigimg.jpg
+	testImg("D:\\Programs\\Python\\barcode\\roofs\\t2\\ident-simple4.png");//bigimg.jpg
 
 
 	//testSimple();
