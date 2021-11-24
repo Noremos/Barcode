@@ -3,41 +3,40 @@
 namespace bc
 {
 
-template<class T>
-class Hole : public Component<T>
-{
-    bool isOutside = false;
-    int index = 0;
-public:
-    T start, end;
-    bool isValid = false;
+    class EXPORT Hole : public Component
+    {
+        bool isOutside = false;
+    public:
 
-    Hole(point p1, point p2, point p3, BarcodeCreator<T>* factory);
-    Hole(point p1, BarcodeCreator<T>* factory);
-    ~Hole();
+        bool isValid = false;
 
-//        void setOutside(bool b) {
-//            isOutside = b;
+        Hole(point p1, point p2, point p3, barcodeCreator* factory);
+        Hole(point p1, barcodeCreator* factory);
+        //******************STATIC SIDE**********************
 
-//        }
-//        inline bool getOutside() { return isOutside;}
-//    void addAround();
-    bool tryAdd(const point &p);
-    //add withot checks. NOT SAFE. not add if valid
-    void add(const point &p);
-    //************************************************************************//
-    bool checkValid(point p);
-    //добовляет точку в дыру, если она там не содержится. Возвращает
 
-    //явяется ли точка точкой соединения двух дыр
-    bool findCross(point p, Hole<T>* hole);
-    bool getIsOutside() const;
-    void setShadowOutside(bool outside);
-    void setOutside();
-    void kill();
 
-    bool isContain(int x, int y);
-    bool isContain(bc::point p);
-};
+        //***************************************************
+    //        void setOutside(bool b) {
+    //            isOutside = b;
 
+    //        }
+    //        inline bool getOutside() { return isOutside;}
+    //    void addAround();
+        bool tryAdd(const point& p);
+        //add withot cheks. NOT SAFE. not add if valid
+        void add(const point& p);
+        //************************************************************************//
+        bool checkValid(point p);
+        //добовляет точку в дыру, если она там не содержится. Возвращает
+
+        //явяется ли точка точкой соединения двух дыр
+        bool findCross(point p, Hole* hole);
+        ~Hole();
+        bool getIsOutside() const;
+        void setShadowOutside(bool outside);
+        void setOutside();
+        void kill();
+
+    };
 }

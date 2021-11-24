@@ -1,102 +1,35 @@
 #pragma once
+#include "barline.h"
 #include <vector>
-#include "barstrucs.h"
-
-
-//#define POINTS_ARE_AVAILABLE
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc.hpp>
 namespace bc
 {
-	typedef uint poidex;
+    class barcodeCreator;
+    class EXPORT  Component
+    {
+    protected:
+        barcodeCreator* factory;
+    public:
+        pmap* coords;
+        uchar start = 0, end = 0;
+        //0 - nan
+        size_t num = 0;
+        //    pmap coords;
 
-	template<class T>
-	class BarcodeCreator;
+        //    cv::Mat binmap;
 
-	template<class T>
-	struct barline;
+        Component(int x, int y, barcodeCreator* factory);
+        Component(barcodeCreator* factory);
+        bool isContain(int x, int y);
+        bool isContain(point p);
+        virtual void add(const point& p);
+        virtual void kill();
+        //    void setB(const point &p);
+        virtual	~Component();
+    };
 
-	template<class T>
-	class Component
-	{
-	public:
-#ifdef POINTS_ARE_AVAILABLE
-		size_t getTotalSize()
-		{
-			return resline->matr.size();
-		}
-#else
-		size_t startIndex = 0;
-		size_t getTotalSize()
-		{
-			return totalCount;
-		}
-	private:
-		size_t totalCount = 0/*, ownSize = 0*/;
-#endif // !POINTS_ARE_AVAILABLE
-	protected:
-		BarcodeCreator<T>* factory;
-		Component<T>* cachedMaxParent = nullptr;
-
-	public:
-		Component<T>* parent = nullptr;
-		barline<T>* resline = nullptr;
-
-	protected:
-		int cashedSize = 0;
-		T lastVal = 0;
-		bool lived = true;
-
-	private:
-		//0 - nan
-
-		void init(BarcodeCreator<T>* factory);
-	public:
-
-		Component(poidex pix, BarcodeCreator<T>* factory);
-		Component(BarcodeCreator<T>* factory, bool create = false);
-
-		T getStart()
-		{
-			return resline->start;
-		}
-		bool isAlive()
-		{
-			return lived;
-		}
-
-		//T len()
-		//{
-		//	//return round(100000 * (end - start)) / 100000;
-		//	return  abs(resline->len());
-		//	//return end - start;
-		//}
-		//    cv::Mat binmap;
-		Component<T>* getMaxparent()
-		{
-			if (parent == nullptr)
-				return this;
-
-			if (cachedMaxParent == nullptr)
-			{
-				cachedMaxParent = parent;
-			}
-			while (cachedMaxParent->parent)
-			{
-				cachedMaxParent = cachedMaxParent->parent;
-				//totalCount += cachedMaxParent->coords->size();
-			}
-			return cachedMaxParent;
-		}
-
-
-		bool isContain(poidex index);
-		virtual void add(poidex index);
-		virtual void add(poidex index, const point p);
-		virtual void kill();
-		virtual void setParent(Component<T>* parnt);
-
-		virtual ~Component();
-
-	};
-
-	//typedef std::unordered_map<point, Component*, pointHash> cmap;
+    //typedef std::unordered_map<point, Component*, pointHash> cmap;
+    typedef Component** cmap;
+    typedef std::pair<point, Component*> cpair;
 }

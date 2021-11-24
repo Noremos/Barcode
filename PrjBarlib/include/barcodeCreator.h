@@ -1,283 +1,121 @@
 #pragma once
-
-#include "presets.h"
-
 #include "hole.h"
-#include "barstrucs.h"
 #include "barclasses.h"
-
-#include <unordered_map>
-
-#define COMPP Component<T>*
-#define HOLEP Hole<T>*
-
-#include "include_py.h"
-#include "include_cv.h"
-
 namespace bc {
 
-	struct indexCov
-	{
-		poidex offset = 0;
-		float dist = 0;
-		bool vert = true;
-		indexCov(uint _offset = 0, float _dist = 0, bool _vert = true) : offset(_offset), dist(_dist), vert(_vert)
-		{}
+    class EXPORT barcodeCreator
+    {
+    public:
 
-		bc::point getNextPoint(bc::point p)
-		{
-			return vert ? bc::point(p.x + 1, p.y) : bc::point(p.x, p.y + 1);
-		}
+        //std::vector<int> b0;
+        //std::vector<int> b1;
+        int b[256];
+        //int bLen = 256;
+        cv::Mat barMap;
+        bool useCorrectSE = true;
+        bool createBin = false;
+        std::vector<Component*> components;
+        //    std::vector<cv::Mat> .;
+    private:
+        std::vector<cv::Vec3b> colors;
+        //cv::Mat image;
+        Component** included;
+        uchar curbright;
+        int wid;
+        int hei;
+        int lastB;
+        int lll3 = 0;
+        int lll4 = 0;
+        bool createMap = false;
+        friend class Component;
+        friend class Hole;
+        //***************************************************
 
-		inline static float safeDiffSqr(const float& a, const float& b)
-		{
-			return a > b ? ((a - b) * (a - b)) : ((b - a) * (b - a));
-		}
+        int GETPOFF(const point& p) const;
 
-		template<class TK, uint N>
-		inline static float val_distance(const barVector<TK, N>& fisrt, const barVector<TK, N>& second)
-		{
-			float dist = 0;
-			for (uint i = 0; i < N; ++i)
-			{
-				dist += safeDiffSqr(static_cast<float>(second[i]), static_cast<float>(fisrt[i]));
-			}
-			return sqrtf(dist);
-		}
+        constexpr int GETOFF(int x, int y) const {
+            return wid * y + x;
+        }
+        point getPoint(size_t i) const
+        {
+            return point(static_cast<int>(i % (size_t)wid), static_cast<int>(i / (size_t)wid));
+        }
 
-		template<class TK>
-		inline static float val_distance(const TK& a, const TK& b)
-		{
-			return a > b ? (a - b) : (b - a);
-		}
-	};
+        //#define GETPOFF(P) (this->wid*P.y+P.x)
+        //#define GETOFF(X, Y) (this->wid*y+x)
 
-	template<class T>
-	using Include = Component<T>*;
+        bool isContain(int x, int y) const;
 
-	template<class T>
-	class EXPORT BarcodeCreator
-	{
-		typedef bc::DatagridProvider<T> bcBarImg;
+        bool isContain(const point& p, bool valid) const;
 
-		bool originalImg = true;
-		std::vector<COMPP> components;
-	private:
-#ifdef USE_OPENCV
-		std::vector<cv::Vec3b> colors;
-#endif
+        bool isContain(const point& p) const;
 
-		BarConstructor<T> settings;
-		bool skipAddPointsToParent = false;
-
-		Include<T>* included = nullptr;
-		const DatagridProvider<T>* workingImg = nullptr;
-		void setWorkingImg(const bcBarImg* newWI)
-		{
-			if (workingImg != nullptr && needDelImg)
-				delete workingImg;
-
-			workingImg = newWI;
-
-			if (!settings.stepPorog.isCached || !settings.maxLen.isCached)
-			{
-				T maxVal, minVal;
-				workingImg->maxAndMin(minVal, maxVal);
-
-				if (!settings.stepPorog.isCached)
-					settings.stepPorog.set(maxVal - minVal);
-
-				if (!settings.maxLen.isCached)
-					settings.maxLen.set(maxVal - minVal);
-			}
-		}
-
-		bool needDelImg = false;
-		T curbright;
-		poidex curpoindex;
-		uint curIndexInSortedArr;
-		point curpix;
-		int wid;
-		int hei;
-		T sourceMax;
-		T sourceMin;
-		// int lastB;
-		friend class Component<T>;
-		friend class Hole<T>;
-		//		friend struct BarRoot<T>;
-		friend class Baritem<T>;
-
-		size_t totalSize = 0;
-		poidex* sortedArr = nullptr;
-
-		//***************************************************
-		constexpr bool IS_OUT_OF_REG(int x, int y)
-		{
-			return x < 0 || y < 0 || x >= wid || y >= hei;
-		}
-		int GETPOFF(const point& p) const
-		{
-			return wid * p.y + p.x;
-		}
-
-		int GETOFF(uint x, uint y) const {
-			return wid * y + x;
-		}
-
-		constexpr bool GETDIFF(T a, T b) const
-		{
-			return (a > b ? a - b : b - a) <= this->settings.getMaxStepPorog();
-		}
-
-		point getPoint(uint i) const
-		{
-			return point(i % wid, i / wid);
-		}
-
-		//#define GETPOFF(P) (this->wid*P.y+P.x)
-		//#define GETOFF(X, Y) (this->wid*y+x)
-
-		bool isContain(poidex ind) const
-		{
-			return included[ind] != nullptr;
-		}
-
-		inline void setInclude(poidex ind, COMPP comp)
-		{
-			included[ind] = comp;
-		}
-
-		inline COMPP getComp(poidex ind)
-		{
-			auto itr = included[ind];
-			return itr ? itr->getMaxparent() : nullptr;
-		}
+        void setInclude(int x, int y, Component* comp);
+        void setInclude(const point& p, Component* comp);
 
 
-		COMPP getPorogComp(const point& p, poidex index);
+        Component* getComp(int x, int y);
+        Component* getComp(const point& p);
 
-		COMPP getInclude(size_t pos);
+        Hole* getHole(int x, int y);
+        Hole* getHole(const point& p);
 
-		// ONLY FOR HOLE
-		bool isContain(const point& p) const
-		{
-			if (p.x < 0 || p.y < 0 || p.x >= wid || p.y >= hei)
-				return false;
+        Hole* tryAttach(Hole* h1, Hole* h2, point p);
+        Component* attach(Component* first, Component* second);
+        //Образовала новый?
+        bool checkCloserB0(point midP);
 
-			return included[wid * p.y + p.x] != nullptr;
-		}
+        bool checkCloserB1(point& p);
 
-		HOLEP getHole(uint x, uint y);
-		HOLEP getHole(const point& p);
+        inline bool tryAdd(bc::Hole* h, const point& p);
 
-		COMPP attach(COMPP first, COMPP second);
-		HOLEP tryAttach(HOLEP h1, HOLEP h2, point p);
+        inline void add(bc::Hole* h, point& p);
+        static point* sort(cv::Mat* arr);
 
-		bool checkCloserB0();
-		bool checkCloserB1();
+        size_t totalSize = 0;
 
-		void sortPixels(bc::ProcType type);
+        void clearIncluded();
+        void clear();
+        Barcode* createSLbarcode(const cv::Mat& src, uchar foneStart, uchar foneEnd);
+        BarcodeTwo* createTwoSlbarcode(const cv::Mat& src);
 
-		void clearIncluded();
+        void draw(std::string name = "test");
+        void VISULA_DEBUG(int y, int i, point& pix);
+        void VISULA_DEBUG_COMP(int y, int i, point& pix);
+        void init(const cv::Mat& src, cv::Mat& img);
+        point* sortedArr;
+        void mapp(bc::Hole* h, const point& p);
+        void drawColorMap(int delay = 0);
+        void processHole0to255(cv::Mat& img, int* retBty, Barcontainer* item = nullptr);
+        void processHole255to0(cv::Mat& img, int* retBty, Barcontainer* item = nullptr);
 
-		void draw(std::string name = "test");
-		void VISUAL_DEBUG();
-		void VISUAL_DEBUG_COMP();
+        void processComp0to255(cv::Mat& img, int* retBty, Barcontainer* item = nullptr);
+        void processComp255to0(cv::Mat& img, int* retBty, Barcontainer* item = nullptr);
+        void addItemToCont(bc::Barcontainer* item);
+        void processTypeF(const barstruct& str, cv::Mat& img, Barcontainer* item = nullptr);
+        void processFULL(const barstruct& str, cv::Mat& img, bc::Barcontainer* item);
+    public:
 
+        barcodeCreator();
+        //********************B1************************************************//
 
-		void init(const bc::DatagridProvider<T>* src, ProcType& type, ComponentType& comp);
-
-		void processComp(Barcontainer<T>* item = nullptr);
-		void processHole(Barcontainer<T>* item = nullptr);
-		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
-
-		void processTypeF(barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
-
-		void processFULL(barstruct& str, const bc::DatagridProvider<T>* img, bc::Barcontainer<T>* item);
-		void addItemToCont(Barcontainer<T>* item);
-
-		void computeNdBarcode(Baritem<T>* lines, int n);
-
-	public:
-		BarcodeCreator()
-		{
-		}
-		BarcodeCreator(const BarcodeCreator&)
-		{
-
-		}
-
-		bc::Barcontainer<T>* createBarcode(const bc::DatagridProvider<T>* img, const BarConstructor<T>& structure);
-		/*{
-			this->settings = structure;
-			settings.checkCorrect();
-
-			Barcontainer<T>* cont = new Barcontainer<T>();
-
-			for (const auto& it : settings.structure)
-			{
-				processFULL(it, img, cont);
-			}
-			return cont;
-		}*/
-
-		bc::Barcontainer<T>* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
-
-
-		virtual ~BarcodeCreator()
-		{
-			//			clearIncluded();
-#ifdef USE_OPENCV
-			colors.clear();
-#endif // USE_OPENCV
-		}
-
-#ifdef _PYD
-
-		bc::Barcontainer<T>* createBarcode(bn::ndarray& img, bc::BarConstructor<T>& structure);
-#endif // _PYD
-
-		///////////GEOMETRY
-	private:
-		void processCompByRadius(Barcontainer<T>* item);
-		
-
-
-		std::unique_ptr<indexCov> geometrySortedArr;
-	};
-
-	template<class T>
-	static Barcontainer<T>* createBarcode(bc::BarType type, const bc::DatagridProvider<T>* img, BarConstructor<T>& _struct)
-	{
-		switch (type)
-		{
-		case bc::BarType::bc_byte:
-		{
-			BarcodeCreator<ushort> t;
-			return t.createBarcode(img, _struct);
-		}
-		case bc::BarType::bc_float:
-		{
-			BarcodeCreator<float> t;
-			return t.createBarcode(img, _struct);
-		}
-		case bc::BarType::bc_int:
-		{
-			BarcodeCreator<int> t;
-			return t.createBarcode(img, _struct);
-		}
-		case bc::BarType::bc_short:
-		{
-			BarcodeCreator<short> t;
-			return t.createBarcode(img, _struct);
-		}
-		case bc::BarType::bc_ushort:
-		{
-			BarcodeCreator<ushort> t;
-			return t.createBarcode(img, _struct);
-		}
-		default:
-			return nullptr;
-		}
-	}
+        //соединяет дыры и  изменяет holeCollaps
+        //**************************************************************************//
+        /// \brief createTwoSlbarcode
+        /// \param src
+        /// \param createRGBbar
+        /// \return barcodeTwo with barcodeRBG if(bool par is true and src.channels()==3) else barcode
+        BarcodeTwo* createTwoSlbarcode(const cv::Mat& src, bool createRGBbar);
+        Barbase* createSLbarcode(const cv::Mat& src, uchar foneStart, uchar foneEnd, bool createRGBbar);
+        Barcode* getSLbarcode(int* points);
+        bc::Barcontainer* createBarcode(cv::Mat img, const std::vector<barstruct>& structure);
+        //************************
+        virtual ~barcodeCreator();
+        std::vector<std::vector<cv::Point>> segmetbar(cv::Mat src, bool reverse, uchar terminateBright);
+        std::vector<std::vector<cv::Point> > segmetbarFull(cv::Mat src, uchar terminateBright);
+        void addToBin0();
+        void addToBin255();
+    };
 }
+
+

@@ -1,472 +1,664 @@
 #include "barclasses.h"
 #include <math.h>
+#ifndef MIN
+#define MIN(a,b) ((a)<(b)?(a):(b))
+#endif
 
-#include <unordered_map>
+#ifndef MAX
+#define MAX(a,b) ((a)>(b)?(a):(b))
+#endif
 
-template<class T>
-bc::Barbase<T>::~Barbase() {}
-
-template<class T>
-bc::Baritem<T>::Baritem(int wid)
-{
-	this->wid = wid;
-}
+//======================barcode================
 
 
-template<class T>
-void bc::Baritem<T>::add(T st, T len)
-{
-	barlines.push_back(new barline<T>(st, len, wid));
-}
-
-
-template<class T>
-void bc::Baritem<T>::add(bc::barline<T>* line)
-{
-	barlines.push_back(line);
-}
-
-template<class T>
-T bc::Baritem<T>::sum() const
-{
-	T ssum = 0;
-	for (const barline<T>* l : barlines)
-		ssum += l->len();
-
-	return ssum;
-}
-
-template<>
-void bc::Baritem<uchar>::getBettyNumbers(int* bs)
-{
-	memset(bs, 0, 256 * sizeof(int));
-
-	for (const barline<uchar>* l : barlines)
-	{
-		for (size_t i = l->start; i < l->end(); ++i)
-		{
-			++bs[i];
-		}
-	}
-}
-
-
-template<class T>
-void bc::Baritem<T>::getBettyNumbers(int* /*bs*/)
+bc::Barcode::Barcode()
 {
 }
 
+bc::Barcode::Barcode(const bc::Barcode& obj)
+{
+    bar.insert(bar.begin(), obj.bar.begin(), obj.bar.end());
+}
+
+void bc::Barcode::add(uchar st, uchar len)
+{
+    bar.push_back(bline(st, len));
+}
+
+int bc::Barcode::sum() const
+{
+    int sum = 0;
+    for (const bline& l : bar)
+        sum += l.len;
+    return sum;
+}
+
+bc::Barcode* bc::Barcode::clone() const
+{
+    Barcode* nb = new Barcode();
+    nb->bar.insert(nb->bar.begin(), bar.begin(), bar.end());
+    return nb;
+}
+
+uchar bc::Barcode::maxLen() const
+{
+    uchar max = 0;
+    for (const bline& l : bar)
+        if (l.len > max)
+            max = l.len;
+    return max;
+}
+
+void bc::Barcode::relen()
+{
+    if (bar.size() == 0)
+        return;
+    uchar mini = bar[0].start;
+    for (size_t i = 1; i < bar.size(); ++i)
+        if (bar[i].start < mini)
+            mini = bar[i].start;
+
+    for (size_t i = 0; i < bar.size(); ++i)
+        bar[i].start -= mini;
+
+    //mini = std::min_element(arr.begin(), arr.end(), [](bline &b1, bline &b2) { return b1.start < b2.start; })->start;
+    //std::for_each(arr.begin(), arr.end(), [mini](bline &n) {return n.start - uchar(mini); });
+}
+
+void bc::Barcode::removePorog(const uchar porog)
+{
+    if (porog == 0)
+        return;
+    Barcode res;
+    for (const bline& line : bar) {
+        if (line.len >= porog)
+            res.bar.push_back(line);
+    }
+    bar.clear();
+    bar.insert(bar.begin(), res.bar.begin(), res.bar.end());
+}
+
+void bc::Barcode::preprocessBar(const int& porog, bool normalize)
+{
+    if (porog > 0)
+        this->removePorog((uchar)roundf((porog * float(this->maxLen()) / 100.f)));
+
+    if (normalize)
+        this->relen();
+}
 
 
-//template<class T>
-//void cloneGraph(bc::barline<T>* old, bc::barline<T>* newone)
+float bc::Barcode::compireCTML(const bc::Barbase* bc) const
+{
+    Barcode* Y = dynamic_cast<const Barcode*>(bc)->clone();
+    Barcode* X = clone();
+    if (X->bar.size() == 0 || Y->bar.size() == 0)
+        return 0;
+    float sum = (float)(X->sum() + Y->sum());
+    int n = static_cast<int>(MIN(bar.size(), Y->bar.size()));
+
+    float tsum = 0.f;
+    for (int re = 0; re < n; ++re) {
+        float maxCoof = 0;
+        float maxsum = 0;
+        int ik = 0;
+        int jk = 0;
+        for (int i = 0, total = X->bar.size(); i < total; ++i)
+        {
+            for (int j = 0, total = Y->bar.size(); j < total; ++j)
+            {
+                short st = MAX(X->bar[i].start, Y->bar[j].start);
+                short ed = MIN(X->bar[i].start + X->bar[i].len, Y->bar[j].start + Y->bar[j].len);
+                float minlen = (float)(ed - st);
+                float maxlen = MAX(X->bar[i].len, Y->bar[j].len);
+                //≈сли меньше 0, значит линии не пересекаютс€
+                if (minlen <= 0 || maxlen <= 0)
+                    continue;
+
+                float coof = minlen / maxlen;
+                if (coof > maxCoof)
+                {
+                    maxCoof = coof;
+                    maxsum = (float)(X->bar[i].len + Y->bar[j].len);
+                    ik = i;
+                    jk = j;
+                }
+            }
+        }
+        X->bar.erase(X->bar.begin() + ik);
+        Y->bar.erase(Y->bar.begin() + jk);
+        tsum += (maxsum / sum) * maxCoof;
+    }
+    return tsum;
+}
+
+float bc::Barcode::compireCTS(const bc::Barbase* bc) const
+{
+    Barcode* Y = dynamic_cast<const Barcode*>(bc)->clone();
+    Barcode* X = clone();
+    if (X->bar.size() == 0 || Y->bar.size() == 0)
+        return 0;
+    float sum = (float)(X->sum() + Y->sum());
+    int n = static_cast<int>(MIN(X->bar.size(), Y->bar.size()));
+
+    float tsum = 0.f;
+    for (int re = 0; re < n; ++re) {
+        float maxCoof = 0;
+        float maxsum = 0;
+        int ik = 0;
+        int jk = 0;
+        for (int i = 0, total = X->bar.size(); i < total; ++i)
+        {
+            for (int j = 0, total2 = Y->bar.size(); j < total2; ++j)
+            {
+                short st = MAX(X->bar[i].start, Y->bar[j].start);
+                short ed = MIN(X->bar[i].start + X->bar[i].len, Y->bar[j].start + Y->bar[j].len);
+                float minlen = (float)(ed - st);
+
+                st = MIN(X->bar[i].start, Y->bar[j].start);
+                ed = MAX(X->bar[i].start + X->bar[i].len, Y->bar[j].start + Y->bar[j].len);
+                float maxlen = (float)(ed - st);
+
+                //≈сли меньше 0, значит линии не пересекаютс€
+                if (minlen <= 0 || maxlen <= 0)
+                    continue;
+
+                float coof = minlen / maxlen;
+                if (coof > maxCoof)
+                {
+                    maxCoof = coof;
+                    maxsum = (float)(X->bar[i].len + Y->bar[j].len);
+                    ik = i;
+                    jk = j;
+                }
+            }
+        }
+        X->bar.erase(X->bar.begin() + ik);
+        Y->bar.erase(Y->bar.begin() + jk);
+        tsum += (maxsum / sum) * maxCoof;
+    }
+    return tsum;
+}
+
+bc::Barcode::~Barcode()
+{
+    bar.clear();
+}
+
+
+////=======================barcodeTwo=====================
+
+bc::BarcodeTwo::BarcodeTwo()
+{
+
+}
+
+bc::BarcodeTwo::BarcodeTwo(bc::Barbase* one, bc::Barbase* two, bool allocateNewpointers)
+{
+    init(one, two, allocateNewpointers);
+}
+
+bc::BarcodeTwo::BarcodeTwo(const bc::BarcodeTwo& obj)
+{
+    one = obj.one->clone();
+    two = obj.two->clone();
+}
+
+void bc::BarcodeTwo::init(bc::Barbase* one, bc::Barbase* two, bool allocateNewpointers)
+{
+    if (this->one != nullptr)
+        delete one;
+    if (this->two != nullptr)
+        delete two;
+    if (allocateNewpointers)
+    {
+        this->one = one->clone();
+        this->two = two->clone();
+    }
+    else {
+        this->one = one;
+        this->two = two;
+    }
+}
+
+bc::BarcodeTwo* bc::BarcodeTwo::clone() const
+{
+    return new BarcodeTwo(one, two, true);
+}
+
+int bc::BarcodeTwo::sum() const
+{
+    return one->sum() + two->sum();
+}
+
+void bc::BarcodeTwo::preprocessBar(const int& porog, bool normalize)
+{
+    one->preprocessBar(porog, normalize);
+    two->preprocessBar(porog, normalize);
+}
+
+float bc::BarcodeTwo::compireCTML(const bc::Barbase* bc) const
+{
+    const BarcodeTwo* b2 = dynamic_cast<const BarcodeTwo*>(bc);
+    float r1 = one->compireCTML(b2->one);
+    float r2 = two->compireCTML(b2->two);
+    int summ1 = one->sum() + b2->one->sum();
+    int summ2 = two->sum() + b2->two->sum();
+    float procWhite = ((float)summ1 / (summ1 + summ2));
+    return r1 * procWhite + r2 * (1 - procWhite);
+}
+
+float bc::BarcodeTwo::compireCTS(const Barbase* bc) const
+{
+    const BarcodeTwo* b2 = dynamic_cast<const BarcodeTwo*>(bc);
+
+    float r1 = one->compireCTS(b2->one);
+    float r2 = two->compireCTS(b2->two);
+    int summ1 = one->sum() + b2->one->sum();
+    int summ2 = two->sum() + b2->two->sum();
+    float procWhite = ((float)summ1 / (summ1 + summ2));
+    return r1 * procWhite + r2 * (1 - procWhite);
+}
+
+void bc::BarcodeTwo::removePorog(const uchar porog)
+{
+    one->removePorog(porog);
+    two->removePorog(porog);
+}
+
+bc::BarcodeTwo::~BarcodeTwo()
+{
+    if (one != nullptr)
+    {
+        delete one;
+        one = nullptr;
+    }
+
+    if (two != nullptr)
+    {
+        delete two;
+        two = nullptr;
+    }
+}
+
+void bc::BarcodeTwo::relen()
+{
+    one->relen();
+    two->relen();
+}
+
+//====================================================
+
+bc::Barbase::~Barbase() {}
+
+float bc::Barbase::compireBarcodes(const bc::Barbase* X, const bc::Barbase* Y, const CompireFunction& type)
+{
+    switch (type) {
+    case CompireFunction::CommonToLen:
+        return X->compireCTML(Y);
+        break;
+    case CompireFunction::CommonToSum:
+        return X->compireCTS(Y);
+        break;
+    default:
+        return 0;
+        //X->compireCTML(Y);
+        break;
+    }
+}
+/////////////////////////////////////////////////////////
+//=================================barocdeTGB
+
+bc::BarcodeRGB* bc::BarcodeRGB::clone() const
+{
+    return new BarcodeRGB(barR, barG, barB, true);
+}
+
+bc::BarcodeRGB::BarcodeRGB() {}
+
+bc::BarcodeRGB::BarcodeRGB(bc::Barbase* r, bc::Barbase* g, bc::Barbase* b, bool allocateNewpointers)
+{
+    init(r, g, b, allocateNewpointers);
+}
+
+bc::BarcodeRGB::BarcodeRGB(const bc::BarcodeRGB& obj)
+{
+    this->barR = obj.barR->clone();
+    this->barG = obj.barG->clone();
+    this->barB = obj.barB->clone();
+}
+
+void bc::BarcodeRGB::init(bc::Barbase* r, bc::Barbase* g, bc::Barbase* b, bool allocateNewpointers)
+{
+    if (barR != nullptr)
+        delete barR;
+
+    if (barG != nullptr)
+        delete barG;
+
+    if (barB != nullptr)
+        delete barB;
+
+    if (allocateNewpointers) {
+        this->barR = r->clone();
+        this->barG = g->clone();
+        this->barB = b->clone();
+    }
+    else {
+        this->barR = r;
+        this->barG = g;
+        this->barB = b;
+    }
+}
+
+
+void bc::BarcodeRGB::preprocessBar(const int& porog, bool normalize)
+{
+    this->barR->preprocessBar(porog, normalize);
+    this->barG->preprocessBar(porog, normalize);
+    this->barB->preprocessBar(porog, normalize);
+}
+
+float bc::BarcodeRGB::compireCTML(const bc::Barbase* bc) const
+{
+    const BarcodeRGB* Y = dynamic_cast<const BarcodeRGB*>(bc);
+    float r0 = barR->compireCTML(Y->barR);
+    float r1 = barG->compireCTML(Y->barG);
+    float r2 = barB->compireCTML(Y->barB);
+    int sum0 = (barR->sum() + Y->barR->sum());
+    int sum1 = (barG->sum() + Y->barG->sum());
+    int sum2 = (barB->sum() + Y->barB->sum());
+    float tsum = (float)(sum0 + sum1 + sum2);
+    return r0 * (sum0 / tsum) + r1 * (sum1 / tsum) + r2 * (sum2 / tsum);
+}
+
+float bc::BarcodeRGB::compireCTS(const bc::Barbase* bc) const
+{
+    const BarcodeRGB* Y = dynamic_cast<const BarcodeRGB*>(bc);
+    float r0 = barR->compireCTS(Y->barR);
+    float r1 = barG->compireCTS(Y->barG);
+    float r2 = barB->compireCTS(Y->barB);
+    int sum0 = (barR->sum() + Y->barR->sum());
+    int sum1 = (barG->sum() + Y->barG->sum());
+    int sum2 = (barB->sum() + Y->barB->sum());
+    float tsum = (float)(sum0 + sum1 + sum2);
+    return r0 * (sum0 / tsum) + r1 * (sum1 / tsum) + r2 * (sum2 / tsum);
+}
+
+void bc::BarcodeRGB::removePorog(const uchar porog)
+{
+    this->barR->removePorog(porog);
+    this->barG->removePorog(porog);
+    this->barB->removePorog(porog);
+}
+
+bc::BarcodeRGB::~BarcodeRGB()
+{
+    if (barR != nullptr)
+    {
+
+        delete barR;
+        barR = nullptr;
+    }
+    if (barG != nullptr) {
+        delete barG;
+        barG = nullptr;
+    }
+    if (barB != nullptr)
+    {
+        delete barB;
+        barB = nullptr;
+    }
+}
+
+int bc::BarcodeRGB::sum() const
+{
+    return barR->sum() + barG->sum() + barB->sum();
+}
+
+void bc::BarcodeRGB::relen()
+{
+    barR->relen();
+    barG->relen();
+    barB->relen();
+}
+
+
+bc::Baritem::Baritem() {}
+
+bc::Baritem::Baritem(const bc::Baritem& obj)
+{
+    bar.insert(bar.begin(), obj.bar.begin(), obj.bar.end());
+}
+
+void bc::Baritem::add(uchar st, uchar len)
+{
+    bar.push_back(new bline(st, len));
+}
+
+//void bc::Baritem::add(uchar st, uchar len, cv::Mat binmat)
 //{
-//	for (size_t i = 0; i < old->children.size(); i++)
-//	{
-//		cloneGraph(old->children[i], newone->children[i]);
-//		old->children[i] = newone->children[i]->clone();
-//	}
+//    bar.push_back(bline(st, len, binmat));
 //}
-
-template<class T>
-bc::Baritem<T>* bc::Baritem<T>::clone() const
+void bc::Baritem::add(uchar st, uchar len, pmap* binmat)
 {
-	std::unordered_map<barline<T>*, barline<T>*> oldNew;
-	Baritem<T>* nb = new Baritem<T>(wid);
-	nb->barlines.insert(nb->barlines.begin(), barlines.begin(), barlines.end());
-	bool createGraph = false;
-	if ((barlines.size() > 0 && barlines[0]->parent != nullptr) || barlines[0]->children.size() > 0)
-		createGraph = true;
-
-	for (size_t i = 0, total = nb->barlines.size(); i < total; ++i)
-	{
-		auto* nnew = nb->barlines[i]->clone();
-		if (createGraph)
-			oldNew.insert(std::pair<barline<T>*, barline<T>*>(nb->barlines[i], nnew));
-
-		nb->barlines[i] = nnew;
-	}
-	if (createGraph)
-	{
-		for (size_t i = 0, total = nb->barlines.size(); i < total; ++i)
-		{
-			auto* nline = nb->barlines[i];
-			nline->parent = oldNew[nline->parent];
-
-			for (size_t i = 0; i < nline->children.size(); i++)
-				nline->children[i] = oldNew[nline->children[i]];
-		}
-	}
-	return nb;
+    bar.push_back(new bline(st, len, binmat));
 }
 
-template<class T>
-T bc::Baritem<T>::maxLen() const
+int bc::Baritem::sum() const
 {
-	T max = 0;
-	for (const barline<T>* l : barlines)
-		if (l->len() > max)
-			max = l->len();
+    int sum = 0;
+    for (const bline* l : bar)
+        sum += l->len;
 
-	return max;
+    return sum;
 }
 
-template<class T>
-void bc::Baritem<T>::relen()
+bc::Baritem* bc::Baritem::clone() const
 {
-	if (barlines.size() == 0)
-		return;
-
-	T mini = barlines[0]->start;
-	for (size_t i = 1; i < barlines.size(); ++i)
-		if (barlines[i]->start < mini)
-			mini = barlines[i]->start;
-
-	for (size_t i = 0; i < barlines.size(); ++i)
-		barlines[i]->start -= mini;
-
-	//mini = std::min_element(arr.begin(), arr.end(), [](barline &b1, barline &b2) { return b1.start < b2.start; })->start;
-	//std::for_each(arr.begin(), arr.end(), [mini](barline &n) {return n.start - uchar(mini); });
+    Baritem* nb = new Baritem();
+    nb->bar.insert(nb->bar.begin(), bar.begin(), bar.end());
+    return nb;
 }
 
-template<class T>
-void bc::Baritem<T>::removePorog(const T porog)
+uchar bc::Baritem::maxLen() const
 {
-	if (porog == 0)
-		return;
-	std::vector<barline<T>*> res;
-	for (size_t i = 0; i < barlines.size(); i++)
-	{
-		barline<T>* line = barlines[i];
-		if (line->len() >= porog)
-			res.push_back(line);
-		else// if (line->isCopy)
-			delete line;
-	}
-	barlines.clear();
-	barlines.insert(barlines.begin(), res.begin(), res.end());
+    uchar max = 0;
+    for (const bline* l : bar)
+        if (l->len > max)
+            max = l->len;
+
+    return max;
 }
 
-template<class T>
-void bc::Baritem<T>::preprocessBar(const T& porog, bool normalize)
+void bc::Baritem::relen()
 {
-	this->removePorog(porog);
+    if (bar.size() == 0)
+        return;
 
-	if (normalize)
-		this->relen();
+    uchar mini = bar[0]->start;
+    for (size_t i = 1; i < bar.size(); ++i)
+        if (bar[i]->start < mini)
+            mini = bar[i]->start;
+
+    for (size_t i = 0; i < bar.size(); ++i)
+        bar[i]->start -= mini;
+
+    //mini = std::min_element(arr.begin(), arr.end(), [](bline &b1, bline &b2) { return b1.start < b2.start; })->start;
+    //std::for_each(arr.begin(), arr.end(), [mini](bline &n) {return n.start - uchar(mini); });
 }
 
-template<class T>
-float findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat)
+void bc::Baritem::removePorog(const uchar porog)
 {
-    float maxlen, minlen;
-	if (strat == bc::CompireStrategy::CommonToSum)
-	{
-		T st = MAX(X->start, Y->start);
-		T ed = MIN(X->end(), Y->end());
-        minlen = static_cast<float>(ed - st);
-
-		st = MIN(X->start, Y->start);
-		ed = MAX(X->end(), Y->end());
-        maxlen = static_cast<float>(ed - st);
-	}
-	else if (strat == bc::CompireStrategy::CommonToLen)
-	{
-		T st = MAX(X->start, Y->start);
-		T ed = MIN(X->end(), Y->end());
-        minlen = static_cast<float>(ed - st);
-        maxlen = static_cast<float>(MAX(X->len(), Y->len()));
-	}
-	else
-	{
-		return X->compire3dbars(Y, strat);
-	}
-
-	if (minlen <= 0 || maxlen <= 0)
-		return -1;
-
-	return minlen / maxlen;
+    if (porog == 0)
+        return;
+    Baritem res;
+    for (bline* line : bar) {
+        if (line->len >= porog)
+            res.bar.push_back(line);
+        else
+            delete line;
+    }
+    bar.clear();
+    bar.insert(bar.begin(), res.bar.begin(), res.bar.end());
 }
 
-#include <algorithm>
-
-template<class T>
-void soirBarlens(bc::barlinevector<T>& barl)
+void bc::Baritem::preprocessBar(const int& porog, bool normalize)
 {
-	std::sort(barl.begin(), barl.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
-		{
-			return a->len() > b->len();
-		});
+    if (porog > 0)
+        this->removePorog((uchar)roundf((porog * float(this->maxLen()) / 100.f)));
+
+    if (normalize)
+        this->relen();
 }
 
 
-template<class T>
-float bc::Baritem<T>::compireBestRes(const bc::Baritem<T>* bc, bc::CompireStrategy strat) const
+float bc::Baritem::compireCTML(const bc::Barbase* bc) const
 {
-	barlinevector<T> Xbarlines = barlines;
-	barlinevector<T> Ybarlines = dynamic_cast<const Baritem<T>*>(bc)->barlines;
+    Baritem* Y = dynamic_cast<const Baritem*>(bc)->clone();
+    Baritem* X = clone();
+    if (X->bar.size() == 0 || Y->bar.size() == 0)
+        return 0;
+    float sum = (float)(X->sum() + Y->sum());
+    int n = static_cast<int>(MIN(bar.size(), Y->bar.size()));
 
-	if (Xbarlines.size() == 0 || Ybarlines.size() == 0)
-		return 0;
+    float tsum = 0.f;
+    for (int re = 0; re < n; ++re)
+    {
+        float maxCoof = 0;
+        float maxsum = 0;
+        int ik = 0;
+        int jk = 0;
+        for (int i = 0, totalI = X->bar.size(); i < totalI; ++i) {
+            for (int j = 0, totalY = Y->bar.size(); j < totalY; ++j) {
+                short st = MAX(X->bar[i]->start, Y->bar[j]->start);
+                short ed = MIN(X->bar[i]->start + X->bar[i]->len, Y->bar[j]->start + Y->bar[j]->len);
+                float minlen = (float)(ed - st);
+                float maxlen = MAX(X->bar[i]->len, Y->bar[j]->len);
+                //≈сли меньше 0, значит линии не пересекаютс€
+                if (minlen <= 0 || maxlen <= 0)
+                    continue;
 
-	float totalsum = 0.f;
-	int n = static_cast<int>(MIN(barlines.size(), Ybarlines.size()));
-
-	float tsum = 0.f;
-	for (int re = 0; re < n; ++re)
-	{
-		float maxCoof = 0;
-		float maxsum = 0;
-		size_t ik = 0;
-		size_t jk = 0;
-		for (size_t i = 0, totalI = Xbarlines.size(); i < totalI; ++i)
-		{
-			for (size_t j = 0, totalY = Ybarlines.size(); j < totalY; ++j)
-			{
-                float coof = findCoof(Xbarlines[i], Ybarlines[j], strat);
-				if (coof < 0)
-					continue;
-
-				if (coof > maxCoof)
-				{
-					maxCoof = coof;
-					maxsum = (float)(Xbarlines[i]->len() + Ybarlines[j]->len());
-					ik = i;
-					jk = j;
-				}
-			}
-		}
-		Xbarlines.erase(Xbarlines.begin() + ik);
-		Ybarlines.erase(Ybarlines.begin() + jk);
-		tsum += maxsum * maxCoof;
-		totalsum += maxsum;
-	}
-	return tsum / totalsum;
+                float coof = minlen / maxlen;
+                if (coof > maxCoof) {
+                    maxCoof = coof;
+                    maxsum = (float)(X->bar[i]->len + Y->bar[j]->len);
+                    ik = i;
+                    jk = j;
+                }
+            }
+        }
+        X->bar.erase(X->bar.begin() + ik);
+        Y->bar.erase(Y->bar.begin() + jk);
+        tsum += maxsum * maxCoof;
+    }
+    return tsum / sum;
 }
 
-template<class T>
-float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy strat) const
+float bc::Baritem::compireCTS(const bc::Barbase* bc) const
 {
-	barlinevector<T> Xbarlines = barlines;
-	barlinevector<T> Ybarlines = dynamic_cast<const Baritem<T>*>(bc)->barlines;
+    Baritem* Y = dynamic_cast<const Baritem*>(bc)->clone();
+    Baritem* X = clone();
+    if (X->bar.size() == 0 || Y->bar.size() == 0)
+        return 0;
+    float sum = (float)(X->sum() + Y->sum());
+    int n = static_cast<int>(MIN(X->bar.size(), Y->bar.size()));
 
-	if (Xbarlines.size() == 0 || Ybarlines.size() == 0)
-		return 0;
+    float tsum = 0.f;
+    for (int re = 0; re < n; ++re)
+    {
+        float maxCoof = 0;
+        float maxsum = 0;
+        int ik = 0;
+        int jk = 0;
+        for (int i = 0, total = X->bar.size(); i < total; ++i) {
+            for (int j = 0, total2 = Y->bar.size(); j < total2; ++j) {
+                short st = MAX(X->bar[i]->start, Y->bar[j]->start);
+                short ed = MIN(X->bar[i]->start + X->bar[i]->len, Y->bar[j]->start + Y->bar[j]->len);
+                float minlen = (float)(ed - st);
 
-	float totalsum = 0;
-    size_t n = MIN(Xbarlines.size(), Ybarlines.size());
-	soirBarlens<T>(Xbarlines);
-	soirBarlens<T>(Ybarlines);
+                st = MIN(X->bar[i]->start, Y->bar[j]->start);
+                ed = MAX(X->bar[i]->start + X->bar[i]->len, Y->bar[j]->start + Y->bar[j]->len);
+                float maxlen = (float)(ed - st);
 
-	float tcoof = 0.f;
-	for (size_t i = 0; i < n; ++i)
-	{
-        float coof = findCoof(Xbarlines[i], Ybarlines[i], strat);
-		if (coof < 0)
-			continue;
+                //≈сли меньше 0, значит линии не пересекаютс€
+                if (minlen <= 0 || maxlen <= 0)
+                    continue;
 
-        float xysum = static_cast<float>(Xbarlines[i]->len() + Ybarlines[i]->len());
-		totalsum += xysum;
-		tcoof += xysum * coof;
-	}
-	return totalsum!=0 ? tcoof / totalsum : 0;
+                float coof = minlen / maxlen;
+                if (coof > maxCoof)
+                {
+                    maxCoof = coof;
+                    maxsum = (float)(X->bar[i]->len + Y->bar[j]->len);
+                    ik = i;
+                    jk = j;
+                }
+            }
+        }
+        X->bar.erase(X->bar.begin() + ik);
+        Y->bar.erase(Y->bar.begin() + jk);
+        tsum += maxsum * maxCoof;
+    }
+    return tsum / sum;
 }
 
-template<class T>
-float bc::Baritem<T>::compareOccurrence(const bc::Baritem<T>* bc, bc::CompireStrategy strat) const
+bc::Baritem::~Baritem()
 {
-	barlinevector<T> Xbarlines = barlines;
-	barlinevector<T> Ybarlines = dynamic_cast<const Baritem<T>*>(bc)->barlines;
-
-	if (Xbarlines.size() == 0 || Ybarlines.size() == 0)
-		return 0;
-
-	size_t n = static_cast<int>(MIN(Xbarlines.size(), Ybarlines.size()));
-	soirBarlens<T>(Xbarlines);
-	soirBarlens<T>(Ybarlines);
-
-	float coofsum = 0.f, totalsum = 0.f;
-	for (size_t re = 0; re < n; ++re)
-	{
-		float maxCoof = 0;
-		float maxsum = 0;
-		size_t jk = 0;
-		for (size_t j = 0, total2 = Ybarlines.size(); j < total2; ++j)
-		{
-            float coof = findCoof(Xbarlines[re], Ybarlines[j], strat);
-			if (coof < 0)
-				continue;
-
-			if (coof > maxCoof)
-			{
-				maxCoof = coof;
-				maxsum = (float)(Xbarlines[re]->len() + Ybarlines[j]->len());
-				jk = j;
-			}
-		}
-		Ybarlines.erase(Ybarlines.begin() + jk);
-		totalsum += maxsum;
-		coofsum += maxsum * maxCoof;
-	}
-	return coofsum / totalsum;
-}
-
-template<class T>
-void bc::Baritem<T>::normalize()
-{
-	if (barlines.size() == 0)
-		return;
-
-	T mini = barlines[0]->start;
-	T maxi = barlines[0]->end();
-	for (size_t i = 1; i < barlines.size(); ++i)
-	{
-		if (barlines[i]->start < mini)
-			mini = barlines[i]->start;
-		if (barlines[i]->end() > maxi)
-			maxi = barlines[i]->end();
-	}
-
-	for (size_t i = 0; i < barlines.size(); ++i)
-	{
-		barlines[i]->start = (barlines[i]->start - mini) / (maxi - mini);
-		barlines[i]->m_end = barlines[i]->start + (barlines[i]->len() - mini) / (maxi - mini);
-	}
-}
-
-using std::string;
-
-template<class T>
-void bc::Baritem<T>::getJsonObejct(std::string &out)
-{
-	string nl = "\r\n";
-
-	out = "{" + nl + "lines: ";
-
-	getJsonLinesArray(out);
-	out += nl + '}';
-}
-
-template<class T>
-void bc::Baritem<T>::getJsonLinesArray(std::string &out)
-{
-	string nl = "\r\n";
-
-	out = "[ ";
-
-	for (bc::barline<T> *line : barlines)
-	{
-		line->getJsonObject(out);
-		out += ",";
-	}
-
-	out[out.length() - 1] = ']';
-}
-
-
-template<class T>
-void bc::Baritem<T>::sortByLen()
-{
-	soirBarlens<T>(barlines);
-}
-
-template<class T>
-void bc::Baritem<T>::sortBySize()
-{
-	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
-		{
-			return a->matr.size() > b->matr.size();
-		});
-}
-
-template<class T>
-void bc::Baritem<T>::sortByStart()
-{
-	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
-		{
-			return a->start > b->start;
-		});
-}
-
-template<class T>
-bc::Baritem<T>::~Baritem()
-{
-	for (auto* bline : barlines)
-	{
-		if (bline!=nullptr)
-			delete bline;
-	}
-	barlines.clear();
-
-	if (rootNode != nullptr)
-		delete rootNode;
+    bar.clear();
 }
 
 //=======================barcontainer=====================
 
-template<class T>
-bc::Barcontainer<T>::Barcontainer()
+bc::Barcontainer::Barcontainer()
 {
 }
 
-template<class T>
-T bc::Barcontainer<T>::sum() const
+int bc::Barcontainer::sum() const
 {
-	T sm = 0;
-	for (const Baritem<T> *it : items)
-	{
-		if (it!=nullptr)
-			sm += it->sum();
-	}
-	return sm;
+    int sm = 0;
+    for (const Baritem* it : items)
+        sm += it->sum();
+
+    return sm;
 }
 
-template<class T>
-void bc::Barcontainer<T>::relen()
+void bc::Barcontainer::relen()
 {
-	for (Baritem<T> *it : items)
-	{
-		if (it!=nullptr)
-			it->relen();
-	}
+    for (Baritem* it : items)
+        it->relen();
 }
 
-template<class T>
-T bc::Barcontainer<T>::maxLen() const
-{
-	T mx = 0;
-	for (const Baritem<T>* it : items)
-	{
-		if (it!=nullptr)
-		{
-			T curm = it->maxLen();
-			if (curm > mx)
-				mx = curm;
-		}
-	}
 
-	return mx;
+uchar bc::Barcontainer::maxLen() const
+{
+    uchar mx = 0;
+    for (const Baritem* it : items) {
+        uchar curm = it->maxLen();
+        if (curm > mx)
+            mx = curm;
+    }
+
+    return mx;
 }
 
-template<class T>
-size_t bc::Barcontainer<T>::count()
+
+size_t bc::Barcontainer::count()
 {
-	return items.size();
+    return items.size();
 }
 
-template<class T>
-bc::Baritem<T>* bc::Barcontainer<T>::getItem(size_t i)
+bc::Baritem* bc::Barcontainer::get(int i)
 {
-	if (items.size() == 0)
-		return nullptr;
+    if (items.size() == 0)
+        return nullptr;
 
-	while (i < 0)
-		i += items.size();
+    while (i < 0)
+        i += items.size();
 
-	while (i >= items.size())
-		i -= items.size();
+    while (i >= (int)items.size())
+        i -= items.size();
 
-	return items[i];
+    return items[i];
 }
 
 //bc::Baritem *bc::Barcontainer::operator[](int i)
@@ -483,98 +675,68 @@ bc::Baritem<T>* bc::Barcontainer<T>::getItem(size_t i)
 //    return items[i];
 //}
 
-template<class T>
-bc::Baritem<T>* bc::Barcontainer<T>::lastItem()
+bc::Baritem* bc::Barcontainer::lastItem()
 {
-	if (items.size() == 0)
-		return nullptr;
+    if (items.size() == 0)
+        return nullptr;
 
-	return items[items.size() - 1];
+    return items[items.size() - 1];
 }
 
-template<class T>
-void bc::Barcontainer<T>::addItem(bc::Baritem<T>* item)
+void bc::Barcontainer::addItem(bc::Baritem* item)
 {
-	items.push_back(item);
+    items.push_back(item);
 }
 
-template<class T>
-void bc::Barcontainer<T>::removePorog(const T porog)
+void bc::Barcontainer::removePorog(const uchar porog)
 {
-	for (Baritem<T> *it : items)
-	{
-		if (it!=nullptr)
-			it->removePorog(porog);
-	}
+    for (Baritem* it : items)
+        it->removePorog(porog);
 }
 
-template<class T>
-void bc::Barcontainer<T>::preprocessBar(const T& porog, bool normalize)
+void bc::Barcontainer::preprocessBar(const int& porog, bool normalize)
 {
-	for (Baritem<T> *it : items)
-	{
-		if (it!=nullptr)
-			it->preprocessBar(porog, normalize);
-	}
+    for (Baritem* it : items)
+        it->preprocessBar(porog, normalize);
 }
 
-template<class T>
-bc::Barbase<T>* bc::Barcontainer<T>::clone() const
+bc::Barbase* bc::Barcontainer::clone() const
 {
-	Barcontainer* newBar = new Barcontainer<T>();
+    Barcontainer* newBar = new Barcontainer();
 
-	for (Baritem<T>* it : items)
-	{
-		if (it!=nullptr)
-			newBar->items.push_back(new Baritem<T>(*it));
-	}
-	return newBar;
+    for (Baritem* it : items)
+        newBar->items.push_back(new Baritem(*it));
+
+    return newBar;
 }
 
-template<class T>
-float bc::Barcontainer<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy strat) const
+
+float bc::Barcontainer::compireCTML(const bc::Barbase* bc) const
 {
-	const Barcontainer* bcr = dynamic_cast<const Barcontainer*>(bc);
+    const Barcontainer* bcr = dynamic_cast<const Barcontainer*>(bc);
     float res = 0;
-    float s = static_cast<float>(sum() + bcr->sum());
-	for (size_t i = 0; i < MIN(items.size(), bcr->items.size()); i++)
-	{
-		if (items[i]!=nullptr)
-			res += items[i]->compireFull(bcr->items[i], strat) * static_cast<float>(items[i]->sum() + bcr->items[i]->sum()) / s;
-	}
+    float s = sum() + bcr->sum();
+    for (size_t i = 0; i < MIN(items.size(), bcr->items.size()); i++)
+    {
+        res += items[i]->compireCTML(bcr->items[i]) * (items[i]->sum() + bcr->items[i]->sum()) / s;
+    }
 
     return res;
 }
 
-template<class T>
-bc::Barcontainer<T>::Barcontainer::~Barcontainer()
+float bc::Barcontainer::compireCTS(const bc::Barbase* bc) const
 {
-	for (size_t i = 0; i < items.size(); ++i)
-	{
-		if (items[i] != nullptr)
-			delete items[i];
-	}
-	items.clear();
+    float res = 0;
+    float s = sum();
+    for (Baritem* it : items)
+        res += bc->compireCTS(it) * it->sum() / s;
+
+    return res;
 }
 
-INIT_TEMPLATE_TYPE(bc::Barbase)
-INIT_TEMPLATE_TYPE(bc::Baritem)
-INIT_TEMPLATE_TYPE(bc::Barcontainer)
-
-#ifdef USE_OPENCV
-
-
-//-------------BARIMG
-template<>
-barvec3b& bc::BarMat<barvec3b>::get(int x, int y) const
+bc::Barcontainer::~Barcontainer()
 {
-	return *reinterpret_cast<barvec3b*>(&mat.at<cv::Vec3b>(y, x));
+    for (size_t i = 0; i < items.size(); ++i)
+        delete items[i];
 }
-
-template<class T>
-T& bc::BarMat<T>::get(int x, int y) const
-{
-	return mat.at<T>(y, x);
-}
-#endif // USE_OPENCV
 

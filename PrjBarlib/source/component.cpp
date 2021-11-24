@@ -1,161 +1,72 @@
-#include "component.h"
+//#include "point.h"
 
 #include "barcodeCreator.h"
-#include <assert.h>
+#include "component.h"
 
-template<class T>
-void bc::Component<T>::init(BarcodeCreator<T>* factory)
+bc::Component::Component(int x, int y, bc::barcodeCreator* factory)
 {
-#ifndef POINTS_ARE_AVAILABLE
-	startIndex = factory->curIndexInSortedArr;
-#endif // !POINTS_ARE_AVAILABLE
+    coords = new pmap();
+    this->factory = factory;
 
-	this->factory = factory;
-	//	index = factory->components.size();
-	factory->components.push_back(this);
+    factory->components.push_back(this);
+    num = factory->components.size();
+    start = factory->curbright;
+    end = 255;
 
-	resline = new barline<T>(factory->workingImg->wid());
-	resline->start = factory->curbright;
-	resline->m_end = factory->curbright;
-
-	lastVal = factory->curbright;
-
-	if (factory->settings.returnType == bc::ReturnType::barcode3d)
-		resline->bar3d = new barcounter<T>();
+    //    binmap.create(factory->hei, factory->wid, CV_16SC1);
+    //    binmap.setTo(-1);
+    add(point(x, y));
 }
 
-template<class T>
-bc::Component<T>::Component(poidex pix, bc::BarcodeCreator<T>* factory)
+bc::Component::Component(bc::barcodeCreator* factory)
 {
-	init(factory);
+    this->factory = factory;
 
-	// factory->lastB++;
+    factory->components.push_back(this);
+    num = factory->components.size();
+    start = factory->curbright;
+    end = 255;
 
-	add(pix);
+    //    binmap.create(factory->hei, factory->wid, CV_16SC1);
+    //    binmap.setTo(-1);
+    coords = new pmap();
 }
 
-template<class T>
-bc::Component<T>::Component(bc::BarcodeCreator<T>* factory, bool /*create*/)
+bool bc::Component::isContain(int x, int y)
 {
-	init(factory);
-
-	// if (create)	factory->lastB++;
+    auto  it = coords->find(point(x, y));
+    return (it != coords->end());
 }
 
-template<class T>
-bool bc::Component<T>::isContain(poidex index)
+bool bc::Component::isContain(point p)
 {
-	return factory->getComp(index) == this;
+    auto  it = coords->find(p);
+    return (it != coords->end());
 }
 
-template<class T>
-void bc::Component<T>::add(poidex index, const point p)
+inline void bc::Component::add(const point& p)
 {
-	assert(lived);
-
-#ifndef POINTS_ARE_AVAILABLE
-	assert(getMaxparent() == this);
-	++getMaxparent()->totalCount;
-#endif // !POINTS_ARE_AVAILABLE
-
-	factory->setInclude(index, this);
-
-	if (factory->settings.createBinaryMasks)
-	{
-		resline->addCoord(p, factory->curbright);
-	}
-	// 3d barcode/ —читаем кол-во добавленных значений
-	if (factory->settings.returnType == ReturnType::barcode3dold)
-	{
-		if (factory->curbright != lastVal)
-		{
-			resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
-			lastVal = factory->curbright;
-			cashedSize = 0;
-		}
-		++cashedSize;
-	}
-	else if (factory->settings.returnType == ReturnType::barcode3d)
-	{
-		if (factory->curbright != lastVal)
-		{
-			resline->bar3d->push_back(bar3dvalue<T>(lastVal, totalCount));
-			lastVal = factory->curbright;
-		}
-	}
+    factory->included[factory->GETPOFF(p)] = this;
+    coords->insert(ppair(p, factory->curbright));
+    //    setB(p);
 }
 
-template<class T>
-void bc::Component<T>::add(poidex index)
+void bc::Component::kill()
 {
-	this->add(index, factory->curpix);
+    end = factory->curbright;
 }
 
-template<class T>
-void bc::Component<T>::kill()
+//void bc::Component::setB(const point &p)
+//{
+//    binmap.at<short>(p.y, p.x) = (short)(factory->curbright);
+//}
+
+bc::Component::~Component()
 {
-	if (!lived)
-		return;
-	lived = false;
-
-	resline->m_end = factory->curbright;
-
-	if (factory->settings.returnType == ReturnType::barcode3d && factory->curbright != lastVal)
-	{
-		resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
-	}
-
-	if (parent == nullptr && factory->settings.createBinaryMasks)
-	{
-		for (barvalue<T>& a : resline->matr)
-		{
-			a.value = factory->curbright - a.value;
-		}
-	}
-
-	lastVal = factory->curbright;
-	cashedSize = 0;
+    factory->components[num - 1] = nullptr;
+    if (!factory->createBin)
+    {
+        coords->clear();
+        delete coords;
+    }
 }
-
-template<class T>
-void bc::Component<T>::setParent(bc::Component<T>* parnt)
-{
-	assert(parent == nullptr);
-	this->parent = parnt;
-
-#ifndef  POINTS_ARE_AVAILABLE
-	this->parent->totalCount += totalCount;
-	parnt->startIndex = MIN(parnt->startIndex, startIndex);
-#endif // ! POINTS_ARE_AVAILABLE
-
-	// at moment when this must be dead
-	assert(lived);
-
-	if (factory->settings.createBinaryMasks)
-	{
-		parnt->resline->matr.reserve(parnt->resline->matr.size() + resline->matr.size() + 1);
-		for (barvalue<T>& val : resline->matr)
-		{
-			// Записываем длину сущщетвования точки
-			val.value = factory->curbright - val.value;
-
-			// Эти точки сичтаются как только что присоединившиеся
-			parnt->resline->addCoord(barvalue<T>(val.getPoint(), factory->curbright));
-		}
-	}
-
-	kill();
-
-	if (factory->settings.createGraph)
-		resline->setparent(parnt->resline);
-}
-
-template<class T>
-bc::Component<T>::~Component()
-{
-	//	factory->components[index] = nullptr;
-
-}
-
-
-INIT_TEMPLATE_TYPE(bc::Component)

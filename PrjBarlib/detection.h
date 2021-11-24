@@ -21,9 +21,21 @@ namespace fs = std::filesystem;
 typedef cv::Point3_<uint8_t> Pixel;
 using std::string;
 
-int pr = 20; bool normA = true;
+int pr = 10; bool normA = false;
+//
+//done for plane: 2 / 80
+//done for  ship : 275 / 559
+//done for  storage - tank : 769 / 1052
+//done for  tennis - court : 9 / 17
+//done for  basketball - court : 0 / 8
+//done for  bridge : 38 / 39
+//done for  helicopter : 0 / 1
+//done for  container - crane : 0 / 0
+//
+//Total : 1093 / 1756
+//Для продолжения нажмите любую клавишу . .
 
-const int N = 9;
+const int N = 8;
 
 std::unordered_map<string, int> categorues;
 
@@ -31,24 +43,23 @@ std::unordered_map<string, int> categorues;
 class barclassificator
 {
 public:
-	bc::Barcontainer<uchar> classes[N * 2];
+	bc::Barcontainer classes[N * 2];
 
-	void addClass(bc::Barcontainer<uchar>* cont, int classInd)
+	void addClass(bc::Barcontainer* cont, int classInd)
 	{
 		classes[classInd].addItem(cont->exractItem(0));
 		classes[classInd + N].addItem(cont->exractItem(1));
 		delete cont;
 	}
 
-	//bool check(bc::Barcontainer<uchar>* cont)
+	//bool check(bc::Barcontainer* cont)
 	//{
 
 	//}
 
 
-	bool check(bc::Baritem<uchar>* bar0, bc::Baritem<uchar>* bar255, int type)
+	bool check(bc::Baritem* bar0, bc::Baritem* bar255, int type)
 	{
-		auto cp = bc::CompireStrategy::CommonToLen;
 		float res = 0;
 
 		//res = classes[type].compireBest(bar0, cp) * 0.5;
@@ -60,7 +71,7 @@ public:
 		float maxP = res;
 		for (size_t i = 0; i < N; i++)
 		{
-			float ps = classes[i].compireBest(bar0, cp) * 0.5 + classes[i + N].compireBest(bar255, cp) * 0.5;
+			float ps = classes[i].compireCTS(bar0) * 0.5 + classes[i + N].compireCTS(bar255) * 0.5;
 			if (ps > maxP)
 			{
 				maxP = ps;
@@ -126,7 +137,7 @@ void getCategories()
 void getSet(string path, barclassificator& data, char diff = '0')
 {
 
-	BarcodeCreator<uchar> bc;
+	barcodeCreator bc;
 	int categoruesSize = 0;
 
 	string labelSubpath = "/labelTxt-v1.5/DOTA-v1.5_hbb/";
@@ -142,13 +153,10 @@ void getSet(string path, barclassificator& data, char diff = '0')
 	}
 
 	std::vector<bc::barstruct> structure;
-	BarConstructor<uchar> consrt;
-	consrt.createBinaryMasks = false;
-	consrt.returnType = bc::ReturnType::barcode2d;
-	consrt.addStructure(ProcType::f0t255, ColorType::gray, ComponentType::Hole);
-	consrt.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::Hole);
-	consrt.visualize = false;
-	consrt.waitK = 1;
+
+	std::vector<bc::barstruct> constr;
+	constr.push_back(barstruct(ProcType::f0t255, ColorType::gray, ComponentType::Hole));
+	constr.push_back(barstruct(ProcType::f255t0, ColorType::gray, ComponentType::Hole));
 	using recursive_directory_iterator = fs::recursive_directory_iterator;
 	int k = 0;
 	for (const auto& dirEntry : recursive_directory_iterator(coords))
@@ -205,8 +213,8 @@ void getSet(string path, barclassificator& data, char diff = '0')
 			cv::Rect ds(x, y, xend - x, yend - y);
 			cv::Mat m = source(ds);
 			cv::resize(m, m, cv::Size(32, 32));
-			bc::BarMat<uchar> wrapper(m);
-			auto b = bc.createBarcode(&wrapper, consrt);
+			//bc::BarMat wrapper(m);
+			auto b = bc.createBarcode(m, constr);
 			b->preprocessBar(pr, normA);
 			data.addClass(b, index);
 		}
@@ -221,7 +229,7 @@ void doMagickDOTA()
 	barclassificator validation;
 
 
-	string whiteList = "plane, ship, storage tank, tennis court, basketball court, bridge, small vehicle, helicopter, container crane";
+	string whiteList = "plane, ship, storage tank, tennis court, basketball court, bridge, helicopter, container crane";
 
 	std::vector<string> splited;
 	split(whiteList, splited, ',');
@@ -248,7 +256,7 @@ void doMagickDOTA()
 
 	getSet(pathvalidation, validation, '0');
 
-	bc::Barcontainer<uchar> testcont;
+	bc::Barcontainer testcont;
 	int correct = 0;
 	int total = 0;
 	int cTotal = 0, cCurrect = 0;
@@ -258,8 +266,8 @@ void doMagickDOTA()
 		auto& barc1 = validation.classes[N + i];
 		for (size_t j = 0; j < barc0.count(); j++)
 		{
-			auto* bar0 = barc0.getItem(j);
-			auto* bar1 = barc1.getItem(j);
+			auto* bar0 = barc0.get(j);
+			auto* bar1 = barc1.get(j);
 			if (train.check(bar0, bar1, i))
 			{
 				++correct;
