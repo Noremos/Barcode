@@ -546,6 +546,21 @@ float bc::Barcontainer<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStra
     return res;
 }
 
+
+template<class T>
+float bc::Barcontainer<T>::compireBest(const bc::Baritem<T>* bc, bc::CompireStrategy strat) const
+{
+	float res = 0;
+	for (size_t i = 0; i < items.size(); i++)
+	{
+		if (items[i] != nullptr)
+			res = MAX(items[i]->compireFull(bc, strat), res);
+	}
+
+	return res;
+}
+
+
 template<class T>
 bc::Barcontainer<T>::Barcontainer::~Barcontainer()
 {

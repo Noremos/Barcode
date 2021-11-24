@@ -17,22 +17,6 @@ using std::string;
 //#define inputArg 3 analysis\images\big.tif analysis\datasets
 
 
-namespace bc
-{
-	struct info
-	{
-		Barcontainer<uchar>* bar;
-		int type;
-
-		info(Barcontainer<uchar>* bar, int type)
-		{
-			this->bar = bar;
-			this->type = type;
-		}
-	};
-}
-
-
 typedef bc::BarImg<uchar> Bimg8;
 typedef bc::BarMat<uchar> Bmat8;
 typedef bc::DatagridProvider<uchar> Bbase8;
@@ -766,7 +750,7 @@ int main()
 
 	//printf("raw data tests: star...");
 	//checkImgFromData2();
-	checkImgFromData3();
+	//checkImgFromData3();
 	//checkImgFromData4();
 	//checkImgFromData5();
 	//checkImgFromData6();

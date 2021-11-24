@@ -21,9 +21,33 @@ namespace fs = std::filesystem;
 typedef cv::Point3_<uint8_t> Pixel;
 using std::string;
 
-int pr = 20; bool normA = true;
+int pr = 10; bool normA = false;
+//
+//done for plane: 2 / 80
+//done for  ship : 275 / 559
+//done for  storage - tank : 769 / 1052
+//done for  tennis - court : 9 / 17
+//done for  basketball - court : 0 / 8
+//done for  bridge : 38 / 39
+//done for  helicopter : 0 / 1
+//done for  container - crane : 0 / 0
+//
+//Total : 1093 / 1756
+//Для продолжения нажмите любую клавишу . .
 
-const int N = 9;
+//
+//done for plane: 11 / 80
+//done for  ship : 293 / 559
+//done for  storage - tank : 861 / 1052
+//done for  tennis - court : 2 / 17
+//done for  basketball - court : 0 / 8
+//done for  bridge : 17 / 39
+//done for  helicopter : 0 / 1
+//done for  container - crane : 0 / 0
+//done for : 0 / 0
+//
+//Total : 1184 / 1756
+const int N = 8;
 
 std::unordered_map<string, int> categorues;
 
@@ -221,7 +245,7 @@ void doMagickDOTA()
 	barclassificator validation;
 
 
-	string whiteList = "plane, ship, storage tank, tennis court, basketball court, bridge, small vehicle, helicopter, container crane";
+	string whiteList = "plane, ship, storage tank, tennis court, basketball court, bridge, helicopter, container crane";
 
 	std::vector<string> splited;
 	split(whiteList, splited, ',');
