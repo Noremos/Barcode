@@ -784,7 +784,7 @@ void bc::barcodeCreator::processHole0to255(cv::Mat& img, int* retBty, Barcontain
             //            addToBin0();
         }
     }
-    assert(((void)"ALARM! b is not zero", lastB == 0));
+    //assert(((void)"ALARM! b is not zero", lastB == 1));
     addItemToCont(item);
     clearIncluded();
     lastB = 0;
@@ -855,7 +855,7 @@ void bc::barcodeCreator::processHole255to0(cv::Mat& img, int* retBty, Barcontain
         if (i == 0)
             break;
     }
-    assert(((void)"ALARM! b is not zero", lastB == 0));
+    //assert(((void)"ALARM! b is not zero", lastB == 1));
     addItemToCont(item);
     clearIncluded();
     lastB = 0;

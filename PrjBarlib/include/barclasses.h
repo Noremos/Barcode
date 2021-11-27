@@ -54,6 +54,7 @@ namespace bc {
         void preprocessBar(int const& porog, bool normalize);
 
         float compireCTML(const Barbase* bc) const;
+        float compireBest(const Barbase* bc) const;
         float compireCTS(Barbase const* bc) const;
 
 

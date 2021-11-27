@@ -724,6 +724,15 @@ float bc::Barcontainer::compireCTML(const bc::Barbase* bc) const
     return res;
 }
 
+float bc::Barcontainer::compireBest(const bc::Barbase* bc) const
+{
+    float res = 0;
+    for (Baritem* it : items)
+        res = MAX(res, bc->compireCTS(it));
+
+    return res;
+}
+
 float bc::Barcontainer::compireCTS(const bc::Barbase* bc) const
 {
     float res = 0;
