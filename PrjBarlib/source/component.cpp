@@ -3,8 +3,8 @@
 #include "barcodeCreator.h"
 #include <assert.h>
 
-template<class T>
-void bc::Component<T>::init(BarcodeCreator<T>* factory)
+template <class T>
+void bc::Component<T>::init(BarcodeCreator<T> *factory)
 {
 #ifndef POINTS_ARE_AVAILABLE
 	startIndex = factory->curIndexInSortedArr;
@@ -19,13 +19,15 @@ void bc::Component<T>::init(BarcodeCreator<T>* factory)
 	resline->m_end = factory->curbright;
 
 	lastVal = factory->curbright;
+	lastVal.index = factory->curpoindex;
 
-	if (factory->settings.returnType == bc::ReturnType::barcode3d)
+	if (factory->settings.returnType == bc::ReturnType::barcode3d ||
+		factory->settings.returnType == bc::ReturnType::barcode3dold)
 		resline->bar3d = new barcounter<T>();
 }
 
-template<class T>
-bc::Component<T>::Component(poidex pix, bc::BarcodeCreator<T>* factory)
+template <class T>
+bc::Component<T>::Component(poidex pix, bc::BarcodeCreator<T> *factory)
 {
 	init(factory);
 
@@ -34,21 +36,21 @@ bc::Component<T>::Component(poidex pix, bc::BarcodeCreator<T>* factory)
 	add(pix);
 }
 
-template<class T>
-bc::Component<T>::Component(bc::BarcodeCreator<T>* factory, bool /*create*/)
+template <class T>
+bc::Component<T>::Component(bc::BarcodeCreator<T> *factory, bool /*create*/)
 {
 	init(factory);
 
 	// if (create)	factory->lastB++;
 }
 
-template<class T>
+template <class T>
 bool bc::Component<T>::isContain(poidex index)
 {
 	return factory->getComp(index) == this;
 }
 
-template<class T>
+template <class T>
 void bc::Component<T>::add(poidex index, const point p)
 {
 	assert(lived);
@@ -79,19 +81,19 @@ void bc::Component<T>::add(poidex index, const point p)
 	{
 		if (factory->curbright != lastVal)
 		{
-			resline->bar3d->push_back(bar3dvalue<T>(lastVal, totalCount));
+			resline->bar3d->push_back(bar3dvalue<T>(lastVal, totalCount - 1));
 			lastVal = factory->curbright;
 		}
 	}
 }
 
-template<class T>
+template <class T>
 void bc::Component<T>::add(poidex index)
 {
 	this->add(index, factory->curpix);
 }
 
-template<class T>
+template <class T>
 void bc::Component<T>::kill()
 {
 	if (!lived)
@@ -100,14 +102,21 @@ void bc::Component<T>::kill()
 
 	resline->m_end = factory->curbright;
 
-	if (factory->settings.returnType == ReturnType::barcode3d && factory->curbright != lastVal)
+	if (factory->curbright != lastVal)
 	{
-		resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
+		if (factory->settings.returnType == ReturnType::barcode3dold)
+		{
+			resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
+		}
+		else if (factory->settings.returnType == ReturnType::barcode3d)
+		{
+			resline->bar3d->push_back(bar3dvalue<T>(lastVal, totalCount));
+		}
 	}
 
 	if (parent == nullptr && factory->settings.createBinaryMasks)
 	{
-		for (barvalue<T>& a : resline->matr)
+		for (barvalue<T> &a : resline->matr)
 		{
 			a.value = factory->curbright - a.value;
 		}
@@ -117,13 +126,13 @@ void bc::Component<T>::kill()
 	cashedSize = 0;
 }
 
-template<class T>
-void bc::Component<T>::setParent(bc::Component<T>* parnt)
+template <class T>
+void bc::Component<T>::setParent(bc::Component<T> *parnt)
 {
 	assert(parent == nullptr);
 	this->parent = parnt;
 
-#ifndef  POINTS_ARE_AVAILABLE
+#ifndef POINTS_ARE_AVAILABLE
 	this->parent->totalCount += totalCount;
 	parnt->startIndex = MIN(parnt->startIndex, startIndex);
 #endif // ! POINTS_ARE_AVAILABLE
@@ -134,7 +143,7 @@ void bc::Component<T>::setParent(bc::Component<T>* parnt)
 	if (factory->settings.createBinaryMasks)
 	{
 		parnt->resline->matr.reserve(parnt->resline->matr.size() + resline->matr.size() + 1);
-		for (barvalue<T>& val : resline->matr)
+		for (barvalue<T> &val : resline->matr)
 		{
 			// Записываем длину сущщетвования точки
 			val.value = factory->curbright - val.value;
@@ -150,12 +159,10 @@ void bc::Component<T>::setParent(bc::Component<T>* parnt)
 		resline->setparent(parnt->resline);
 }
 
-template<class T>
+template <class T>
 bc::Component<T>::~Component()
 {
 	//	factory->components[index] = nullptr;
-
 }
-
 
 INIT_TEMPLATE_TYPE(bc::Component)
