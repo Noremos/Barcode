@@ -42,7 +42,7 @@ namespace bc
 
 	protected:
 		int cashedSize = 0;
-		T lastVal = 0;
+		barvalue<T> lastVal;
 		bool lived = true;
 
 	private:

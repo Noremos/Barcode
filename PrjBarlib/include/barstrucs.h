@@ -6,6 +6,7 @@
 #include <vector>
 #include <cassert>
 #include <cstring>
+#include <unordered_map>
 
 #include "include_cv.h"
 
@@ -450,6 +451,7 @@ namespace bc
 			this->count = 0;
 		}
 	};
+
 
 
 	template<class T>

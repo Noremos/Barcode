@@ -25,6 +25,7 @@ namespace bc
 
 		// 3d barcode
 		barcounter<T>* bar3d = nullptr;
+		bc::barvector<T> bar3dPoints;
 
 		// Main params
 		T start;

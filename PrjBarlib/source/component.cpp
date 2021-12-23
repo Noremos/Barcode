@@ -18,9 +18,11 @@ void bc::Component<T>::init(BarcodeCreator<T>* factory)
 	resline->start = factory->curbright;
 	resline->m_end = factory->curbright;
 
-	lastVal = factory->curbright;
+	lastVal.value = factory->curbright;
+	lastVal.index = factory->curpoindex;
 
-	if (factory->settings.returnType == bc::ReturnType::barcode3d)
+	if (factory->settings.returnType == bc::ReturnType::barcode3d ||
+		factory->settings.returnType == bc::ReturnType::barcode3dold)
 		resline->bar3d = new barcounter<T>();
 }
 
@@ -67,20 +69,26 @@ void bc::Component<T>::add(poidex index, const point p)
 	// 3d barcode/ —читаем кол-во добавленных значений
 	if (factory->settings.returnType == ReturnType::barcode3dold)
 	{
-		if (factory->curbright != lastVal)
+		if (factory->curbright != lastVal.value)
 		{
-			resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
-			lastVal = factory->curbright;
+			resline->bar3d->push_back(bar3dvalue<T>(lastVal.value, cashedSize));
+			auto rp = factory->getPoint(lastVal.index);
+			resline->bar3dPoints.push_back(barvalue<T>(rp.x, rp.y, lastVal.value));
+			lastVal.value = factory->curbright;
+			lastVal.index = factory->curpoindex;
 			cashedSize = 0;
 		}
 		++cashedSize;
 	}
 	else if (factory->settings.returnType == ReturnType::barcode3d)
 	{
-		if (factory->curbright != lastVal)
+		if (factory->curbright != lastVal.value)
 		{
-			resline->bar3d->push_back(bar3dvalue<T>(lastVal, totalCount));
-			lastVal = factory->curbright;
+			resline->bar3d->push_back(bar3dvalue<T>(lastVal.value, totalCount - 1));
+			auto rp = factory->getPoint(lastVal.index);
+			resline->bar3dPoints.push_back(barvalue<T>(rp.x, rp.y, lastVal.value));
+			lastVal.value = factory->curbright;
+			lastVal.index = factory->curpoindex;
 		}
 	}
 }
@@ -100,9 +108,18 @@ void bc::Component<T>::kill()
 
 	resline->m_end = factory->curbright;
 
-	if (factory->settings.returnType == ReturnType::barcode3d && factory->curbright != lastVal)
+	if (factory->settings.returnType == ReturnType::barcode3dold && factory->curbright != lastVal.value)
 	{
-		resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize));
+		resline->bar3d->push_back(bar3dvalue<T>(lastVal.value, cashedSize));
+		auto rp = factory->getPoint(lastVal.index);
+		resline->bar3dPoints.push_back(barvalue<T>(rp.x, rp.y, lastVal.value));
+	}
+
+	if (factory->settings.returnType == ReturnType::barcode3d && factory->curbright != lastVal.value)
+	{
+		resline->bar3d->push_back(bar3dvalue<T>(lastVal.value, cashedSize));
+		auto rp = factory->getPoint(lastVal.index);
+		resline->bar3dPoints.push_back(barvalue<T>(rp.x, rp.y, lastVal.value));
 	}
 
 	if (parent == nullptr && factory->settings.createBinaryMasks)
@@ -113,7 +130,8 @@ void bc::Component<T>::kill()
 		}
 	}
 
-	lastVal = factory->curbright;
+	lastVal.value = factory->curbright;
+	lastVal.index = factory->curpoindex;
 	cashedSize = 0;
 }
 

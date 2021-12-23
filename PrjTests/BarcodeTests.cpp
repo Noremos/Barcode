@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 
-#include "../Barcode/include/barcodeCreator.h"
+#include "../PrjBarlib/include/barcodeCreator.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 

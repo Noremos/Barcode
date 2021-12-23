@@ -1,304 +1,437 @@
 #ifdef _PYD
 
-#include "barcodeCreator.h"
+#include "boost/python.hpp"
+#include "boost/python/numpy.hpp"
+using namespace boost::python;
+namespace bp = boost::python;
+namespace bn = boost::python::numpy;
 
-#include "include_py.h"
+#include <cstring>
 
-//typedef float TV;
-typedef uchar TV;
-typedef barvec3b TV3d;
-//typedef short TV;
+typedef unsigned char uchar;
 
 #define PY_SILENS
-#define TN(NAME) NAME
+#define MAX(A, B) ((A) > (B) ? (A) : (B))
 
-//class Barline8u : public bc::barline<uchar>
-//{ };
-//class Barline32s : public bc::barline<float>
-//{ };
-//BarcodeCreator
-//BarConstructor
-//Baritem
-//bar3dvalue
-//barvalue
-//BarcodeCreator
+#define xtype float
+const int N = 256;
+struct simpleMatrix
+{
+	xtype data[N * N];
+	int wid, hei;
+	void init()
+	{
+		memset(data, 0, wid * hei);
+	}
+
+	void divine(float val)
+	{
+		for (size_t i = 0; i < wid * hei; i++)
+		{
+			data[i] /= val;
+		}
+	}
+
+	xtype sum()
+	{
+		xtype sum = 0;
+		for (size_t i = 0; i < wid * hei; i++)
+		{
+			sum += data[i];
+		}
+		return sum;
+	}
+
+	uchar get(int x, int y)
+	{
+		return data[y * wid + x];
+	}
+
+	void set(int x, int y, xtype val)
+	{
+		data[y * wid + x] = val;
+	}
+
+	void increment(int x, int y)
+	{
+		xtype& val = data[y * wid + x];
+		++val;
+	}
+
+	xtype sumWid(int rowIndex)
+	{
+		xtype* raw = data;
+		xtype sum = 0;
+		int index = rowIndex * wid;
+		for (size_t x = 0; x < 256; x++)
+		{
+			sum += data[index + x];
+		}
+		return sum;
+	}
+
+	xtype sumHei(int colIndex)
+	{
+		xtype* raw = data;
+		xtype sum = 0;
+		for (size_t y = 0; y < 256; y++)
+		{
+			sum += data[y * wid + colIndex];
+		}
+		return sum;
+	}
+};
+
+simpleMatrix getGLSM(const bn::ndarray& gray, int angle)
+{
+	int not_zero_coun = 0;
+	simpleMatrix P;
+	Py_intptr_t const* strides = gray.get_strides();
+
+	P.wid = 256;
+	P.hei = 256;
+	if (angle == 0)
+	{
+		for (int x = 0; x < P.wid; ++x)
+		{
+			for (size_t y = 0; y < P.hei; y++)
+			{
+				if (x + 1 < P.wid)
+				{
+					uchar I = *(gray.get_data() + y * strides[0] + x * strides[1]);
+					uchar In = *(gray.get_data() + y * strides[0] + (x + 1) * strides[1]);
+
+					P.increment(I, In);
+					if (I != 0)
+						not_zero_coun += 1;
+				}
+			}
+		}
+	}
+
+	else if (angle == 45)
+	{
+
+		for (int x = 0; x < P.wid; ++x)
+		{
+			for (size_t y = 0; y < P.hei; y++)
+			{
+				if (y - 1 >= 0 && x + 1 < P.wid)
+				{
+					uchar I = *(gray.get_data() + y * strides[0] + x * strides[1]);
+					uchar In = *(gray.get_data() + (y - 1) * strides[0] + (x + 1) * strides[1]);
+
+					P.increment(I, In);
+					if (I != 0)
+						not_zero_coun += 1;
+				}
+			}
+		}
+
+	}
+	else if (angle == 90)
+	{
+		for (int x = 0; x < P.wid; ++x)
+		{
+			for (size_t y = 0; y < P.hei; y++)
+			{
+				if (y - 1 >= 0)
+				{
+					uchar I = *(gray.get_data() + y * strides[0] + x * strides[1]);
+					uchar In = *(gray.get_data() + (y - 1) * strides[0] + x * strides[1]);
+
+					P.increment(I, In);
+					if (I != 0)
+						not_zero_coun += 1;
+				}
+			}
+		}
+	}
+	else
+	{
+		for (int x = 0; x < P.wid; ++x)
+		{
+			for (size_t y = 0; y < P.hei; y++)
+			{
+				if (y - 1 >= 0 && x - 1 >= 0)
+				{
+					uchar I = *(gray.get_data() + y * strides[0] + x * strides[1]);
+					uchar In = *(gray.get_data() + (y - 1) * strides[0] + (x + 1) * strides[1]);
+
+					P.increment(I, In);
+					if (I != 0)
+						not_zero_coun += 1;
+				}
+			}
+		}
 
 
-BOOST_PYTHON_MODULE(barpy)
+	}
+
+	P.divine(not_zero_coun);
+	return P;
+}
+//
+//bp::list getChrcs(const bn::ndarray& gray)
+//{
+//
+//	int maxLen = 256;
+//	int* hist = new int[maxLen];
+//	memset(hist, 0, maxLen * sizeof(int));
+//
+//	for (size_t i = 0; i < barlines.size(); i++)
+//		++hist[static_cast<int>(barlines[i]->len())];
+//
+//	bp::list pyhist;
+//	for (size_t i = 0; i < maxLen; i++)
+//		pyhist.append(hist[i]);
+//
+//	delete[] hist;
+//
+//	return pyhist;
+//}
+
+
+
+bp::list getFitchesFAST(const bn::ndarray& gray)
+{
+	
+
+	Py_intptr_t const* strides = gray.get_strides();
+	float ui = 0;
+	float oi = 0;
+	for (int i = 0; i < gray.shape(1); i++)
+	{
+		float sm = 0;
+		for (int j = 0; j < gray.shape(0); j++)
+		{
+			uchar val = *(gray.get_data() + j * strides[0] + i * strides[1]);
+			sm += val;
+			oi += (val * i) * (val * i);
+		}
+		ui += sm * i;
+	}
+
+	float res[100];
+	int resInt = 0;
+	int angle = 0;
+
+	int u = 0;
+	for (uchar an = 0; an < 4; ++an)
+	{
+		simpleMatrix P = getGLSM(gray, angle);
+		angle += 45;
+
+		const int pplusSize = 2 * N - 1;
+		float Pplus[pplusSize];
+		memset(Pplus, 0, pplusSize * 4);
+		float Pmin[N];
+		memset(Pmin, 0, N * 4);
+
+		float Px[N];
+		float Py[N];
+		float Q = 0;
+		int ik = 0, jk = 0;
+
+		for (size_t i = 0; i < N; i++)
+		{
+			Px[i] = P.sumWid(i);
+			Py[i] = P.sumHei(i);
+			ik = i;
+			jk = i;
+			double dele = (Px[ik] * Py[i]);
+			if (dele != 0.0)
+			{
+				Q += (P.get(i, ik) * P.get(i, jk)) / (dele);
+			}
+		}
+
+		float HX = 0;
+		float HY = 0;
+		for (int ai = 0; ai < N; ai++)
+		{
+			float v_y = Py[ai];
+			HY -= v_y * log2f(v_y);
+
+			float v_x = Px[ai];
+			HX -= v_x * log2(v_x);
+		}
+
+		float HXY1 = 0;
+		float HXY2 = 0;
+		for (size_t it = 0; it < N * N; it++)
+		{
+			int i = it % P.wid;
+			int j = it / P.wid;
+			xtype Pij = P.data[it];
+
+			HXY1 -= Pij * log(Px[i] * Py[j]);
+			HXY2 -= Px[i] * Py[j] * log(Px[i] * Py[j]);
+			Pplus[i + j] += Pij;
+			Pmin[abs(i - j)] += Pij;
+		}
+
+		float v = 0;
+		float ksum = 0.0;
+		for (int k = 0; k < N; k++)
+		{
+			ksum += P.get(k, k) * P.get(k, k);
+		}
+
+
+		float f[15];
+		memset(f, 0, 15);
+		float g[18];
+		memset(g, 0, 18);
+
+		float rm = 0;
+		for (size_t it = 0; it < N * N; it++)
+		{
+			int i = it % P.wid;
+			int j = it / P.wid;
+			xtype Pij = P.data[it];
+			// 1.Угловой момент второго порядка(мера гладкости изображения
+				// f1 += sqr(Pij)
+				// 3.Корреляция Харалика
+			f[3] += (i - j) * (i - j) * Pij;
+			// 4.Дисперсия Харалика :
+			f[4] += (i - u) * (i - u) * Pij;
+
+			//разностный момент
+			rm += Pij * (1 + (i - u) * (i - u));
+			//5.Обратный разностный момент(имеет большое значение для низко - контрастных изображений) :
+			f[5] += Pij / (1 + (i - u) * (i - u));
+			// 7.Энтропя
+
+			//9. Энтропия(мера равномерности) :
+			f[9] -= Pij * log(Pij);
+
+			// 1.втрогой угловой момент
+			g[1] += Pij * Pij;
+			// 3.Разностный момент
+			g[3] += (i - j) * (i - j) * Pij;
+			// 4.Обратный разностный момент
+			g[4] += Pij / (1 + (i - j) * (i - j));
+			// 7.Энтропя
+			g[8] -= Pij * log(Pij);
+			// 13.Диагональный момент
+			g[14] += (Pij >= 0 ? sqrt(0.5 * abs(i - j) * Pij) : -sqrt(0.5 * abs(i - j) * (-Pij)));
+			// 14.Второй диагональный момент
+			g[15] += (0.5 * abs(i - j) * Pij);
+
+			// 15.Момент произведения 1
+			g[16] += (i - v) * (j - v) * Pij;
+			// 16.Момент произведения 2
+			g[17] += Pij - ksum / N;
+		}
+
+		float ASM = 0;
+		for (int n = 0; n < N; n++)
+		{
+			ASM += P.get(n, n) * P.get(n, n);
+			//////////////////////////////////
+			// 2.Контраст
+			g[2] += n * n;
+
+			g[2] *= P.sum();
+		}
+
+		float ENERGY = sqrt(ASM);
+
+		for (int i = 1; i < pplusSize; i++)
+		{
+			// 8.Суммарная энтропия
+			f[8] -= Pplus[i] * log(Pplus[i]);
+			//////##############################33
+			// 5Суммарное среднее
+			g[5] += (i + 1) * Pplus[i];
+			// 6.Суммарная энтропя
+			g[6] -= Pplus[i] * log(Pplus[i]);
+
+		}
+
+		for (int i = 1; i < pplusSize; i++)
+		{
+			// 6.Суммарное среднее
+			f[6] += i * float(Pplus[i]);
+
+			// 7.Суммарная дисперсия :
+			f[7] += (i - f[8]) * (i - f[8]) * Pplus[i];
+		}
+
+		// [1,2*n-1] Надо делать -1, т.к. индексация у массивов с 0
+		for (int i = 0; i < N; i++)
+		{
+			f[10] += i * i * Pmin[i];
+			f[11] -= i * i * float(Pmin[i]) * log(Pmin[i]);
+			// #########################################
+				// 8.Разностная энтропя
+			g[9] -= Pmin[i] * log(Pmin[i]);
+			// 9.Разностная вариация
+			g[10] -= Pmin[i] * (i - g[9]) * (i - g[9]);
+		}
+		// 10.Корреляция 1
+		g[11] = (g[8] - HXY1) / (MAX(HX, HY));
+
+		// 11.Корреляция 2
+		g[12] = sqrt(1 - exp(-2 * (HXY2 - HXY1)));
+
+
+		//f[12] = (f[9] - HXY1) / MAX(HX, HY);
+		f[13] = sqrt(1 - exp(-2 * HXY2 - f[9]));
+
+		f[14] = sqrt(Q);
+
+		// Корреляция Харалика - 2
+		// Суммарная Дисперсия - 7
+		// Вторая информационная мера - 13
+		// Энергия
+		// Разностный момент rm(5)
+		// Обратный разностный момент 5
+		// Разностная энтропия(расчитывается чуть по - другому) - 11
+		// Коэффициент вариации 14(14 - Максимальный коэффициент корреляции)
+		// среднее значение яркости - 6
+		res[resInt++] = (g[1]);
+		res[resInt++] = (g[2]);
+		res[resInt++] = (g[3]);
+		res[resInt++] = (g[4]);
+		res[resInt++] = (g[5]);
+		res[resInt++] = (g[6]);
+		res[resInt++] = (g[8]);
+		res[resInt++] = (g[9]);
+		res[resInt++] = (g[10]);
+		res[resInt++] = (g[11]);
+		res[resInt++] = (g[12]);
+		res[resInt++] = (g[13]);
+		res[resInt++] = (g[14]);
+		res[resInt++] = (g[15]);
+		res[resInt++] = (g[16]);
+		res[resInt++] = (g[17]);
+		res[resInt++] = (f[3]);
+		res[resInt++] = (f[7]);
+		res[resInt++] = (f[13]);
+		res[resInt++] = (ENERGY);
+		res[resInt++] = (rm);
+		res[resInt++] = (f[5]);
+		res[resInt++] = (f[11]);
+		res[resInt++] = (f[14]);
+		res[resInt++] = (f[6]);
+	}
+
+	bp::list respy;
+	for (int i = 0; i < 100; i++)
+	{
+		respy.append(res[i]);
+	}
+	return respy;
+}
+
+BOOST_PYTHON_MODULE(matrix)
 {
 	bn::initialize();
 	Py_Initialize();
 
-	enum_<bc::AttachMode>("AttachMode")
-		.value("firstEatSecond", bc::AttachMode::firstEatSecond)
-		.value("secondEatFirst", bc::AttachMode::secondEatFirst)
-		.value("createNew", bc::AttachMode::createNew)
-		.value("dontTouch", bc::AttachMode::dontTouch)
-		;
-
-	enum_<bc::CompireStrategy>("CompireStrategy")
-		.value("CommonToLen", bc::CompireStrategy::CommonToLen)
-		.value("CommonToSum", bc::CompireStrategy::CommonToSum)
-		.value("compire3d", bc::CompireStrategy::compire3dHist)
-		.value("compire3d", bc::CompireStrategy::compire3dBrightless)
-		;
-
-	enum_<bc::ComponentType>("ComponentType")
-		.value("Component", bc::ComponentType::Component)
-		.value("RadiusComp", bc::ComponentType::RadiusComp)
-		//.value("Hole", bc::ComponentType::Hole)
-		;
-
-	enum_<bc::ProcType>("ProcType")
-		.value("f0t255", bc::ProcType::f0t255)
-		.value("f255t0", bc::ProcType::f255t0)
-		;
-
-	enum_<bc::ColorType>("ColorType")
-		.value("gray", bc::ColorType::gray)
-		.value("native", bc::ColorType::native)
-		.value("rgb", bc::ColorType::rgb)
-		;
-
-	enum_<bc::ReturnType>("ReturnType")
-		.value("barcode2d", bc::ReturnType::barcode2d)
-		.value("barcode3d", bc::ReturnType::barcode3d)
-		;
-
-	class_<bc::point>("Point")
-		.def(init<int, int>(args("x", "y")))
-		.add_property("x", make_getter(&bc::point::x), make_setter(&bc::point::x))
-		.add_property("y", make_getter(&bc::point::y), make_setter(&bc::point::y))
-		//.def("y", &bc::point::y)
-		.def("init", static_cast<void (bc::point::*)(int, int)>(&bc::point::init), args("x", "y"))
-		;
-
-
-	//#define TN(NAME) (std::string(NAME)+"8u").c_str()
-	//#include "pytemplcalsses.h"
-	///////////////////////////////////////////// TYPE /////////////////////
-
-	class_<bc::pybarvalue<TV>>("Matrvalue")
-		.add_property("x", make_getter(&bc::pybarvalue<TV>::x), make_setter(&bc::pybarvalue<TV>::x))
-		.add_property("y", make_getter(&bc::pybarvalue<TV>::y), make_setter(&bc::pybarvalue<TV>::y))
-		.add_property("value", make_getter(&bc::pybarvalue<TV>::value), make_setter(&bc::pybarvalue<TV>::value))
-		//.add_property("points", make_getter(&bc::barline::matr))
-		;
-
-	class_<bc::bar3dvalue<TV>>("Bar3dvalue")
-		.add_property("count", make_getter(&bc::bar3dvalue<TV>::count), make_setter(&bc::bar3dvalue<TV>::count))
-		.add_property("value", make_getter(&bc::bar3dvalue<TV>::value), make_setter(&bc::bar3dvalue<TV>::value))
-		//.add_property("points", make_getter(&bc::barline::matr))
-		;
-
-	class_<bc::barline<TV>>("Barline")
-		.def(init<TV, TV, int>(args("start", "len", "wid")))
-		.add_property("start", make_getter(&bc::barline<TV>::start), make_setter(&bc::barline<TV>::start))
-		.def("len", &bc::barline<TV>::len)
-		.def("end", &bc::barline<TV>::end)
-		.def("getPointsInDict", &bc::barline<TV>::getPointsInDict, (arg("skipChildPoints") = false))
-		.def("getPoints", &bc::barline<TV>::getPoints, (arg("skipChildPoints") = false))
-		.def("getPointsSize", &bc::barline<TV>::getPointsSize)
-		.def("getMatrvalue", &bc::barline<TV>::getPoint, args("index"))
-		.def("getRect", &bc::barline<TV>::getRect)
-		.def("getParent", &bc::barline<TV>::getParent, return_internal_reference())
-		.def("getChildren", &bc::barline<TV>::getChildren)
-		.def("compire3dbars", &bc::barline<TV>::compire3dbars, args("inc", "compireStrategy"))
-
-		.def("get3dList", &bc::barline<TV>::getBarcode3d)
-		.def("get3dSize", &bc::barline<TV>::getBarcode3dSize)
-		.def("get3dValue", &bc::barline<TV>::getBarcode3dValue, args("index"))
-
-		//.add_property("points", make_getter(&bc::barline::matr))
-		;
-
-	class_<bc::Baritem<TV>>("Baritem")
-		.def("sum", &bc::Baritem<TV>::sum)
-		.def("relen", &bc::Baritem<TV>::relen)
-		.def("clone", &bc::Baritem<TV>::clone, return_value_policy< manage_new_object >())
-		.def("maxLen", &bc::Baritem<TV>::maxLen)
-		.def("removePorog", &bc::Baritem<TV>::removePorog, args("porog"))
-		.def("preprocessBar", &bc::Baritem<TV>::preprocessBar, args("porog", "normalize"))
-		.def("cmp", &bc::Baritem<TV>::cmp, args("bitem", "compireStrategy"))
-		.def("cmpOccurrence", &bc::Baritem<TV>::compareOccurrence, args("bitem", "compireStrategy"))
-		.def("compireBestRes", &bc::Baritem<TV>::compireBestRes, args("bitem", "compireStrategy"))
-		.def("getBarcode", &bc::Baritem<TV>::getBarcode)
-		.def("SortByLineLen", &bc::Baritem<TV>::sortByLen)
-		.def("SortByPointsCount", &bc::Baritem<TV>::sortBySize)
-		.def("calcHistByBarlen", &bc::Baritem<TV>::calcHistByBarlen)
-		.def("getRootNode", &bc::Baritem<TV>::getRootNode, return_internal_reference()/*, make_setter(&bc::Baritem::rootNode)*/)
-
-		.def("getBettyNumbers", &bc::Baritem<TV>::PY_getBettyNumbers)
-
-		;
-
-	class_<bc::Barcontainer<TV>>("Barcontainer")
-		.def("sum", &bc::Barcontainer<TV>::sum)
-		.def("relen", &bc::Barcontainer<TV>::relen)
-		.def("clone", &bc::Barcontainer<TV>::clone, return_value_policy< manage_new_object >())
-		.def("maxLen", &bc::Barcontainer<TV>::maxLen)
-		.def("count", &bc::Barcontainer<TV>::count)
-		.def("removePorog", &bc::Barcontainer<TV>::removePorog, args("porog"))
-		.def("preprocessBar", &bc::Barcontainer<TV>::preprocessBar, args("porog", "normalize"))
-		//.def("compireCTML", &bc::Barcontainer::compireCTML, args("bc"))
-		//.def("compireCTS", &bc::Barcontainer::compireCTS, args("bc"))
-		//.def("compireCTML", static_cast<float (bc::Barcontainer::*)(const bc::Barbase*) const> (&bc::Barcontainer::compireCTML), args("bc"))
-		//.def("compireCTS", static_cast<float (bc::Barcontainer::*)(bc::Barbase const*) const>(&bc::Barcontainer::compireCTS), args("bc"))
-		.def("addItem", &bc::Barcontainer<TV>::addItem, args("Baritem"))
-		.def("getItem", &bc::Barcontainer<TV>::getItem, args("index"), return_internal_reference())
-		;
-
-	class_<bc::BarConstructor<TV>>("BarConstructor")
-		.def("addStructure", &bc::BarConstructor<TV>::addStructure, args("ProcType", "ColorType", "ComponentType"))
-		.def("setPorogStep", &bc::BarConstructor<TV>::setStep, args("porog"))
-		.def("setMaxLen", &bc::BarConstructor<TV>::setMaxLen, args("len"))
-		.add_property("returnType", &bc::BarConstructor<TV>::returnType, make_setter(&bc::BarConstructor<TV>::returnType))
-		.add_property("createBinaryMasks", &bc::BarConstructor<TV>::createBinaryMasks, make_setter(&bc::BarConstructor<TV>::createBinaryMasks))
-		.add_property("createGraph", &bc::BarConstructor<TV>::createGraph, make_setter(&bc::BarConstructor<TV>::createGraph))
-		.add_property("attachMode", &bc::BarConstructor<TV>::attachMode, make_setter(&bc::BarConstructor<TV>::attachMode))
-		.add_property("killOnMaxLen", &bc::BarConstructor<TV>::killOnMaxLen, make_setter(&bc::BarConstructor<TV>::killOnMaxLen))
-		;
-	;
-
-	class_<bc::BarcodeCreator<TV>>("BarcodeCreator")
-		.def("createBarcode", static_cast<bc::Barcontainer<TV>*(bc::BarcodeCreator<TV>::*) (bn::ndarray&, bc::BarConstructor<TV>&)>
-			(&bc::BarcodeCreator<TV>::createBarcode), args("image", "structure"), return_value_policy< manage_new_object >())
-		;
-
-	//////////////////////////3d//////////////////////////////////////////////////////////////////////////////////
-
-
-	class_<bc::pybarvalue<TV3d>>("Matrvalue3d")
-		.add_property("x", make_getter(&bc::pybarvalue<TV3d>::x), make_setter(&bc::pybarvalue<TV3d>::x))
-		.add_property("y", make_getter(&bc::pybarvalue<TV3d>::y), make_setter(&bc::pybarvalue<TV3d>::y))
-		.add_property("value", make_getter(&bc::pybarvalue<TV3d>::value), make_setter(&bc::pybarvalue<TV3d>::value))
-		//.add_property("points", make_getter(&bc::barline::matr))
-		;
-
-	class_<bc::bar3dvalue<TV3d>>("Bar3dvalue3d")
-		.add_property("count", make_getter(&bc::bar3dvalue<TV3d>::count), make_setter(&bc::bar3dvalue<TV3d>::count))
-		.add_property("value", make_getter(&bc::bar3dvalue<TV3d>::value), make_setter(&bc::bar3dvalue<TV3d>::value))
-		//.add_property("points", make_getter(&bc::barline::matr))
-		;
-
-	class_<bc::barline<TV3d>>("Barline3d")
-		.def(init<TV3d, TV3d, int>(args("start", "len", "wid")))
-		.add_property("start", make_getter(&bc::barline<TV3d>::start), make_setter(&bc::barline<TV3d>::start))
-		.def("len", &bc::barline<TV3d>::len)
-		.def("end", &bc::barline<TV3d>::end)
-		.def("getPointsInDict", &bc::barline<TV3d>::getPointsInDict, (arg("skipChildPoints") = false))
-		.def("getPoints", &bc::barline<TV3d>::getPoints, (arg("skipChildPoints") = false))
-		.def("getPointsSize", &bc::barline<TV3d>::getPointsSize)
-		.def("getMatrvalue", &bc::barline<TV3d>::getPoint, args("index"))
-		.def("getRect", &bc::barline<TV3d>::getRect)
-		.def("getParent", &bc::barline<TV3d>::getParent, return_internal_reference())
-		.def("getChildren", &bc::barline<TV3d>::getChildren)
-		.def("compire3dbars", &bc::barline<TV3d>::compire3dbars, args("inc", "compireStrategy"))
-
-		.def("get3dList", &bc::barline<TV3d>::getBarcode3d)
-		.def("get3dSize", &bc::barline<TV3d>::getBarcode3dSize)
-		.def("get3dValue", &bc::barline<TV3d>::getBarcode3dValue, args("index"))
-
-		//.add_property("points", make_getter(&bc::barline::matr))
-		;
-
-	class_<bc::Baritem<TV3d>>("Baritem3d")
-		.def("sum", &bc::Baritem<TV3d>::sum)
-		.def("relen", &bc::Baritem<TV3d>::relen)
-		.def("clone", &bc::Baritem<TV3d>::clone, return_value_policy< manage_new_object >())
-		.def("maxLen", &bc::Baritem<TV3d>::maxLen)
-		.def("removePorog", &bc::Baritem<TV3d>::removePorog, args("porog"))
-		.def("preprocessBar", &bc::Baritem<TV3d>::preprocessBar, args("porog", "normalize"))
-		.def("cmp", &bc::Baritem<TV3d>::cmp, args("bitem", "compireStrategy"))
-		.def("cmpOccurrence", &bc::Baritem<TV3d>::compareOccurrence, args("bitem", "compireStrategy"))
-		.def("compireBestRes", &bc::Baritem<TV3d>::compireBestRes, args("bitem", "compireStrategy"))
-		.def("getBarcode", &bc::Baritem<TV3d>::getBarcode)
-		.def("SortByLineLen", &bc::Baritem<TV3d>::sortByLen)
-		.def("SortByPointsCount", &bc::Baritem<TV3d>::sortBySize)
-		.def("calcHistByBarlen", &bc::Baritem<TV3d>::calcHistByBarlen)
-		.def("getRootNode", &bc::Baritem<TV3d>::getRootNode, return_internal_reference()/*, make_setter(&bc::Baritem::rootNode)*/)
-
-		.def("getBettyNumbers", &bc::Baritem<TV3d>::PY_getBettyNumbers)
-
-		;
-
-	class_<bc::Barcontainer<TV3d>>("Barcontainer3d")
-		.def("sum", &bc::Barcontainer<TV3d>::sum)
-		.def("relen", &bc::Barcontainer<TV3d>::relen)
-		.def("clone", &bc::Barcontainer<TV3d>::clone, return_value_policy< manage_new_object >())
-		.def("maxLen", &bc::Barcontainer<TV3d>::maxLen)
-		.def("count", &bc::Barcontainer<TV3d>::count)
-		.def("removePorog", &bc::Barcontainer<TV3d>::removePorog, args("porog"))
-		.def("preprocessBar", &bc::Barcontainer<TV3d>::preprocessBar, args("porog", "normalize"))
-		//.def("compireCTML", &bc::Barcontainer::compireCTML, args("bc"))
-		//.def("compireCTS", &bc::Barcontainer::compireCTS, args("bc"))
-		//.def("compireCTML", static_cast<float (bc::Barcontainer::*)(const bc::Barbase*) const> (&bc::Barcontainer::compireCTML), args("bc"))
-		//.def("compireCTS", static_cast<float (bc::Barcontainer::*)(bc::Barbase const*) const>(&bc::Barcontainer::compireCTS), args("bc"))
-		.def("addItem", &bc::Barcontainer<TV3d>::addItem, args("Baritem"))
-		.def("getItem", &bc::Barcontainer<TV3d>::getItem, args("index"), return_internal_reference())
-		;
-
-	class_<bc::BarConstructor<TV3d>>("BarConstructor3d")
-		.def("addStructure", &bc::BarConstructor<TV3d>::addStructure, args("ProcType", "ColorType", "ComponentType"))
-		.def("setPorogStep", &bc::BarConstructor<TV3d>::setStep, args("porog"))
-		.def("setMaxLen", &bc::BarConstructor<TV3d>::setMaxLen, args("len"))
-		.add_property("returnType", &bc::BarConstructor<TV3d>::returnType, make_setter(&bc::BarConstructor<TV3d>::returnType))
-		.add_property("createBinaryMasks", &bc::BarConstructor<TV3d>::createBinaryMasks, make_setter(&bc::BarConstructor<TV3d>::createBinaryMasks))
-		.add_property("createGraph", &bc::BarConstructor<TV3d>::createGraph, make_setter(&bc::BarConstructor<TV3d>::createGraph))
-		.add_property("attachMode", &bc::BarConstructor<TV3d>::attachMode, make_setter(&bc::BarConstructor<TV3d>::attachMode))
-		.add_property("killOnMaxLen", &bc::BarConstructor<TV3d>::killOnMaxLen, make_setter(&bc::BarConstructor<TV3d>::killOnMaxLen))
-		;
-	;
-
-	class_<bc::BarcodeCreator<TV3d>>("BarcodeCreator3d")
-		.def("createBarcode", static_cast<bc::Barcontainer<TV3d>*(bc::BarcodeCreator<TV3d>::*) (bn::ndarray&, bc::BarConstructor<TV3d>&)>
-			(&bc::BarcodeCreator<TV3d>::createBarcode), args("image", "structure"), return_value_policy< manage_new_object >())
-		;
-
-
-
-	//#define TV float;
-	//#define TN(NAME) (std::string(NAME)+"32s").c_str()
-	//#include "pytemplcalsses.h"
-
-	//#define TV short;
-	//#define TN(NAME) (std::string(NAME)+"16s").c_str()
-	//#include "pytemplcalsses.h"
-
+	def("getFitchesFAST", getFitchesFAST, args("grayImage"));
 }
-
-//template<> 
-//PyObject* type_into_python<barvector>::convert(barvector const& map)
-//{
-//	//auto d = t.date();
-//	//auto tod = t.time_of_day();
-//	//auto usec = tod.total_microseconds() % 1000000;
-//	//return PyDateTime_FromDateAndTime(d.year(), d.month(), d.day(), tod.hours(), tod.minutes(), tod.seconds(), usec);
-//	return nullptr;
-//}
-// 
-//
-//template<>
-//PyObject* type_into_python<std::vector<bc::barline>>::convert(std::vector<bc::barline> const& bar)
-//{
-//	bp::object get_iter = bp::iterator<std::vector<bc::barline> >();
-//	bp::object iter = get_iter(bar);
-//	bp::list l(iter);
-//	//return PyObject_New(bp::list, &l);
-//
-//	//bp::PyDateTime_FromDateAndTime
-//	//PyObject_vec
-//	//PyObject* py_object = new PyObject();
-//	//py_object.
-//	//bp::handle<> handle(py_object);
-//	//bp::object* o =new object(bar);
-//	//return o;//new list(bar)
-//	//bp::list* barlest = new list();
-//	//for (auto line : bar)
-//	//	barlest.append(line);
-//	//return barlest;
-//	return nullptr;
-//}
-
 
 #endif // _PYD

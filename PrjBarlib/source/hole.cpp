@@ -114,8 +114,9 @@ template<class T>
 inline void bc::Hole<T>::add(const point& p)
 {
 	bool outDo = isOutside;
-	auto temp = bc::Component<T>::factory->getComp();
-	bc::Component<T>::add(bc::Component<T>::factory->GETOFF(p.x, p.y));
+	int off = bc::Component<T>::factory->GETOFF(p.x, p.y);
+	auto temp = bc::Component<T>::factory->getComp(off);
+	bc::Component<T>::add(off);
 	//    setB(p);
 
 	if (!isOutside)//ребро должно быть на границе
