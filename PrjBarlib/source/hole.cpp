@@ -114,7 +114,7 @@ template<class T>
 inline void bc::Hole<T>::add(const point& p)
 {
 	bool outDo = isOutside;
-	auto temp = bc::Component<T>::factory->getComp();
+	//auto temp = bc::Component<T>::factory->getComp();
 	bc::Component<T>::add(bc::Component<T>::factory->GETOFF(p.x, p.y));
 	//    setB(p);
 

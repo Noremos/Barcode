@@ -43,6 +43,7 @@ namespace bc
 	protected:
 		int cashedSize = 0;
 		T lastVal = 0;
+		point startPoint;
 		bool lived = true;
 
 	private:
