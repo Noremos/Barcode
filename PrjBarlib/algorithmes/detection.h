@@ -3,7 +3,7 @@
 #include <opencv2/imgproc.hpp>
 
 
-#include "include/barcodeCreator.h" 
+#include "barcodeCreator.h" 
 
 #include <iostream>
 #include <filesystem>

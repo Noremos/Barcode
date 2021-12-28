@@ -1,3 +1,4 @@
+#include "../algorithmes/prep.h"
 
 /////////////////////////////
 /////////////////////////////
@@ -5,7 +6,6 @@
 /////////////////////////////
 /////////////////////////////
 
-using std::string;
 //typedef std::pair<bc::BarcodeTwo*, bool> net;
 
 //#define inputArg 3 analysis\images\polus.png analysis\datasets
@@ -13,9 +13,6 @@ using std::string;
 //#define inputArg 3 analysis\images\big.tif analysis\datasets
 
 
-typedef bc::BarImg<uchar> Bimg8;
-typedef bc::BarMat<uchar> Bmat8;
-typedef bc::DatagridProvider<uchar> Bbase8;
 
 void set(bc::barline<uchar>* rt, Bimg8* data)
 {
