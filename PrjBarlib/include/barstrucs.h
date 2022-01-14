@@ -6,7 +6,7 @@
 #include <vector>
 #include <cassert>
 #include <cstring>
-
+#include <unordered_map>
 #include "include_cv.h"
 
 #define BARVALUE_RAM_OPTIMIZATION
