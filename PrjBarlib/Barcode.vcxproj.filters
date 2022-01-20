@@ -58,7 +58,10 @@
     <ClInclude Include="include\pytemplcalsses.h">
       <Filter>pylib</Filter>
     </ClInclude>
-    <ClInclude Include="prep.h">
+    <ClInclude Include="algorithmes\prep.h">
+      <Filter>algorithmes</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithmes\roofs.h">
       <Filter>algorithmes</Filter>
     </ClInclude>
   </ItemGroup>

@@ -97,6 +97,10 @@
     <ClInclude Include="algorithmes\noise.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="algorithmes\prep.h" />
+    <ClInclude Include="algorithmes\roofs.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="include\barline.h" />
     <ClInclude Include="include\barstrucs.h" />
     <ClInclude Include="include\barcodeCreator.h" />
@@ -108,9 +112,6 @@
     <ClInclude Include="include\include_py.h" />
     <ClInclude Include="include\presets.h" />
     <ClInclude Include="include\pytemplcalsses.h" />
-    <ClInclude Include="prep.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\barcodeCreator.cpp" />
@@ -631,7 +632,7 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>D:\Install\Python39\libs;D:\MyA\Libraries\sources\boost_1_74_0\stage\lib;D:\MyA\Libraries\sources\boost_1_74_0\libs;D:\MyA\Libraries\Libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Install\Python38\libs;D:\MyA\Libraries\sources\boost_1_74_0\stage\lib;D:\MyA\Libraries\sources\boost_1_74_0\libs;D:\MyA\Libraries\Libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>python38.lib;opencv_world411.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>

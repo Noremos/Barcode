@@ -82,7 +82,7 @@ namespace bc
 			return res;
 		}
 
-		auto &operator-=(const barVector<T, N>& R)
+		auto& operator-=(const barVector<T, N>& R)
 		{
 			for (size_t i = 0; i < N; i++)
 			{
@@ -210,6 +210,12 @@ namespace bc
 			width = _width;
 			height = _height;
 		}
+
+		float coof()
+		{
+			return width > height ? static_cast<float>(width) / height : static_cast<float>(height) / width;
+		}
+
 		int right()
 		{
 			return x + width;
@@ -592,7 +598,7 @@ namespace bc
 	//**********************************************
 
 	INIT_TEMPLATE_STRUCT(CachedValue)
-	INIT_TEMPLATE_STRUCT(BarConstructor)
+		INIT_TEMPLATE_STRUCT(BarConstructor)
 }
 
 #endif // BARCODE_H

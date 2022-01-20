@@ -16,17 +16,38 @@
 
 namespace bc {
 
+	// # - позиции; * - текущий поинт
+	// 00#
+	// 0*#
+	// 0##
+	enum nextPoz : char
+	{
+		topRight = 0,
+		middleRight = 1,
+		downRight = 2,
+		downCur = 3
+	};
 	struct indexCov
 	{
 		poidex offset = 0;
 		float dist = 0;
-		bool vert = true;
-		indexCov(uint _offset = 0, float _dist = 0, bool _vert = true) : offset(_offset), dist(_dist), vert(_vert)
+		nextPoz poz;
+		indexCov(uint _offset = 0, float _dist = 0, nextPoz _vert = topRight) : offset(_offset), dist(_dist), poz(_vert)
 		{}
 
-		bc::point getNextPoint(bc::point p)
+		bc::point getNextPoint(const bc::point& p) const
 		{
-			return vert ? bc::point(p.x + 1, p.y) : bc::point(p.x, p.y + 1);
+			switch (poz)
+			{
+			case topRight:
+				return bc::point(p.x + 1, p.y - 1);
+			case middleRight:
+				return bc::point(p.x + 1, p.y);
+			case downRight:
+				return bc::point(p.x + 1, p.y + 1);
+			case downCur:
+				return bc::point(p.x, p.y + 1);
+			}
 		}
 
 		inline static float safeDiffSqr(const float& a, const float& b)
@@ -175,6 +196,7 @@ namespace bc {
 
 		bool checkCloserB0();
 		bool checkCloserB1();
+
 
 		void sortPixels(bc::ProcType type);
 

@@ -5,6 +5,7 @@
 
 #include "../algorithmes/detection.h"
 #include "../algorithmes/noise.h"
+#include "../algorithmes/roofs.h"
 #include "tests.h"
 
 void tetsAll()
@@ -73,7 +74,7 @@ void compireMethods()
 
 	Mat noiseMat = source.clone();
 	Bmat8 noised(noiseMat);
-	
+
 	float p = 0.1;
 
 	noise(noise_typ::gauss, noised, p);
@@ -92,7 +93,7 @@ void compireMethods()
 	denoisedOut = 255 - denoisedOut;
 
 	// end ------------------------------------------------------
-	
+
 	cout << "Our SKO: " << getSKO(source, denoisedOut) << endl;
 	cout << "Our PSNR: " << getPSNR(source, denoisedOut) << endl;
 	cout << "Med SKO: " << getSKO(source, denoisedMedian) << endl;
@@ -113,12 +114,20 @@ void compireMethods()
 	cv::waitKey(0);
 }
 
+void prepSegm()
+{
+	//string path = "D:/Programs/Python/barcode/roofs/imgs/8.bmp";
+	string path = "D:/Learning/BAR/base/1.png";
+	segment<barvec3b>(path);
+	//segment<uchar>(path);
+}
+
 
 int main()
 {
 	// doMagickDOTA();
 	//  testAll();
-	compireMethods();
-
+	//compireMethods();
+	prepSegm();
 	return 0;
 }
