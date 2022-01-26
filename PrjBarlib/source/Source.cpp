@@ -123,6 +123,7 @@ void prepSegm()
 }
 
 
+
 int main()
 {
 	// doMagickDOTA();

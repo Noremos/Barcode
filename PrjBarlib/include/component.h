@@ -46,6 +46,8 @@ namespace bc
 		point startPoint;
 		bool lived = true;
 
+		float sums = 0;
+
 	private:
 		//0 - nan
 
@@ -59,6 +61,12 @@ namespace bc
 		{
 			return resline->start;
 		}
+
+		T getLast()
+		{
+			return lastVal;
+		}
+
 		bool isAlive()
 		{
 			return lived;
@@ -90,8 +98,8 @@ namespace bc
 
 
 		bool isContain(poidex index);
-		virtual void add(poidex index);
-		virtual void add(poidex index, const point p);
+		virtual bool add(poidex index);
+		virtual bool add(poidex index, const point p);
 		virtual void kill();
 		virtual void setParent(Component<T>* parnt);
 

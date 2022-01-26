@@ -64,7 +64,7 @@ void BarcodeCreator<T>::draw(std::string name)
 			if (hd && hd->getIsOutside())
 				col = cv::Vec3b(0, 0, 0);
 			else
-				col = colors[(size_t)comp % size];
+				col = colors[(size_t)comp->startIndex % size];
 
 			marc = cv::MARKER_TILTED_CROSS;
 		}
@@ -160,6 +160,19 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 		return main;
 	}
 
+	float bottom = (float)main->getStart();
+	float top = (float)main->getLast();
+	if (bottom > top)
+		std::swap(bottom, top);
+
+	float bottm2 = (float)second->getStart();
+	float top2 = (float)second->getLast();
+	if (bottm2 > top2)
+		std::swap(bottm2, top2);
+
+	if (!((bottom <= bottm2 && bottm2 <= top) || (bottom <= top2 && top2 <= top)))
+		return main;
+
 	switch (settings.attachMode)
 	{
 	case AttachMode::dontTouch:
@@ -241,8 +254,8 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 						}
 					first = nullptr;
 				}
-				else
-					first->add(curpoindex);
+				else if (!first->add(curpoindex))
+					first = nullptr;
 				//setInclude(midP, first);//n--nt обяз нужно
 			}
 			else
@@ -907,7 +920,7 @@ void BarcodeCreator<T>::VISUAL_DEBUG_COMP()
 	if (settings.visualize)
 	{
 		draw("main");
-		cv::waitKey(1);
+		cv::waitKey(settings.waitK);
 	}
 #endif // DEBUG
 }

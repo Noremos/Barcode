@@ -50,14 +50,29 @@ bool bc::Component<T>::isContain(poidex index)
 }
 
 template <class T>
-void bc::Component<T>::add(poidex index, const point p)
+bool bc::Component<T>::add(poidex index, const point p)
 {
 	assert(lived);
+
+	float val = (float)factory->workingImg->get(p.x, p.y);
+	Component<T>* comp = getMaxparent();
+	if ((float)comp->totalCount / factory->workingImg->length() >= .1f)
+	{
+		float st = (float)comp->getStart();
+		float avg = ((float)comp->sums + val)/ (comp->totalCount + 1);
+		float dff = abs((float)st - avg);
+		if (abs(val - avg) > dff)
+		{
+			return false;
+		}
+	}
+	comp->sums += val;
 
 #ifndef POINTS_ARE_AVAILABLE
 	assert(getMaxparent() == this);
 	++getMaxparent()->totalCount;
 #endif // !POINTS_ARE_AVAILABLE
+
 
 	factory->setInclude(index, this);
 
@@ -71,7 +86,6 @@ void bc::Component<T>::add(poidex index, const point p)
 		if (factory->curbright != lastVal)
 		{
 			resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize)); //всего
-			lastVal = factory->curbright;
 		}
 		++cashedSize;
 	}
@@ -80,17 +94,19 @@ void bc::Component<T>::add(poidex index, const point p)
 		if (factory->settings.returnType == ReturnType::barcode3dold)
 		{
 			resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize)); // сколкьо было доабвлено
-			lastVal = factory->curbright;
 			cashedSize = 0;
 		}
 		++cashedSize;
 	}
+	lastVal = factory->curbright;
+
+	return true;
 }
 
 template <class T>
-void bc::Component<T>::add(poidex index)
+bool bc::Component<T>::add(poidex index)
 {
-	this->add(index, factory->curpix);
+	return this->add(index, factory->curpix);
 }
 
 template <class T>
@@ -132,6 +148,7 @@ void bc::Component<T>::setParent(bc::Component<T>* parnt)
 #ifndef POINTS_ARE_AVAILABLE
 	this->parent->totalCount += totalCount;
 	parnt->startIndex = MIN(parnt->startIndex, startIndex);
+	parnt->sums += this->sums;
 #endif // ! POINTS_ARE_AVAILABLE
 
 	// at moment when this must be dead
