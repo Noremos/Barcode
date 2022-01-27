@@ -83,7 +83,7 @@ namespace bc
 	enum class ColorType { gray, rgb, native };
 
 	enum class ReturnType { barcode2d, barcode3d, barcode3dold };
-	enum class AttachMode { firstEatSecond, secondEatFirst, createNew, dontTouch };
+	enum class AttachMode { firstEatSecond, secondEatFirst, createNew, dontTouch, morePointsEatLow };
 	enum class ProcessStrategy { brightness, radius };// classic or geometry
 
 	enum class BarType { bc_byte, bc_float, bc_int, bc_short, bc_ushort };

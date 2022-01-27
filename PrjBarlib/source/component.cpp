@@ -59,9 +59,10 @@ bool bc::Component<T>::add(poidex index, const point p)
 	if ((float)comp->totalCount / factory->workingImg->length() >= .1f)
 	{
 		float st = (float)comp->getStart();
-		float avg = ((float)comp->sums + val)/ (comp->totalCount + 1);
+		//float avg = ((float)comp->sums + val) / (comp->totalCount + 1);
+		float avg = ((float)lastVal - st) / 2;
 		float dff = abs((float)st - avg);
-		if (abs(val - avg) > dff)
+		if (abs((((float)val - st) / 2) - avg) > dff)
 		{
 			return false;
 		}

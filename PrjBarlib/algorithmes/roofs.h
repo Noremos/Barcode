@@ -201,7 +201,7 @@ void experemental6()
 	bcstruct.returnType = bc::ReturnType::barcode2d;
 	bcstruct.createBinaryMasks = true;
 	bcstruct.createGraph = true;
-	bcstruct.attachMode = AttachMode::firstEatSecond;
+	bcstruct.attachMode = AttachMode::morePointsEatLow;
 	//bcstruct.attachMode = AttachMode::createNew;
 	bcstruct.visualize = false;
 	//bcstruct.stepPorog.set(60.0);
@@ -227,7 +227,7 @@ void experemental6()
 	string path = "D:/Learning/BAR/base/1.png";
 	path = "D:/Learning/BAR/base/ident.png";
 
-	//path = "D:/Programs/Python/barcode/roofs/imgs/5_mini4.bmp";
+	path = "D:/Programs/Python/barcode/roofs/imgs/5_mini.bmp";
 
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
@@ -236,12 +236,12 @@ void experemental6()
 	cv::imshow("nasl", img);
 
 
-	//int ncols = img.cols / 2;
-	//float coofs = img.cols / ncols;
-	//int nrows = img.rows / coofs;
-	//int ocols = img.cols;
-	//int orows = img.rows;
-	//cv::resize(img, img, cv::Size(ncols, nrows));
+	int ncols = 300;
+	float coofs = img.cols / ncols;
+	int nrows = img.rows / coofs;
+	int ocols = img.cols;
+	int orows = img.rows;
+	cv::resize(img, img, cv::Size(ncols, nrows));
 
 
 	Mat back;

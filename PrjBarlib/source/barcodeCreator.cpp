@@ -170,8 +170,8 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 	if (bottm2 > top2)
 		std::swap(bottm2, top2);
 
-	if (!((bottom <= bottm2 && bottm2 <= top) || (bottom <= top2 && top2 <= top)))
-		return main;
+	/*if (!((bottom <= bottm2 && bottm2 <= top) || (bottom <= top2 && top2 <= top)))
+		return main;*/
 
 	switch (settings.attachMode)
 	{
@@ -198,6 +198,15 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 		//second->kill();
 		return newOne;
 	}
+	case AttachMode::morePointsEatLow:
+		if (main->getTotalSize() < second->getTotalSize())
+		{
+			COMPP temp = main;
+			main = second;
+			second = temp;
+		}
+		second->setParent(main);
+		return main;
 	// else pass down
 
 	case AttachMode::firstEatSecond:
