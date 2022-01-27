@@ -62,7 +62,7 @@ bool bc::Component<T>::add(poidex index, const point p)
 		//float avg = ((float)comp->sums + val) / (comp->totalCount + 1);
 		float avg = ((float)lastVal - st) / 2;
 		float dff = abs((float)st - avg);
-		if (abs((((float)val - st) / 2) - avg) > dff)
+		if (abs(val - avg) > dff)
 		{
 			return false;
 		}

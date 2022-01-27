@@ -207,7 +207,7 @@ void experemental6()
 	//bcstruct.stepPorog.set(60.0);
 	bcstruct.waitK = 0;
 
-	bcstruct.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::RadiusComp);
+	bcstruct.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::Component);
 
 	//bc::BarImg<uchar> img(1, 1);
 
@@ -227,7 +227,7 @@ void experemental6()
 	string path = "D:/Learning/BAR/base/1.png";
 	path = "D:/Learning/BAR/base/ident.png";
 
-	path = "D:/Programs/Python/barcode/roofs/imgs/5_mini.bmp";
+	path = "D:/Programs/Python/barcode/roofs/imgs/5.bmp";
 
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
@@ -241,7 +241,8 @@ void experemental6()
 	int nrows = img.rows / coofs;
 	int ocols = img.cols;
 	int orows = img.rows;
-	cv::resize(img, img, cv::Size(ncols, nrows));
+
+	//cv::resize(img, img, cv::Size(ncols, nrows));
 
 
 	Mat back;
