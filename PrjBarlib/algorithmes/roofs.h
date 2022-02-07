@@ -56,7 +56,7 @@ void segment(string& path, bool revert = false, int radius = 0)
 	return;
 	path = "D:/Learning/BAR/base/1.png";
 	path = "D:/Programs/Python/barcode/roofs/imgs/5.bmp";
-	path = "D:/Programs/Python/barcode/roofs/imgs/5m.bmp";
+	//path = "D:/Programs/Python/barcode/roofs/imgs/5m.bmp";
 
 	bool is3d = typeid(T) != typeid(uchar);
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
@@ -96,7 +96,7 @@ void segment(string& path, bool revert = false, int radius = 0)
 	bcstruct.returnType = bc::ReturnType::barcode2d;
 	bcstruct.createBinaryMasks = true;
 	bcstruct.createGraph = true;
-	bcstruct.attachMode = AttachMode::firstEatSecond;
+	bcstruct.attachMode = AttachMode::morePointsEatLow;
 	//bcstruct.attachMode = AttachMode::createNew;
 	bcstruct.visualize = false;
 	//bcstruct.stepPorog.set(60.0);
@@ -227,7 +227,7 @@ void experemental6()
 	string path = "D:/Learning/BAR/base/1.png";
 	path = "D:/Learning/BAR/base/ident.png";
 
-	path = "D:/Programs/Python/barcode/roofs/imgs/5.bmp";
+	path = "D:/Programs/Python/barcode/roofs/imgs/4.bmp";
 
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
@@ -236,13 +236,13 @@ void experemental6()
 	cv::imshow("nasl", img);
 
 
-	int ncols = 300;
+	int ncols = img.cols / 2;
 	float coofs = img.cols / ncols;
 	int nrows = img.rows / coofs;
 	int ocols = img.cols;
 	int orows = img.rows;
 
-	//cv::resize(img, img, cv::Size(ncols, nrows));
+	cv::resize(img, img, cv::Size(ncols, nrows));
 
 
 	Mat back;
@@ -277,6 +277,8 @@ void experemental6()
 
 
 		if (points.size() < 100 || points.size() > wrap.length() * 0.6)
+			continue;
+		if (line->getDeath() != 2)
 			continue;
 
 		Vec3b col = colors[k % collen];
@@ -335,6 +337,9 @@ void experemental6()
 		{
 			workingimg.at<Vec3b>(p.getY(), p.getX()) = Vec3b(255, 0, 0);
 		}
+
+		cout << "Start-end: " << (int)line->start << "-" << (int)line->len() << "|" << line->getDeath() << " : " << (line->parent == nullptr ? "emply" : "has parent") << endl;
+
 		cv::namedWindow("result", cv::WINDOW_NORMAL);
 		cv::imshow("result", workingimg);
 		ds = cv::waitKey(0);

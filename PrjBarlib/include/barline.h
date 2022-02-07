@@ -278,6 +278,19 @@ namespace bc
 			return m_end > start ? m_end - start : start - m_end;
 		}
 
+		int getDeath()
+		{
+			int r = 0;
+			barline<T> * temp = parent;
+			while (temp)
+			{
+				++r;
+				temp = temp->parent;
+			}
+
+			return r;
+		}
+
 		T end() const
 		{
 			return m_end;
