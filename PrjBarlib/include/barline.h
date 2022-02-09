@@ -243,7 +243,7 @@ namespace bc
 		barline* clone() const
 		{
 			barline* temp = new barline(start, m_end, matWid, nullptr);
-			
+
 			temp->numberInParent = this->numberInParent;
 			temp->parent = this->parent;
 			temp->children = this->children;
@@ -281,7 +281,7 @@ namespace bc
 		int getDeath()
 		{
 			int r = 0;
-			barline<T> * temp = parent;
+			barline<T>* temp = parent;
 			while (temp)
 			{
 				++r;
@@ -404,6 +404,21 @@ namespace bc
 			if (isnan(t))
 				return 1.f;
 			return  abs(roundf(1000.f * (PI - t) / PI) / 1000.f);
+		}
+
+		bc::barvector<T> getExclusivePoints()
+		{
+			bc::barvector<T> out;
+			std::unordered_map<bc::point, bool, bc::pointHash> childs;
+			getChildsMatr(childs);
+
+			for (size_t i = 0; i < matr.size(); i++)
+			{
+				if (childs.find(matr[i].getPoint()) == childs.end())
+					out.push_back(matr[i]);
+			}
+
+			return std::move(out);
 		}
 
 #ifdef _PYD

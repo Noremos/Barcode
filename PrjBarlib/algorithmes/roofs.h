@@ -223,7 +223,7 @@ void experemental6()
 	//img.assignRawData(6, 6, 1, data6);
 
 	//Mat backback(img.hei(), img.wid(), CV_8UC3);
-	
+
 	string path = "D:/Learning/BAR/base/1.png";
 	path = "D:/Learning/BAR/base/ident.png";
 
@@ -264,43 +264,67 @@ void experemental6()
 	size_t ll = bar.size();
 	BarRoot<uchar>* root = item->getRootNode();
 	//ll = root->children.size();
-	for (size_t i = 0; i < ll; i++)
+
+	int deep = 1;
+	while (true)
 	{
-		barline<uchar>* line = bar[i];
-		//line = root->children[i];
-		barvector<uchar>& points = line->matr;
-
-		BarRect v = line->getBarRect();
-
-		//if (v.coof() < 1.5)
-		//	continue;
-
-
-		if (points.size() < 100 || points.size() > wrap.length() * 0.6)
-			continue;
-		if (line->getDeath() != 2)
-			continue;
-
-		Vec3b col = colors[k % collen];
-		Scalar scal(col.val[0], col.val[1], col.val[2]);
-		for (barvalue<uchar>& p : points)
+		k = 0;
+		for (size_t i = 0; i < ll; i++)
 		{
-			//size_t ny = p.getY(), yend = p.getY() * coofs;
-			//size_t nx = p.getX(), xend = p.getX() * coofs;
-			//cv::rectangle(backback, cv::Rect(nx, ny, xend - nx, yend - ny), scal, 2);
-			backback.at<cv::Vec3b>(p.getY(), p.getX()) = col;
+			barline<uchar>* line = bar[i];
+			//line = root->children[i];
+			barvector<uchar> points = line->getExclusivePoints();
+
+			BarRect v = line->getBarRect();
+
+			//if (v.coof() < 1.5)
+			//	continue;
+
+
+			if (points.size() < 100 || points.size() > wrap.length() * 0.6)
+				continue;
+			if (!(line->getDeath() == deep))
+				continue;
+
+			Vec3b col = colors[k % collen];
+			Scalar scal(col.val[0], col.val[1], col.val[2]);
+			for (barvalue<uchar>& p : points)
+			{
+				//size_t ny = p.getY(), yend = p.getY() * coofs;
+				//size_t nx = p.getX(), xend = p.getX() * coofs;
+				//cv::rectangle(backback, cv::Rect(nx, ny, xend - nx, yend - ny), scal, 2);
+				backback.at<cv::Vec3b>(p.getY(), p.getX()) = col;
+			}
+			k++;
 		}
-		k++;
+
+
+		cv::namedWindow("result", cv::WINDOW_NORMAL);
+		cv::imshow("result", backback);
+		int d = cv::waitKey(0);
+		img.copyTo(backback);
+		switch (d)
+		{
+		case 'd':
+		case 'D':
+			deep += 1;
+
+			break;
+		case 'a':
+		case 'A':
+			deep -= 1;
+			if (deep < 0)
+				deep = 0;
+			break;
+		}
 	}
 
-
-	cv::namedWindow("result", cv::WINDOW_NORMAL);
-	cv::imshow("result", backback);
-	int ds = cv::waitKey(0);
+	int ds = '\0';
 	int ind = 0;
 	bool inc = false;
 	while (ds != 'q')
 	{
+		k = 0;
 		Mat workingimg;
 		//(img.hei(), img.wid(), CV_8UC3);
 		img.copyTo(workingimg);

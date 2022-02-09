@@ -273,7 +273,7 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 					continue;
 
 				//lastB -= 1;
-				if (first != connected)
+				if (first != connected && first->canBeConnected(IcurPoint))
 					first = attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
 			}
 		}
@@ -1320,12 +1320,13 @@ void BarcodeCreator<T>::processCompByRadius(Barcontainer<T>* item)
 		bc::point NextPoint = val.getNextPoint(curpix);
 		poidex NextPindex = NextPoint.getLiner(workingImg->wid());
 
-		auto first = getComp(curpoindex);
-		auto connected = getComp(NextPindex);
+		Component<T>* first = getComp(curpoindex);
+		Component<T>* connected = getComp(NextPindex);
 		if (first != nullptr)
 		{
 			if (connected != nullptr)//существует ли ребро вокруг
 			{
+				auto tempPoi = getPoint(NextPindex);
 				if (first != connected)//если в найденном уже есть этот элемент
 					attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
 			}
