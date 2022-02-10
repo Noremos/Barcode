@@ -328,6 +328,18 @@ namespace bc
 			}
 		}
 
+
+		void getChildsMatr(barvector<T>& vect)
+		{
+			for (barline<T>* chil : this->children)
+			{
+				for (barvalue<T>& val : chil->matr)
+				{
+					vect.push_back(val);
+				}
+			}
+		}
+
 		size_t getBarcode3dSize()
 		{
 			return bar3d->size();
@@ -404,6 +416,14 @@ namespace bc
 			if (isnan(t))
 				return 1.f;
 			return  abs(roundf(1000.f * (PI - t) / PI) / 1000.f);
+		}
+
+		bc::barvector<T> getEnclusivePoints()
+		{
+			bc::barvector<T> out;
+			getChildsMatr(out);
+
+			return std::move(out);
 		}
 
 		bc::barvector<T> getExclusivePoints()

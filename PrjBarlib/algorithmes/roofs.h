@@ -264,111 +264,98 @@ void experemental6()
 	size_t ll = bar.size();
 	BarRoot<uchar>* root = item->getRootNode();
 	//ll = root->children.size();
+	Mat mainMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
 
-	int deep = 1;
-	while (true)
+	for (size_t i = 0; i < ll; i++)
 	{
-		k = 0;
-		for (size_t i = 0; i < ll; i++)
-		{
-			barline<uchar>* line = bar[i];
-			//line = root->children[i];
-			barvector<uchar> points = line->getExclusivePoints();
-
-			BarRect v = line->getBarRect();
-
-			//if (v.coof() < 1.5)
-			//	continue;
-
-
-			if (points.size() < 100 || points.size() > wrap.length() * 0.6)
-				continue;
-			if (!(line->getDeath() == deep))
-				continue;
-
-			Vec3b col = colors[k % collen];
-			Scalar scal(col.val[0], col.val[1], col.val[2]);
-			for (barvalue<uchar>& p : points)
-			{
-				//size_t ny = p.getY(), yend = p.getY() * coofs;
-				//size_t nx = p.getX(), xend = p.getX() * coofs;
-				//cv::rectangle(backback, cv::Rect(nx, ny, xend - nx, yend - ny), scal, 2);
-				backback.at<cv::Vec3b>(p.getY(), p.getX()) = col;
-			}
-			k++;
-		}
-
-
-		cv::namedWindow("result", cv::WINDOW_NORMAL);
-		cv::imshow("result", backback);
-		int d = cv::waitKey(0);
-		img.copyTo(backback);
-		switch (d)
-		{
-		case 'd':
-		case 'D':
-			deep += 1;
-
-			break;
-		case 'a':
-		case 'A':
-			deep -= 1;
-			if (deep < 0)
-				deep = 0;
-			break;
-		}
-	}
-
-	int ds = '\0';
-	int ind = 0;
-	bool inc = false;
-	while (ds != 'q')
-	{
-		k = 0;
-		Mat workingimg;
-		//(img.hei(), img.wid(), CV_8UC3);
-		img.copyTo(workingimg);
-		//Mat workingimg(img.hei(), img.wid(), CV_8UC3);
-
-		switch (ds)
-		{
-		case 'd':
-		case 'D':
-			ind += 1;
-			if (ind >= ll)
-				ind = ll - 1;
-
-			inc = true;
-			break;
-		case 'a':
-		case 'A':
-			ind -= 1;
-			if (ind < 0)
-				ind = 0;
-
-			inc = false;
-			break;
-		}
-
-		barline<uchar>* line = bar[ind];
-		//line = root->children[ind];
-
-		barvector<uchar>& points = line->matr;
-		if (ind < ll - 1 && points.size() < 50)
-			ind += inc ? 1 : -1;
-
+		barline<uchar>* line = bar[i];
+		barvector<uchar> points = line->getEnclusivePoints();// encluseve - только точки чайлов
 		for (barvalue<uchar>& p : points)
 		{
-			workingimg.at<Vec3b>(p.getY(), p.getX()) = Vec3b(255, 0, 0);
+			mainMask.at<uchar>(p.getY(), p.getX()) = 255;
 		}
+	}
+	//cv::namedWindow("result", cv::WINDOW_NORMAL);
+	//cv::imshow("result", mainMask);
+	//cv::waitKey(0);
 
-		cout << "Start-end: " << (int)line->start << "-" << (int)line->len() << "|" << line->getDeath() << " : " << (line->parent == nullptr ? "emply" : "has parent") << endl;
+	vector<vector<Point> > contours;
+	vector<vector<Point> > conres;
+	vector<Vec4i> hierarchy;
+	
+	findContours(mainMask, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
+	cv::drawContours(backback, contours, -1, Scalar(255, 0, 0), 1);
+	++k;
 
-		cv::namedWindow("result", cv::WINDOW_NORMAL);
-		cv::imshow("result", workingimg);
-		ds = cv::waitKey(0);
+	cv::namedWindow("result", cv::WINDOW_NORMAL);
+	cv::imshow("result", backback);
+	cv::waitKey(0);
+
+	vector<cv::Rect> rects;
+	for (size_t i = 0; i < contours.size(); i++)
+	{
+		rects.push_back(cv::boundingRect(contours[i]));
 	}
 
-	delete containet;
+	Mat objectsMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
 
+
+	const int deepSt = 0;
+	const int deepEnd = 3;
+
+	float avg = 0;
+	int coun = 0;
+
+	for (size_t i = 0; i < ll; i++)
+	{
+		barline<uchar>* line = bar[i];
+		barvector<uchar> points = line->getExclusivePoints();
+
+		if (points.size() < 50 || points.size() > wrap.length() * 0.7)
+			continue;
+
+
+		int d = line->getDeath();
+		if (deepSt <= d && d <= deepEnd)
+		{
+			int sz = points.size();
+			cv::Point p0 = points.at(0).getPoint().cvPoint();
+			cv::Point p1 = points.at(sz / 2).getPoint().cvPoint();
+			cv::Point p2 = points.at(sz - 1).getPoint().cvPoint();
+			int ks = 0;
+			for (const Rect& rect : rects)
+			{
+				if (rect.contains(p0) && rect.contains(p1) && rect.contains(p2))
+				{
+					conres.push_back(std::move(contours.at(ks)));
+					avg += rect.area();
+					++coun;
+					break;
+				}
+				++ks;
+			}
+		}
+	}
+
+	k = 0;
+
+	float dev = 0.7f;
+	avg /= (float)coun;
+	const float defmin = avg * (1 - dev);// 0.5
+	const float defmax = avg * (1 + dev);//1.5
+	for (size_t i = 0; i < coun; i++)
+	{
+		int szsa = boundingRect(conres[i]).area();
+
+		if (defmin <= szsa && szsa <= defmax)
+		{
+			cv::drawContours(backback, conres, k, colors[k % collen]);
+			++k;
+		}
+	}
+
+	cv::namedWindow("result", cv::WINDOW_NORMAL);
+	cv::imshow("result", backback);
+	int d = cv::waitKey(0);
+	delete containet;
 }
