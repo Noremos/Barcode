@@ -275,29 +275,22 @@ void experemental6()
 			mainMask.at<uchar>(p.getY(), p.getX()) = 255;
 		}
 	}
-	//cv::namedWindow("result", cv::WINDOW_NORMAL);
-	//cv::imshow("result", mainMask);
-	//cv::waitKey(0);
+	cv::namedWindow("main mask", cv::WINDOW_NORMAL);
+	cv::imshow("main mask", mainMask);
 
-	vector<vector<Point> > contours;
-	vector<vector<Point> > conres;
-	vector<Vec4i> hierarchy;
-	
-	findContours(mainMask, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
-	cv::drawContours(backback, contours, -1, Scalar(255, 0, 0), 1);
+
 	++k;
 
-	cv::namedWindow("result", cv::WINDOW_NORMAL);
-	cv::imshow("result", backback);
-	cv::waitKey(0);
+	//cv::namedWindow("result", cv::WINDOW_NORMAL);
+	//cv::imshow("result", backback);
+	//cv::waitKey(0);
 
-	vector<cv::Rect> rects;
-	for (size_t i = 0; i < contours.size(); i++)
-	{
-		rects.push_back(cv::boundingRect(contours[i]));
-	}
+	//vector<cv::Rect> rects;
+	//for (size_t i = 0; i < contours.size(); i++)
+	//{
+	//	rects.push_back(cv::boundingRect(contours[i]));
+	//}
 
-	Mat objectsMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
 
 
 	const int deepSt = 0;
@@ -305,13 +298,15 @@ void experemental6()
 
 	float avg = 0;
 	int coun = 0;
+	vector<vector<Point> > conres;
+
 
 	for (size_t i = 0; i < ll; i++)
 	{
 		barline<uchar>* line = bar[i];
 		barvector<uchar> points = line->getExclusivePoints();
 
-		if (points.size() < 50 || points.size() > wrap.length() * 0.7)
+		if (points.size() < 50)// || points.size() > wrap.length() * 0.7)
 			continue;
 
 
@@ -319,39 +314,103 @@ void experemental6()
 		if (deepSt <= d && d <= deepEnd)
 		{
 			int sz = points.size();
+
 			cv::Point p0 = points.at(0).getPoint().cvPoint();
 			cv::Point p1 = points.at(sz / 2).getPoint().cvPoint();
 			cv::Point p2 = points.at(sz - 1).getPoint().cvPoint();
 			int ks = 0;
-			for (const Rect& rect : rects)
+
+			if (mainMask.at<uchar>(p0.y, p0.x) == 255 && mainMask.at<uchar>(p1.y, p1.x) == 255 && mainMask.at<uchar>(p2.y, p2.x) == 255)
 			{
-				if (rect.contains(p0) && rect.contains(p1) && rect.contains(p2))
+				Mat objectsMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
+				int xs = points[0].getX(), xe = points[0].getX();
+				int ys = points[0].getY(), ye = points[0].getY();
+				for (barvalue<uchar>& p : points)
 				{
-					conres.push_back(std::move(contours.at(ks)));
-					avg += rect.area();
-					++coun;
-					break;
+					int x = p.getX();
+					int y = p.getY();
+					objectsMask.at<uchar>(y, x) = 255;
+					if (x < xs)
+						xs = x;
+					else if (x > xe)
+						xe = x;
+
+					if (y < ys)
+						ys = y;
+					else if (y > ye)
+						ye = y;
 				}
-				++ks;
+
+				//cv::namedWindow("object mask", cv::WINDOW_NORMAL);
+				//cv::imshow("object mask", objectsMask);
+				//waitKey(0);
+
+
+
+
+				//int morph_size = 3;
+				//Mat element = getStructuringElement(2, Size(2 * morph_size + 1, 2 * morph_size + 1), Point(morph_size, morph_size));
+				//morphologyEx(objectsMask, objectsMask, cv::MORPH_CLOSE, element);
+
+				//cv::namedWindow("object mask", cv::WINDOW_NORMAL);
+				//cv::imshow("object mask", objectsMask);
+				//waitKey(0);
+
+				vector<vector<Point> > contours;
+				vector<Vec4i> hierarchy;
+				findContours(objectsMask, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
+
+
+				if (contours.size() == 0)
+					continue;
+
+				int mi = 0;
+				int mm = 0;
+				for (size_t i = 0; i < contours.size(); i++)
+				{
+					if (contours[i].size() > mm)
+					{
+						mm = contours[i].size();
+						mi = i;
+					}
+				}
+
+				approxPolyDP(contours[mi], contours[mi], 2, true);
+				//avg += boundingRect(contours[mi]).area();
+				avg += contours[mi].size();
+				coun++;
+
+
+				conres.push_back(std::move(contours[mi]));
 			}
+
 		}
 	}
+	Mat sad;
+	img.copyTo(sad);
+	cv::drawContours(sad, conres, -1, Scalar(0, 0, 255), 1);
+	cv::namedWindow("object mask", cv::WINDOW_NORMAL);
+	cv::imshow("object mask", sad);
 
 	k = 0;
 
-	float dev = 0.7f;
+	float dev = 1.1f; // насколько можно отклониться от среднего ( в процентах)
 	avg /= (float)coun;
 	const float defmin = avg * (1 - dev);// 0.5
 	const float defmax = avg * (1 + dev);//1.5
 	for (size_t i = 0; i < coun; i++)
 	{
-		int szsa = boundingRect(conres[i]).area();
+		//int szsa = boundingRect(conres[i]).area();
+		int szsa = conres[i].size();
 
 		if (defmin <= szsa && szsa <= defmax)
 		{
-			cv::drawContours(backback, conres, k, colors[k % collen]);
+			cv::drawContours(backback, conres, i, Scalar(0, 255, 0), 1);
 			++k;
 		}
+		/*else
+			cv::drawContours(backback, conres, i, Scalar(0, 0, 255), 2);*/
+
 	}
 
 	cv::namedWindow("result", cv::WINDOW_NORMAL);
