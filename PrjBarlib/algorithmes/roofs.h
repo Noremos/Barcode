@@ -204,6 +204,7 @@ void experemental6()
 	bcstruct.attachMode = AttachMode::morePointsEatLow;
 	//bcstruct.attachMode = AttachMode::createNew;
 	bcstruct.visualize = false;
+	bcstruct.extracheckOnPixelConnect = true;
 	//bcstruct.stepPorog.set(60.0);
 	bcstruct.waitK = 0;
 

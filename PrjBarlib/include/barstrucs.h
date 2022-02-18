@@ -281,7 +281,7 @@ namespace bc
 		AttachMode attachMode = AttachMode::firstEatSecond;
 		//ProcessStrategy processMode = ProcessStrategy::brightness;
 		bool killOnMaxLen = false;
-
+		bool extracheckOnPixelConnect = false;
 #ifdef USE_OPENCV
 		bool visualize = false;
 		int waitK = 1;

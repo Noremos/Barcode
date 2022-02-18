@@ -54,7 +54,7 @@ bool bc::Component<T>::add(poidex index, const point p)
 {
 	assert(lived);
 
-	if (!canBeConnected(p, true))
+	if (factory->settings.extracheckOnPixelConnect && !canBeConnected(p, true))
 		return false;
 
 
