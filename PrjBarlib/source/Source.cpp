@@ -129,6 +129,7 @@ int main()
 	// doMagickDOTA();
 	//  testAll();
 	//compireMethods();
-	prepSegm();
+	//prepSegm();
+	getResults();
 	return 0;
 }

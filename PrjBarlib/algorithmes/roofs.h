@@ -46,8 +46,16 @@ cv::Vec3b colors[] =
 	getCol("#85A990")
 };
 
-void experemental6();
 
+Mat experemental6(const string& path);
+Mat experemental6()
+{
+	string path = "D:/Learning/BAR/base/1.png";
+	path = "D:/Learning/BAR/base/ident.png";
+
+	path = "D:/Programs/Python/barcode/roofs/imgs/4.bmp";
+	return experemental6(path);
+}
 
 template<class T>
 void segment(string& path, bool revert = false, int radius = 0)
@@ -192,7 +200,7 @@ void segment(string& path, bool revert = false, int radius = 0)
 }
 
 
-void experemental6()
+Mat experemental6(const string& path)
 {
 	BarcodeCreator<uchar> barcodeFactory;
 
@@ -205,30 +213,9 @@ void experemental6()
 	//bcstruct.attachMode = AttachMode::createNew;
 	bcstruct.visualize = false;
 	bcstruct.extracheckOnPixelConnect = true;
-	//bcstruct.stepPorog.set(60.0);
 	bcstruct.waitK = 0;
 
 	bcstruct.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::Component);
-
-	//bc::BarImg<uchar> img(1, 1);
-
-	//uchar* data6 = new uchar[36]{
-	//	'7','1','1','1','1','1',
-	//	'2','2','7','8','1','1',
-	//	'6','1','8','8','1','&',
-	//	'8','1','8','9','2','1',
-	//	'8','1','8','8','3','1',
-	//	'9','3','1','2','2','1',
-	//};
-
-	//img.assignRawData(6, 6, 1, data6);
-
-	//Mat backback(img.hei(), img.wid(), CV_8UC3);
-
-	string path = "D:/Learning/BAR/base/1.png";
-	path = "D:/Learning/BAR/base/ident.png";
-
-	path = "D:/Programs/Python/barcode/roofs/imgs/4.bmp";
 
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
@@ -238,6 +225,7 @@ void experemental6()
 
 
 	int ncols = img.cols / 2;
+	//int ncols = 100;
 	float coofs = img.cols / ncols;
 	int nrows = img.rows / coofs;
 	int ocols = img.cols;
@@ -248,7 +236,6 @@ void experemental6()
 
 	Mat back;
 	cv::cvtColor(img, back, cv::COLOR_BGR2GRAY);
-	//img.copyTo(img);
 	BarMat<uchar> wrap(back);
 
 	Mat backback;
@@ -264,7 +251,6 @@ void experemental6()
 	int k = 0;
 	size_t ll = bar.size();
 	BarRoot<uchar>* root = item->getRootNode();
-	//ll = root->children.size();
 	Mat mainMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
 
 	for (size_t i = 0; i < ll; i++)
@@ -276,23 +262,11 @@ void experemental6()
 			mainMask.at<uchar>(p.getY(), p.getX()) = 255;
 		}
 	}
-	cv::namedWindow("main mask", cv::WINDOW_NORMAL);
-	cv::imshow("main mask", mainMask);
+	//cv::namedWindow("main mask", cv::WINDOW_NORMAL);
+	//cv::imshow("main mask", mainMask);
 
 
 	++k;
-
-	//cv::namedWindow("result", cv::WINDOW_NORMAL);
-	//cv::imshow("result", backback);
-	//cv::waitKey(0);
-
-	//vector<cv::Rect> rects;
-	//for (size_t i = 0; i < contours.size(); i++)
-	//{
-	//	rects.push_back(cv::boundingRect(contours[i]));
-	//}
-
-
 
 	const int deepSt = 0;
 	const int deepEnd = 3;
@@ -342,21 +316,6 @@ void experemental6()
 						ye = y;
 				}
 
-				//cv::namedWindow("object mask", cv::WINDOW_NORMAL);
-				//cv::imshow("object mask", objectsMask);
-				//waitKey(0);
-
-
-
-
-				//int morph_size = 3;
-				//Mat element = getStructuringElement(2, Size(2 * morph_size + 1, 2 * morph_size + 1), Point(morph_size, morph_size));
-				//morphologyEx(objectsMask, objectsMask, cv::MORPH_CLOSE, element);
-
-				//cv::namedWindow("object mask", cv::WINDOW_NORMAL);
-				//cv::imshow("object mask", objectsMask);
-				//waitKey(0);
-
 				vector<vector<Point> > contours;
 				vector<Vec4i> hierarchy;
 				findContours(objectsMask, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
@@ -387,13 +346,14 @@ void experemental6()
 
 		}
 	}
-	Mat sad;
-	img.copyTo(sad);
-	cv::drawContours(sad, conres, -1, Scalar(0, 0, 255), 1);
-	cv::namedWindow("object mask", cv::WINDOW_NORMAL);
-	cv::imshow("object mask", sad);
+	//Mat sad;
+	//img.copyTo(sad);
+	//cv::drawContours(sad, conres, -1, Scalar(0, 0, 255), 1);
+	//cv::namedWindow("object mask", cv::WINDOW_NORMAL);
+	//cv::imshow("object mask", sad);
 
 	k = 0;
+	mainMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
 
 	float dev = 1.1f; // насколько можно отклониться от среднего ( в процентах)
 	avg /= (float)coun;
@@ -401,12 +361,13 @@ void experemental6()
 	const float defmax = avg * (1 + dev);//1.5
 	for (size_t i = 0; i < coun; i++)
 	{
-		//int szsa = boundingRect(conres[i]).area();
 		int szsa = conres[i].size();
 
 		if (defmin <= szsa && szsa <= defmax)
 		{
-			cv::drawContours(backback, conres, i, Scalar(0, 255, 0), 1);
+
+			cv::drawContours(mainMask, conres, i, Scalar(255), cv::FILLED);
+			//cv::drawContours(backback, conres, i, Scalar(0, 255, 0), 1);
 			++k;
 		}
 		/*else
@@ -414,8 +375,70 @@ void experemental6()
 
 	}
 
-	cv::namedWindow("result", cv::WINDOW_NORMAL);
-	cv::imshow("result", backback);
-	int d = cv::waitKey(0);
+	//cv::namedWindow("result", cv::WINDOW_NORMAL);
+	//cv::imshow("result", backback);
+	//int d = cv::waitKey(0);
 	delete containet;
+
+	return mainMask;
+}
+
+
+using std::filesystem::exists;
+
+
+void getResults()
+{
+	const int N = 100;
+
+	string mainPath = "./researching/tiles/";
+
+	float totalCor = 0.f;
+	int totalImgs = 0;
+	for (size_t i = 0; i < N; i++)
+	{
+		const string setlPath = mainPath + to_string(i) + "_set.png";
+		if (exists(setlPath))
+		{
+			const string binPath = mainPath + to_string(i) + "_bld.png";
+
+			Mat bin_etalon = cv::imread(binPath, IMREAD_GRAYSCALE);
+			Mat bar_result = experemental6(setlPath);
+
+			//cv::resize(bar_result, bar_result, cv::Size(bar_result.cols * 2, bar_result.rows * 2));
+			cv::resize(bar_result, bar_result, cv::Size(bin_etalon.cols, bin_etalon.rows));
+
+		/*	assert(bin_etalon.cols == bar_result.cols);
+			assert(bin_etalon.rows == bar_result.rows);*/
+
+			int common = 0;
+			int total = 0;
+			for (size_t r = 0; r < bin_etalon.rows; r++)
+			{
+				for (size_t c = 0; c < bin_etalon.cols; c++)
+				{
+					uchar eval = bin_etalon.at<uchar>(r, c);
+					uchar bval = bar_result.at<uchar>(r, c);
+
+					common += ((eval == 255 &&  bval== 255) ? 1 : 0);
+					total += ((eval == 255 || bval == 255 ) ? 1 : 0);
+				}
+			}
+			float cor = static_cast<float>(common) / total;
+			std::cout << "For " << setlPath << ":" << cor << endl;
+
+			cv::namedWindow("etalon", cv::WINDOW_NORMAL);
+			cv::namedWindow("barres", cv::WINDOW_NORMAL);
+
+			cv::imshow("etalon", bin_etalon);
+			cv::imshow("barres", bar_result);
+			cv::waitKey(1);
+
+			totalCor += cor;
+			++totalImgs;
+		}
+	}
+
+	totalCor /= totalImgs;
+	std::cout << "Total cor: " << totalCor << endl;
 }
