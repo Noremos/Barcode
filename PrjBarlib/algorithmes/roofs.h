@@ -47,14 +47,14 @@ cv::Vec3b colors[] =
 };
 
 
-Mat experemental6(const string& path);
+Mat experemental6(const string& path, bool debug = false);
 Mat experemental6()
 {
 	string path = "D:/Learning/BAR/base/1.png";
 	path = "D:/Learning/BAR/base/ident.png";
 
 	path = "D:/Programs/Python/barcode/roofs/imgs/4.bmp";
-	return experemental6(path);
+	return experemental6(path, true);
 }
 
 template<class T>
@@ -77,7 +77,7 @@ void segment(string& path, bool revert = false, int radius = 0)
 
 
 	cv::namedWindow("nasl", cv::WINDOW_NORMAL);
-	cv::resizeWindow("nasl", 720, 480);
+	//cv::resizeWindow("nasl", 720, 480);
 	cv::imshow("nasl", img);
 
 
@@ -198,13 +198,13 @@ void segment(string& path, bool revert = false, int radius = 0)
 	delete containet;
 
 }
+using btype = barvec3b;
 
-
-Mat experemental6(const string& path)
+Mat experemental6(const string& path, bool debug)
 {
-	BarcodeCreator<uchar> barcodeFactory;
+	BarcodeCreator<btype> barcodeFactory;
 
-	BarConstructor<uchar> bcstruct;
+	BarConstructor<btype> bcstruct;
 
 	bcstruct.returnType = bc::ReturnType::barcode2d;
 	bcstruct.createBinaryMasks = true;
@@ -212,16 +212,23 @@ Mat experemental6(const string& path)
 	bcstruct.attachMode = AttachMode::morePointsEatLow;
 	//bcstruct.attachMode = AttachMode::createNew;
 	bcstruct.visualize = false;
-	bcstruct.extracheckOnPixelConnect = true;
+	bcstruct.extracheckOnPixelConnect = false;
 	bcstruct.waitK = 0;
 
-	bcstruct.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::Component);
+	bcstruct.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::RadiusComp);
 
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
+	//Mat img = cv::imread(path, cv::IMREAD_GRAYSCALE);
+	//cv::threshold(img, img, 127, 255, cv::THRESH_OTSU);
+	//return img;
 
-	cv::namedWindow("nasl", cv::WINDOW_NORMAL);
-	cv::resizeWindow("nasl", 720, 480);
-	cv::imshow("nasl", img);
+	if (debug)
+	{
+		cv::namedWindow("nasl", cv::WINDOW_NORMAL);
+		//cv::resizeWindow("nasl", 720, 480);
+		//cv::resizeWindow("nasl", 720, 480);
+		cv::imshow("nasl", img);
+	}
 
 
 	int ncols = img.cols / 2;
@@ -235,41 +242,45 @@ Mat experemental6(const string& path)
 
 
 	Mat back;
-	cv::cvtColor(img, back, cv::COLOR_BGR2GRAY);
-	BarMat<uchar> wrap(back);
+	img.copyTo(back);
+	//cv::cvtColor(img, back, cv::COLOR_BGR2GRAY);
+	BarMat<btype> wrap(back);
 
 	Mat backback;
 	img.copyTo(backback);
 
-	Barcontainer<uchar>* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
-	Baritem<uchar>* item = containet->getItem(0);
+	Barcontainer<btype>* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
+	Baritem<btype>* item = containet->getItem(0);
 	item->sortBySize();
-	bc::barlinevector<uchar>& bar = item->barlines;
+	bc::barlinevector<btype>& bar = item->barlines;
 
 
 	int collen = sizeof(colors) / sizeof(Vec3b);
 	int k = 0;
 	size_t ll = bar.size();
-	BarRoot<uchar>* root = item->getRootNode();
+	BarRoot<btype>* root = item->getRootNode();
 	Mat mainMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
 
 	for (size_t i = 0; i < ll; i++)
 	{
-		barline<uchar>* line = bar[i];
-		barvector<uchar> points = line->getEnclusivePoints();// encluseve - только точки чайлов
-		for (barvalue<uchar>& p : points)
+		barline<btype>* line = bar[i];
+		barvector<btype> points = line->getEnclusivePoints();// encluseve - только точки чайлов
+		for (barvalue<btype>& p : points)
 		{
 			mainMask.at<uchar>(p.getY(), p.getX()) = 255;
 		}
 	}
-	//cv::namedWindow("main mask", cv::WINDOW_NORMAL);
-	//cv::imshow("main mask", mainMask);
+	if (debug)
+	{
+		cv::namedWindow("main mask", cv::WINDOW_NORMAL);
+		cv::imshow("main mask", mainMask);
+	}
 
 
 	++k;
 
-	const int deepSt = 0;
-	const int deepEnd = 3;
+	const int deepSt = 2;
+	const int deepEnd = 4;
 
 	float avg = 0;
 	int coun = 0;
@@ -278,8 +289,9 @@ Mat experemental6(const string& path)
 
 	for (size_t i = 0; i < ll; i++)
 	{
-		barline<uchar>* line = bar[i];
-		barvector<uchar> points = line->getExclusivePoints();
+		barline<btype>* line = bar[i];
+		//barvector<btype> points = line->getExclusivePoints();
+		barvector<btype> points = line->matr;
 
 		if (points.size() < 50)// || points.size() > wrap.length() * 0.7)
 			continue;
@@ -295,12 +307,12 @@ Mat experemental6(const string& path)
 			cv::Point p2 = points.at(sz - 1).getPoint().cvPoint();
 			int ks = 0;
 
-			if (mainMask.at<uchar>(p0.y, p0.x) == 255 && mainMask.at<uchar>(p1.y, p1.x) == 255 && mainMask.at<uchar>(p2.y, p2.x) == 255)
+			if (mainMask.at<btype>(p0.y, p0.x) == 255 && mainMask.at<btype>(p1.y, p1.x) == 255 && mainMask.at<btype>(p2.y, p2.x) == 255)
 			{
 				Mat objectsMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
 				int xs = points[0].getX(), xe = points[0].getX();
 				int ys = points[0].getY(), ye = points[0].getY();
-				for (barvalue<uchar>& p : points)
+				for (barvalue<btype>& p : points)
 				{
 					int x = p.getX();
 					int y = p.getY();
@@ -340,17 +352,19 @@ Mat experemental6(const string& path)
 				avg += contours[mi].size();
 				coun++;
 
-
 				conres.push_back(std::move(contours[mi]));
 			}
 
 		}
 	}
-	//Mat sad;
-	//img.copyTo(sad);
-	//cv::drawContours(sad, conres, -1, Scalar(0, 0, 255), 1);
-	//cv::namedWindow("object mask", cv::WINDOW_NORMAL);
-	//cv::imshow("object mask", sad);
+	if (debug)
+	{
+		Mat sad;
+		img.copyTo(sad);
+		cv::drawContours(sad, conres, -1, Scalar(0, 0, 255), 1);
+		cv::namedWindow("object mask", cv::WINDOW_NORMAL);
+		cv::imshow("object mask", sad);
+	}
 
 	k = 0;
 	mainMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
@@ -367,7 +381,8 @@ Mat experemental6(const string& path)
 		{
 
 			cv::drawContours(mainMask, conres, i, Scalar(255), cv::FILLED);
-			//cv::drawContours(backback, conres, i, Scalar(0, 255, 0), 1);
+			if (debug)
+				cv::drawContours(backback, conres, i, Scalar(0, 255, 0), 1);
 			++k;
 		}
 		/*else
@@ -375,10 +390,18 @@ Mat experemental6(const string& path)
 
 	}
 
-	//cv::namedWindow("result", cv::WINDOW_NORMAL);
-	//cv::imshow("result", backback);
-	//int d = cv::waitKey(0);
 	delete containet;
+
+	if (debug)
+	{
+		cv::namedWindow("result", cv::WINDOW_NORMAL);
+		cv::imshow("result", backback);
+
+		cv::namedWindow("result mask", cv::WINDOW_NORMAL);
+		cv::imshow("result mask", mainMask);
+
+		int d = cv::waitKey(0);
+	}
 
 	return mainMask;
 }
@@ -389,6 +412,13 @@ using std::filesystem::exists;
 
 void getResults()
 {
+	//Mat bin_etalon = cv::imread("D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/5_bld.png", IMREAD_GRAYSCALE);
+	//cv::namedWindow("etalon", cv::WINDOW_NORMAL);
+	//cv::imshow("etalon", bin_etalon);
+	//string ds = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/5_set.png";
+	//experemental6(ds, true);
+	//return;
+
 	const int N = 100;
 
 	string mainPath = "./researching/tiles/";
@@ -398,45 +428,48 @@ void getResults()
 	for (size_t i = 0; i < N; i++)
 	{
 		const string setlPath = mainPath + to_string(i) + "_set.png";
-		if (exists(setlPath))
-		{
-			const string binPath = mainPath + to_string(i) + "_bld.png";
+		if (!exists(setlPath))
+			break;
 
-			Mat bin_etalon = cv::imread(binPath, IMREAD_GRAYSCALE);
-			Mat bar_result = experemental6(setlPath);
+		const string binPath = mainPath + to_string(i) + "_bld.png";
 
-			//cv::resize(bar_result, bar_result, cv::Size(bar_result.cols * 2, bar_result.rows * 2));
-			cv::resize(bar_result, bar_result, cv::Size(bin_etalon.cols, bin_etalon.rows));
+		Mat bin_etalon = cv::imread(binPath, IMREAD_GRAYSCALE);
+		Mat bar_result = experemental6(setlPath);
+
+
+
+		//cv::resize(bar_result, bar_result, cv::Size(bar_result.cols * 2, bar_result.rows * 2));
+		cv::resize(bar_result, bar_result, cv::Size(bin_etalon.cols, bin_etalon.rows));
 
 		/*	assert(bin_etalon.cols == bar_result.cols);
 			assert(bin_etalon.rows == bar_result.rows);*/
 
-			int common = 0;
-			int total = 0;
-			for (size_t r = 0; r < bin_etalon.rows; r++)
+		int common = 0;
+		int total = 0;
+		for (size_t r = 0; r < bin_etalon.rows; r++)
+		{
+			for (size_t c = 0; c < bin_etalon.cols; c++)
 			{
-				for (size_t c = 0; c < bin_etalon.cols; c++)
-				{
-					uchar eval = bin_etalon.at<uchar>(r, c);
-					uchar bval = bar_result.at<uchar>(r, c);
+				uchar eval = bin_etalon.at<uchar>(r, c);
+				uchar bval = bar_result.at<uchar>(r, c);
 
-					common += ((eval == 255 &&  bval== 255) ? 1 : 0);
-					total += ((eval == 255 || bval == 255 ) ? 1 : 0);
-				}
+				common += ((eval == 255 && bval == 255) ? 1 : 0);
+				total += ((eval == 255 || bval == 255) ? 1 : 0);
+				//total += (eval == 255 ? 1 : 0);
 			}
-			float cor = static_cast<float>(common) / total;
-			std::cout << "For " << setlPath << ":" << cor << endl;
-
-			cv::namedWindow("etalon", cv::WINDOW_NORMAL);
-			cv::namedWindow("barres", cv::WINDOW_NORMAL);
-
-			cv::imshow("etalon", bin_etalon);
-			cv::imshow("barres", bar_result);
-			cv::waitKey(1);
-
-			totalCor += cor;
-			++totalImgs;
 		}
+		float cor = static_cast<float>(common) / total;
+		std::cout << "For " << setlPath << ":" << cor << endl;
+
+		cv::namedWindow("etalon", cv::WINDOW_NORMAL);
+		cv::namedWindow("barres", cv::WINDOW_NORMAL);
+
+		cv::imshow("etalon", bin_etalon);
+		cv::imshow("barres", bar_result);
+		cv::waitKey(1);
+
+		totalCor += cor;
+		++totalImgs;
 	}
 
 	totalCor /= totalImgs;

@@ -598,7 +598,7 @@ namespace bc
 	//**********************************************
 
 	INIT_TEMPLATE_STRUCT(CachedValue)
-		INIT_TEMPLATE_STRUCT(BarConstructor)
+	INIT_TEMPLATE_STRUCT(BarConstructor)
 }
 
 #endif // BARCODE_H
