@@ -471,11 +471,14 @@ Mat binarymatr(const string& path)
 	
 	for (int i = 0; i < frange; ++i)
 	{
-		BarRect r = bar.at(i)->getBarRect();
-		int minlen = bar.at(i)->len() * 0.0 + 5;
-		if (checkRect(r, img.cols, img.rows) && bar[i]->len() > 60)
+		barline<matrtype>* line = bar[i];
+		BarRect r = line->getBarRect();
+		int minlen = line->len() * 0.0 + 5;
+		if (line->getDeath() < 2)
+			continue;
+		//if (checkRect(r, img.cols, img.rows) && line->len() > 60)
 		{
-			barvector<matrtype>& points = bar[i]->matr;
+			barvector<matrtype>& points = line->matr;
 			for (size_t i = 0; i < points.size(); i++)
 			{
 				if (points[i].value < minlen)
@@ -486,7 +489,7 @@ Mat binarymatr(const string& path)
 	}
 
 	//kernel = np.ones((3, 3), np.uint8)
-	Mat kernel(9, 9, CV_8U);
+	Mat kernel(3, 3, CV_8U);
 
 	cv::morphologyEx(binmap, binmap, cv::MORPH_ERODE, kernel);
 	cv::morphologyEx(binmap, binmap, cv::MORPH_DILATE, kernel);
@@ -560,7 +563,7 @@ void getResults()
 		cv::namedWindow("origin", cv::WINDOW_NORMAL);
 		cv::imshow("origin", orgn);
 
-		cv::waitKey(0);
+		cv::waitKey(1);
 
 		totalCor += cor;
 		++totalImgs;
