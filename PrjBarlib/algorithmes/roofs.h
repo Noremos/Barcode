@@ -198,7 +198,7 @@ void segment(string& path, bool revert = false, int radius = 0)
 	delete containet;
 
 }
-using btype = barvec3b;
+using btype = uchar;
 
 Mat experemental6(const string& path, bool debug)
 {
@@ -215,7 +215,7 @@ Mat experemental6(const string& path, bool debug)
 	bcstruct.extracheckOnPixelConnect = false;
 	bcstruct.waitK = 0;
 
-	bcstruct.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::RadiusComp);
+	bcstruct.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::Component);
 
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 	//Mat img = cv::imread(path, cv::IMREAD_GRAYSCALE);
@@ -243,7 +243,7 @@ Mat experemental6(const string& path, bool debug)
 
 	Mat back;
 	img.copyTo(back);
-	//cv::cvtColor(img, back, cv::COLOR_BGR2GRAY);
+	cv::cvtColor(img, back, cv::COLOR_BGR2GRAY);
 	BarMat<btype> wrap(back);
 
 	Mat backback;
@@ -264,6 +264,10 @@ Mat experemental6(const string& path, bool debug)
 	for (size_t i = 0; i < ll; i++)
 	{
 		barline<btype>* line = bar[i];
+		if (line->getDeath() > 0)
+		{
+			continue;
+		}
 		barvector<btype> points = line->getEnclusivePoints();// encluseve - только точки чайлов
 		for (barvalue<btype>& p : points)
 		{
@@ -307,13 +311,16 @@ Mat experemental6(const string& path, bool debug)
 			cv::Point p2 = points.at(sz - 1).getPoint().cvPoint();
 			int ks = 0;
 
-			if (mainMask.at<btype>(p0.y, p0.x) == 255 && mainMask.at<btype>(p1.y, p1.x) == 255 && mainMask.at<btype>(p2.y, p2.x) == 255)
+			int avlVal = (float)line->len() / 2;
+			//if (mainMask.at<uchar>(p0.y, p0.x) == 255 && mainMask.at<uchar>(p1.y, p1.x) == 255 && mainMask.at<uchar>(p2.y, p2.x) == 255)
 			{
 				Mat objectsMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
 				int xs = points[0].getX(), xe = points[0].getX();
 				int ys = points[0].getY(), ye = points[0].getY();
 				for (barvalue<btype>& p : points)
 				{
+					if (p.getPyValue().value < avlVal)
+						continue;
 					int x = p.getX();
 					int y = p.getY();
 					objectsMask.at<uchar>(y, x) = 255;
@@ -409,6 +416,82 @@ Mat experemental6(const string& path, bool debug)
 
 using std::filesystem::exists;
 
+bool checkRect(const BarRect& rect, int wid, int hei)
+{
+	return (5 < rect.width && rect.width < wid / 2 && 5 < rect.height && rect.height < hei / 2);
+}
+
+
+using matrtype = uchar;
+Mat binarymatr(const string& path)
+{
+	bool revert = true;
+	int radius = 255;
+	bool skipPar = false;
+	int frange = 2;
+
+	BarcodeCreator<matrtype> barcodeFactory;
+
+	BarConstructor<matrtype> bcstruct;
+
+	bcstruct.returnType = bc::ReturnType::barcode2d;
+	bcstruct.createBinaryMasks = true;
+	bcstruct.createGraph = true;
+	//bcstruct.attachMode = AttachMode::morePointsEatLow;
+	//bcstruct.attachMode = AttachMode::createNew;
+	bcstruct.visualize = false;
+	bcstruct.extracheckOnPixelConnect = false;
+	bcstruct.setStep(radius);
+	bcstruct.waitK = 0;
+
+	bcstruct.addStructure(ProcType::f0t255, ColorType::gray, ComponentType::Component);
+
+	Mat img = cv::imread(path, cv::IMREAD_GRAYSCALE);
+
+	Mat back = 255 - img;
+	Mat	backback;
+	back.copyTo(backback);
+
+	back.at<uchar>(0, 0) = 0;
+
+	BarMat<matrtype> wrap(back);
+	Barcontainer< matrtype>* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
+	Baritem<matrtype>* item = containet->getItem(0);
+	item->sortBySize();
+	//# item.removePorog(1)
+	barlinevector<matrtype>& bar = item->barlines;
+
+	//back = backback;
+	//back.fill(0);
+	Mat binmap(img.rows, img.cols, CV_8UC1, Scalar(0));
+	//img.copyTo(binmap);
+	//# frange = min(frange, len(bar))
+	frange = bar.size();
+
+	
+	for (int i = 0; i < frange; ++i)
+	{
+		BarRect r = bar.at(i)->getBarRect();
+		int minlen = bar.at(i)->len() * 0.0 + 5;
+		if (checkRect(r, img.cols, img.rows) && bar[i]->len() > 60)
+		{
+			barvector<matrtype>& points = bar[i]->matr;
+			for (size_t i = 0; i < points.size(); i++)
+			{
+				if (points[i].value < minlen)
+					continue;
+				binmap.at<uchar>(points[i].getY(), points[i].getX()) = 255;
+			}
+		}
+	}
+
+	//kernel = np.ones((3, 3), np.uint8)
+	Mat kernel(9, 9, CV_8U);
+
+	cv::morphologyEx(binmap, binmap, cv::MORPH_ERODE, kernel);
+	cv::morphologyEx(binmap, binmap, cv::MORPH_DILATE, kernel);
+	return binmap;
+}
 
 void getResults()
 {
@@ -434,9 +517,8 @@ void getResults()
 		const string binPath = mainPath + to_string(i) + "_bld.png";
 
 		Mat bin_etalon = cv::imread(binPath, IMREAD_GRAYSCALE);
-		Mat bar_result = experemental6(setlPath);
-
-
+		Mat bar_result = binarymatr(setlPath);
+		//Mat bar_result = experemental6(setlPath);
 
 		//cv::resize(bar_result, bar_result, cv::Size(bar_result.cols * 2, bar_result.rows * 2));
 		cv::resize(bar_result, bar_result, cv::Size(bin_etalon.cols, bin_etalon.rows));
@@ -458,7 +540,7 @@ void getResults()
 				//total += (eval == 255 ? 1 : 0);
 			}
 		}
-		float cor = static_cast<float>(common) / total;
+		float cor = total > 0 ? static_cast<float>(common) / total : 0;
 		std::cout << "For " << setlPath << ":" << cor << endl;
 
 		cv::namedWindow("etalon", cv::WINDOW_NORMAL);
@@ -466,7 +548,19 @@ void getResults()
 
 		cv::imshow("etalon", bin_etalon);
 		cv::imshow("barres", bar_result);
-		cv::waitKey(1);
+
+		//Mat org = cv::imread(setlPath, cv::IMREAD_GRAYSCALE);
+		//cv::Canny(org, org, 238, 255);
+		//cv::threshold(org, org, 127, 255, cv::THRESH_OTSU);
+		//cv::namedWindow("canny", cv::WINDOW_NORMAL);
+		//cv::imshow("canny", org);
+
+		Mat orgn = cv::imread(setlPath, cv::IMREAD_COLOR);
+
+		cv::namedWindow("origin", cv::WINDOW_NORMAL);
+		cv::imshow("origin", orgn);
+
+		cv::waitKey(0);
 
 		totalCor += cor;
 		++totalImgs;
