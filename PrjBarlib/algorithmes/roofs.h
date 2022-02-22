@@ -426,7 +426,7 @@ using matrtype = uchar;
 Mat binarymatr(const string& path)
 {
 	bool revert = true;
-	int radius = 255;
+	int radius = 50;
 	bool skipPar = false;
 	int frange = 2;
 
@@ -452,7 +452,7 @@ Mat binarymatr(const string& path)
 	Mat	backback;
 	back.copyTo(backback);
 
-	back.at<uchar>(0, 0) = 0;
+	//back.at<uchar>(0, 0) = 255;
 
 	BarMat<matrtype> wrap(back);
 	Barcontainer< matrtype>* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
@@ -473,36 +473,44 @@ Mat binarymatr(const string& path)
 	{
 		barline<matrtype>* line = bar[i];
 		BarRect r = line->getBarRect();
-		int minlen = line->len() * 0.0 + 5;
-		if (line->getDeath() < 2)
-			continue;
-		//if (checkRect(r, img.cols, img.rows) && line->len() > 60)
+		int minlen = 0;
+		//minlen = line->len() * 0.0;// +15;
+		//minlen = 15;
+		//if (line->getDeath() < 2)
+		//	continue;
+
+		//if (line->getPointsSize() < 40)
+		//	continue;
+		if (checkRect(r, img.cols, img.rows) && line->len() > 60)
 		{
 			barvector<matrtype>& points = line->matr;
 			for (size_t i = 0; i < points.size(); i++)
 			{
-				if (points[i].value < minlen)
-					continue;
+				if (points[i].value < minlen)				continue;
 				binmap.at<uchar>(points[i].getY(), points[i].getX()) = 255;
 			}
 		}
 	}
 
-	//kernel = np.ones((3, 3), np.uint8)
 	Mat kernel(3, 3, CV_8U);
 
-	cv::morphologyEx(binmap, binmap, cv::MORPH_ERODE, kernel);
-	cv::morphologyEx(binmap, binmap, cv::MORPH_DILATE, kernel);
+	//cv::morphologyEx(binmap, binmap, cv::MORPH_ERODE, kernel);
+	////cv::morphologyEx(binmap, binmap, cv::MORPH_OPEN, kernel);
+	//cv::medianBlur(binmap, binmap, 3);
 	return binmap;
 }
 
 void getResults()
 {
-	//Mat bin_etalon = cv::imread("D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/5_bld.png", IMREAD_GRAYSCALE);
+	//Mat bin_etalon = cv::imread("D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/14_bld.png", IMREAD_GRAYSCALE);
 	//cv::namedWindow("etalon", cv::WINDOW_NORMAL);
 	//cv::imshow("etalon", bin_etalon);
-	//string ds = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/5_set.png";
-	//experemental6(ds, true);
+	//string ds = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/14_set.png";
+	////experemental6(ds, true);
+	//Mat bar_result =  binarymatr(ds);
+	//cv::namedWindow("barres", cv::WINDOW_NORMAL);
+	//cv::imshow("barres", bar_result);
+	//cv::waitKey(0);
 	//return;
 
 	const int N = 100;
@@ -525,7 +533,6 @@ void getResults()
 
 		//cv::resize(bar_result, bar_result, cv::Size(bar_result.cols * 2, bar_result.rows * 2));
 		cv::resize(bar_result, bar_result, cv::Size(bin_etalon.cols, bin_etalon.rows));
-
 		/*	assert(bin_etalon.cols == bar_result.cols);
 			assert(bin_etalon.rows == bar_result.rows);*/
 
@@ -563,7 +570,7 @@ void getResults()
 		cv::namedWindow("origin", cv::WINDOW_NORMAL);
 		cv::imshow("origin", orgn);
 
-		cv::waitKey(1);
+		cv::waitKey(0);
 
 		totalCor += cor;
 		++totalImgs;

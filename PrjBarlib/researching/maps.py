@@ -84,7 +84,7 @@ def createImages():
             if len(prm) != 3:
                 continue
 
-            print(line)
+            print(line[:-1])
             center = staticmaps.create_latlng(float(prm[0]), float(prm[1]))
             zoom = int(prm[2])
 
