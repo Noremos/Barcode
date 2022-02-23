@@ -275,7 +275,7 @@ namespace bc
 		//T foneEnd;
 		std::vector<barstruct> structure;
 		ReturnType returnType;
-
+		T d = 0;
 		bool createGraph = false;
 		bool createBinaryMasks = false;
 		AttachMode attachMode = AttachMode::firstEatSecond;

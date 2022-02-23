@@ -7,6 +7,7 @@
 #include "barclasses.h"
 
 #include <unordered_map>
+#include <limits>
 
 #define COMPP Component<T>*
 #define HOLEP Hole<T>*
@@ -92,13 +93,16 @@ namespace bc {
 		bool skipAddPointsToParent = false;
 
 		Include<T>* included = nullptr;
-		const DatagridProvider<T>* workingImg = nullptr;
-		void setWorkingImg(const bcBarImg* newWI)
+		DatagridProvider<T>* workingImg = nullptr;
+		void setWorkingImg(bcBarImg* newWI)
 		{
-			if (workingImg != nullptr && needDelImg)
-				delete workingImg;
+			if (!saveImg)
+			{
+				if (workingImg != nullptr && needDelImg)
+					delete workingImg;
 
-			workingImg = newWI;
+				workingImg = newWI;
+			}
 
 			if (!settings.stepPorog.isCached || !settings.maxLen.isCached)
 			{
@@ -207,15 +211,15 @@ namespace bc {
 		void VISUAL_DEBUG_COMP();
 
 
-		void init(const bc::DatagridProvider<T>* src, ProcType& type, ComponentType& comp);
+		void init(bc::DatagridProvider<T>* src, ProcType& type, ComponentType& comp);
 
 		void processComp(Barcontainer<T>* item = nullptr);
 		void processHole(Barcontainer<T>* item = nullptr);
 		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
 
-		void processTypeF(barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
+		void processTypeF(barstruct& str, bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
 
-		void processFULL(barstruct& str, const bc::DatagridProvider<T>* img, bc::Barcontainer<T>* item);
+		void processFULL(barstruct& str, bc::DatagridProvider<T>* img, bc::Barcontainer<T>* item);
 		void addItemToCont(Barcontainer<T>* item);
 
 		void computeNdBarcode(Baritem<T>* lines, int n);
@@ -229,7 +233,7 @@ namespace bc {
 
 		}
 
-		bc::Barcontainer<T>* createBarcode(const bc::DatagridProvider<T>* img, const BarConstructor<T>& structure);
+		bc::Barcontainer<T>* createBarcode(bc::DatagridProvider<T>* img, const BarConstructor<T>& structure);
 		/*{
 			this->settings = structure;
 			settings.checkCorrect();
@@ -261,15 +265,17 @@ namespace bc {
 
 		///////////GEOMETRY
 	private:
-		void processCompByRadius(Barcontainer<T>* item);
-		
+		void processCompByRadius(Barcontainer<T>* item, float maxLen = std::numeric_limits<float>::max());
+		void processImageByD(Barcontainer<T>* item);
+
 
 
 		std::unique_ptr<indexCov> geometrySortedArr;
-	};
+		bool saveImg = false;
+		};
 
 	template<class T>
-	static Barcontainer<T>* createBarcode(bc::BarType type, const bc::DatagridProvider<T>* img, BarConstructor<T>& _struct)
+	static Barcontainer<T>* createBarcode(bc::BarType type, bc::DatagridProvider<T>* img, BarConstructor<T>& _struct)
 	{
 		switch (type)
 		{
@@ -302,4 +308,4 @@ namespace bc {
 			return nullptr;
 		}
 	}
-}
+	}

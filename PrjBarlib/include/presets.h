@@ -78,7 +78,7 @@ namespace bc
 {
 	enum class CompireStrategy { CommonToSum, CommonToLen, compire3dHist, compire3dBrightless, FromMethod, Complex, Temp1, Temp2 };
 
-	enum class ComponentType { Component, Hole, RadiusComp, FullPrepair, PrepairComp };
+	enum class ComponentType { Component, Hole, RadiusComp, FullPrepair, PrepairComp, ProcessD };
 	enum class ProcType { f0t255, f255t0, invertf0, experiment };
 	enum class ColorType { gray, rgb, native };
 
