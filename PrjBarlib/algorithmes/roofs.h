@@ -473,7 +473,7 @@ Mat binarymatr(const string& path)
 	vector<vector<Point>> contours;
 	binarymatrInner(path, contours, false);
 	binarymatrInner(path, contours, true);
-	drawContours(restbgr, contours, -1, Scalar(0, 0, 255), 2);
+	drawContours(restbgr, contours, -1, Scalar(0, 0, 255), 1);
 	return restbgr;
 }
 
@@ -572,20 +572,24 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 	for (int i = 0; i < frange; ++i)
 	{
 		barline<matrtype>* line = bar[i];
-		BarRect r = line->getBarRect();
+		//BarRect r = line->getBarRect();
 		int minlen = 0;
 		//minlen = line->len() * 0.0;// +15;
 		//minlen = 15;
-		if (line->getDeath() != 2)
+		if (line->getDeath() < 2)
+			continue;
+		if (line->getDeath() > 3)
 			continue;
 
-		//if (line->len() < 70 || line->len() > 110)
-		//	continue;
+		if (line->len() < 70)
+			continue;
 
+		//if (line->start < 50)
+		//	continue;
 		//if (line->getPointsSize() > img.rows * img.cols * 0.5)
 		//	continue;
-		//if (line->getPointsSize() < 30)
-		//	continue;
+		if (line->getPointsSize() < 20)
+			continue;
 		if (line->getPointsSize() > 1000)
 			continue;
 		//if (checkRect(r, img.cols, img.rows) && line->len() > 60)
