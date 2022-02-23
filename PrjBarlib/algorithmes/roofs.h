@@ -603,7 +603,7 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 
 			for (size_t i = 0; i < points.size(); i++)
 			{
-				//if (points[i].value < 20)				continue;
+				if (points[i].value <100)				continue;
 				binmap.at<uchar>(points[i].getY(), points[i].getX()) = 255;
 			}
 		}
