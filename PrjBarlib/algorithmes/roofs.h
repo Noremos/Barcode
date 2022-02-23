@@ -45,6 +45,7 @@ cv::Vec3b colors[] =
 	getCol("#85A900"),
 	getCol("#85A990")
 };
+const int collen = sizeof(colors) / sizeof(Vec3b);
 
 
 Mat experemental6(const string& path, bool debug = false);
@@ -130,7 +131,6 @@ void segment(string& path, bool revert = false, int radius = 0)
 
 
 	int ll = bar.size();
-	int collen = sizeof(colors) / sizeof(Vec3b);
 	int k = 0;
 	for (size_t i = 0; i < ll; i++)
 	{
@@ -422,10 +422,63 @@ bool checkRect(const BarRect& rect, int wid, int hei)
 }
 
 
+void show(string name, Mat img, int wait = -1)
+{
+	cv::namedWindow(name, cv::WINDOW_NORMAL);
+	cv::imshow(name, img);
+	if (wait >= 0)
+		waitKey(wait);
+}
+
+template<class T>
+void getCounturFormMatr(barline<T>* line, int rows, int cols, vector<vector<Point> >& contoursRet)
+{
+	Mat objectsMask = Mat::zeros(rows, cols, CV_8UC1);
+	for (barvalue<btype>& p : line->matr)
+	{
+		//if (p.getPyValue().value < avlVal)
+		//	continue;
+		int x = p.getX();
+		int y = p.getY();
+		objectsMask.at<uchar>(y, x) = 255;
+	}
+
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(objectsMask, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
+
+	if (contours.size() == 0)
+		return;
+
+	int mi = 0;
+	int mm = 0;
+	for (size_t i = 0; i < contours.size(); i++)
+	{
+		if (contours[i].size() > mm)
+		{
+			mm = contours[i].size();
+			mi = i;
+		}
+	}
+	contoursRet.push_back(contours[mi]);
+}
+
 using matrtype = uchar;
+
+void binarymatrInner(const string& path, vector<vector<Point>> &contours, bool revert);
 Mat binarymatr(const string& path)
 {
-	bool revert = true;
+	Mat restbgr = cv::imread(path, cv::IMREAD_COLOR);
+
+	vector<vector<Point>> contours;
+	binarymatrInner(path, contours, false);
+	binarymatrInner(path, contours, true);
+	drawContours(restbgr, contours, -1, Scalar(0, 0, 255), 2);
+	return restbgr;
+}
+
+void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool revert)
+{
 	int radius = 50;
 	bool skipPar = false;
 	int frange = 2;
@@ -437,22 +490,28 @@ Mat binarymatr(const string& path)
 	bcstruct.returnType = bc::ReturnType::barcode2d;
 	bcstruct.createBinaryMasks = true;
 	bcstruct.createGraph = true;
-	//bcstruct.attachMode = AttachMode::morePointsEatLow;
+	bcstruct.attachMode = AttachMode::morePointsEatLow;
 	//bcstruct.attachMode = AttachMode::createNew;
 	bcstruct.visualize = false;
 	bcstruct.extracheckOnPixelConnect = false;
-	bcstruct.setStep(radius);
+	//bcstruct.setStep(radius);
+	//bcstruct.setMaxLen(radius);
+	//bcstruct.killOnMaxLen = true;;
 	bcstruct.waitK = 0;
 
-	bcstruct.addStructure(ProcType::f0t255, ColorType::gray, ComponentType::Component);
+	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::Component);
 
-	Mat img = cv::imread(path, cv::IMREAD_GRAYSCALE);
+	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
-	Mat back = 255 - img;
-	Mat	backback;
-	back.copyTo(backback);
+	Mat back = img;
+	cvtColor(img, back, COLOR_BGR2GRAY);
+	back *= 2;
+	if (revert)
+		back = 255 - back;
 
-	//back.at<uchar>(0, 0) = 255;
+	cv::medianBlur(back, back, 3);
+	show("baeck", back, 1);
+	back.at<uchar>(0, 0) = 0;
 
 	BarMat<matrtype> wrap(back);
 	Barcontainer< matrtype>* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
@@ -468,7 +527,48 @@ Mat binarymatr(const string& path)
 	//# frange = min(frange, len(bar))
 	frange = bar.size();
 
-	
+
+	int ds = cv::waitKey(1);
+	int ind = 0;
+	while (ds != 'q')
+	{
+		Mat workingimg;
+		img.copyTo(workingimg);
+		switch (ds)
+		{
+		case 'd':
+		case 'D':
+			ind += 1;
+			if (ind >= frange)
+				ind = frange - 1;
+			break;
+		case 'a':
+		case 'A':
+			ind -= 1;
+			if (ind < 0)
+				ind = 0;
+			break;
+		}
+
+		barline<matrtype>* line = bar[ind];
+		barvector<matrtype>& points = line->matr;
+
+		for (barvalue<matrtype>& p : points)
+		{
+			////if (p.value < 50)				continue;
+
+			workingimg.at<Vec3b>(p.getY(), p.getX()) = colors[ind % collen];
+		}
+		break;
+
+		cv::namedWindow("result", cv::WINDOW_NORMAL);
+		cv::imshow("result", workingimg);
+		ds = cv::waitKey(0);
+	}
+
+
+	//vector<vector<Point>> contours;
+
 	for (int i = 0; i < frange; ++i)
 	{
 		barline<matrtype>* line = bar[i];
@@ -476,42 +576,59 @@ Mat binarymatr(const string& path)
 		int minlen = 0;
 		//minlen = line->len() * 0.0;// +15;
 		//minlen = 15;
-		//if (line->getDeath() < 2)
+		if (line->getDeath() != 2)
+			continue;
+
+		//if (line->len() < 70 || line->len() > 110)
 		//	continue;
 
-		//if (line->getPointsSize() < 40)
+		//if (line->getPointsSize() > img.rows * img.cols * 0.5)
 		//	continue;
-		if (checkRect(r, img.cols, img.rows) && line->len() > 60)
+		//if (line->getPointsSize() < 30)
+		//	continue;
+		if (line->getPointsSize() > 1000)
+			continue;
+		//if (checkRect(r, img.cols, img.rows) && line->len() > 60)
 		{
 			barvector<matrtype>& points = line->matr;
+			getCounturFormMatr(line, img.rows, img.cols, contours);
+			float len = contours[contours.size() - 1].size();
+			float s = (float)points.size() / len;
+			//if (s > 5 or s < 1)
+			//	continue;
+
 			for (size_t i = 0; i < points.size(); i++)
 			{
-				if (points[i].value < minlen)				continue;
+				//if (points[i].value < 20)				continue;
 				binmap.at<uchar>(points[i].getY(), points[i].getX()) = 255;
 			}
 		}
 	}
 
-	Mat kernel(3, 3, CV_8U);
+	show("da", binmap, 1);
+
+	//return contours;
+
+	//Mat kernel(3, 3, CV_8U);
 
 	//cv::morphologyEx(binmap, binmap, cv::MORPH_ERODE, kernel);
 	////cv::morphologyEx(binmap, binmap, cv::MORPH_OPEN, kernel);
 	//cv::medianBlur(binmap, binmap, 3);
-	return binmap;
+	//return restbgr;
 }
 
 void getResults()
 {
-	//Mat bin_etalon = cv::imread("D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/14_bld.png", IMREAD_GRAYSCALE);
-	//cv::namedWindow("etalon", cv::WINDOW_NORMAL);
-	//cv::imshow("etalon", bin_etalon);
-	//string ds = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/14_set.png";
-	////experemental6(ds, true);
-	//Mat bar_result =  binarymatr(ds);
-	//cv::namedWindow("barres", cv::WINDOW_NORMAL);
-	//cv::imshow("barres", bar_result);
-	//cv::waitKey(0);
-	//return;
+	string ds = "D:/Learning/papers/CO4/test.png";
+	Mat bin_etalon = cv::imread(ds, IMREAD_COLOR);
+	cv::namedWindow("source", cv::WINDOW_NORMAL);
+	cv::imshow("source", bin_etalon);
+	//experemental6(ds, true);
+	Mat bar_result = binarymatr(ds);
+	cv::namedWindow("barres", cv::WINDOW_NORMAL);
+	cv::imshow("barres", bar_result);
+	cv::waitKey(0);
+	return;
 
 	const int N = 100;
 
