@@ -490,7 +490,7 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 	bcstruct.returnType = bc::ReturnType::barcode2d;
 	bcstruct.createBinaryMasks = true;
 	bcstruct.createGraph = true;
-	bcstruct.attachMode = AttachMode::morePointsEatLow;
+	bcstruct.attachMode = AttachMode::firstEatSecond;
 	//bcstruct.attachMode = AttachMode::createNew;
 	bcstruct.visualize = false;
 	bcstruct.extracheckOnPixelConnect = false;
@@ -505,11 +505,11 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 
 	Mat back = img;
 	cvtColor(img, back, COLOR_BGR2GRAY);
-	back *= 2;
-	if (revert)
-		back = 255 - back;
+	//back *= 2;
+	//if (revert)
+	//	back = 255 - back;
 
-	cv::medianBlur(back, back, 3);
+	//cv::medianBlur(back, back, 3);
 	show("baeck", back, 1);
 	back.at<uchar>(0, 0) = 0;
 
@@ -576,13 +576,13 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 		int minlen = 0;
 		//minlen = line->len() * 0.0;// +15;
 		//minlen = 15;
-		if (line->getDeath() < 2)
-			continue;
-		if (line->getDeath() > 3)
-			continue;
+		//if (line->getDeath() < 2)
+		//	continue;
+		//if (line->getDeath() > 3)
+		//	continue;
 
-		if (line->len() < 70)
-			continue;
+		//if (line->len() < 70)
+		//	continue;
 
 		//if (line->start < 50)
 		//	continue;
@@ -623,7 +623,7 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 
 void getResults()
 {
-	string ds = "D:/Learning/papers/CO4/test.png";
+	string ds = "D:/Learning/papers/CO4/Coptic2.jpg";
 	Mat bin_etalon = cv::imread(ds, IMREAD_COLOR);
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
 	cv::imshow("source", bin_etalon);
