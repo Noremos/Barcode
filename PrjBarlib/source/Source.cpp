@@ -7,6 +7,7 @@
 #include "../algorithmes/noise.h"
 #include "../algorithmes/roofs.h"
 #include "tests.h"
+#include <variant>
 
 void tetsAll()
 {
@@ -126,6 +127,14 @@ void prepSegm()
 
 int main()
 {
+//	std::variant<int, float> v, w;
+//	v = 42; // v contains int
+//	int i = std::get<int>(v);
+//	assert(42 == i); // succeeds
+//	w = std::get<int>(v);
+//	w = std::get<0>(v); // same effect as the previous line
+//	w = v; // same effect as the previous line
+	//std::cout << std::get<float>(v);
 	// doMagickDOTA();
 	//  testAll();
 	//compireMethods();

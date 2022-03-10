@@ -464,20 +464,19 @@ void getCounturFormMatr(barline<T>* line, int rows, int cols, vector<vector<Poin
 }
 
 using matrtype = uchar;
+//void binarymatrInner(const string& path, vector<vector<Point>>& contours, int k, bool revert);
+//Mat binarymatr(const string& path)
+//{
+//	Mat restbgr = cv::imread(path, cv::IMREAD_COLOR);
+//
+//	vector<vector<Point>> contours;
+//	binarymatrInner(path, contours, 0, false);
+//	//binarymatrInner(path, contours, true);
+//	//drawContours(restbgr, contours, -1, Scalar(0, 0, 255), 1);
+//	return restbgr;
+//}
 
-void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool revert);
-Mat binarymatr(const string& path)
-{
-	Mat restbgr = cv::imread(path, cv::IMREAD_COLOR);
-
-	vector<vector<Point>> contours;
-	binarymatrInner(path, contours, false);
-	//binarymatrInner(path, contours, true);
-	//drawContours(restbgr, contours, -1, Scalar(0, 0, 255), 1);
-	return restbgr;
-}
-
-void getLowAndHigh(Baritem<matrtype>* item, Mat& low, Mat& high)
+void getLowAndHigh(Baritem<matrtype>* item, Mat& low, Mat& high, Mat& source)
 {
 	barlinevector<matrtype>& bar = item->barlines;
 	int frange = bar.size();
@@ -485,7 +484,7 @@ void getLowAndHigh(Baritem<matrtype>* item, Mat& low, Mat& high)
 	for (int i = 0; i < frange; ++i)
 	{
 		barline<matrtype>* line = bar[i];
-		
+
 		Mat* curmat = &low;
 		if (line->len() > 200)
 		{
@@ -498,6 +497,7 @@ void getLowAndHigh(Baritem<matrtype>* item, Mat& low, Mat& high)
 			curmat->at<uchar>(points[j].getY(), points[j].getX()) += points[j].value;
 		}
 	}
+	source = 255 - (high + low);
 	low = 255 - low;
 	high = 255 - high;
 	//threshold(high, high, 128, 255, THRESH_OTSU);
@@ -544,7 +544,7 @@ void stepShwo(Mat baseImg, Baritem<matrtype>* item)
 		ds = cv::waitKey(0);
 	}
 }
-void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool revert)
+void binarymatrInner(const string& path, int k, bool revert)
 {
 	int radius = 255;
 	bool skipPar = false;
@@ -566,7 +566,7 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 	//bcstruct.killOnMaxLen = true;;
 	bcstruct.waitK = 0;
 
-	bcstruct.d = 10;
+	bcstruct.d = k;
 	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::ProcessD);
 	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::Component);
 
@@ -574,7 +574,9 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 
 	Mat back = img;
 	cvtColor(img, back, COLOR_BGR2GRAY);
-	back = 255 - back;
+
+	if (revert)
+		back = 255 - back;
 
 	BarMat<matrtype> wrap(back);
 	Barcontainer< matrtype>* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
@@ -584,11 +586,26 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 
 	Mat low(img.rows, img.cols, CV_8UC1, Scalar(0));
 	Mat high(img.rows, img.cols, CV_8UC1, Scalar(0));
+	Mat source(img.rows, img.cols, CV_8UC1, Scalar(0));
 
-	getLowAndHigh(item, low, high);
-	show("low", low, -1);
-	show("high", high, 0);
+	getLowAndHigh(item, low, high, source);
+	//show("low", low, -1);
+	//show("high", high, 0);
 
+	int poy = path.find_last_of('/');
+	int poi = path.find_last_of('.');
+	string newPath = path.substr(0, poy + 1) + "res/";
+	string name = path.substr(poy + 1, poi - poy - 1);
+	newPath += name;
+	newPath += "_d=" + to_string(k);
+	if (revert)
+		newPath += "_revert";
+
+	cv::imwrite(newPath + "_high.png", high);
+	cv::imwrite(newPath + "_low.png", low);
+	cv::imwrite(newPath + "_source.png", source);
+
+	delete containet;
 	//return contours;
 
 	//Mat kernel(3, 3, CV_8U);
@@ -605,6 +622,25 @@ void getResults()
 	ds = "D:/Learning/BAR/220px-Lenna.png";
 	ds = "D:/Learning/papers/CO4/test.png";
 	ds = "D:/Learning/papers/CO4/coptic2.jpg";
+
+	vector<string> paths{ "2.png", "3.jpg", "boats.bmp", "CAMERA.BMP", "car.png", "Coptic.jpg", "coptic2.jpg",
+	};
+	//	"coptic3.jpg", "test.png", "test2.png", "test2s.png", "test3.png", "test4.png", "test5.png", "test6.png" };
+	vector<int> Ds{0, 2, 5, 10, 15, 30, 50, 100, 200 };
+
+	string basestr = "D:/Learning/papers/CO4/";
+	for (size_t i = 0; i < paths.size(); i++)
+	{
+		string imgpath = basestr + paths[i];
+		std::cout << imgpath << std::endl;
+		for (size_t j = 0; j < Ds.size(); j++)
+		{
+			binarymatrInner(imgpath, Ds[j], false);
+			binarymatrInner(imgpath, Ds[j], true);
+		}
+	}
+	return;
+
 	//ds = "./researching/tiles/5_set.png";
 
 	//ds = "D:/Learning/papers/CO4/test2s2.png";
@@ -613,10 +649,10 @@ void getResults()
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
 	cv::imshow("source", bin_etalon);
 	//experemental6(ds, true);
-	Mat bar_result = binarymatr(ds);
-	cv::namedWindow("barres", cv::WINDOW_NORMAL);
-	cv::imshow("barres", bar_result);
-	cv::waitKey(0);
+	//Mat bar_result = binarymatr(ds);
+	//cv::namedWindow("barres", cv::WINDOW_NORMAL);
+	//cv::imshow("barres", bar_result);
+	//cv::waitKey(0);
 	return;
 }
 
@@ -637,8 +673,8 @@ void compireTiles()
 		const string binPath = mainPath + to_string(i) + "_bld.png";
 
 		Mat bin_etalon = cv::imread(binPath, IMREAD_GRAYSCALE);
-		Mat bar_result = binarymatr(setlPath);
-		//Mat bar_result = experemental6(setlPath);
+		//Mat bar_result = binarymatr(setlPath);
+		Mat bar_result = experemental6(setlPath);
 
 		//cv::resize(bar_result, bar_result, cv::Size(bar_result.cols * 2, bar_result.rows * 2));
 		cv::resize(bar_result, bar_result, cv::Size(bin_etalon.cols, bin_etalon.rows));
