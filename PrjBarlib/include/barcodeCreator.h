@@ -201,8 +201,25 @@ namespace bc {
 		bool checkCloserB0();
 		bool checkCloserB1();
 
-
 		void sortPixels(bc::ProcType type);
+
+
+		inline void sortPixels(bc::ProcType type, int st, int end, int off = 1)
+		{
+			int size = (end - st) / off;
+			// do this hack to skip constructor calling for every point
+			poidex* data = new poidex[size + 1];//256
+
+			//point * data = new point[total];
+
+			for (size_t i = st; i < end; i += off)//wid
+				data[i] = workingImg->getLiner(st + off * i);
+
+			myclassFromMin<T> cmp;
+			cmp.workingImg = workingImg;
+			std::sort(data, &data[size], cmp);
+			this->sortedArr = data;
+		}
 
 		void clearIncluded();
 
@@ -267,12 +284,13 @@ namespace bc {
 	private:
 		void processCompByRadius(Barcontainer<T>* item, float maxLen = std::numeric_limits<float>::max());
 		void processImageByD(Barcontainer<T>* item);
+		void processFureLike(Barcontainer<T>* item);
 
 
 
 		std::unique_ptr<indexCov> geometrySortedArr;
 		bool saveImg = false;
-		};
+	};
 
 	template<class T>
 	static Barcontainer<T>* createBarcode(bc::BarType type, bc::DatagridProvider<T>* img, BarConstructor<T>& _struct)
@@ -308,4 +326,4 @@ namespace bc {
 			return nullptr;
 		}
 	}
-	}
+}
