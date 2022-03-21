@@ -560,8 +560,8 @@ namespace bc
 				// matr
 			}
 
-			outObj += "start:" + std::to_string(static_cast<float>((start)));
-			outObj += ", len:" + std::to_string(static_cast<float>(len())) + "}";
+			outObj += "\"start\":" + std::to_string(static_cast<float>((start)));
+			outObj += ", \"len\":" + std::to_string(static_cast<float>(len())) + "}";
 		}
 
 		bool is3dmoreing() const
@@ -571,7 +571,7 @@ namespace bc
 			for (size_t i = 0; i < bar3d->size(); ++i)
 			{
 				T val = bar3d->at(i).value;
-				int tval = 256 * static_cast<int>(static_cast<float>(val) / len);
+				int tval = 256 * static_cast<int>(static_cast<float>(val) / len());
 
 				++coos[tval];
 			}
