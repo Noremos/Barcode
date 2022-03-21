@@ -100,6 +100,4 @@ def createImages():
             k += 1
 
 
-# createImages()
-# while True:
-#     print('e')
+createImages()
