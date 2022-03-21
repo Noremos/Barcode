@@ -96,7 +96,8 @@ template<class T>
 inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 {
 	//second->kill();
-	if (second->getStart() == main->getStart() && main->getStart() == curbright)
+if ((second->getStart() == main->getStart() && main->getStart() == curbright) || 
+		(second->getCurrectLen() == 0 || main->getCurrectLen() == 0))
 	{
 #ifdef POINTS_ARE_AVAILABLE
 		for (const auto& val : second->resline->matr)

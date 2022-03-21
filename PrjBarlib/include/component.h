@@ -62,6 +62,11 @@ namespace bc
 			return resline->start;
 		}
 
+		T getCurrectLen()
+		{
+			return lastVal - resline->start;
+		}
+
 		T getLast()
 		{
 			return lastVal;
