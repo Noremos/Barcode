@@ -104,6 +104,7 @@ void bc::Component<T>::kill()
 {
 	if (!lived)
 		return;
+
 	lived = false;
 
 	resline->m_end = factory->curbright;
@@ -124,7 +125,10 @@ void bc::Component<T>::kill()
 			a.value = factory->curbright - a.value;
 		}
 	}
-
+	if (resline->len() == 0)
+	{
+		std::cout << "WRONG!" << std::endl;
+	}
 	lastVal = factory->curbright;
 	cashedSize = 0;
 }

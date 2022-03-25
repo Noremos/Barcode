@@ -96,8 +96,9 @@ template<class T>
 inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 {
 	//second->kill();
-if ((second->getStart() == main->getStart() && main->getStart() == curbright) || 
-		(second->getCurrectLen() == 0 || main->getCurrectLen() == 0))
+if ((second->getStart() == main->getStart() && main->getStart() == curbright)
+	|| (second->getCurrectLen() == 0 || main->getCurrectLen() == 0)
+	)
 	{
 #ifdef POINTS_ARE_AVAILABLE
 		for (const auto& val : second->resline->matr)
@@ -268,13 +269,10 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 					first = nullptr;
 				//setInclude(midP, first);//n--nt обяз нужно
 			}
-			else
+			else if (connected != first)// && !connected->isContain(IcurPindex))
 			{
-				if (first->isContain(IcurPindex))//если в найденном уже есть этот элемент
-					continue;
-
 				//lastB -= 1;
-				if (first != connected && first->canBeConnected(IcurPoint))
+				if (connected->canBeConnected(IcurPoint))
 					first = attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
 			}
 		}
@@ -846,6 +844,8 @@ void BarcodeCreator<T>::processComp(Barcontainer<T>* item)
 {
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < totalSize; ++curIndexInSortedArr)
 	{
+		if (curIndexInSortedArr == 1111)
+			printf("BRAEK");
 		curpoindex = sortedArr[curIndexInSortedArr];
 		curpix = getPoint(curpoindex);
 		assert(curpoindex == wid * curpix.y + curpix.x);
