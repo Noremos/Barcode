@@ -250,7 +250,7 @@ namespace bc {
 			cachedMin.set(_min);
 		}
 
-		T max() const
+		T maxv() const
 		{
 			if (cachedMax.isCached)
 				return cachedMax.val;
@@ -267,7 +267,7 @@ namespace bc {
 			return _max;
 		}
 
-		T min() const
+		T minv() const
 		{
 			if (cachedMin.isCached)
 				return cachedMin.val;
@@ -544,7 +544,7 @@ namespace bc {
 			max = static_cast<T>(amax);
 		}
 
-		T max() const
+		T maxv() const
 		{
 			if (cachedMax.isCached)
 			{
@@ -600,7 +600,7 @@ namespace bc {
 			return *reinterpret_cast<T*>(mat.get_data() + y * strides[0] + x * strides[1]);
 		}
 
-		T max() const
+		T maxv() const
 		{
 			if (this->length() == 0)
 				return 0;

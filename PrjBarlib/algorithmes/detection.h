@@ -33,7 +33,7 @@ int pr = 10; bool normA = false;
 //done for  container - crane : 0 / 0
 //
 //Total : 1093 / 1756
-//Для продолжения нажмите любую клавишу . .
+//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ . .
 
 //
 //done for plane: 11 / 80
@@ -105,7 +105,6 @@ public:
 };
 
 using namespace bc;
-using namespace std;
 
 
 int procR(int r, int b)
@@ -178,7 +177,7 @@ void getSet(string path, barclassificator& data, char diff = '0')
 	for (const auto& dirEntry : recursive_directory_iterator(coords))
 	{
 		string coordsPath = dirEntry.path().string();//D:\Programs\C++\Barcode\analysis\datasets\DOTA\labels\P0013.txt
-		std::cout << coordsPath << "..." << endl;
+		std::cout << coordsPath << "..." << std::endl;
 		//k++;
 		//if (k == 5000)
 		//	break;

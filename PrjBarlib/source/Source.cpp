@@ -6,6 +6,7 @@
 #include "../algorithmes/detection.h"
 #include "../algorithmes/noise.h"
 #include "../algorithmes/roofs.h"
+#include "../algorithmes/compression.h"
 #include "tests.h"
 #include <variant>
 
@@ -139,6 +140,9 @@ int main()
 	//  testAll();
 	//compireMethods();
 	//prepSegm();
-	getResults();
+	//getResults();
+	//testImg("D:\\Learning\\BAR\\test\\Spiral.bmp"); // bigimg.jpg
+	//testImg("D:\\Learning\\BAR\\test\\Spiral.bmp"); // bigimg.jpg
+	compressMain();
 	return 0;
 }

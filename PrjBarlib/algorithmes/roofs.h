@@ -2,7 +2,18 @@
 
 #include "prep.h"
 using namespace bc;
-using namespace cv;
+using std::vector;
+using std::endl;
+using std::to_string;
+using cv::Vec3b;
+using cv::Vec4i;
+using cv::Point;
+using cv::Scalar;
+using cv::waitKey;
+using cv::namedWindow;
+using cv::imshow;
+using cv::imwrite;
+using cv::imread;
 
 
 int getFromHex(const char* s)
@@ -268,7 +279,7 @@ Mat experemental6(const string& path, bool debug)
 		{
 			continue;
 		}
-		barvector<btype> points = line->getEnclusivePoints();// encluseve - только точки чайлов
+		barvector<btype> points = line->getEnclusivePoints();// encluseve - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		for (barvalue<btype>& p : points)
 		{
 			mainMask.at<uchar>(p.getY(), p.getX()) = 255;
@@ -337,7 +348,7 @@ Mat experemental6(const string& path, bool debug)
 
 				vector<vector<Point> > contours;
 				vector<Vec4i> hierarchy;
-				findContours(objectsMask, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
+				findContours(objectsMask, contours, hierarchy, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
 
 
 				if (contours.size() == 0)
@@ -376,7 +387,7 @@ Mat experemental6(const string& path, bool debug)
 	k = 0;
 	mainMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
 
-	float dev = 1.1f; // насколько можно отклониться от среднего ( в процентах)
+	float dev = 1.1f; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ( пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 	avg /= (float)coun;
 	const float defmin = avg * (1 - dev);// 0.5
 	const float defmax = avg * (1 + dev);//1.5
@@ -431,7 +442,7 @@ void show(string name, Mat img, int wait = -1)
 }
 
 template<class T>
-void getCounturFormMatr(barline<T>* line, int rows, int cols, vector<vector<Point> >& contoursRet)
+void getCounturFormMatr(barline<T>* line, int rows, int cols, vector<vector<cv::Point> >& contoursRet)
 {
 	Mat objectsMask = Mat::zeros(rows, cols, CV_8UC1);
 	for (barvalue<btype>& p : line->matr)
@@ -445,7 +456,7 @@ void getCounturFormMatr(barline<T>* line, int rows, int cols, vector<vector<Poin
 
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
-	findContours(objectsMask, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
+	findContours(objectsMask, contours, hierarchy, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
 
 	if (contours.size() == 0)
 		return;
@@ -573,7 +584,7 @@ void binarymatrInner(const string& path, int k, bool revert)
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
 	Mat back = img;
-	cvtColor(img, back, COLOR_BGR2GRAY);
+	cvtColor(img, back, cv::COLOR_BGR2GRAY);
 
 	if (revert)
 		back = 255 - back;
@@ -623,8 +634,7 @@ void getResults()
 	ds = "D:/Learning/papers/CO4/test.png";
 	ds = "D:/Learning/papers/CO4/coptic2.jpg";
 
-	vector<string> paths{ "2.png", "3.jpg", "boats.bmp", "CAMERA.BMP", "car.png", "Coptic.jpg", "coptic2.jpg",
-	};
+	vector<string> paths{ "2.png", "3.jpg", "boats.bmp", "CAMERA.BMP", "car.png", "Coptic.jpg", "coptic2.jpg"};
 	//	"coptic3.jpg", "test.png", "test2.png", "test2s.png", "test3.png", "test4.png", "test5.png", "test6.png" };
 	vector<int> Ds{0, 2, 5, 10, 15, 30, 50, 100, 200 };
 
@@ -645,7 +655,7 @@ void getResults()
 
 	//ds = "D:/Learning/papers/CO4/test2s2.png";
 
-	Mat bin_etalon = cv::imread(ds, IMREAD_COLOR);
+	Mat bin_etalon = cv::imread(ds, cv::IMREAD_COLOR);
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
 	cv::imshow("source", bin_etalon);
 	//experemental6(ds, true);
@@ -672,7 +682,7 @@ void compireTiles()
 
 		const string binPath = mainPath + to_string(i) + "_bld.png";
 
-		Mat bin_etalon = cv::imread(binPath, IMREAD_GRAYSCALE);
+		Mat bin_etalon = cv::imread(binPath, cv::IMREAD_GRAYSCALE);
 		//Mat bar_result = binarymatr(setlPath);
 		Mat bar_result = experemental6(setlPath);
 

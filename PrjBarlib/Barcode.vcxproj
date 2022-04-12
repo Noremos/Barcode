@@ -91,6 +91,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="algorithmes\compression.h" />
+    <ClInclude Include="algorithmes\comprssWave.h" />
     <ClInclude Include="algorithmes\detection.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
     </ClInclude>

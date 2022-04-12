@@ -111,21 +111,21 @@ namespace bc
 
 		bool canBeConnected(const bc::point& p, bool incrSum = false)
 		{
-			float val = (float)factory->workingImg->get(p.x, p.y);
-			Component<T>* comp = getMaxparent();
-			if ((float)comp->totalCount / factory->workingImg->length() >= .1f)
-			{
-				float st = (float)comp->getStart();
-				//float avg = ((float)comp->sums + val) / (comp->totalCount + 1);
-				float avg = ((float)lastVal - st) / 2;
-				float dff = abs((float)st - avg);
-				if (abs(val - avg) > dff)
-				{
-					return false;
-				}
-			}
-			if (incrSum)
-				comp->sums += val;
+			//float val = (float)factory->workingImg->get(p.x, p.y);
+			//Component<T>* comp = getMaxparent();
+			//if ((float)comp->totalCount / factory->workingImg->length() >= .1f)
+			//{
+			//	float st = (float)comp->getStart();
+			//	//float avg = ((float)comp->sums + val) / (comp->totalCount + 1);
+			//	float avg = ((float)lastVal - st) / 2;
+			//	float dff = abs((float)st - avg);
+			//	if (abs(val - avg) > dff)
+			//	{
+			//		return false;
+			//	}
+			//}
+			//if (incrSum)
+			//	comp->sums += val;
 
 			return true;
 		}

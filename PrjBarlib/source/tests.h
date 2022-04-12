@@ -472,8 +472,8 @@ void testBigProblemFloatMats()
 	//retFromQGIS->relen();
 	//retFromQGIS->removePorog(3);
 
-	float maxs = imgFromGeo.max();
-	float mins = imgFromGeo.min();
+	float maxs = imgFromGeo.maxv();
+	float mins = imgFromGeo.minv();
 
 	//imgFromGeo.addToMat(-mins);
 
@@ -534,7 +534,7 @@ void testFloatMats()
 		bc::Barcontainer<float>* sdd = (bc::Barcontainer<float>*)ret->clone();
 		float re = sdd->compireFull(ret, bc::CompireStrategy::compire3dBrightless);
 
-		bc::BarImg<float> retimg = restoreToBarimg(sdd, 60, 60, baseimg.max());
+		bc::BarImg<float> retimg = restoreToBarimg(sdd, 60, 60, baseimg.maxv());
 
 		compiteBarAndBar(retimg, baseimg);
 
@@ -596,27 +596,96 @@ void caclSize(bc::Barcontainer<uchar>* ret)
 void testImg(string path)
 {
 	bc::BarConstructor<uchar> bcont;
-	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Hole);
+	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
 	bcont.createBinaryMasks = true;
-	bcont.createGraph = false;
+	bcont.createGraph = true;
 	bcont.returnType = bc::ReturnType::barcode2d;
 	bcont.waitK = 1;
 	bcont.visualize = true;
-	bcont.setStep(255);
+	//bcont.setStep(255);
 
-	bc::BarcodeCreator<uchar>* test = new bc::BarcodeCreator<uchar>();
+	bc::BarcodeCreator<uchar> test;
 
 	Mat testmat = cv::imread(path, cv::IMREAD_GRAYSCALE);
-
+	double min, max;
+	//cv::minMaxLoc(testmat, &min, &max);
+	//testmat =  max - testmat;
 	cv::namedWindow("maintest", cv::WINDOW_NORMAL);
 	cv::imshow("maintest", testmat);
-	cv::waitKey(0);
+	cv::waitKey(1);
 	//Mat testmat = cv::imread((string)"D:\\Programs\\Python\\barcode\\lenna.png", cv::IMREAD_GRAYSCALE);
 	bc::BarMat<uchar> mf(testmat);
 
-	auto* ret = test->createBarcode(&mf, bcont);
-	delete test;
-	caclSize(ret);
+	auto* ret = test.createBarcode(&mf, bcont);
+
+	auto* it = ret->getItem(0);
+	auto& lines = it->barlines;
+
+	Mat img(mf.hei(), mf.wid(), CV_8UC1, Scalar(0));
+	Mat img2(mf.hei(), mf.wid(), CV_8UC1, Scalar(0));
+	Mat img3(mf.hei(), mf.wid(), CV_8UC1, Scalar(0));
+	for (size_t i = 0; i < lines.size(); i++)
+	{
+		uchar start = lines[i]->start;
+		uchar end = start + lines[i]->len();
+		auto& matr = lines[i]->matr;
+
+		//if (matr.size() > 100)
+		//	continue;
+		if (lines[i]->children.size() == 0)
+		{
+
+			for (size_t k = 0; k < matr.size(); k++)
+			{
+				auto& p = matr[k];
+				//assert(start <= p.value && p.value <= end);
+				img.at<uchar>(p.getY(), p.getX()) += p.value;
+			}
+		}
+		//else if (lines[i]->len() < 100)
+		//{
+		//	for (size_t k = 0; k < matr.size(); k++)
+		//	{
+		//		auto& p = matr[k];
+		//		//assert(start <= p.value && p.value <= end);
+		//		img2.at<uchar>(p.getY(), p.getX()) += p.value;
+		//	}
+		//}
+		else
+		{
+			for (size_t k = 0; k < matr.size(); k++)
+			{
+				auto& p = matr[k];
+				//assert(start <= p.value && p.value <= end);
+				img3.at<uchar>(p.getY(), p.getX()) += p.value;
+			}
+		}
+	}
+
+	img = mf.maxv() - img;
+	cv::imwrite("low.png", img);
+
+	img2 = mf.maxv() - img2;
+	cv::imwrite("middle.png", img2);
+
+	img3 = mf.maxv() - img3;
+	cv::imwrite("high.png", img3);
+
+
+	return;
+	//caclSize(ret);
+	string json;
+	ret->getItem(0)->getJsonLinesArray(json);
+	std::ofstream out("output_array.json");
+	out << json;
+	out.close();
+
+	std::ofstream out2("output_object.json");
+	json = "";
+	ret->getItem(0)->getJsonObejct(json);
+	out2 << json;
+	out2.close();
+
 	delete ret;
 }
 
@@ -636,7 +705,7 @@ void testMaxLen()
 
 	auto varcode = bc.createBarcode(&gray, constr);
 
-	Bimg8 sd = restoreToBarimg(varcode, gray.wid(), gray.hei(), gray.max());
+	Bimg8 sd = restoreToBarimg(varcode, gray.wid(), gray.hei(), gray.maxv());
 	compiteBarAndBar(sd, gray);
 }
 

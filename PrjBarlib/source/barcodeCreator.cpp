@@ -844,8 +844,8 @@ void BarcodeCreator<T>::processComp(Barcontainer<T>* item)
 {
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < totalSize; ++curIndexInSortedArr)
 	{
-		if (curIndexInSortedArr == 1111)
-			printf("BRAEK");
+		// if (curIndexInSortedArr == 1111)
+		// 	printf("BRAEK");
 		curpoindex = sortedArr[curIndexInSortedArr];
 		curpix = getPoint(curpoindex);
 		assert(curpoindex == wid * curpix.y + curpix.x);

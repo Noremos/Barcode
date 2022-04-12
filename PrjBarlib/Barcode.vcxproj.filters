@@ -64,6 +64,12 @@
     <ClInclude Include="algorithmes\roofs.h">
       <Filter>algorithmes</Filter>
     </ClInclude>
+    <ClInclude Include="algorithmes\compression.h">
+      <Filter>algorithmes</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithmes\comprssWave.h">
+      <Filter>algorithmes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint">
