@@ -676,6 +676,7 @@ struct myclassFromMax {
 template<class T>
 void BarcodeCreator<T>::sortPixels(bc::ProcType type)
 {
+	int size = end - st;
 	// do this hack to skip constructor calling for every point
 	poidex* data = new poidex[totalSize + 1];//256
 
@@ -686,10 +687,10 @@ void BarcodeCreator<T>::sortPixels(bc::ProcType type)
 
 	myclassFromMin<T> cmp;
 	cmp.workingImg = workingImg;
-	std::sort(data, &data[totalSize], cmp);
+	std::sort(data, &data[size], cmp);
 	if (type == ProcType::f255t0)
 	{
-		for (size_t i = 1; i < totalSize - 1; ++i)//wid
+		for (size_t i = 1; i < size - 1; ++i)//wid
 		{
 			float v0 = static_cast<float>(workingImg->getLiner(data[i - 1]));
 			float v2 = static_cast<float>(workingImg->getLiner(data[i]));
@@ -784,8 +785,6 @@ void BarcodeCreator<T>::init(bc::DatagridProvider<T>* src, ProcType& type, Compo
 	}
 	else
 		setWorkingImg(src);
-
-
 
 
 	//от 255 до 0
@@ -962,9 +961,9 @@ void BarcodeCreator<T>::clearIncluded()
 		workingImg = nullptr;
 
 	}
-	
+
 	geometrySortedArr.reset(nullptr);
-	
+
 	if (sortedArr != nullptr)
 	{
 		delete[] sortedArr;
@@ -1048,6 +1047,9 @@ void BarcodeCreator<T>::processTypeF(barstruct& str, bc::DatagridProvider<T>* sr
 		//	break;
 	case  ComponentType::ProcessD:
 		processImageByD(item);
+		break;
+	case  ComponentType::FureLike:
+		processFureLike(item);
 		break;
 	default:
 		break;
@@ -1429,6 +1431,127 @@ void bc::BarcodeCreator<T>::processImageByD(Barcontainer<T>* item)
 		}
 	}
 	delete barcode;
+}
+
+template<class T>
+void bc::BarcodeCreator<T>::processFureLike(Barcontainer<T>* container)
+{
+	Baritem<T>* itemLeft = new Baritem<T>();
+	Baritem<T>* itemRight = new Baritem<T>();
+
+	for (size_t i = 0; i < totalSize; i += wid)
+	{
+		included = new Include<T>[wid];
+		sortPixels(ProcType::f0t255, i, i + wid, 1);
+		for (curIndexInSortedArr = 0; w < wid; ++curIndexInSortedArr)
+		{
+			curpoindex = sortedArr[curIndexInSortedArr];
+			curpix = getPoint(curpoindex);
+			assert(curpoindex == wid * curpix.y + curpix.x);
+
+			curbright = workingImg->get(curpix.x, curpix.y);
+
+			point leftPoint(curpix + {-1, 0});
+			point rightPoint(curpix + {1, 0});
+			bool found = false;
+			COMPP left = nullptr;
+			COMPP right = nullptr;
+			if (w > 0)
+			{
+				left = getComp(leftPoint.getLiner(wid));
+				left->add(curpix);
+				found = true;
+			}
+
+			if (w < wid - 1)
+			{
+				right = getComp(rightPoint.getLiner(wid));
+				if (left)
+					attach(left, right);
+				else
+					right->add(curpix);
+
+				found = true;
+			}
+
+			if (!found)
+			{
+				new Component<T>(curpix, this);
+			}
+		}
+
+		Baritem<T> temp;
+
+		computeNdBarcode(&temp, 2);
+		for (size_t i = 0; i < temp.barlines.size(); i++)
+		{
+			if (temp->barlines[i]->len() > 10)
+				itemLeft->barlines.push_back(std::move(temp.barlines[i]));
+			else
+				itemRight->barlines.push_back(std::move(temp.barlines[i]));
+		}
+		clearIncluded();
+	}
+
+
+	for (size_t i = 0; i < hei; i += 1)
+	{
+		included = new Include<T>[hei];
+		sortPixels(ProcType::f0t255, wid * i, (i + 1) * wid, wid);
+		for (curIndexInSortedArr = 0; w < hei; ++curIndexInSortedArr)
+		{
+			curpoindex = sortedArr[curIndexInSortedArr];
+			curpix = getPoint(curpoindex);
+			assert(curpoindex == wid * curpix.y + curpix.x);
+
+			curbright = workingImg->get(curpix.x, curpix.y);
+
+			point leftPoint(curpix + {0, -1});
+			point rightPoint(curpix + {0, +1});
+			bool found = false;
+			COMPP left = nullptr;
+			COMPP right = nullptr;
+			if (w > 0)
+			{
+				left = getComp(leftPoint.getLiner(wid));
+				left->add(curpix);
+				found = true;
+			}
+
+			if (w < wid - 1)
+			{
+				right = getComp(rightPoint.getLiner(wid));
+				if (left)
+					attach(left, right);
+				else
+					right->add(curpix);
+
+				found = true;
+			}
+
+			if (!found)
+			{
+				new Component<T>(curpix, this);
+			}
+		}
+
+		Baritem<T> temp;
+
+		computeNdBarcode(&temp, 2);
+		for (size_t i = 0; i < temp.barlines.size(); i++)
+		{
+			if (temp->barlines[i]->len() > 10)
+				itemLeft->barlines.push_back(std::move(temp.barlines[i]));
+			else
+				itemRight->barlines.push_back(std::move(temp.barlines[i]));
+		}
+		clearIncluded();
+	}
+	container->addItem(itemLeft);
+	container->addItem(itemRight);
+
+
+	// lastB = 0;
 }
 
 
