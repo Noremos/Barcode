@@ -85,6 +85,7 @@ SOCKET connect()
 	return true;
 }
 
+
 //void sentMatGetRest(SOCKET connection, Mat img)
 //{
 //	std::string reply(15, ' ');
@@ -312,27 +313,86 @@ struct CompressRes
 	}
 };
 
-CompressRes checkCompression(const Mat& origin, const Mat& compressed, const string& ext)
+enum class ComprType
+{
+	png,
+	haff
+};
+
+/// PNG
+size_t comprPng(const Mat& img)
 {
 	std::vector<uchar> buff;
-	cv::imencode(ext, origin, buff);
+	cv::imencode(".jpg", img, buff);
+	return buff.size();
+}
 
+/// HUFFMAN
+
+std::vector<char> getMatData(const Mat& img)
+{
+	int hei = img.rows;
+	int wid = img.cols;
+	//int wid = intFromBytes(buffer + 9);
+
+	std::vector<char> recbuff(wid * hei);
+
+	int offset = 0;
+
+	for (size_t i = 0; i < hei; i++)
+	{
+		memcpy(recbuff.data() + offset, img.row(i).data, wid);
+		offset += wid;
+	}
+
+	return recbuff;
+}
+
+namespace huff
+{
+#include "../3d/Wavelet/Huffman.h"
+	size_t huff(const Mat& img)
+	{
+		wlt_header_info out;
+		std::vector<char> buff = getMatData(img);
+		HuffEncode((UCHAR*)buff.data(), buff.size(), out);
+		return buff.size();
+	}
+}
+
+// COMMON FUNCTION
+
+CompressRes checkCompression(const Mat& origin, const Mat& compressed, ComprType compr)
+{
 	CompressRes sizes;
-	sizes.orgSize = buff.size();
-
-	buff.clear();
-	cv::imencode(ext, compressed, buff);
-	sizes.comprSize = buff.size();
-
+	switch (compr)
+	{
+	case ComprType::png:
+		sizes.orgSize = comprPng(origin);
+		sizes.comprSize = comprPng(compressed);
+		break;
+	case ComprType::haff:
+		sizes.orgSize = huff::huff(origin);
+		sizes.comprSize = huff::huff(compressed);
+		break;
+	default:
+		break;
+	}
+	
 	return sizes;
 }
 
 #include "../3d/Wavelet-Transform-2D/wt2d.h"
 
-void processImage(const Mat& frame)
+void processImage(const Mat& frame, ComprType comp)
 {
+	cv::namedWindow("source", cv::WINDOW_NORMAL);
+	cv::imshow("source", frame);
+
+	SOCKET s = connect();
+
 	Mat wavPre = precompressWave3(frame);
-	CompressRes wavpng = checkCompression(frame, wavPre, ".png");
+	CompressRes wavpng = checkCompression(frame, wavPre,comp);
 	//CompressRes wavpng = checkCompression(frame, wavPre, ".png");
 	cv::namedWindow("wave", cv::WINDOW_NORMAL);
 	cv::imshow("wave", wavPre);
@@ -343,64 +403,65 @@ void processImage(const Mat& frame)
 	{
 		Mat barPre = precompressBar(frame, Ds[j], false);
 
-		CompressRes barpng = checkCompression(frame, barPre, ".png");
+		CompressRes barpng = checkCompression(frame, barPre, comp);
 		cv::namedWindow("bar", cv::WINDOW_NORMAL);
 		cv::imshow("bar", barPre);
 		cv::waitKey(1);
 		barpng.printResult("bar:");
 	}
+	closesocket(s);
 	cv::waitKey(0);
 }
 
-void compressCompire()
-{
-	cv::VideoCapture cap("chaplin.mp4");
-	// Check if camera opened successfully
-	if (!cap.isOpened()) {
-		cout << "Error opening video stream or file" << endl;
-		return;
-	}
-
-	while (1)
-	{
-		Mat frame;
-		// Capture frame-by-frame
-		cap >> frame;
-
-
-		// If the frame is empty, break immediately
-		if (frame.empty())
-			break;
-
-		processImage(frame);
-
-		// Display the resulting frame
-		//imshow("Frame", frame);
-
-		// Press  ESC on keyboard to exit
-		char c = (char)cv::waitKey(25);
-		if (c == 27)
-			break;
-	}
-
-	// When everything done, release the video capture object
-	cap.release();
-
-	// Closes all the frames
-	//destroyAllWindows()
-
-	//VideoWriter video("outcpp.avi", CV_FOURCC('M', 'J', 'P', 'G'), 10, Size(frame_width, frame_height));;
-}
+//void compressCompire()
+//{
+//	cv::VideoCapture cap("chaplin.mp4");
+//	// Check if camera opened successfully
+//	if (!cap.isOpened()) {
+//		cout << "Error opening video stream or file" << endl;
+//		return;
+//	}
+//
+//	while (1)
+//	{
+//		Mat frame;
+//		// Capture frame-by-frame
+//		cap >> frame;
+//
+//
+//		// If the frame is empty, break immediately
+//		if (frame.empty())
+//			break;
+//
+//		processImage(frame, ComprType::png);
+//		processImage(frame, ComprType::haff);
+//
+//		// Display the resulting frame
+//		//imshow("Frame", frame);
+//
+//		// Press  ESC on keyboard to exit
+//		char c = (char)cv::waitKey(25);
+//		if (c == 27)
+//			break;
+//	}
+//
+//	// When everything done, release the video capture object
+//	cap.release();
+//
+//	// Closes all the frames
+//	//destroyAllWindows()
+//
+//	//VideoWriter video("outcpp.avi", CV_FOURCC('M', 'J', 'P', 'G'), 10, Size(frame_width, frame_height));;
+//}
 
 void compressMain()
 {
-	SOCKET s = connect();
 	string ds;
 	ds = "D:/Learning/BAR/220px-Lenna.png";
 	ds = "D:/Learning/papers/CO4/test.png";
 	ds = "D:/Learning/papers/CO4/coptic2.jpg";
 
-	vector<string> paths{ "2.png", "3.jpg", "boats.bmp", "CAMERA.BMP", "car.png", "Coptic.jpg", "coptic2.jpg" };
+	vector<string> paths{ "2.png", "3.jpg", "CAMERA.BMP", "car.png", "Coptic.jpg", "coptic2.jpg" };
 	//	"coptic3.jpg", "test.png", "test2.png", "test2s.png", "test3.png", "test4.png", "test5.png", "test6.png" };
 
 	string basestr = "D:/Learning/papers/CO4/";
@@ -411,12 +472,12 @@ void compressMain()
 
 		std::cout << "---------" << paths[i] << "---------" << endl;
 		Mat img = imread(imgpath, cv::IMREAD_GRAYSCALE);
-		processImage(img);
+		//processImage(img, ComprType::haff);
+		processImage(img, ComprType::png);
 
-		break;
+		//break;
 	}
 
-	closesocket(s);
 }
 
 // https://github.com/Cyan4973/FiniteStateEntropy
