@@ -14,15 +14,15 @@ int getFromHex(const char* s)
 
 cv::Vec3b getCol(const char* name)
 {
-	return cv::Vec3b(getFromHex(name), getFromHex(name + 3), getFromHex(name + 5));
+	return cv::Vec3b(getFromHex(name + 1), getFromHex(name + 3), getFromHex(name + 5));
 }
 
 
 cv::Vec3b colors[] =
 {
+	getCol("#FF0000"),
 	getCol("#00FF00"),
 	getCol("#0000FF"),
-	getCol("#FF0000"),
 	getCol("#01FFFE"),
 	getCol("#FFA6FE"),
 	getCol("#FFDB66"),
@@ -498,10 +498,28 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 	//bcstruct.setMaxLen(radius);
 	//bcstruct.killOnMaxLen = true;;
 	bcstruct.waitK = 0;
-
-	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::Component);
+	bcstruct.maxRadius = 20;
+	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::RadiusComp);
 
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
+	//Mat img(3, 5, CV_8UC1);
+	//img.at<uchar>(0, 0) = 1;
+	//img.at<uchar>(0, 1) = 1;
+	//img.at<uchar>(0, 2) = 3;
+	//img.at<uchar>(0, 3) = 1;
+	//img.at<uchar>(0, 4) = 1;
+	//img.at<uchar>(1, 0) = 1;
+	//img.at<uchar>(1, 1) = 1;
+	//img.at<uchar>(1, 2) = 3;
+	//img.at<uchar>(1, 3) = 10;
+	//img.at<uchar>(1, 4) = 7;
+	//img.at<uchar>(2, 0) = 4;
+	//img.at<uchar>(2, 1) = 4;
+	//img.at<uchar>(2, 2) = 4;
+	//img.at<uchar>(2, 3) = 10;
+	//img.at<uchar>(2, 4) = 7;
+	//cvtColor(img, img, COLOR_GRAY2BGR);
+
 
 	Mat back = img;
 	cvtColor(img, back, COLOR_BGR2GRAY);
@@ -511,22 +529,74 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 
 	//cv::medianBlur(back, back, 3);
 	show("baeck", back, 1);
-	back.at<uchar>(0, 0) = 0;
+	cv::imwrite("source.png", back);
+
+	//back.at<uchar>(0, 0) = 0;
 
 	BarMat<matrtype> wrap(back);
 	Barcontainer< matrtype>* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
 	Baritem<matrtype>* item = containet->getItem(0);
-	item->sortBySize();
+
 	//# item.removePorog(1)
-	barlinevector<matrtype>& bar = item->barlines;
+	barlinevector<matrtype>& bar = item->getRootNode()->children;
+
+	Mat binmap2(img.rows, img.cols, CV_8UC1, Scalar(0));
+	img.copyTo(binmap2);
+
+	Mat procmat(img.rows, img.cols, CV_8UC1, Scalar(0));
+	back.copyTo(procmat);
+	for (int i = 0; i < bar.size(); ++i)
+	{
+		//break;
+		barline<matrtype>* line = bar[i];
+		int minlen = 0;
+		barvector<matrtype>& points = line->matr;
+
+		for (size_t k = 0; k < points.size(); k++)
+		{
+			//if (line->len() > 100)
+			procmat.at<uchar>(points[k].getY(), points[k].getX()) = line->start;
+			binmap2.at<Vec3b>(points[k].getY(), points[k].getX()) = colors[i % collen];
+		}
+	}
+
+	show("radius", binmap2, 1);
+	show("radius input", procmat, 1);
+	cv::imwrite("rad.png", procmat);
+
+	delete containet;
+
+	bcstruct.structure[0].comtype = ComponentType::Component;
+	BarMat<matrtype> wrap2(procmat);
+	containet = barcodeFactory.createBarcode(&wrap2, bcstruct);
+	item = containet->getItem(0);
+	item->sortBySize();
+
 
 	//back = backback;
 	//back.fill(0);
-	Mat binmap(img.rows, img.cols, CV_8UC1, Scalar(0));
-	//img.copyTo(binmap);
-	//# frange = min(frange, len(bar))
-	frange = bar.size();
 
+	Mat binmap(img.rows, img.cols, CV_8UC1, Scalar(0));
+	img.copyTo(binmap);
+
+	barlinevector<matrtype>& bar2 = item->barlines;
+	frange = bar2.size();
+
+	for (int i = 0; i < bar2.size(); ++i)
+	{
+		barline<matrtype>* line = bar2[i];
+		int minlen = 0;
+		barvector<matrtype>& points = line->matr;
+
+		for (size_t k = 0; k < points.size(); k++)
+		{
+			//if (line->len() > 100)
+			binmap.at<Vec3b>(points[k].getY(), points[k].getX()) = colors[i % collen];
+		}
+	}
+
+	show("fullres", binmap, 1);
+	cv::waitKey(0);
 
 	int ds = cv::waitKey(1);
 	int ind = 0;
@@ -559,7 +629,7 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 
 			workingimg.at<Vec3b>(p.getY(), p.getX()) = colors[ind % collen];
 		}
-		break;
+		//break;
 
 		cv::namedWindow("result", cv::WINDOW_NORMAL);
 		cv::imshow("result", workingimg);
@@ -623,7 +693,7 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 
 void getResults()
 {
-	string ds = "D:/Learning/papers/CO4/Coptic2.jpg";
+	string ds = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/4_set.png";
 	Mat bin_etalon = cv::imread(ds, IMREAD_COLOR);
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
 	cv::imshow("source", bin_etalon);

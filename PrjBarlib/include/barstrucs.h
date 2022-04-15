@@ -270,6 +270,7 @@ namespace bc
 	{
 		CachedValue<T> stepPorog;
 		CachedValue<T> maxLen;
+		float maxRadius = 999999;
 	public:
 		//T foneStart;
 		//T foneEnd;

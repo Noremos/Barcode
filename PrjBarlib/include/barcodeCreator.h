@@ -128,6 +128,7 @@ namespace bc {
 		//		friend struct BarRoot<T>;
 		friend class Baritem<T>;
 
+		size_t processCount = 0;
 		size_t totalSize = 0;
 		poidex* sortedArr = nullptr;
 
