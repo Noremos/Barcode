@@ -433,7 +433,7 @@ bool checkRect(const BarRect& rect, int wid, int hei)
 }
 
 
-void show(string name, Mat img, int wait = -1)
+void show(string name, const Mat& img, int wait = -1)
 {
 	cv::namedWindow(name, cv::WINDOW_NORMAL);
 	cv::imshow(name, img);

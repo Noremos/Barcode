@@ -27,11 +27,11 @@ enum class PY_SIGN : uchar
 SOCKET connect()
 {
 	WSADATA WsaData;
-	bool err =  WSAStartup(MAKEWORD(2, 2), &WsaData) == NO_ERROR;
+	bool err = WSAStartup(MAKEWORD(2, 2), &WsaData) == NO_ERROR;
 
 	std::string ip = "127.0.0.1";
 	int port = 8088;
-	
+
 	struct addrinfo* result = NULL,
 		* ptr = NULL,
 		hints;
@@ -161,7 +161,7 @@ cv::Mat precompressWave1(const Mat& img)
 cv::Mat precompressWave2(Mat& img)
 {
 	//main2da(img);
-	
+
 	//float samplerate_hz(100.);
 	//float frequency_min = 0.1;
 	//float frequency_max = 50.;
@@ -203,7 +203,7 @@ cv::Mat precompressWave3(const Mat& img)
 	unique_ptr<uchar[]> data;
 	data.reset(new uchar[totalSize]);
 	data[0] = (uchar)PY_SIGN::SEND_IMG;
- 	memcpy(data.get() + 1, &imgFullSize, 4);
+	memcpy(data.get() + 1, &imgFullSize, 4);
 	memcpy(data.get() + 5, &img.rows, 4);
 	memcpy(data.get() + 9, &img.cols, 4);
 	memcpy(data.get() + 13, img.data, imgDataSize);
@@ -214,12 +214,11 @@ cv::Mat precompressWave3(const Mat& img)
 	char buffer[8192];
 	memset(buffer, 0, 8192);
 	int bytes_recv = 0;
-	
+
 	do
 	{
 		bytes_recv = recv(_socket, (char*)buffer, 9, 0);
-	}
-	while (bytes_recv <= 0);
+	} while (bytes_recv <= 0);
 
 	if (bytes_recv == -1)
 		exit(-1);
@@ -228,7 +227,7 @@ cv::Mat precompressWave3(const Mat& img)
 	int hei = intFromBytes(buffer + 1);
 	int wid = intFromBytes(buffer + 5);
 	//int wid = intFromBytes(buffer + 9);
-	
+
 	std::vector<uchar> recbuff(wid * hei, 0);
 
 	int offset = 0;
@@ -251,13 +250,13 @@ cv::Mat precompressWave3(const Mat& img)
 	return reslt;
 }
 
-cv::Mat precompressBar(const Mat& img, int len, bool onlyOneSize = true)
+cv::Mat precompressBar(const Mat& img, int len, bool onlyOneSize = true, Mat* outRet = NULL)
 {
 	bc::BarConstructor<uchar> bcont;
 	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
 	//bcont.addStructure(bc::ProcType::f255t0, bc::ColorType::gray, bc::ComponentType::Component);
 	bcont.createBinaryMasks = true;
-	bcont.createGraph = false;
+	bcont.createGraph = true;
 	bcont.returnType = bc::ReturnType::barcode3d;
 	// ###### PARAMS #####
 	double min = 0, max = 0;
@@ -276,16 +275,36 @@ cv::Mat precompressBar(const Mat& img, int len, bool onlyOneSize = true)
 		auto* item = cont->getItem(ik);
 		for (auto& line : item->barlines)
 		{
-			if (line->len() <= len)
+			bool remove = false;
+			if (len == 0)
 			{
-				auto& matr = line->matr;
-				for (int k = 0; k < matr.size(); ++k)
+				if (line->children.size() == 0)
 				{
-					auto& p = matr[k];
-					uchar& val = out.at<uchar>(p.getY(), p.getX());
-					//assert(val >= p.value);
-					val -= p.value;
+					remove = true;
 				}
+			}
+			else
+			{
+				if (line->len() <= len)
+				{
+					remove = true;
+				}
+			}
+
+			if (!remove)
+				continue;
+
+			// Вычетаем линию из изображения
+			auto& matr = line->matr;
+			for (int k = 0; k < matr.size(); ++k)
+			{
+				auto& p = matr[k];
+				uchar& val = out.at<uchar>(p.getY(), p.getX());
+				//assert(val >= p.value);
+				val -= p.value;
+
+				if (outRet)
+					outRet->at<uchar>(p.getY(), p.getX()) += p.value;
 			}
 		}
 
@@ -309,21 +328,22 @@ struct CompressRes
 
 	void printResult(string pred)
 	{
-		std::cout << pred << getProc() << "%" << endl;
+		std::cout << pred << getProc() << "%" << " (" << comprSize << " / " << orgSize << ")" << endl;
 	}
 };
 
 enum class ComprType
 {
 	png,
-	haff
+	haff,
+	entropy
 };
 
 /// PNG
 size_t comprPng(const Mat& img)
 {
 	std::vector<uchar> buff;
-	cv::imencode(".jpg", img, buff);
+	cv::imencode(".png", img, buff);
 	return buff.size();
 }
 
@@ -346,6 +366,196 @@ std::vector<char> getMatData(const Mat& img)
 	}
 
 	return recbuff;
+}
+
+// ENTROPY
+struct EntropyCompression
+{
+	std::vector<char> data, untouched;
+
+	void addTouched()
+	{
+		int untouch = untouched.size();
+		if (untouch == 0)
+			return;
+
+		int sta = 0;
+
+		char maxVal0 = 127;
+		char maxVal1 = 127;
+		bool doubleWord = false;
+		int maxToADd = 127;
+		if (untouch >= 127 * 3)
+		{
+			doubleWord = true;
+			USHORT mamu = USHRT_MAX;
+			maxVal0 = ((char*)&mamu)[0];
+			maxVal1 = ((char*)&mamu)[1];
+			maxToADd = mamu;
+		}
+
+		while (untouch > maxToADd)
+		{
+			if (doubleWord)
+			{
+				data.push_back(0);
+				data.push_back(maxVal0);
+				data.push_back(maxVal1);
+			}
+			else
+				data.push_back(maxVal0);
+
+			data.insert(data.end(), untouched.begin() + sta, untouched.begin() + sta + MIN(maxToADd, untouch));
+			untouch -= maxToADd;
+			sta += maxToADd;
+		}
+		if (untouch > 0)
+		{
+			data.push_back(-untouch);
+			data.insert(data.end(), untouched.begin() + sta, untouched.end());
+		}
+
+		untouched.clear();
+	}
+
+
+	size_t copress(const Mat& img)
+	{
+		bool oneByteSize = true;
+
+		int s = img.rows * img.cols;
+
+		for (size_t i = 0; i < s; i++)
+		{
+			int r = i / img.cols;
+			int c = i % img.cols;
+			uchar val = img.at<uchar>(i / img.cols, i % img.cols);
+			int sd = 0;
+
+			for (size_t k = i + 1; k < s; k++)
+			{
+				int rk = k / img.cols;
+				int ck = k % img.cols;
+				if (val == img.at<uchar>(rk, ck))
+					++sd;
+				else
+					break;
+			}
+
+			if (sd > 2)
+			{
+				// Если есть что добавить
+				addTouched();
+				if (sd > 127 * 3)
+				{
+					ushort sdUsh = sd;
+
+					while (sd > USHRT_MAX)
+					{
+						data.push_back(1);
+						data.push_back(((char*)&sdUsh)[0]);
+						data.push_back(((char*)&sdUsh)[1]);
+
+						data.push_back(val);
+						sd -= USHRT_MAX;
+					}
+				}
+				else
+				{
+					while (sd > 127)
+					{
+						data.push_back(127);
+						data.push_back(val);
+						sd -= 127;
+					}
+				}
+
+				if (sd > 0)
+				{
+					data.push_back(sd);
+					data.push_back(val);
+				}
+				i += sd;
+				//uchar testval = img.at<uchar>(i / img.cols, i % img.cols);
+				//uchar testval2 = img.at<uchar>((i + 1) / img.cols, (i + 1) % img.cols);
+				//testval += 0;
+			}
+			else
+			{
+				untouched.push_back(val);
+			}
+		}
+
+		// Добавить остток
+		addTouched();
+
+
+		return data.size();
+	}
+
+	void decompress(int sourceRows, int sourceCols)
+	{
+		// test: try decode
+
+		int poiPoz = 0;
+		Mat out(sourceRows, sourceCols, CV_8UC1);
+		for (size_t i = 0; i < data.size(); i++)
+		{
+			char type = data[i];
+			if (type > 0)
+			{
+				char val = data[++i];
+				for (int total = poiPoz + type; poiPoz <= total; poiPoz++)
+				{
+					int r = poiPoz / sourceCols;
+					int c = poiPoz % sourceCols;
+					out.at<uchar>(r, c) = val;
+				}
+			}
+			else
+			{
+				++i;
+				for (int total = poiPoz + -type; poiPoz < total; ++poiPoz)
+				{
+					int r = poiPoz / sourceCols;
+					int c = poiPoz % sourceCols;
+					out.at<uchar>(r, c) = data[i++];
+				}
+				--i;
+			}
+		}
+
+		show("test comr", out, 0);
+	}
+};
+//
+//if (oneByteSize)
+//{
+//	while (untouch > 127)
+//	{
+//		data.push_back(-127);
+//		data.insert(data.end(), untouched.begin() + sta, untouched.begin() + sta + MIN(127, untouch));
+//		untouch -= 127;
+//		sta += 127;
+//	}
+//	if (untouch > 0)
+//	{
+//		data.push_back(-untouch);
+//		data.insert(data.end(), untouched.begin() + sta, untouched.end());
+//	}
+//}
+//else
+//{
+//	data.push_back(((char*)&untouch)[0]);
+//	data.push_back(((char*)&untouch)[1]);
+//	data.insert(data.end(), untouched.begin(), untouched.end());
+//}
+
+size_t entropy(const Mat& img)
+{
+	EntropyCompression compr;
+
+	return compr.copress(img);
 }
 
 namespace huff
@@ -375,14 +585,151 @@ CompressRes checkCompression(const Mat& origin, const Mat& compressed, ComprType
 		sizes.orgSize = huff::huff(origin);
 		sizes.comprSize = huff::huff(compressed);
 		break;
+	case ComprType::entropy:
+		sizes.orgSize = entropy(origin);
+		sizes.comprSize = entropy(compressed);
+		break;
 	default:
 		break;
 	}
-	
+
 	return sizes;
 }
 
 #include "../3d/Wavelet-Transform-2D/wt2d.h"
+struct HaffCode
+{
+	uchar val = 0;
+	int count = 0;
+	uchar code = 255;
+	HaffCode* par = nullptr;
+};
+
+struct resltSj
+{
+	uchar data[8];
+	int len = 1;
+};
+
+
+size_t haaffman(const Mat& source, int maxLen)
+{
+	maxLen = 255;
+	int s = source.rows * source.cols;
+	HaffCode* proc = new HaffCode[maxLen];
+
+	int maxCall = 0;
+	for (size_t i = 0; i < s; i++)
+	{
+		int r = i / source.cols;
+		int c = i % source.cols;
+		uchar val = source.at<uchar>(r, c);
+
+		++proc[val].count;
+
+		if (val > maxCall)
+		{
+			maxCall = val;
+		}
+	}
+
+	for (size_t i = 0; i < maxCall; i++)
+	{
+		//proc[i].ver /= s;
+		proc[i].val = i;
+	}
+
+	sort(proc, proc + maxLen, [](const HaffCode& left, const HaffCode& right) {return left.val < right.val; });
+
+	vector<HaffCode*> result;
+	for (size_t i = 0; i < maxCall; i++)
+	{
+		result.push_back(&proc[i]);
+	}
+
+	std::vector<HaffCode*> stackDel;
+	while (result.size() > 1)
+	{
+		vector<HaffCode*> resultSwitch;
+
+		for (size_t i = 0; i < result.size(); i += 2)
+		{
+			if (proc[i].count < proc[i + 1].count)
+			{
+				// 0 for more
+				proc[i].code = 1;
+				proc[i + 1].code = 0;
+			}
+			else
+			{
+				// 0 for more
+				proc[i].code = 0;
+				proc[i + 1].code = 1;
+			}
+
+			HaffCode* par = new HaffCode();
+			par->count = proc[i].count + proc[i + 1].count;
+			par->par = nullptr;
+
+			stackDel.push_back(par);
+
+			proc[i].par = par;
+			proc[i + 1].par = par;
+			resultSwitch.push_back(par);
+		}
+		if (result.size() % 2 == 1)
+		{
+			resultSwitch.push_back(result.back());
+		}
+
+		result = resultSwitch;
+	}
+
+	//HaffCode* proc = new Haff[maxLen];
+
+	resltSj* resultData = new resltSj[maxLen];
+
+	for (size_t i = 0; i < maxCall; i++)
+	{
+		uchar* datacode = resultData[proc[i].val].data;
+
+		datacode[0] = proc[i].code;
+		int dataInd = 1;
+		HaffCode* coderef = &proc[i];
+		while (coderef->par)
+		{
+			coderef = coderef->par;
+			datacode[dataInd++] = coderef->code;
+		}
+
+		resultData[proc[i].val].len = dataInd;
+	}
+
+	vector<uchar> output;
+
+	for (size_t i = 0; i < s; i++)
+	{
+		int r = i / source.cols;
+		int c = i % source.cols;
+		uchar val = source.at<uchar>(r, c);
+		uchar* datacode = resultData[val].data;
+
+		for (size_t l = 0; l < resultData[val].len; l++)
+		{
+			output.push_back(datacode[l]);
+		}
+	}
+
+	for (size_t i = 0; i < stackDel.size(); i++)
+	{
+		delete stackDel[i];
+	}
+
+	delete[] resultData;
+	delete[] proc;
+
+	return output.size() / 8;
+}
 
 void processImage(const Mat& frame, ComprType comp)
 {
@@ -391,26 +738,54 @@ void processImage(const Mat& frame, ComprType comp)
 
 	SOCKET s = connect();
 
-	Mat wavPre = precompressWave3(frame);
-	CompressRes wavpng = checkCompression(frame, wavPre,comp);
-	//CompressRes wavpng = checkCompression(frame, wavPre, ".png");
-	cv::namedWindow("wave", cv::WINDOW_NORMAL);
-	cv::imshow("wave", wavPre);
-	wavpng.printResult("wave:");
+	cout << "Original size: " << frame.rows * frame.cols << endl;
 
-	vector<int> Ds{ 1, 2, 5, 10, 15, 30 };
+	//Mat wavPre = precompressWave3(frame);
+	//CompressRes wavpng = checkCompression(frame, wavPre, comp);
+	////CompressRes wavpng = checkCompression(frame, wavPre, ".png");
+	//cv::namedWindow("wave", cv::WINDOW_NORMAL);
+	//cv::imshow("wave", wavPre);
+	//wavpng.printResult("wave:");
+
+	std::vector<Mat> out, result;
+	cv::split(frame, out);
+
+	vector<int> Ds{ 1, 2, 5, 10, 15 , 30};//, 30, 50 };// , 100, 150, 200, 255 };
 	for (size_t j = 0; j < Ds.size(); j++)
 	{
-		Mat barPre = precompressBar(frame, Ds[j], false);
+		cout << "For pre = " << Ds[j] << ": " << endl;
+		//cv::imwrite("D:\\len.png", frame);
 
-		CompressRes barpng = checkCompression(frame, barPre, comp);
-		cv::namedWindow("bar", cv::WINDOW_NORMAL);
-		cv::imshow("bar", barPre);
-		cv::waitKey(1);
-		barpng.printResult("bar:");
+		CompressRes barpng;
+		barpng.comprSize = 0;
+		barpng.orgSize = 0;
+		result.clear();
+		for (int i = 0; i < out.size(); ++i)
+		{
+			Mat curFrame = out[i].clone();
+			Mat outSec(curFrame.rows, curFrame.cols, CV_8UC1, cv::Scalar(0));
+			Mat barPre = precompressBar(curFrame, Ds[j], false, &outSec);
+			CompressRes temp = checkCompression(curFrame, barPre, comp);
+			barpng.comprSize += temp.comprSize;
+			barpng.orgSize += temp.orgSize;
+			show("bar", barPre, 1);
+			result.push_back(barPre);
+			break;
+		}
+
+		Mat outresul;
+		cv::merge(result, outresul);
+		show("splitted", outresul, 1);
+
+		barpng.printResult("bar: ");
+		//CompressRes barsec = checkCompression(frame, outSec, comp);
+		//barpng.comprSize += barsec.comprSize;
+		//barpng.comprSize += haaffman(outSec, Ds[j]);
+		//barpng.printResult("(loseless): ");
+		//cv::imwrite("D:\\len_compr.png", frame);
 	}
 	closesocket(s);
-	cv::waitKey(0);
+	cv::waitKey(1);
 }
 
 //void compressCompire()
@@ -462,6 +837,8 @@ void compressMain()
 	ds = "D:/Learning/papers/CO4/coptic2.jpg";
 
 	vector<string> paths{ "2.png", "3.jpg", "CAMERA.BMP", "car.png", "Coptic.jpg", "coptic2.jpg" };
+	//vector<string> paths{ "coptic2.jpg" };
+	//vector<string> paths{ "city.jpg", "car.png", "test.png" };
 	//	"coptic3.jpg", "test.png", "test2.png", "test2s.png", "test3.png", "test4.png", "test5.png", "test6.png" };
 
 	string basestr = "D:/Learning/papers/CO4/";
@@ -473,7 +850,8 @@ void compressMain()
 		std::cout << "---------" << paths[i] << "---------" << endl;
 		Mat img = imread(imgpath, cv::IMREAD_GRAYSCALE);
 		//processImage(img, ComprType::haff);
-		processImage(img, ComprType::png);
+		//processImage(img, ComprType::png);
+		processImage(img, ComprType::entropy);
 
 		//break;
 	}

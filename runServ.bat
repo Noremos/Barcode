@@ -1,0 +1,1 @@
+python.exe D:\Programs\Python\barcode\wavelet\vawe.py
