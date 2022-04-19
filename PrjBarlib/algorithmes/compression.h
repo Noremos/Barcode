@@ -299,6 +299,8 @@ cv::Mat precompressBar(const Mat& img, int len, bool onlyOneSize = true, Mat* ou
 			for (int k = 0; k < matr.size(); ++k)
 			{
 				auto& p = matr[k];
+				//if (p.value > len)	continue;
+
 				uchar& val = out.at<uchar>(p.getY(), p.getX());
 				//assert(val >= p.value);
 				val -= p.value;
@@ -652,29 +654,30 @@ size_t haaffman(const Mat& source, int maxLen)
 	{
 		vector<HaffCode*> resultSwitch;
 
-		for (size_t i = 0; i < result.size(); i += 2)
+		int rsize = result.size() - result.size() % 2;
+		for (size_t i = 0; i < rsize; i += 2)
 		{
-			if (proc[i].count < proc[i + 1].count)
+			if (result[i]->count < result[i + 1]->count)
 			{
 				// 0 for more
-				proc[i].code = 1;
-				proc[i + 1].code = 0;
+				result[i]->code = 1;
+				result[i + 1]->code = 0;
 			}
 			else
 			{
 				// 0 for more
-				proc[i].code = 0;
-				proc[i + 1].code = 1;
+				result[i]->code = 0;
+				result[i + 1]->code = 1;
 			}
 
 			HaffCode* par = new HaffCode();
-			par->count = proc[i].count + proc[i + 1].count;
+			par->count = result[i]->count + result[i + 1]->count;
 			par->par = nullptr;
 
 			stackDel.push_back(par);
 
-			proc[i].par = par;
-			proc[i + 1].par = par;
+			result[i]->par = par;
+			result[i + 1]->par = par;
 			resultSwitch.push_back(par);
 		}
 		if (result.size() % 2 == 1)
@@ -740,17 +743,17 @@ void processImage(const Mat& frame, ComprType comp)
 
 	cout << "Original size: " << frame.rows * frame.cols << endl;
 
-	//Mat wavPre = precompressWave3(frame);
-	//CompressRes wavpng = checkCompression(frame, wavPre, comp);
-	////CompressRes wavpng = checkCompression(frame, wavPre, ".png");
-	//cv::namedWindow("wave", cv::WINDOW_NORMAL);
-	//cv::imshow("wave", wavPre);
-	//wavpng.printResult("wave:");
+	Mat wavPre = precompressWave3(frame);
+	CompressRes wavpng = checkCompression(frame, wavPre, comp);
+	//CompressRes wavpng = checkCompression(frame, wavPre, ".png");
+	cv::namedWindow("wave", cv::WINDOW_NORMAL);
+	cv::imshow("wave", wavPre);
+	wavpng.printResult("wave:");
 
 	std::vector<Mat> out, result;
 	cv::split(frame, out);
 
-	vector<int> Ds{ 1, 2, 5, 10, 15 , 30};//, 30, 50 };// , 100, 150, 200, 255 };
+	vector<int> Ds{ 1, 2, 5, 10 , 15, 30};//, 30, 50 };// , 100, 150, 200, 255 };
 	for (size_t j = 0; j < Ds.size(); j++)
 	{
 		cout << "For pre = " << Ds[j] << ": " << endl;
@@ -768,9 +771,13 @@ void processImage(const Mat& frame, ComprType comp)
 			CompressRes temp = checkCompression(curFrame, barPre, comp);
 			barpng.comprSize += temp.comprSize;
 			barpng.orgSize += temp.orgSize;
-			show("bar", barPre, 1);
+
+			//CompressRes barsec = checkCompression(frame, outSec, comp);
+			//barpng.comprSize += entropy(outSec);
+ 
+			//show("bar", barPre, 1);
 			result.push_back(barPre);
-			break;
+			//break;
 		}
 
 		Mat outresul;
@@ -778,9 +785,7 @@ void processImage(const Mat& frame, ComprType comp)
 		show("splitted", outresul, 1);
 
 		barpng.printResult("bar: ");
-		//CompressRes barsec = checkCompression(frame, outSec, comp);
-		//barpng.comprSize += barsec.comprSize;
-		//barpng.comprSize += haaffman(outSec, Ds[j]);
+
 		//barpng.printResult("(loseless): ");
 		//cv::imwrite("D:\\len_compr.png", frame);
 	}
