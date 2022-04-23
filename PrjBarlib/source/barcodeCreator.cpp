@@ -160,15 +160,24 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 		return main;
 	}
 
-	float bottom = (float)main->getStart();
-	float top = (float)main->getLast();
-	if (bottom > top)
-		std::swap(bottom, top);
+	//float bottom = (float)main->getStart();
+	//float top = (float)main->getLast();
+	//if (bottom > top)
+	//	std::swap(bottom, top);
 
-	float bottm2 = (float)second->getStart();
-	float top2 = (float)second->getLast();
-	if (bottm2 > top2)
-		std::swap(bottm2, top2);
+	//float bottm2 = (float)second->getStart();
+	//float top2 = (float)second->getLast();
+	//if (bottm2 > top2)
+	//	std::swap(bottm2, top2);
+
+
+	T fs = main->getStart();
+	T sc = second->getStart();
+	T diff = (fs > sc) ? (fs - sc) : (sc - fs);
+	if (diff > settings.getMaxLen())
+	{
+		return main;
+	}
 
 	/*if (!((bottom <= bottm2 && bottm2 <= top) || (bottom <= top2 && top2 <= top)))
 		return main;*/
@@ -1353,29 +1362,31 @@ void BarcodeCreator<T>::processCompByRadius(Barcontainer<T>* item)
 		Component<T>* connected = getComp(NextPindex);
 		if (first != nullptr)
 		{
-			if (connected != nullptr)//существует ли ребро вокруг
+			//если в найденном уже есть этот элемент
+			//существует ли ребро вокруг
+			if (connected != nullptr && first != connected)
 			{
-				auto tempPoi = getPoint(NextPindex);
-				if (first != connected)//если в найденном уже есть этот элемент
-					attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
+				attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
 			}
-			else
+			else if (connected == nullptr)
 			{
-				first->add(NextPindex, NextPoint);
+				if (!first->add(NextPindex, NextPoint))
+				{
+					connected = new Component<T>(NextPindex, this);
+					connected->add(curpoindex, getPoint(curpoindex));
+				}
 			}
 		}
 		else
 		{
-			if (connected != nullptr)//существует ли ребро вокруг
-			{
-				connected->add(curpoindex);
-			}
-			else
+			// Ребро не создано или не получилось присоединить
+			if (connected == nullptr || !connected->add(curpoindex))
 			{
 				first = new Component<T>(curpoindex, this);
 				first->add(NextPindex, NextPoint);
 			}
 		}
+
 #ifdef USE_OPENCV
 		if (settings.visualize)
 		{

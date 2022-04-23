@@ -492,13 +492,13 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 	bcstruct.createGraph = true;
 	bcstruct.attachMode = AttachMode::firstEatSecond;
 	//bcstruct.attachMode = AttachMode::createNew;
-	bcstruct.visualize = false;
 	bcstruct.extracheckOnPixelConnect = false;
 	//bcstruct.setStep(radius);
-	//bcstruct.setMaxLen(radius);
+	bcstruct.setMaxLen(10);
 	//bcstruct.killOnMaxLen = true;;
-	bcstruct.waitK = 0;
-	bcstruct.maxRadius = 20;
+	bcstruct.visualize = false;
+	bcstruct.waitK = 1;
+	bcstruct.maxRadius = 9999;
 	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::RadiusComp);
 
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
@@ -538,39 +538,39 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 	Baritem<matrtype>* item = containet->getItem(0);
 
 	//# item.removePorog(1)
-	barlinevector<matrtype>& bar = item->getRootNode()->children;
+	//barlinevector<matrtype>& bar = item->getRootNode()->children;
 
-	Mat binmap2(img.rows, img.cols, CV_8UC1, Scalar(0));
-	img.copyTo(binmap2);
+	//Mat binmap2(img.rows, img.cols, CV_8UC1, Scalar(0));
+	//img.copyTo(binmap2);
 
-	Mat procmat(img.rows, img.cols, CV_8UC1, Scalar(0));
-	back.copyTo(procmat);
-	for (int i = 0; i < bar.size(); ++i)
-	{
-		//break;
-		barline<matrtype>* line = bar[i];
-		int minlen = 0;
-		barvector<matrtype>& points = line->matr;
+	//Mat procmat(img.rows, img.cols, CV_8UC1, Scalar(0));
+	//back.copyTo(procmat);
+	//for (int i = 0; i < bar.size(); ++i)
+	//{
+	//	//break;
+	//	barline<matrtype>* line = bar[i];
+	//	int minlen = 0;
+	//	barvector<matrtype>& points = line->matr;
 
-		for (size_t k = 0; k < points.size(); k++)
-		{
-			//if (line->len() > 100)
-			procmat.at<uchar>(points[k].getY(), points[k].getX()) = line->start;
-			binmap2.at<Vec3b>(points[k].getY(), points[k].getX()) = colors[i % collen];
-		}
-	}
+	//	for (size_t k = 0; k < points.size(); k++)
+	//	{
+	//		//if (line->len() > 100)
+	//		procmat.at<uchar>(points[k].getY(), points[k].getX()) = line->start;
+	//		binmap2.at<Vec3b>(points[k].getY(), points[k].getX()) = colors[i % collen];
+	//	}
+	//}
 
-	show("radius", binmap2, 1);
-	show("radius input", procmat, 1);
-	cv::imwrite("rad.png", procmat);
+	//show("radius", binmap2, 1);
+	//show("radius input", procmat, 0);
+	//cv::imwrite("rad.png", procmat);
 
-	delete containet;
+	//delete containet;
 
-	bcstruct.structure[0].comtype = ComponentType::Component;
-	BarMat<matrtype> wrap2(procmat);
-	containet = barcodeFactory.createBarcode(&wrap2, bcstruct);
-	item = containet->getItem(0);
-	item->sortBySize();
+	//bcstruct.structure[0].comtype = ComponentType::Component;
+	//BarMat<matrtype> wrap2(procmat);
+	//containet = barcodeFactory.createBarcode(&wrap2, bcstruct);
+	//item = containet->getItem(0);
+	//item->sortBySize();
 
 
 	//back = backback;
@@ -579,9 +579,9 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 	Mat binmap(img.rows, img.cols, CV_8UC1, Scalar(0));
 	img.copyTo(binmap);
 
-	barlinevector<matrtype>& bar2 = item->barlines;
+	barlinevector<matrtype>& bar2 = item->getRootNode()->children;
 	frange = bar2.size();
-
+	int add = 0;
 	for (int i = 0; i < bar2.size(); ++i)
 	{
 		barline<matrtype>* line = bar2[i];
@@ -602,25 +602,47 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 	int ind = 0;
 	while (ds != 'q')
 	{
+		add = 0;
 		Mat workingimg;
 		img.copyTo(workingimg);
 		switch (ds)
 		{
 		case 'd':
 		case 'D':
-			ind += 1;
-			if (ind >= frange)
-				ind = frange - 1;
+			add = 1;
+			
 			break;
 		case 'a':
 		case 'A':
-			ind -= 1;
-			if (ind < 0)
-				ind = 0;
+			add = -1;
+
 			break;
 		}
 
-		barline<matrtype>* line = bar[ind];
+		while (add != 0)
+		{
+			ind += add;
+			if (ind < 0)
+			{
+				ind = 0;
+				break;
+			}
+
+			if (ind >= frange)
+			{
+				ind = frange - 1;
+				break;
+			}
+
+			if (bar2[ind]->getPointsSize() < 100)
+			{
+				continue;
+			}
+
+			break;
+		}
+
+		barline<matrtype>* line = bar2[ind];
 		barvector<matrtype>& points = line->matr;
 
 		for (barvalue<matrtype>& p : points)
@@ -641,7 +663,7 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 
 	for (int i = 0; i < frange; ++i)
 	{
-		barline<matrtype>* line = bar[i];
+		barline<matrtype>* line = bar2[i];
 		//BarRect r = line->getBarRect();
 		int minlen = 0;
 		//minlen = line->len() * 0.0;// +15;
@@ -658,10 +680,10 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 		//	continue;
 		//if (line->getPointsSize() > img.rows * img.cols * 0.5)
 		//	continue;
-		if (line->getPointsSize() < 20)
-			continue;
-		if (line->getPointsSize() > 1000)
-			continue;
+		//if (line->getPointsSize() < 20)
+		//	continue;
+		//if (line->getPointsSize() > 1000)
+		//	continue;
 		//if (checkRect(r, img.cols, img.rows) && line->len() > 60)
 		{
 			barvector<matrtype>& points = line->matr;
@@ -673,7 +695,7 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 
 			for (size_t i = 0; i < points.size(); i++)
 			{
-				if (points[i].value <100)				continue;
+				//if (points[i].value <100)				continue;
 				binmap.at<uchar>(points[i].getY(), points[i].getX()) = 255;
 			}
 		}
@@ -693,7 +715,7 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 
 void getResults()
 {
-	string ds = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/4_set.png";
+	string ds = "D:/Programs/C++/Barcode/PrjBarlib/researching/e.png";
 	Mat bin_etalon = cv::imread(ds, IMREAD_COLOR);
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
 	cv::imshow("source", bin_etalon);
