@@ -4,87 +4,92 @@
 #include "prep.h"
 
 #undef max
-// Client side C/C++ program to demonstrate Socket programming
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-#pragma comment (lib, "Ws2_32.lib")
-#include <iostream>
-//#include <string.h>
-#include <sstream>
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-//using namespace std;
+//
+
 using std::cout;
 using std::cin;
 
-SOCKET _socket;
+namespace CN {
+//
+//	// Client side C/C++ program to demonstrate Socket programming
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#pragma comment (lib, "Ws2_32.lib")
+//#include <iostream>
+////#include <string.h>
+//#include <sstream>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
 
-enum class PY_SIGN : uchar
-{
-	SEND_IMG = 0,
-
-};
-
-SOCKET connect()
-{
-	WSADATA WsaData;
-	bool err = WSAStartup(MAKEWORD(2, 2), &WsaData) == NO_ERROR;
-
-	std::string ip = "127.0.0.1";
-	int port = 8088;
-
-	struct addrinfo* result = NULL,
-		* ptr = NULL,
-		hints;
-
-	// Validate the parameters 
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-
-	// Resolve the server address and port
-	int iResult = getaddrinfo(ip.c_str(), std::to_string(port).c_str(), &hints, &result);
-	if (iResult != 0) {
-		printf("getaddrinfo failed with error: %d\n", iResult);
-		return false;
-	}
-
-	// Attempt to connect to an address until one succeeds
-	for (ptr = result; ptr != NULL; ptr = ptr->ai_next)
+//
+	SOCKET _socket;
+//
+	enum class PY_SIGN : uchar
 	{
-		// Create a SOCKET for connecting to server
-		_socket = socket(ptr->ai_family, ptr->ai_socktype,
-			ptr->ai_protocol);
-		if (_socket == INVALID_SOCKET)
-		{
-			printf("socket failed with error: %ld\n", WSAGetLastError());
+		SEND_IMG = 0,
+
+	};
+
+	SOCKET connect()
+	{
+		WSADATA WsaData;
+		bool err = WSAStartup(MAKEWORD(2, 2), &WsaData) == NO_ERROR;
+
+		std::string ip = "127.0.0.1";
+		int port = 8088;
+
+		struct addrinfo* result = NULL,
+			* ptr = NULL,
+			hints;
+
+		// Validate the parameters 
+		ZeroMemory(&hints, sizeof(hints));
+		hints.ai_family = AF_UNSPEC;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_protocol = IPPROTO_TCP;
+
+		// Resolve the server address and port
+		int iResult = getaddrinfo(ip.c_str(), std::to_string(port).c_str(), &hints, &result);
+		if (iResult != 0) {
+			printf("getaddrinfo failed with error: %d\n", iResult);
 			return false;
 		}
 
-		// Connect to server.
-		iResult = connect(_socket, ptr->ai_addr, (int)ptr->ai_addrlen);
-		if (iResult == SOCKET_ERROR)
+		// Attempt to connect to an address until one succeeds
+		for (ptr = result; ptr != NULL; ptr = ptr->ai_next)
 		{
-			closesocket(_socket);
-			_socket = INVALID_SOCKET;
-			continue;
+			// Create a SOCKET for connecting to server
+			_socket = socket(ptr->ai_family, ptr->ai_socktype,
+				ptr->ai_protocol);
+			if (_socket == INVALID_SOCKET)
+			{
+				printf("socket failed with error: %ld\n", WSAGetLastError());
+				return false;
+			}
+
+			// Connect to server.
+			iResult = connect(_socket, ptr->ai_addr, (int)ptr->ai_addrlen);
+			if (iResult == SOCKET_ERROR)
+			{
+				closesocket(_socket);
+				_socket = INVALID_SOCKET;
+				continue;
+			}
+			break;
 		}
-		break;
+
+		freeaddrinfo(result);
+
+		if (_socket == INVALID_SOCKET)
+		{
+			printf("Unable to connect to server!\n");
+			return false;
+		}
+		printf("Connecting esabled!\n");
+
+
+		return true;
 	}
-
-	freeaddrinfo(result);
-
-	if (_socket == INVALID_SOCKET)
-	{
-		printf("Unable to connect to server!\n");
-		return false;
-	}
-	printf("Connecting esabled!\n");
-
-
-	return true;
 }
-
 
 //void sentMatGetRest(SOCKET connection, Mat img)
 //{
@@ -202,13 +207,13 @@ cv::Mat precompressWave3(const Mat& img)
 
 	unique_ptr<uchar[]> data;
 	data.reset(new uchar[totalSize]);
-	data[0] = (uchar)PY_SIGN::SEND_IMG;
+	data[0] = (uchar)CN::PY_SIGN::SEND_IMG;
 	memcpy(data.get() + 1, &imgFullSize, 4);
 	memcpy(data.get() + 5, &img.rows, 4);
 	memcpy(data.get() + 9, &img.cols, 4);
 	memcpy(data.get() + 13, img.data, imgDataSize);
 
-	send(_socket, (const char*)data.get(), totalSize, 0);
+	CN::send(CN::_socket, (const char*)data.get(), totalSize, 0);
 	data.release();
 
 	char buffer[8192];
@@ -217,7 +222,7 @@ cv::Mat precompressWave3(const Mat& img)
 
 	do
 	{
-		bytes_recv = recv(_socket, (char*)buffer, 9, 0);
+		bytes_recv = CN::recv(CN::_socket, (char*)buffer, 9, 0);
 	} while (bytes_recv <= 0);
 
 	if (bytes_recv == -1)
@@ -234,7 +239,7 @@ cv::Mat precompressWave3(const Mat& img)
 
 	while (bytes_recv != 0)
 	{
-		bytes_recv = recv(_socket, (char*)buffer, 8192, 0);
+		bytes_recv = CN::recv(CN::_socket, (char*)buffer, 8192, 0);
 		memcpy(recbuff.data() + offset, buffer, bytes_recv);
 		offset += bytes_recv;
 	}
@@ -294,7 +299,7 @@ cv::Mat precompressBar(const Mat& img, int len, bool onlyOneSize = true, Mat* ou
 			if (!remove)
 				continue;
 
-			// Вычетаем линию из изображения
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			auto& matr = line->matr;
 			for (int k = 0; k < matr.size(); ++k)
 			{
@@ -338,7 +343,8 @@ enum class ComprType
 {
 	png,
 	haff,
-	entropy
+	entropy,
+	quby
 };
 
 /// PNG
@@ -390,7 +396,7 @@ struct EntropyCompression
 		if (untouch >= 127 * 3)
 		{
 			doubleWord = true;
-			USHORT mamu = USHRT_MAX;
+			unsigned short mamu = USHRT_MAX;
 			maxVal0 = ((char*)&mamu)[0];
 			maxVal1 = ((char*)&mamu)[1];
 			maxToADd = mamu;
@@ -446,7 +452,7 @@ struct EntropyCompression
 
 			if (sd > 2)
 			{
-				// Если есть что добавить
+				// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				addTouched();
 				if (sd > 127 * 3)
 				{
@@ -488,7 +494,7 @@ struct EntropyCompression
 			}
 		}
 
-		// Добавить остток
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		addTouched();
 
 
@@ -567,10 +573,40 @@ namespace huff
 	{
 		wlt_header_info out;
 		std::vector<char> buff = getMatData(img);
-		HuffEncode((UCHAR*)buff.data(), buff.size(), out);
+		HuffEncode((uchar*)buff.data(), buff.size(), out);
 		return buff.size();
 	}
 }
+
+// union ComprInt
+// {
+// 	unsigned char bytes[4];
+// 	uint fullval;
+// };
+
+// struct Encodebytes
+// {
+// 	std::vector<uchar> bytes;
+// }
+
+// #include <unordered_map>
+// size_t quby(const Mat& img)
+// {
+// 	std::unordered_map<uint, Encodebytes> vals;
+
+// 	for (size_t r = 0; r < img.rows - 1; r += 2)
+// 	{
+// 		for (size_t c = 0; c < img.cols - 1; c += 2)
+// 		{
+// 			ComprInt val;
+// 			val.bytes[0] = img.at<uchar>(r, c);
+// 			val.bytes[1] = img.at<uchar>(r, c + 1);
+// 			val.bytes[2] = img.at<uchar>(r + 1, c);
+// 			val.bytes[3] = img.at<uchar>(r + 1, c + 1);
+
+// 		}
+// 	}
+// }
 
 // COMMON FUNCTION
 
@@ -591,6 +627,9 @@ CompressRes checkCompression(const Mat& origin, const Mat& compressed, ComprType
 		sizes.orgSize = entropy(origin);
 		sizes.comprSize = entropy(compressed);
 		break;
+	case ComprType::quby:
+		sizes.orgSize = entropy(origin);
+		sizes.comprSize = entropy(compressed);
 	default:
 		break;
 	}
@@ -739,7 +778,7 @@ void processImage(const Mat& frame, ComprType comp)
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
 	cv::imshow("source", frame);
 
-	SOCKET s = connect();
+	CN::SOCKET s = CN::connect();
 
 	cout << "Original size: " << frame.rows * frame.cols << endl;
 
@@ -774,7 +813,7 @@ void processImage(const Mat& frame, ComprType comp)
 
 			//CompressRes barsec = checkCompression(frame, outSec, comp);
 			//barpng.comprSize += entropy(outSec);
- 
+
 			//show("bar", barPre, 1);
 			result.push_back(barPre);
 			//break;
@@ -789,7 +828,7 @@ void processImage(const Mat& frame, ComprType comp)
 		//barpng.printResult("(loseless): ");
 		//cv::imwrite("D:\\len_compr.png", frame);
 	}
-	closesocket(s);
+	CN::closesocket(s);
 	cv::waitKey(1);
 }
 
