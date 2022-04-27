@@ -10,8 +10,8 @@ using std::cout;
 using std::cin;
 
 namespace CN {
-//
-//	// Client side C/C++ program to demonstrate Socket programming
+	//
+	//	// Client side C/C++ program to demonstrate Socket programming
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #pragma comment (lib, "Ws2_32.lib")
 //#include <iostream>
@@ -22,7 +22,7 @@ namespace CN {
 
 //
 	SOCKET _socket;
-//
+	//
 	enum class PY_SIGN : uchar
 	{
 		SEND_IMG = 0,
@@ -578,73 +578,18 @@ namespace huff
 	}
 }
 
-// union ComprInt
-// {
-// 	unsigned char bytes[4];
-// 	uint fullval;
-// };
 
-// struct Encodebytes
-// {
-// 	std::vector<uchar> bytes;
-// }
+// MY HUFF
 
-// #include <unordered_map>
-// size_t quby(const Mat& img)
-// {
-// 	std::unordered_map<uint, Encodebytes> vals;
-
-// 	for (size_t r = 0; r < img.rows - 1; r += 2)
-// 	{
-// 		for (size_t c = 0; c < img.cols - 1; c += 2)
-// 		{
-// 			ComprInt val;
-// 			val.bytes[0] = img.at<uchar>(r, c);
-// 			val.bytes[1] = img.at<uchar>(r, c + 1);
-// 			val.bytes[2] = img.at<uchar>(r + 1, c);
-// 			val.bytes[3] = img.at<uchar>(r + 1, c + 1);
-
-// 		}
-// 	}
-// }
-
-// COMMON FUNCTION
-
-CompressRes checkCompression(const Mat& origin, const Mat& compressed, ComprType compr)
+class HaffCode
 {
-	CompressRes sizes;
-	switch (compr)
-	{
-	case ComprType::png:
-		sizes.orgSize = comprPng(origin);
-		sizes.comprSize = comprPng(compressed);
-		break;
-	case ComprType::haff:
-		sizes.orgSize = huff::huff(origin);
-		sizes.comprSize = huff::huff(compressed);
-		break;
-	case ComprType::entropy:
-		sizes.orgSize = entropy(origin);
-		sizes.comprSize = entropy(compressed);
-		break;
-	case ComprType::quby:
-		sizes.orgSize = entropy(origin);
-		sizes.comprSize = entropy(compressed);
-	default:
-		break;
-	}
-
-	return sizes;
-}
-
-#include "../3d/Wavelet-Transform-2D/wt2d.h"
-struct HaffCode
-{
+public:
 	uchar val = 0;
 	int count = 0;
 	uchar code = 255;
-	HaffCode* par = nullptr;
+	HaffCode * par = nullptr;
 };
+
 
 struct resltSj
 {
@@ -773,26 +718,185 @@ size_t haaffman(const Mat& source, int maxLen)
 	return output.size() / 8;
 }
 
+
+union Comprint
+{
+	unsigned char bytes[4];
+	uint fullval;
+};
+
+
+struct Encodebytes
+{
+	uchar val = 0;
+	int count = 0;
+	uchar code = 255;
+	Encodebytes* par = nullptr;
+	std::vector<uchar> bytes;
+};
+
+
+#include <unordered_map>
+size_t quby(const Mat& img)
+{
+	std::unordered_map<uint, Encodebytes> vals;
+
+	for (size_t r = 0; r < img.rows - 1; r += 2)
+	{
+		for (size_t c = 0; c < img.cols - 1; c += 2)
+		{
+			Comprint val;
+			val.bytes[0] = img.at<uchar>(r, c);
+			val.bytes[1] = img.at<uchar>(r, c + 1);
+			val.bytes[2] = img.at<uchar>(r + 1, c);
+			val.bytes[3] = img.at<uchar>(r + 1, c + 1);
+
+			vals[val.fullval].count++;
+		}
+	}
+
+	vector<Encodebytes*> result;
+	for (auto it = vals.begin(); it != vals.end(); it++)
+	{
+		result.push_back(&it->second);
+	}
+
+
+	std::sort(result.begin(), result.end(), [](const Encodebytes* left, const Encodebytes* right)
+		{ return left->count < right->count; });
+
+	int maxCall = vals.size();
+
+	std::vector<Encodebytes*> stackDel;
+	while (result.size() > 1)
+	{
+		vector<Encodebytes*> resultSwitch;
+
+		int rsize = result.size() - result.size() % 2;
+		for (size_t i = 0; i < rsize; i += 2)
+		{
+			if (result[i]->count < result[i + 1]->count)
+			{
+				// 0 for more
+				result[i]->code = 1;
+				result[i + 1]->code = 0;
+			}
+			else
+			{
+				// 0 for more
+				result[i]->code = 0;
+				result[i + 1]->code = 1;
+			}
+
+			Encodebytes* par = new Encodebytes();
+			par->count = result[i]->count + result[i + 1]->count;
+			par->par = nullptr;
+
+			stackDel.push_back(par);
+
+			result[i]->par = par;
+			result[i + 1]->par = par;
+			resultSwitch.push_back(par);
+		}
+		if (result.size() % 2 == 1)
+		{
+			resultSwitch.push_back(result.back());
+		}
+
+		result = resultSwitch;
+	}
+
+
+	for (auto it = vals.begin(); it != vals.end(); it++)
+	{
+		std::vector<uchar>& datacode = it->second.bytes;
+
+		datacode.push_back(it->second.code);
+		Encodebytes* coderef = &it->second;
+		while (coderef->par)
+		{
+			coderef = coderef->par;
+			datacode.push_back(coderef->code);
+		}
+	}
+
+	vector<uchar> output;
+
+	for (size_t r = 0; r < img.rows - 1; r += 2)
+	{
+		for (size_t c = 0; c < img.cols - 1; c += 2)
+		{
+			Comprint val;
+			val.bytes[0] = img.at<uchar>(r, c);
+			val.bytes[1] = img.at<uchar>(r, c + 1);
+			val.bytes[2] = img.at<uchar>(r + 1, c);
+			val.bytes[3] = img.at<uchar>(r + 1, c + 1);
+
+			std::vector<uchar>& datacode = vals[val.fullval].bytes;
+			
+			output.insert(output.end(), datacode.begin(), datacode.end());
+		}
+	}
+
+
+	for (size_t i = 0; i < stackDel.size(); i++)
+	{
+		delete stackDel[i];
+	}
+
+	return output.size() / 8;
+}
+
+// COMMON FUNCTION
+
+CompressRes checkCompression(const Mat& origin, const Mat& compressed, ComprType compr)
+{
+	CompressRes sizes;
+	switch (compr)
+	{
+	case ComprType::png:
+		sizes.orgSize = comprPng(origin);
+		sizes.comprSize = comprPng(compressed);
+		break;
+	case ComprType::haff:
+		sizes.orgSize = huff::huff(origin);
+		sizes.comprSize = huff::huff(compressed);
+		break;
+	case ComprType::entropy:
+		sizes.orgSize = entropy(origin);
+		sizes.comprSize = entropy(compressed);
+		break;
+	case ComprType::quby:
+		sizes.orgSize = entropy(origin);
+		sizes.comprSize = entropy(compressed);
+	default:
+		break;
+	}
+
+	return sizes;
+}
+
+#include "../3d/Wavelet-Transform-2D/wt2d.h"
+
 void processImage(const Mat& frame, ComprType comp)
 {
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
 	cv::imshow("source", frame);
 
-	CN::SOCKET s = CN::connect();
+	//CN::SOCKET s = CN::connect();
 
 	cout << "Original size: " << frame.rows * frame.cols << endl;
 
-	Mat wavPre = precompressWave3(frame);
-	CompressRes wavpng = checkCompression(frame, wavPre, comp);
-	//CompressRes wavpng = checkCompression(frame, wavPre, ".png");
-	cv::namedWindow("wave", cv::WINDOW_NORMAL);
-	cv::imshow("wave", wavPre);
-	wavpng.printResult("wave:");
+	//Mat wavPre = precompressWave3(frame);
+	//CompressRes wavpng = checkCompression(frame, wavPre, comp);
+	//cv::namedWindow("wave", cv::WINDOW_NORMAL);
+	//cv::imshow("wave", wavPre);
+	//wavpng.printResult("wave:");
 
 	std::vector<Mat> out, result;
 	cv::split(frame, out);
 
-	vector<int> Ds{ 1, 2, 5, 10 , 15, 30};//, 30, 50 };// , 100, 150, 200, 255 };
+	vector<int> Ds{ 1, 2, 5, 10 , 15, 30 };//, 30, 50 };// , 100, 150, 200, 255 };
 	for (size_t j = 0; j < Ds.size(); j++)
 	{
 		cout << "For pre = " << Ds[j] << ": " << endl;
@@ -811,8 +915,8 @@ void processImage(const Mat& frame, ComprType comp)
 			barpng.comprSize += temp.comprSize;
 			barpng.orgSize += temp.orgSize;
 
-			//CompressRes barsec = checkCompression(frame, outSec, comp);
-			//barpng.comprSize += entropy(outSec);
+			//CompressRes barsec = checkCompression(frame, outSec, ComprType::quby);
+			//barpng.comprSize += barsec.comprSize;
 
 			//show("bar", barPre, 1);
 			result.push_back(barPre);
@@ -828,7 +932,7 @@ void processImage(const Mat& frame, ComprType comp)
 		//barpng.printResult("(loseless): ");
 		//cv::imwrite("D:\\len_compr.png", frame);
 	}
-	CN::closesocket(s);
+	//CN::closesocket(s);
 	cv::waitKey(1);
 }
 
@@ -894,8 +998,8 @@ void compressMain()
 		std::cout << "---------" << paths[i] << "---------" << endl;
 		Mat img = imread(imgpath, cv::IMREAD_GRAYSCALE);
 		//processImage(img, ComprType::haff);
-		//processImage(img, ComprType::png);
-		processImage(img, ComprType::entropy);
+		processImage(img, ComprType::png);
+		//processImage(img, ComprType::quby);
 
 		//break;
 	}
