@@ -1009,10 +1009,10 @@ void BarcodeCreator<T>::clearIncluded()
 template<class T>
 bool compareLines(const barline<T>* i1, const barline<T>* i2)
 {
-	if (i1->len == i2->len)
+	if (i1->len() == i2->len())
 		return i1->start > i2->start;
 
-	return (i1->len > i2->len);
+	return (i1->len() > i2->len());
 }
 
 
