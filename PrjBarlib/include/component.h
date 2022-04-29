@@ -57,6 +57,11 @@ namespace bc
 		Component(poidex pix, BarcodeCreator<T>* factory);
 		Component(BarcodeCreator<T>* factory, bool create = false);
 
+		int getLastRowSize()
+		{
+			return cashedSize;
+		}
+
 		T getStart()
 		{
 			return resline->start;
@@ -70,6 +75,11 @@ namespace bc
 		bool isAlive()
 		{
 			return lived;
+		}
+
+		T liveLen()
+		{
+			return resline->start > lastVal ? resline->start - lastVal : lastVal - resline->start;
 		}
 
 		//T len()
@@ -99,7 +109,7 @@ namespace bc
 
 		bool isContain(poidex index);
 		virtual bool add(poidex index);
-		virtual bool add(poidex index, const point p);
+		virtual bool add(poidex index, const point p, bool forsed = false);
 		virtual void kill();
 		virtual void setParent(Component<T>* parnt);
 

@@ -50,13 +50,20 @@ bool bc::Component<T>::isContain(poidex index)
 }
 
 template <class T>
-bool bc::Component<T>::add(poidex index, const point p)
+bool bc::Component<T>::add(poidex index, const point p, bool forsed)
 {
 	assert(lived);
 
-	if (factory->settings.extracheckOnPixelConnect && !canBeConnected(p, true))
-		return false;
+	if (!forsed)
+	{
+		if (factory->settings.extracheckOnPixelConnect && !canBeConnected(p, true))
+			return false;
 
+		if (cashedSize == factory->settings.colorRange)
+		{
+			return false;
+		}
+	}
 
 #ifndef POINTS_ARE_AVAILABLE
 	assert(getMaxparent() == this);
@@ -77,17 +84,16 @@ bool bc::Component<T>::add(poidex index, const point p)
 		{
 			resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize)); //всего
 		}
-		++cashedSize;
 	}
 	else if (factory->curbright != lastVal)
 	{
 		if (factory->settings.returnType == ReturnType::barcode3dold)
 		{
 			resline->bar3d->push_back(bar3dvalue<T>(lastVal, cashedSize)); // сколкьо было доабвлено
-			cashedSize = 0;
 		}
-		++cashedSize;
+		cashedSize = 0;
 	}
+	++cashedSize;
 	lastVal = factory->curbright;
 
 	return true;

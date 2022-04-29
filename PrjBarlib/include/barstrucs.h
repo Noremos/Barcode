@@ -283,6 +283,7 @@ namespace bc
 		//ProcessStrategy processMode = ProcessStrategy::brightness;
 		bool killOnMaxLen = false;
 		bool extracheckOnPixelConnect = false;
+		int colorRange = INT32_MAX;
 #ifdef USE_OPENCV
 		bool visualize = false;
 		int waitK = 1;

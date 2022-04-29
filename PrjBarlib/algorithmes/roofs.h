@@ -494,90 +494,30 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 	//bcstruct.attachMode = AttachMode::createNew;
 	bcstruct.extracheckOnPixelConnect = false;
 	//bcstruct.setStep(radius);
-	bcstruct.setMaxLen(10);
+	bcstruct.setMaxLen(25);
 	//bcstruct.killOnMaxLen = true;;
 	bcstruct.visualize = false;
 	bcstruct.waitK = 1;
 	bcstruct.maxRadius = 9999;
-	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::RadiusComp);
+	bcstruct.colorRange = 25;
+	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::Component);
 
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
-	//Mat img(3, 5, CV_8UC1);
-	//img.at<uchar>(0, 0) = 1;
-	//img.at<uchar>(0, 1) = 1;
-	//img.at<uchar>(0, 2) = 3;
-	//img.at<uchar>(0, 3) = 1;
-	//img.at<uchar>(0, 4) = 1;
-	//img.at<uchar>(1, 0) = 1;
-	//img.at<uchar>(1, 1) = 1;
-	//img.at<uchar>(1, 2) = 3;
-	//img.at<uchar>(1, 3) = 10;
-	//img.at<uchar>(1, 4) = 7;
-	//img.at<uchar>(2, 0) = 4;
-	//img.at<uchar>(2, 1) = 4;
-	//img.at<uchar>(2, 2) = 4;
-	//img.at<uchar>(2, 3) = 10;
-	//img.at<uchar>(2, 4) = 7;
-	//cvtColor(img, img, COLOR_GRAY2BGR);
-
 
 	Mat back = img;
 	cvtColor(img, back, COLOR_BGR2GRAY);
-	//back *= 2;
-	//if (revert)
-	//	back = 255 - back;
 
-	//cv::medianBlur(back, back, 3);
 	show("baeck", back, 1);
 	cv::imwrite("source.png", back);
 
 	//back.at<uchar>(0, 0) = 0;
-
+	back = 255 - back;
 	BarMat<matrtype> wrap(back);
 	Barcontainer< matrtype>* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
 	Baritem<matrtype>* item = containet->getItem(0);
 
-	//# item.removePorog(1)
-	//barlinevector<matrtype>& bar = item->getRootNode()->children;
-
-	//Mat binmap2(img.rows, img.cols, CV_8UC1, Scalar(0));
-	//img.copyTo(binmap2);
-
-	//Mat procmat(img.rows, img.cols, CV_8UC1, Scalar(0));
-	//back.copyTo(procmat);
-	//for (int i = 0; i < bar.size(); ++i)
-	//{
-	//	//break;
-	//	barline<matrtype>* line = bar[i];
-	//	int minlen = 0;
-	//	barvector<matrtype>& points = line->matr;
-
-	//	for (size_t k = 0; k < points.size(); k++)
-	//	{
-	//		//if (line->len() > 100)
-	//		procmat.at<uchar>(points[k].getY(), points[k].getX()) = line->start;
-	//		binmap2.at<Vec3b>(points[k].getY(), points[k].getX()) = colors[i % collen];
-	//	}
-	//}
-
-	//show("radius", binmap2, 1);
-	//show("radius input", procmat, 0);
-	//cv::imwrite("rad.png", procmat);
-
-	//delete containet;
-
-	//bcstruct.structure[0].comtype = ComponentType::Component;
-	//BarMat<matrtype> wrap2(procmat);
-	//containet = barcodeFactory.createBarcode(&wrap2, bcstruct);
-	//item = containet->getItem(0);
-	//item->sortBySize();
-
-
-	//back = backback;
-	//back.fill(0);
-
 	Mat binmap(img.rows, img.cols, CV_8UC1, Scalar(0));
-	img.copyTo(binmap);
+	//img.copyTo(binmap);
 
 	barlinevector<matrtype>& bar2 = item->getRootNode()->children;
 	frange = bar2.size();
@@ -588,10 +528,12 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 		int minlen = 0;
 		barvector<matrtype>& points = line->matr;
 
+		//assert(line->len() < 6);
 		for (size_t k = 0; k < points.size(); k++)
 		{
 			//if (line->len() > 100)
-			binmap.at<Vec3b>(points[k].getY(), points[k].getX()) = colors[i % collen];
+			//binmap.at<Vec3b>(points[k].getY(), points[k].getX()) = colors[i % collen];
+			binmap.at<uchar>(points[k].getY(), points[k].getX()) = 255 - line->start;
 		}
 	}
 

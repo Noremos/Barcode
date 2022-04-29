@@ -96,7 +96,7 @@ template<class T>
 inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 {
 	//second->kill();
-	if (second->getStart() == main->getStart() && main->getStart() == curbright)
+	if (second->liveLen() == 0 || main->liveLen() == 0)
 	{
 #ifdef POINTS_ARE_AVAILABLE
 		for (const auto& val : second->resline->matr)
@@ -114,6 +114,7 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 			main = second;
 			second = temp;
 		}
+
 		if (sortedArr != nullptr)
 		{
 			for (size_t rind = second->startIndex; rind <= curIndexInSortedArr; ++rind)
@@ -123,7 +124,7 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 				if (getInclude(p) == second)
 				{
 					// Перебираем предыдущие элементы
-					main->add(p, getPoint(p));
+					main->add(p, getPoint(p), true);
 				}
 			}
 		}
@@ -138,7 +139,7 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 				if (getInclude(p) == second)
 				{
 					// Перебираем предыдущие элементы
-					main->add(p, curpoint);
+					main->add(p, curpoint, true);
 				}
 
 				// NEXT
@@ -148,7 +149,7 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 				if (getInclude(NextPindex) == second)
 				{
 					// Перебираем предыдущие элементы
-					main->add(NextPindex, NextPoint);
+					main->add(NextPindex, NextPoint, true);
 				}
 			}
 		}
@@ -227,6 +228,13 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 			second = temp;
 		}
 		second->setParent(main);
+
+		if (main->getLastRowSize() >= settings.colorRange)
+		{
+			main->kill();
+			return new Component<T>(this, true);
+		}
+
 		break;
 	}
 	//возращаем единую компоненту.
@@ -1033,7 +1041,7 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 
 		if (c->parent == nullptr)
 		{
-			assert(c->isAlive() || settings.killOnMaxLen);
+			//assert(c->isAlive() || settings.killOnMaxLen);
 			c->kill();
 			if (settings.createGraph)
 				c->resline->setparent(rootNode);
