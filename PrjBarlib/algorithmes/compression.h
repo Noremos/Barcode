@@ -892,7 +892,7 @@ void processImage(const Mat& frame, ComprType comp)
 	cv::namedWindow("wave", cv::WINDOW_NORMAL);
 	cv::imshow("wave", wavPre);
 	wavpng.printResult("wave:");
-	cv::imwrite("wave-" + to_string(k) + ".png", wavPre);
+	//cv::imwrite("wave-" + to_string(k) + ".png", wavPre);
 
 	std::vector<Mat> out, result;
 	cv::split(frame, out);
@@ -928,7 +928,7 @@ void processImage(const Mat& frame, ComprType comp)
 		cv::merge(result, outresul);
 		show("splitted", outresul, 1);
 
-		cv::imwrite("bar-" + to_string(k) + ", len=" + to_string(Ds[j]) + ".png", outresul);
+		//cv::imwrite("bar-" + to_string(k) + ", len=" + to_string(Ds[j]) + ".png", outresul);
 
 		barpng.printResult("bar: ");
 
