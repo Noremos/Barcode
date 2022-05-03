@@ -877,21 +877,22 @@ CompressRes checkCompression(const Mat& origin, const Mat& compressed, ComprType
 }
 
 #include "../3d/Wavelet-Transform-2D/wt2d.h"
-
+int k = 0;
 void processImage(const Mat& frame, ComprType comp)
 {
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
 	cv::imshow("source", frame);
 
-	//CN::SOCKET s = CN::connect();
+	CN::SOCKET s = CN::connect();
 
 	cout << "Original size: " << frame.rows * frame.cols << endl;
 
-	//Mat wavPre = precompressWave3(frame);
-	//CompressRes wavpng = checkCompression(frame, wavPre, comp);
-	//cv::namedWindow("wave", cv::WINDOW_NORMAL);
-	//cv::imshow("wave", wavPre);
-	//wavpng.printResult("wave:");
+	Mat wavPre = precompressWave3(frame);
+	CompressRes wavpng = checkCompression(frame, wavPre, comp);
+	cv::namedWindow("wave", cv::WINDOW_NORMAL);
+	cv::imshow("wave", wavPre);
+	wavpng.printResult("wave:");
+	cv::imwrite("wave-" + to_string(k) + ".png", wavPre);
 
 	std::vector<Mat> out, result;
 	cv::split(frame, out);
@@ -927,12 +928,15 @@ void processImage(const Mat& frame, ComprType comp)
 		cv::merge(result, outresul);
 		show("splitted", outresul, 1);
 
+		cv::imwrite("bar-" + to_string(k) + ", len=" + to_string(Ds[j]) + ".png", outresul);
+
 		barpng.printResult("bar: ");
 
 		//barpng.printResult("(loseless): ");
 		//cv::imwrite("D:\\len_compr.png", frame);
 	}
-	//CN::closesocket(s);
+	++k;
+	CN::closesocket(s);
 	cv::waitKey(1);
 }
 
@@ -997,8 +1001,9 @@ void compressMain()
 
 		std::cout << "---------" << paths[i] << "---------" << endl;
 		Mat img = imread(imgpath, cv::IMREAD_GRAYSCALE);
+		cv::imwrite(to_string(i) + ".png", img);
 		//processImage(img, ComprType::haff);
-		processImage(img, ComprType::png);
+		//processImage(img, ComprType::png);
 		//processImage(img, ComprType::quby);
 
 		//break;
