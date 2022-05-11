@@ -104,6 +104,20 @@ public:
 	}
 
 
+	bool operator==(const int& X) const
+	{
+		switch (type)
+		{
+		case BarType::BYTE8_1:
+			return data.b1 == X;
+		case BarType::BYTE8_3:
+		default:
+		{
+			return (data.b3[0] == X && data.b3[1] == X && data.b3[2] == X);
+		}
+		}
+	}
+
 	bool operator==(const Barscalar& X) const
 	{
 		assert(type == X.type);
@@ -124,7 +138,7 @@ public:
 
 	std::partial_ordering operator<=>(const Barscalar& X) const
 	{
-		assert(type == X.type);
+		//assert(type == X.type);
 
 		switch (type)
 		{
@@ -415,27 +429,27 @@ public:
 	// Operators
 	auto operator+(const Barscalar& R) const
 	{
-		Barscalar res;
+		Barscalar res = *this;
 		res += R;
 		return res;
 	}
 
 	auto operator+(const uchar R) const
 	{
-		Barscalar res;
+		Barscalar res = *this;
 		res += R;
 		return res;
 	}
 
 	auto operator-(const uchar R) const
 	{
-		Barscalar res;
+		Barscalar res = *this;
 		res -= R;
 		return res;
 	}
 	auto operator-(const Barscalar& R) const
 	{
-		Barscalar res;
+		Barscalar res = *this;
 		res -= R;
 		return res;
 	}
@@ -443,27 +457,27 @@ public:
 
 	Barscalar operator* (const uchar& R) const
 	{
-		Barscalar res;
+		Barscalar res = *this;
 		res *= R;
 		return res;
 	}
 	Barscalar operator* (const Barscalar& R) const
 	{
-		Barscalar res;
+		Barscalar res = *this;
 		res *= R;
 		return res;
 	}
 
 	Barscalar operator/ (const uchar& R) const
 	{
-		Barscalar res;
+		Barscalar res = *this;
 		res /= R;
 		return res;
 	}
 
 	Barscalar operator/ (const Barscalar& R) const
 	{
-		Barscalar res;
+		Barscalar res = *this;
 		res /= R;
 		return res;
 	}
