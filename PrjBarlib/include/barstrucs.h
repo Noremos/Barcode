@@ -8,193 +8,42 @@
 #include <cstring>
 #include <unordered_map>
 #include "include_cv.h"
+#include "barscalar.h"
 
 #define BARVALUE_RAM_OPTIMIZATION
 
 namespace bc
 {
+	typedef uint poidex;
 
-	template<class T, uint N>
-	struct EXPORT barVector
+
+	struct barRGB : public Barscalar
 	{
-	protected:
-		T vecdata[N];
-	public:
-		barVector()
-		{
-			memset(vecdata, 0, N * sizeof(T));
-		}
-
-		barVector<T, N>(int v)
-		{
-			memset(vecdata, v, N * sizeof(T));
-		}
-
-		barVector<T, N>(const barVector<T, N>& copy)
-		{
-			memcpy(vecdata, copy.vecdata, N * sizeof(T));
-		}
-
-
-		// Overloaded assignment
-		auto& operator= (const barVector<T, N>& fraction)
-		{
-			memcpy(vecdata, fraction.vecdata, N * sizeof(T));
-			return *this;
-		}
-
-
-		auto& operator= (int fraction)
-		{
-			memset(vecdata, fraction, N * sizeof(T));
-			return *this;
-		}
-
-		explicit operator int() const
-		{
-			int avg = 0;
-			for (size_t i = 0; i < N; i++)
-			{
-				avg += vecdata[i];
-			}
-			return avg / N;
-		}
-
-		explicit operator float() const
-		{
-			float avg = 0;
-			for (size_t i = 0; i < N; i++)
-			{
-				avg += vecdata[i];
-			}
-			return avg / N;
-		}
-
-		template<class KJ>
-		auto operator-(const KJ R) const
-		{
-			KJ res{};
-			for (size_t i = 0; i < N; i++)
-			{
-				res.vecdata[i] = vecdata[i] - R.vecdata[i];
-			}
-
-			return res;
-		}
-
-		auto& operator-=(const barVector<T, N>& R)
-		{
-			for (size_t i = 0; i < N; i++)
-			{
-				vecdata[i] -= R.vecdata[i];
-			}
-
-			return *this;
-		}
-
-		auto operator+(const barVector<T, N>& R)
-		{
-			barVector<T, N> res;
-			for (size_t i = 0; i < N; i++)
-			{
-				res.vecdata[i] = vecdata[i] + R.vecdata[i];
-			}
-
-			return res;
-		}
-
-		auto& operator+=(const barVector<T, N>& R)
-		{
-			for (size_t i = 0; i < N; i++)
-			{
-				vecdata[i] += R.vecdata[i];
-			}
-
-			return *this;
-		}
-
-		bool operator> (const barVector<T, N>& fraction) const
-		{
-			return (float)(*this) > (float)fraction;
-		}
-
-		bool operator< (const barVector<T, N>& fraction) const
-		{
-			return (float)(*this) < (float)fraction;
-		}
-
-		bool operator <= (const barVector<T, N>& fraction) const
-		{
-			return (float)(*this) <= (float)fraction;
-		}
-
-		bool operator >= (const barVector<T, N>& fraction) const
-		{
-			return (float)(*this) >= (float)fraction;
-		}
-
-		bool operator== (const barVector<T, N>& fraction) const
-		{
-			return memcmp(vecdata, fraction.vecdata, N * sizeof(T)) == 0;
-		}
-
-		bool operator!= (const barVector<T, N>& fraction) const
-		{
-			return memcmp(vecdata, fraction.vecdata, N * sizeof(T)) != 0;
-		}
-
-		barVector<T, N> operator/ (const barVector<T, N>& fraction) const
-		{
-			std::exception();
-			return fraction;
-		}
-
-		barVector<T, N> operator* (const barVector<T, N>& fraction) const
-		{
-			std::exception();
-			return fraction;
-		}
-
-		T& operator[](uint index)
-		{
-			assert(index < N);
-			return vecdata[index];
-		}
-
-		T operator[](uint index) const
-		{
-			assert(index < N);
-			return vecdata[index];
-		}
+		uchar getR() { return this->data.b3[0]; }
+		uchar getG() { return this->data.b3[1]; }
+		uchar getB() { return this->data.b3[2]; }
 	};
 
-	struct barRGB : public barVector<uchar, 3>
+	struct barBGR : public Barscalar
 	{
-		uchar getR() { return this->vecdata[0]; }
-		uchar getG() { return this->vecdata[1]; }
-		uchar getB() { return this->vecdata[2]; }
+		uchar getB() { return this->data.b3[0]; }
+		uchar getG() { return this->data.b3[1]; }
+		uchar getR() { return this->data.b3[2]; }
 	};
 
-	struct barBGR : public barVector<uchar, 3>
-	{
-		uchar getB() { return this->vecdata[0]; }
-		uchar getG() { return this->vecdata[1]; }
-		uchar getR() { return this->vecdata[2]; }
-	};
-
-	template<class T>
+	
 	struct EXPORT CachedValue
 	{
-		T val;
+		Barscalar val;
 		bool isCached = false;
 
-		void set(T val)
+		void set(Barscalar val)
 		{
 			this->val = val;
 			this->isCached = true;
 		}
 
-		T getOrDefault(T defValue) const
+		Barscalar getOrDefault(Barscalar defValue) const
 		{
 			return isCached ? val : defValue;
 		}
@@ -265,17 +114,18 @@ namespace bc
 	};
 
 
-	template<class T>
+	
 	struct BarConstructor
 	{
-		CachedValue<T> stepPorog;
-		CachedValue<T> maxLen;
+		CachedValue stepPorog;
+		CachedValue maxLen;
 		float maxRadius = 999999;
 	public:
-		//T foneStart;
-		//T foneEnd;
+		//Barscalar foneStart;
+		//Barscalar foneEnd;
 		std::vector<barstruct> structure;
 		ReturnType returnType;
+		BarType type;
 
 		bool createGraph = false;
 		bool createBinaryMasks = false;
@@ -309,53 +159,53 @@ namespace bc
 		}
 
 		// разница соединяемых значений должна быть меньше этого значения
-		T getMaxStepPorog() const
+		Barscalar getMaxStepPorog() const
 		{
 			return stepPorog.getOrDefault(0);
 		}
 
-		void setStep(T val)
+		void setStep(Barscalar val)
 		{
 			stepPorog.set(val);
 		}
 
-		T getMaxLen()
+		Barscalar getMaxLen()
 		{
 			return maxLen.getOrDefault(0);
 		}
 
-		void setMaxLen(T val)
+		void setMaxLen(Barscalar val)
 		{
 			maxLen.set(val);
 		}
 	};
 
 
-	template<class T>
-	static BarConstructor<T>* createStructure(bc::BarType type)
-	{
-		switch (type)
-		{
-		case bc::BarType::bc_byte:
-			return new BarConstructor<uchar>();
-			break;
-		case bc::BarType::bc_float:
-			return new BarConstructor<float>();
-			break;
-		case bc::BarType::bc_int:
-			return new BarConstructor<int>();
-			break;
-		case bc::BarType::bc_short:
-			return new BarConstructor<short>();
-			break;
-		case bc::BarType::bc_ushort:
-			return new BarConstructor<ushort>();
-			break;
-		default:
-			return nullptr;
-			break;
-		}
-	}
+	
+	//static BarConstructor* createStructure(bc::BarType type)
+	//{
+	//	switch (type)
+	//	{
+	//	case bc::BarType::bc_byte:
+	//		return new BarConstructor<uchar>();
+	//		break;
+	//	case bc::BarType::bc_float:
+	//		return new BarConstructor<float>();
+	//		break;
+	//	case bc::BarType::bc_int:
+	//		return new BarConstructor<int>();
+	//		break;
+	//	case bc::BarType::bc_short:
+	//		return new BarConstructor<short>();
+	//		break;
+	//	case bc::BarType::bc_ushort:
+	//		return new BarConstructor<ushort>();
+	//		break;
+	//	default:
+	//		return nullptr;
+	//		break;
+	//	}
+	//}
 
 
 	struct EXPORT point
@@ -391,7 +241,7 @@ namespace bc
 		}
 #endif // USE_OPENCV
 
-		size_t getLiner(int wid)
+		poidex getLiner(int wid) const
 		{
 			assert(x >= 0);
 			assert(y >= 0);
@@ -442,13 +292,13 @@ namespace bc
 	typedef std::unordered_map<point, bool, pointHash> pmap;
 	typedef std::pair<point, bool> ppair;
 
-	template<class T>
+	
 	struct bar3dvalue
 	{
 		size_t count;
-		T value;
+		Barscalar value;
 
-		bar3dvalue(T value, size_t count)
+		bar3dvalue(Barscalar value, size_t count)
 		{
 			this->count = count;
 			this->value = value;
@@ -460,16 +310,16 @@ namespace bc
 	};
 
 
-	template<class T>
+	
 	struct pybarvalue
 	{
-		T value;
+		Barscalar value;
 		int x, y;
 
 		pybarvalue()
 		{}
 
-		pybarvalue(int x, int y, T value)
+		pybarvalue(int x, int y, Barscalar value)
 		{
 			this->x = x;
 			this->y = y;
@@ -484,7 +334,7 @@ namespace bc
 #define OPTTIF((A), (B)) (B)
 #endif
 
-	template<class T>
+	
 	struct barvalue
 	{
 #ifdef BARVALUE_RAM_OPTIMIZATION
@@ -493,9 +343,9 @@ namespace bc
 		uint x;
 		uint y;
 #endif
-		T value;
+		Barscalar value;
 
-		barvalue(int x, int y, T value)
+		barvalue(int x, int y, Barscalar value)
 		{
 			assert(x >= 0);
 			assert(y >= 0);
@@ -503,7 +353,7 @@ namespace bc
 			this->value = value;
 		}
 
-		barvalue(bc::point p, T value)
+		barvalue(bc::point p, Barscalar value)
 		{
 			assert(p.x >= 0);
 			assert(p.y >= 0);
@@ -585,22 +435,19 @@ namespace bc
 			OPTTIF(index = y * MAX_WID + getX(), this->y = y);
 		}
 
-		pybarvalue<T> getPyValue() const
+		pybarvalue getPyValue() const
 		{
-			return pybarvalue<T>(getX(), getY(), value);
+			return pybarvalue(getX(), getY(), value);
 		}
 	};
 
-	template<class T>
-	using barvector = std::vector<barvalue<T>>;
+	
+	using barvector = std::vector<barvalue>;
 
-	template<class T>
-	using barcounter = std::vector<bar3dvalue<T>>;
+	
+	using barcounter = std::vector<bar3dvalue>;
 
 	//**********************************************
-
-	INIT_TEMPLATE_STRUCT(CachedValue)
-	INIT_TEMPLATE_STRUCT(BarConstructor)
 }
 
 #endif // BARCODE_H

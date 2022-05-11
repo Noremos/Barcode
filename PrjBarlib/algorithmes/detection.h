@@ -55,22 +55,22 @@ std::unordered_map<string, int> categorues;
 class barclassificator
 {
 public:
-	bc::Barcontainer<uchar> classes[N * 2];
+	bc::Barcontainer classes[N * 2];
 
-	void addClass(bc::Barcontainer<uchar>* cont, int classInd)
+	void addClass(bc::Barcontainer* cont, int classInd)
 	{
 		classes[classInd].addItem(cont->exractItem(0));
 		classes[classInd + N].addItem(cont->exractItem(1));
 		delete cont;
 	}
 
-	//bool check(bc::Barcontainer<uchar>* cont)
+	//bool check(bc::Barcontainer* cont)
 	//{
 
 	//}
 
 
-	bool check(bc::Baritem<uchar>* bar0, bc::Baritem<uchar>* bar255, int type)
+	bool check(bc::Baritem* bar0, bc::Baritem* bar255, int type)
 	{
 		auto cp = bc::CompireStrategy::CommonToLen;
 		float res = 0;
@@ -150,7 +150,7 @@ void getCategories()
 void getSet(string path, barclassificator& data, char diff = '0')
 {
 
-	BarcodeCreator<uchar> bc;
+	BarcodeCreator bc;
 	int categoruesSize = 0;
 
 	string labelSubpath = "/labelTxt-v1.5/DOTA-v1.5_hbb/";
@@ -166,7 +166,7 @@ void getSet(string path, barclassificator& data, char diff = '0')
 	}
 
 	std::vector<bc::barstruct> structure;
-	BarConstructor<uchar> consrt;
+	BarConstructor consrt;
 	consrt.createBinaryMasks = false;
 	consrt.returnType = bc::ReturnType::barcode2d;
 	consrt.addStructure(ProcType::f0t255, ColorType::gray, ComponentType::Hole);
@@ -229,7 +229,7 @@ void getSet(string path, barclassificator& data, char diff = '0')
 			cv::Rect ds(x, y, xend - x, yend - y);
 			cv::Mat m = source(ds);
 			cv::resize(m, m, cv::Size(32, 32));
-			bc::BarMat<uchar> wrapper(m);
+			bc::BarMat wrapper(m, BarType::BYTE8_1);
 			auto b = bc.createBarcode(&wrapper, consrt);
 			b->preprocessBar(pr, normA);
 			data.addClass(b, index);
@@ -272,7 +272,7 @@ void doMagickDOTA()
 
 	getSet(pathvalidation, validation, '0');
 
-	bc::Barcontainer<uchar> testcont;
+	bc::Barcontainer testcont;
 	int correct = 0;
 	int total = 0;
 	int cTotal = 0, cCurrect = 0;

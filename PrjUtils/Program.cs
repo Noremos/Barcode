@@ -95,7 +95,7 @@ public class parcInfo
 
     public string getFullType(ref int startnd)
     {
-        // [const] void [< T >] [*]  name
+        // [const] void [< Barscalar >] [*]  name
         int couMun = 0;
         while (true)
         {
@@ -261,7 +261,7 @@ public class parser
 
         public void addType()
         {
-            //[const] void <T> [const][*] [const]
+            //[const] void  [const][*] [const]
             ps[] typePart = new ps[] { ps.op, ps._const, ps.word, ps.op, ps.tr_skob_word, ps.op, ps._const, ps.op, ps._ref, ps.op, ps._const };
             sign.AddRange(typePart);
         }
@@ -302,7 +302,7 @@ public class parser
         }
         public static ps[] getAbstructFuncpc()
         {
-            //[virual] [const] void [<T>] [*]  v(...) [const] [override] [;] = 0;
+            //[virual] [const] void [] [*]  v(...) [const] [override] [;] = 0;
 
             sigconstr cont = new sigconstr();
             cont.addVirtual(true);
@@ -317,7 +317,7 @@ public class parser
         }
         public static ps[] getFuncpc()
         {
-            // [virual] [const] void [<T>] [*]  v(...) [const] [override] [;]
+            // [virual] [const] void [] [*]  v(...) [const] [override] [;]
 
             sigconstr cont = new sigconstr();
             cont.addVirtual(true);
@@ -361,7 +361,7 @@ public class parser
         }
         public static ps[] getMemberpc()
         {
-            // [const] void <T> * mem [=] [4];
+            // [const] void  * mem [=] [4];
             sigconstr cont = new sigconstr();
             cont.addType();
             cont.add(ps.word);
@@ -447,7 +447,7 @@ public class parser
 
     public bool isFunc()
     {
-        // [virual] [const] void [<T>] [*]  v(...) [const] [override] [;]
+        // [virual] [const] void [] [*]  v(...) [const] [override] [;]
         ps[] funcFig = sigconstr.getFuncpc();
         return compireSigs(funcFig, lineInfo.sign);
     }
@@ -569,7 +569,7 @@ public class parser
 
     public bool isClass()
     {
-        // class Exopr cl1 *: public class<T>*
+        // class Exopr cl1 *: public class*
         ps[] classSig = new ps[] { ps.pclass, ps.export, ps.word, ps.skip };
         return compireSigs(classSig, lineInfo.sign);
 
@@ -614,7 +614,7 @@ public class parser
 
     public bool isUsing()
     {
-        // using a = b<T>*;
+        // using a = b*;
         ps[] usingSig = new ps[] { ps._using, ps.word, ps.ravn, ps.word, ps.op, ps.tr_skob_word, ps.op, ps._ref, ps.je, ps.end };
         return compireSigs(usingSig, lineInfo.sign);
     }
@@ -623,7 +623,7 @@ public class parser
     {
         if (!isUsing())
             return ("", "");
-        // using a = b<T>*;
+        // using a = b*;
         Debug.Assert(lineInfo.isSign(0, ps.pclass));
         Debug.Assert(lineInfo.isSign(1, ps.word));
         Debug.Assert(lineInfo.isSign(2, ps.ravn));
@@ -639,7 +639,7 @@ public class parser
 
     public bool isTypedef()
     {
-        // typedef bc::DatagridProvider < T >* bcBarImg;
+        // typedef bc::DatagridProvider < Barscalar >* bcBarImg;
         ps[] typedefSig = new ps[] { ps.typedef, ps.word, ps.op, ps.template, ps.op, ps._ref, ps.word, ps.je, ps.end };
         return compireSigs(typedefSig, lineInfo.sign);
     }
@@ -1103,7 +1103,7 @@ public class parser
                         }
 
 
-                        //"bc::BarRoot<T>* getRootNode()"
+                        //"bc::BarRoot* getRootNode()"
                         var func = parser.getFunc();
                         if (check(func))
                         {

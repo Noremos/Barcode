@@ -44,35 +44,9 @@ typedef unsigned int uint;
 
 namespace bc
 {
-	template<class T, uint N>
-	struct EXPORT barVector;
 	struct barRGB;
 	struct barBGR;
 };
-using barvec3b = bc::barVector<uchar, 3>;
-
-#define INIT_TEMPLATE_TYPE(TYPE) \
-template class TYPE<uchar>; \
-template class TYPE<float>; \
-template class TYPE<int>; \
-template class TYPE<short>; \
-template class TYPE<ushort>; \
-template class TYPE<barvec3b>;
-//template class TYPE<bc::barBGR>; \
-//template class TYPE<bc::barRGB>;
-
-
-#define INIT_TEMPLATE_STRUCT(TYPE) \
-template struct TYPE<uchar>; \
-template struct TYPE<float>; \
-template struct TYPE<int>; \
-template struct TYPE<short>; \
-template struct TYPE<ushort>; \
-template struct TYPE<barvec3b>;
-//template struct TYPE<bc::barRGB>; \
-//template struct TYPE<bc::barBGR>;
-
-
 
 namespace bc
 {
@@ -85,6 +59,4 @@ namespace bc
 	enum class ReturnType { barcode2d, barcode3d, barcode3dold };
 	enum class AttachMode { firstEatSecond, secondEatFirst, createNew, dontTouch, morePointsEatLow };
 	enum class ProcessStrategy { brightness, radius };// classic or geometry
-
-	enum class BarType { bc_byte, bc_float, bc_int, bc_short, bc_ushort };
 }

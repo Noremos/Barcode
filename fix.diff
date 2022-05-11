@@ -6,20 +6,20 @@ index ace6bdd..bf32914 100644
  			return resline->start;
  		}
  
-+		T getCurrectLen()
++		Barscalar getCurrectLen()
 +		{
 +			return lastVal - resline->start;
 +		}
 +
- 		T getLast()
+ 		Barscalar getLast()
  		{
  			return lastVal;
 diff --git a/PrjBarlib/source/barcodeCreator.cpp b/PrjBarlib/source/barcodeCreator.cpp
 index ff1bc3e..66bbd4d 100644
 --- a/PrjBarlib/source/barcodeCreator.cpp
 +++ b/PrjBarlib/source/barcodeCreator.cpp
-@@ -96,7 +96,8 @@ template<class T>
- inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
+@@ -96,7 +96,8 @@ 
+ inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
  {
  	//second->kill();
 -	if (second->getStart() == main->getStart() && main->getStart() == curbright)

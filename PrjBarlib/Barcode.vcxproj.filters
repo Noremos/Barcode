@@ -64,6 +64,9 @@
     <ClInclude Include="algorithmes\roofs.h">
       <Filter>algorithmes</Filter>
     </ClInclude>
+    <ClInclude Include="include\barscalar.h">
+      <Filter>classes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint">

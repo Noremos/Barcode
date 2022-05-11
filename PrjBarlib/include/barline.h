@@ -12,24 +12,24 @@
 
 namespace bc
 {
-	template<class T>
+
 	struct EXPORT barline
 	{
 		// Graph
-		std::vector<barline<T>*> children;
-		barline<T>* parent = nullptr;
+		std::vector<barline*> children;
+		barline* parent = nullptr;
 		size_t numberInParent = 0;
 
 		// Binary mask
-		bc::barvector<T> matr;
+		bc::barvector matr;
 
 		// 3d barcode
-		barcounter<T>* bar3d = nullptr;
+		barcounter* bar3d = nullptr;
 
 		// Main params
-		T start;
-		//T len;
-		T m_end;
+		Barscalar start;
+		//Barscalar len;
+		Barscalar m_end;
 		int matWid;
 
 	private:
@@ -41,7 +41,7 @@ namespace bc
 		{
 			matWid = wid;
 		}
-		barline(T _start, T _end, int wid, barcounter<T>* _barc = nullptr, size_t coordsSize = 0) : start(_start), m_end(_end), matWid(wid)
+		barline(Barscalar _start, Barscalar _end, int wid, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), m_end(_end), matWid(wid)
 		{
 			matr.reserve(coordsSize);
 			bar3d = _barc;
@@ -66,7 +66,7 @@ namespace bc
 
 			if (obj.bar3d != nullptr)
 			{
-				this->bar3d = new barcounter<T>();
+				this->bar3d = new barcounter();
 				this->bar3d->insert(this->bar3d->begin(), obj.bar3d->begin(), obj.bar3d->end());
 			}
 		}
@@ -89,26 +89,28 @@ namespace bc
 
 			if (obj.bar3d != nullptr)
 			{
-				this->bar3d = new barcounter<T>();
+				this->bar3d = new barcounter();
 				this->bar3d->insert(this->bar3d->begin(), obj.bar3d->begin(), obj.bar3d->end());
 			}
 		}
 
 		// move costr
-		barline(barline&& obj) {
+		barline(barline&& obj)
+		{
 			this->start = obj.start;
 			this->m_end = obj.m_end;
 			this->matWid = obj.matWid;
 
 			this->numberInParent = obj.numberInParent;
 			this->parent = std::exchange(obj.parent, nullptr);
-			this->children = std::exchange(obj.children, nullptr);
+			this->children = obj.children;
+			obj.children.clear();
 			this->isCopy = false;
 
 			if (obj.matr.size() != 0)
 			{
-				this->matr = obj.mart;
-				obj.mart.clear();
+				this->matr = obj.matr;
+				obj.matr.clear();
 			}
 
 			this->bar3d = obj.bar3d;
@@ -125,12 +127,13 @@ namespace bc
 
 			this->numberInParent = obj.numberInParent;
 			this->parent = std::exchange(obj.parent, nullptr);
-			this->children = std::exchange(obj.children, nullptr);
+			this->children = obj.children;
+			obj.children.clear();
 
 			if (obj.matr.size() != 0)
 			{
-				this->matr = obj.mart;
-				obj.mart.clear();
+				this->matr = obj.matr;
+				obj.matr.clear();
 			}
 
 			this->bar3d = obj.bar3d;
@@ -173,16 +176,16 @@ namespace bc
 		{
 			cv::Mat m = cv::Mat::zeros(s.height, s.width, CV_8UC1);
 			for (auto it = matr.begin(); it != matr.end(); ++it) {
-				m.at<T>(it->point.y, it->point.x) = it->value;
+				m.at<uchar>(it->getY(), it->getX()) = it->value.data.b1;
 			}
 			return m;
 		}
-		void setFromCvMat(cv::Mat& mat)
-		{
-			matr->clear();
-			mat.forEach<T>([m = matr](uchar& pixel, const int* pos) -> void {
-				m->push_back(barvalue(pos[0], pos[1], pixel, mat.cols)); });
-		}
+		//void setFromCvMat(cv::Mat& mat)
+		//{
+		//	matr.clear();
+		//	mat.forEach([m = matr](uchar& pixel, const int* pos) -> void {
+		//		m->push_back(barvalue(pos[0], pos[1], pixel, mat.cols)); });
+		//}
 		cv::Rect getCvRect()
 		{
 			auto r = getBarRect();
@@ -190,22 +193,22 @@ namespace bc
 		}
 #endif // USE_OPENCV
 
-		bc::BarImg<T> getBarImg(const int wid, int hei) const
-		{
-			BarImg<T> bc(wid, hei);
-			for (auto* it = matr.begin(); it != matr.end(); ++it) {
-				bc.set(it->point.y, it->point.x, it->value);
-			}
-			return bc;
-		}
+		//bc::BarImg getBarImg(const int wid, int hei) const
+		//{
+		//	BarImg bc(wid, hei);
+		//	for (barvalue& it = matr.begin(); it != matr.end(); ++it) {
+		//		bc.set(it->point.y, it->point.x, it->value);
+		//	}
+		//	return bc;
+		//}
 
-		void setFromBarImg(const bc::BarImg<T>& mat)
-		{
-			matr.clear();
+		//void setFromBarImg(const bc::BarImg& mat)
+		//{
+		//	matr.clear();
 
-			for (size_t i = 0; i < mat.getLiner(); i++)
-				matr->push_back(barvalue<T>(mat.getPointAt(i), mat.getLiner(i), mat._wid));
-		}
+		//	for (size_t i = 0; i < mat.getLiner(); i++)
+		//		matr->push_back(barvalue(mat.getPointAt(i), mat.getLiner(i), mat._wid));
+		//}
 
 		BarRect getBarRect()  const
 		{
@@ -227,12 +230,12 @@ namespace bc
 			return BarRect(l, t, r - l + 1, d - t + 1);
 		}
 
-		void addCoord(const point& first, T bright)
+		void addCoord(const point& first, Barscalar bright)
 		{
-			matr.push_back(std::move(barvalue<T>(first, bright)));
+			matr.push_back(std::move(barvalue(first, bright)));
 		}
 
-		void addCoord(barvalue<T> val)
+		void addCoord(barvalue val)
 		{
 			matr.push_back(val);
 		}
@@ -256,13 +259,13 @@ namespace bc
 
 			if (bar3d != nullptr)
 			{
-				temp->bar3d = new barcounter<T>();
+				temp->bar3d = new barcounter();
 				temp->bar3d->insert(temp->bar3d->begin(), bar3d->begin(), bar3d->end());
 			}
 			return temp;
 		}
 
-		void setparent(barline<T>* node)
+		void setparent(barline* node)
 		{
 			assert(parent == nullptr || parent == node);
 			if (this->parent == node)
@@ -273,7 +276,7 @@ namespace bc
 			parent->children.push_back(this);
 		}
 
-		T len() const
+		Barscalar len() const
 		{
 			return m_end > start ? m_end - start : start - m_end;
 		}
@@ -281,7 +284,7 @@ namespace bc
 		int getDeath()
 		{
 			int r = 0;
-			barline<T>* temp = parent;
+			barline* temp = parent;
 			while (temp)
 			{
 				++r;
@@ -291,7 +294,7 @@ namespace bc
 			return r;
 		}
 
-		T end() const
+		Barscalar end() const
 		{
 			return m_end;
 		}
@@ -301,7 +304,7 @@ namespace bc
 			return matr.size();
 		}
 
-		barvalue<T> getPoint(size_t index) const
+		barvalue getPoint(size_t index) const
 		{
 			if (index >= matr.size())
 				index = index % matr.size();
@@ -319,9 +322,9 @@ namespace bc
 
 		void getChildsMatr(std::unordered_map<bc::point, bool, bc::pointHash>& childs)
 		{
-			for (barline<T>* chil : this->children)
+			for (barline* chil : this->children)
 			{
-				for (barvalue<T>& val : chil->matr)
+				for (barvalue& val : chil->matr)
 				{
 					childs.insert(std::pair< bc::point, bool>(val.getPoint(), true));
 				}
@@ -329,11 +332,11 @@ namespace bc
 		}
 
 
-		void getChildsMatr(barvector<T>& vect)
+		void getChildsMatr(barvector& vect)
 		{
-			for (barline<T>* chil : this->children)
+			for (barline* chil : this->children)
 			{
-				for (barvalue<T>& val : chil->matr)
+				for (barvalue& val : chil->matr)
 				{
 					vect.push_back(val);
 				}
@@ -345,10 +348,10 @@ namespace bc
 			return bar3d->size();
 		}
 
-		bar3dvalue<T> getBarcode3dValue(size_t index)
+		bar3dvalue getBarcode3dValue(size_t index)
 		{
 			if (bar3d == nullptr)
-				return bar3dvalue<T>();
+				return bar3dvalue();
 
 			if (index >= bar3d->size())
 				index = index % bar3d->size();
@@ -357,31 +360,31 @@ namespace bc
 		}
 
 		//  bc::CompireStrategy::compire3dHist ONLY FOR !!! UCHAR !!!
-		float compire3dbars(bc::barline<T>* inc, bc::CompireStrategy cmp)
+		float compire3dbars(bc::barline* inc, bc::CompireStrategy cmp)
 		{
 			float t = 0, x2 = 0, y2 = 0;
 			size_t n = MIN(bar3d->size(), inc->bar3d->size());
 
 			if (cmp == bc::CompireStrategy::compire3dHist)
 			{
-				T s0[255];
+				Barscalar s0[255];
 
 				if (n == 0)
 					return 1;
-				memset(&s0, 0, 255 * sizeof(T));
+				memset(&s0, 0, 255 * sizeof(Barscalar));
 				for (size_t i = 0; i < bar3d->size(); ++i)
 				{
-					bc::bar3dvalue<T>& b = bar3d->at(i);
-					s0[(int)b.value] = b.count;
+					bc::bar3dvalue& b = bar3d->at(i);
+					s0[(int)b.value] = (int)b.count;
 					x2 += b.count * b.count;
 				}
 
-				T s1[255];
-				memset(&s1, 0, 255 * sizeof(T));
+				Barscalar s1[255];
+				memset(&s1, 0, 255 * sizeof(Barscalar));
 				for (size_t i = 0; i < inc->bar3d->size(); ++i)
 				{
-					bc::bar3dvalue<T>& b = inc->bar3d->at(i);
-					s1[(int)b.value] = b.count;
+					bc::bar3dvalue& b = inc->bar3d->at(i);
+					s1[(int)b.value] = (int)b.count;
 					y2 += b.count * b.count;
 				}
 
@@ -392,13 +395,13 @@ namespace bc
 			{
 				for (size_t i = 0; i < bar3d->size(); ++i)
 				{
-					bc::bar3dvalue<T>& b = bar3d->at(i);
+					bc::bar3dvalue& b = bar3d->at(i);
 					x2 += b.count * b.count;
 				}
 
 				for (size_t i = 0; i < inc->bar3d->size(); ++i)
 				{
-					bc::bar3dvalue<T>& b = inc->bar3d->at(i);
+					bc::bar3dvalue& b = inc->bar3d->at(i);
 					y2 += b.count * b.count;
 				}
 
@@ -418,17 +421,17 @@ namespace bc
 			return  abs(roundf(1000.f * (PI - t) / PI) / 1000.f);
 		}
 
-		bc::barvector<T> getEnclusivePoints()
+		bc::barvector getEnclusivePoints()
 		{
-			bc::barvector<T> out;
+			bc::barvector out;
 			getChildsMatr(out);
 
 			return std::move(out);
 		}
 
-		bc::barvector<T> getExclusivePoints()
+		bc::barvector getExclusivePoints()
 		{
-			bc::barvector<T> out;
+			bc::barvector out;
 			std::unordered_map<bc::point, bool, bc::pointHash> childs;
 			getChildsMatr(childs);
 
@@ -519,13 +522,13 @@ namespace bc
 		bp::list getChildren()
 		{
 			bp::list list;
-			for (barline<T>* child : children)
+			for (barline* child : children)
 				list.append(child);
 
 			return list;
 		}
 
-		bc::barline<T>* getParent()
+		bc::barline* getParent()
 		{
 			return this->parent;
 		}
@@ -551,7 +554,7 @@ namespace bc
 			{
 				// TODO
 
-//				barcounter<T>* bar3d = nullptr;
+//				barcounter* bar3d = nullptr;
 			}
 			if (expotrBinaryMask)
 			{
@@ -566,12 +569,12 @@ namespace bc
 
 		bool is3dmoreing() const
 		{
-			float d = this->len() / 256;
+			float d = (float)this->len() / 256;
 			int coos[256];
 			for (size_t i = 0; i < bar3d->size(); ++i)
 			{
-				T val = bar3d->at(i).value;
-				int tval = 256 * static_cast<int>(static_cast<float>(val) / len);
+				Barscalar val = bar3d->at(i).value;
+				int tval = 256 * static_cast<int>(static_cast<float>(val) / (float)len());
 
 				++coos[tval];
 			}
@@ -591,12 +594,10 @@ namespace bc
 
 			return true;
 		}
-		};
+	};
 
 	// comparable
-	template<class T>
-	using bline = barline<T>;
 
-	template<class T>
-	using BarRoot = barline<T>;
-	}
+	using bline = barline;
+	using BarRoot = barline;
+}

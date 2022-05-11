@@ -5,32 +5,32 @@
 
 namespace bc
 {
-	template<class T>
+	
 	class EXPORT Barbase
 	{
 	public:
-		virtual void removePorog(T const porog) = 0;
-		virtual void preprocessBar(T const& porog, bool normalize) = 0;
-		virtual float compireFull(const Barbase<T>* Y, bc::CompireStrategy strat) const = 0;
-		virtual Barbase<T>* clone() const = 0;
-		virtual T sum() const = 0;
+		virtual void removePorog(Barscalar const porog) = 0;
+		virtual void preprocessBar(Barscalar const& porog, bool normalize) = 0;
+		virtual float compireFull(const Barbase* Y, bc::CompireStrategy strat) const = 0;
+		virtual Barbase* clone() const = 0;
+		virtual Barscalar sum() const = 0;
 		virtual void relen() = 0;
 		//    virtual void fullCompite(barbase const *bc, CompireFunction fn, float poroc = 0.5f) = 0;
 		virtual ~Barbase();
 	};
 
 	
-	template<class T>
-	using barlinevector = std::vector<bc::barline<T>*>;
+	
+	using barlinevector = std::vector<bc::barline*>;
 
-	template<class T>
-	class EXPORT Baritem : public Barbase<T>
+	
+	class EXPORT Baritem : public Barbase
 	{
 	public:
-		barlinevector<T> barlines;
+		barlinevector barlines;
 
 	private:
-		bc::BarRoot<T>* rootNode = nullptr;
+		bc::BarRoot* rootNode = nullptr;
 		int wid;
 	public:
 		Baritem(int wid = 0);
@@ -58,9 +58,9 @@ namespace bc
 			}
 		}
 
-		// move costr
-		Baritem(Baritem&& obj) {
-
+		// move constr
+		Baritem(Baritem&& obj)
+		{
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
 
@@ -69,7 +69,8 @@ namespace bc
 		}
 
 		// move assign
-		void operator=(Baritem&& obj) {
+		void operator=(Baritem&& obj)
+		{
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
 
@@ -78,22 +79,22 @@ namespace bc
 		}
 
 		//    cv::Mat binmap;
-		void add(T st, T len);
-		void add(barline<T>* line);
+		void add(Barscalar st, Barscalar len);
+		void add(barline* line);
 
-		T sum() const;
+		Barscalar sum() const;
 		void relen();
-		T maxLen() const;
-		Baritem<T>* clone() const;
+		Barscalar maxLen() const;
+		Baritem* clone() const;
 
 		void getBettyNumbers(int* bs);
 
 		// remove lines than less then passed value
-		void removePorog(T const porog);
-		void preprocessBar(T const& porog, bool normalize);
-		float compireFull(const Barbase<T>* bc, bc::CompireStrategy strat) const;
-		float compireBestRes(Baritem<T> const* bc, bc::CompireStrategy strat) const;
-		float compareOccurrence(Baritem<T> const* bc, bc::CompireStrategy strat) const;
+		void removePorog(Barscalar const porog);
+		void preprocessBar(Barscalar const& porog, bool normalize);
+		float compireFull(const Barbase* bc, bc::CompireStrategy strat) const;
+		float compireBestRes(Baritem const* bc, bc::CompireStrategy strat) const;
+		float compareOccurrence(Baritem const* bc, bc::CompireStrategy strat) const;
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 
 		void normalize();
@@ -101,18 +102,18 @@ namespace bc
 		void getJsonLinesArray(std::string &out);
 		~Baritem();
 
-		bc::BarRoot<T>* getRootNode()
+		bc::BarRoot* getRootNode()
 		{
 			return rootNode;
 		}
-		void setRootNode(bc::BarRoot<T>* root)
+		void setRootNode(bc::BarRoot* root)
 		{
 			rootNode = root;
 		}
 
-		T getMax()
+		Barscalar getMax()
 		{
-			T _max{ 0 };
+			Barscalar _max{ 0 };
 			for (auto* b : this->barlines)
 			{
 				if (b->start + b->len() > _max)
@@ -123,7 +124,7 @@ namespace bc
 
 #ifdef _PYD
 		// only for uchar
-		bp::list calcHistByBarlen(/*T maxLen*/)
+		bp::list calcHistByBarlen(/*Barscalar maxLen*/)
 		{
 			int maxLen = 256;
 			int* hist = new int[maxLen];
@@ -135,7 +136,7 @@ namespace bc
 			bp::list pyhist;
 			for (size_t i = 0; i < maxLen; i++)
 				pyhist.append(hist[i]);
-			
+
 			delete[] hist;
 
 			return pyhist;
@@ -153,7 +154,7 @@ namespace bc
 		}
 
 		// only for uchar
-		bp::list calcHistByPointsSize(/*T maxLen*/)
+		bp::list calcHistByPointsSize(/*Barscalar maxLen*/)
 		{
 			int rm = 0;
 			for (size_t i = 0; i < barlines.size(); i++)
@@ -189,9 +190,9 @@ namespace bc
 			return lines;
 		}
 		
-		float cmp(const Baritem<T>* bitem, bc::CompireStrategy strat) const
+		float cmp(const Baritem* bitem, bc::CompireStrategy strat) const
 		{
-			return compireFull((const Baritem<T>*)bitem, strat);
+			return compireFull((const Baritem*)bitem, strat);
 		}
 
 
@@ -203,23 +204,23 @@ namespace bc
 	};
 
 	//template<size_t N>
-	template<class T>
-	class EXPORT Barcontainer : public Barbase<T>
+	
+	class EXPORT Barcontainer : public Barbase
 	{
-		std::vector<Baritem<T>*> items;
+		std::vector<Baritem*> items;
 	public:
 		Barcontainer();
 
-		T sum() const;
+		Barscalar sum() const;
 		void relen();
-		Barbase<T>* clone() const;
-		T maxLen() const;
+		Barbase* clone() const;
+		Barscalar maxLen() const;
 		size_t count();
 		//    Baritem *operator [](int i);
-		Baritem<T>* getItem(size_t i);
+		Baritem* getItem(size_t i);
 
 
-		Baritem<T> *exractItem(size_t index)
+		Baritem *exractItem(size_t index)
 		{
 			if (index < items.size())
 			{
@@ -230,7 +231,7 @@ namespace bc
 			return nullptr;
 		}
 
-		void exractItems(std::vector<Baritem<T> *> extr)
+		void exractItems(std::vector<Baritem *> extr)
 		{
 			for (size_t i = 0; i < items.size(); ++i)
 			{
@@ -239,14 +240,14 @@ namespace bc
 			}
 			items.clear();
 		}
-		Baritem<T>* lastItem();
-		void addItem(Baritem<T>* item);
+		Baritem* lastItem();
+		void addItem(Baritem* item);
 		// remove lines than less then passed value
-		void removePorog(T const porog);
-		void preprocessBar(T const& porog, bool normalize);
+		void removePorog(Barscalar const porog);
+		void preprocessBar(Barscalar const& porog, bool normalize);
 
-		float compireFull(const Barbase<T>* bc, bc::CompireStrategy strat) const;
-		float compireBest(const Baritem<T>* bc, bc::CompireStrategy strat) const;
+		float compireFull(const Barbase* bc, bc::CompireStrategy strat) const;
+		float compireBest(const Baritem* bc, bc::CompireStrategy strat) const;
 
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		~Barcontainer();

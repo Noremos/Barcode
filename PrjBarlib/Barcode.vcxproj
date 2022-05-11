@@ -102,6 +102,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="include\barline.h" />
+    <ClInclude Include="include\barscalar.h" />
     <ClInclude Include="include\barstrucs.h" />
     <ClInclude Include="include\barcodeCreator.h" />
     <ClInclude Include="include\barclasses.h" />

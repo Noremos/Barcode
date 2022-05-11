@@ -8,8 +8,8 @@ using namespace bc;
 
 #pragma warning(disable : 4996)
 
-template<class T>
-void BarcodeCreator<T>::draw(std::string name)
+
+void BarcodeCreator::draw(std::string name)
 {
 #ifdef USE_OPENCV
 
@@ -60,7 +60,7 @@ void BarcodeCreator<T>::draw(std::string name)
 		//		}
 		//		else
 		{
-			Hole<T>* hd = dynamic_cast<Hole<T>*>(comp);
+			Hole* hd = dynamic_cast<Hole*>(comp);
 			if (hd && hd->getIsOutside())
 				col = cv::Vec3b(0, 0, 0);
 			else
@@ -92,8 +92,8 @@ void BarcodeCreator<T>::draw(std::string name)
 #endif // USE_OPENCV
 }
 
-template<class T>
-inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
+
+inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 {
 	//second->kill();
 	if (second->liveLen() == 0 || main->liveLen() == 0)
@@ -115,44 +115,13 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 			second = temp;
 		}
 
-		if (sortedArr != nullptr)
+		for (size_t rind = 0, totalm = second->resline->matr.size(); rind < totalm; ++rind)
 		{
-			for (size_t rind = second->startIndex; rind <= curIndexInSortedArr; ++rind)
-			{
-				poidex& p = sortedArr[rind];
-				//assert(workingImg->get(p.x, p.y) == curbright);
-				if (getInclude(p) == second)
-				{
-					// Перебираем предыдущие элементы
-					main->add(p, getPoint(p), true);
-				}
-			}
+			const barvalue& val = second->resline->matr[rind];
+			const bc::point p = val.getPoint();
+			main->add(p.getLiner(wid), p, true);
 		}
-		else
-		{
-			for (size_t rind = second->startIndex; rind <= curIndexInSortedArr; ++rind)
-			{
-				auto val = geometrySortedArr.get()[rind];
-				poidex& p = val.offset;
-				auto curpoint = getPoint(p);
 
-				if (getInclude(p) == second)
-				{
-					// Перебираем предыдущие элементы
-					main->add(p, curpoint, true);
-				}
-
-				// NEXT
-				bc::point NextPoint = val.getNextPoint(curpoint);
-				poidex NextPindex = NextPoint.getLiner(workingImg->wid());
-
-				if (getInclude(NextPindex) == second)
-				{
-					// Перебираем предыдущие элементы
-					main->add(NextPindex, NextPoint, true);
-				}
-			}
-		}
 		main->startIndex = MIN(second->startIndex, main->startIndex);
 #endif // POINTS_ARE_AVAILABLE
 		delete second->resline;
@@ -172,9 +141,9 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 	//	std::swap(bottm2, top2);
 
 
-	T fs = main->getStart();
-	T sc = second->getStart();
-	T diff = (fs > sc) ? (fs - sc) : (sc - fs);
+	Barscalar fs = main->getStart();
+	Barscalar sc = second->getStart();
+	Barscalar diff = (fs > sc) ? (fs - sc) : (sc - fs);
 	if (diff > settings.getMaxLen())
 	{
 		return main;
@@ -201,7 +170,7 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 	case AttachMode::createNew:
 		//if ((double)MIN(main->getTotalSize(), second->getTotalSize()) / totalSize > 0.05)
 	{
-		COMPP newOne = new Component<T>(this, true);
+		COMPP newOne = new Component(this, true);
 		main->setParent(newOne);
 		second->setParent(newOne);
 		//main->kill();
@@ -232,7 +201,7 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 		if (main->getLastRowSize() >= settings.colorRange)
 		{
 			main->kill();
-			return new Component<T>(this, true);
+			return new Component(this, true);
 		}
 
 		break;
@@ -243,8 +212,8 @@ inline COMPP BarcodeCreator<T>::attach(COMPP main, COMPP second)
 
 #include <iostream>
 //****************************************B0**************************************
-template<class T>
-inline bool BarcodeCreator<T>::checkCloserB0()
+
+inline bool BarcodeCreator::checkCloserB0()
 {
 	COMPP first = nullptr;
 	COMPP connected;// = new rebro(x, y); //included[{(int)i, (int)j}];
@@ -299,7 +268,7 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 	{
 		//lastB += 1;
 
-		first = new Component<T>(curpoindex, this);
+		first = new Component(curpoindex, this);
 		return true;
 	}
 	return false;
@@ -308,8 +277,8 @@ inline bool BarcodeCreator<T>::checkCloserB0()
 
 
 
-template<class T>
-COMPP BarcodeCreator<T>::getPorogComp(const point& p, poidex index)
+
+COMPP BarcodeCreator::getPorogComp(const point& p, poidex index)
 {
 	auto* itr = included[index];
 	if (itr && GETDIFF(curbright, workingImg->get(p.x, p.y)))
@@ -321,16 +290,16 @@ COMPP BarcodeCreator<T>::getPorogComp(const point& p, poidex index)
 		return nullptr;
 }
 
-template<class T>
-COMPP BarcodeCreator<T>::getInclude(const size_t pos)
+
+COMPP BarcodeCreator::getInclude(const size_t pos)
 {
 	assert(pos < totalSize);
 	return included[pos] ? included[pos]->getMaxparent() : nullptr;
 }
 
 
-template<class T>
-HOLEP BarcodeCreator<T>::getHole(uint x, uint y)
+
+HOLEP BarcodeCreator::getHole(uint x, uint y)
 {
 	if (x < 0 || y < 0 || x >= wid || y >= hei)
 		return nullptr;
@@ -339,16 +308,16 @@ HOLEP BarcodeCreator<T>::getHole(uint x, uint y)
 	return dynamic_cast<HOLEP>(itr ? itr->getMaxparent() : nullptr);
 }
 
-template<class T>
-HOLEP BarcodeCreator<T>::getHole(const point& p)
+
+HOLEP BarcodeCreator::getHole(const point& p)
 {
 	auto itr = included[wid * p.y + p.x];
 	return dynamic_cast<HOLEP>(itr ? itr->getMaxparent() : nullptr);
 }
 
 
-template<class T>
-HOLEP BarcodeCreator<T>::tryAttach(HOLEP main, HOLEP add, point p)
+
+HOLEP BarcodeCreator::tryAttach(HOLEP main, HOLEP add, point p)
 {
 	if (main != add && main->findCross(p, add))
 	{
@@ -374,11 +343,11 @@ HOLEP BarcodeCreator<T>::tryAttach(HOLEP main, HOLEP add, point p)
 
 //****************************************B1**************************************
 
-template<class T>
-inline bool BarcodeCreator<T>::checkCloserB1()
+
+inline bool BarcodeCreator::checkCloserB1()
 {
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };//эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
-	Hole<T>* hr = nullptr;
+	Hole* hr = nullptr;
 	point p1;
 	point p2;
 
@@ -400,8 +369,8 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 			else
 				continue;//если не нашли. Проверяем только потелнциальные дыры
 
-			Hole<T>* h1 = getHole(p1);
-			Hole<T>* h2 = getHole(p2);
+			Hole* h1 = getHole(p1);
+			Hole* h2 = getHole(p2);
 			//все проверки на out в самом конце
 			//вариант 1 - они принадлежат одному объекту. Не валидные могут содержать только одну компоненту, значит, этот объект валидный
 			if (h1 == h2 && h1->isValid)
@@ -413,7 +382,7 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 			//cod 402
 			else if (h1->isValid && !h2->isValid)
 			{
-				hr = new Hole<T>(curpix, p1, p2, this);
+				hr = new Hole(curpix, p1, p2, this);
 
 				delete h2;
 				h1->tryAdd(curpix);
@@ -423,7 +392,7 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 			//cod 402
 			else if (h2->isValid && !h1->isValid)
 			{
-				hr = new Hole<T>(curpix, p1, p2, this);
+				hr = new Hole(curpix, p1, p2, this);
 				delete h1;
 				h2->tryAdd(curpix);
 				hr = tryAttach(hr, h2, curpix);
@@ -432,7 +401,7 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 			else if (!h1->isValid && !h2->isValid)//не факт, что они не валидны
 			{
 				//Т.К. мы уже проверили вышле, что образуется треуготльник, можно смело создаать дыру
-				hr = new Hole<T>(curpix, p1, p2, this);
+				hr = new Hole(curpix, p1, p2, this);
 				delete h1;
 				delete h2;
 
@@ -466,7 +435,7 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 
 	if (hr == nullptr)
 	{
-		hr = new Hole<T>(curpix, this);
+		hr = new Hole(curpix, this);
 		return false;
 	}
 
@@ -476,12 +445,12 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 
 		if (isContain(curp))
 		{
-			Hole<T>* h_t = getHole(curp);
+			Hole* h_t = getHole(curp);
 			//получена дыра
 			if (h_t == hr)
 				continue;
 
-			Hole<T>* h2 = nullptr;
+			Hole* h2 = nullptr;
 
 			point next = curpix + poss[(i % 8) + 1];
 			if (isContain(next))
@@ -495,7 +464,7 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 				{
 					delete h_t;
 					delete h2;
-					new Hole<T>(curpix, curp, next, this);
+					new Hole(curpix, curp, next, this);
 				}
 				else if (hr->tryAdd(curp))
 					delete h_t;
@@ -539,8 +508,8 @@ inline bool BarcodeCreator<T>::checkCloserB1()
 //********************************************************************************
 
 
-template<class T>
-bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider<T>* workingImg, size_t& totalSize, bc::ProcType type, float maxRadius, size_t& toProcess)
+
+bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, size_t& totalSize, bc::ProcType type, float maxRadius, size_t& toProcess)
 {
 	int wid = workingImg->wid();
 	int lastW = wid - 1;
@@ -558,8 +527,8 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider<T>* workingImg, size
 		for (int w = 0; w < lastW; ++w)
 		{
 			int offset = wid * h + w;
-			T cur = workingImg->get(w, h);
-			T next;
+			Barscalar cur = workingImg->get(w, h);
+			Barscalar next;
 
 			next = workingImg->get(w + 1, h - 1);
 			dist = indexCov::val_distance(cur, next);
@@ -588,8 +557,8 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider<T>* workingImg, size
 	for (int w = 0; w < lastW; ++w)
 	{
 		int offset = w;
-		T cur = workingImg->get(w, 0);
-		T next;
+		Barscalar cur = workingImg->get(w, 0);
+		Barscalar next;
 
 		next = workingImg->get(w + 1, 0);
 		dist = indexCov::val_distance(cur, next);
@@ -611,8 +580,8 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider<T>* workingImg, size
 	for (int w = 0; w < lastW; ++w)
 	{
 		int offset = wid * lastH + w;
-		T cur = workingImg->get(w, lastH);
-		T next;
+		Barscalar cur = workingImg->get(w, lastH);
+		Barscalar next;
 
 		next = workingImg->get(w + 1, lastH - 1);
 		dist = indexCov::val_distance(cur, next);
@@ -629,8 +598,8 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider<T>* workingImg, size
 	for (int h = 0; h < lastH; ++h)
 	{
 		int offset = wid * h + lastW;
-		T cur = workingImg->get(lastW, h);
-		T nextH = workingImg->get(lastW, h + 1);
+		Barscalar cur = workingImg->get(lastW, h);
+		Barscalar nextH = workingImg->get(lastW, h + 1);
 
 		dist = indexCov::val_distance(cur, nextH);
 		if (dist <= maxRadius)
@@ -655,9 +624,36 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider<T>* workingImg, size
 }
 
 
-template<>
-inline void BarcodeCreator<uchar>::sortPixels(bc::ProcType type)
+inline void BarcodeCreator::sortPixels(bc::ProcType type)
 {
+	if (workingImg->channels() == 3)
+	{
+		this->geometrySortedArr.reset(sortPixelsByRadius(workingImg, totalSize, type, settings.maxRadius, this->processCount));
+		return;
+	}
+	//// do this hack to skip constructor calling for every point
+	//poidex* data = new poidex[totalSize + 1];//256
+
+	////point * data = new point[total];
+
+	//for (size_t i = 0; i < totalSize; ++i)//wid
+	//	data[i] = i;
+
+	//myclassFromMin cmp;
+	//cmp.workingImg = workingImg;
+	//std::sort(data, &data[totalSize], cmp);
+	//if (type == ProcType::f255t0)
+	//{
+	//	for (size_t i = 1; i < totalSize - 1; ++i)//wid
+	//	{
+	//		float v0 = static_cast<float>(workingImg->getLiner(data[i - 1]));
+	//		float v2 = static_cast<float>(workingImg->getLiner(data[i]));
+	//		assert(v0 >= v2);
+	//	}
+	//}
+
+	//this->sortedArr = data;
+
 	uint hist[256];//256
 	uint offs[256];//256
 	memset(hist, 0, 256 * sizeof(int));
@@ -667,7 +663,7 @@ inline void BarcodeCreator<uchar>::sortPixels(bc::ProcType type)
 	{
 		for (int i = 0; i < workingImg->wid(); ++i)//wid
 		{
-			auto p = workingImg->get(i, j);
+			auto p = (int)workingImg->get(i, j);
 			++hist[p];//можно vector, но хз
 		}
 	}
@@ -682,7 +678,7 @@ inline void BarcodeCreator<uchar>::sortPixels(bc::ProcType type)
 	poidex* data = new poidex[totalSize + 1];//256
 	for (size_t i = 0; i < totalSize; i++)
 	{
-		uchar p = workingImg->getLiner(i);
+		uchar p = workingImg->getLiner(i).data.b1;
 		data[offs[p]++] = i;
 	}
 
@@ -693,62 +689,27 @@ inline void BarcodeCreator<uchar>::sortPixels(bc::ProcType type)
 	this->sortedArr = data;
 }
 
-
-
-template<>
-void BarcodeCreator<bc::barVector<uchar, 3>>::sortPixels(bc::ProcType type)
-{
-	this->geometrySortedArr.reset(sortPixelsByRadius(workingImg, totalSize, type, settings.maxRadius, this->processCount));
-}
-
-template<class T>
 struct myclassFromMin {
-	const bc::DatagridProvider<T>* workingImg;
+	const bc::DatagridProvider* workingImg;
 	bool operator() (poidex& a, poidex& b)
 	{
 		return workingImg->getLiner(a) < workingImg->getLiner(b);
 	}
 };
 
-template<class T>
+
 struct myclassFromMax {
-	const bc::DatagridProvider<T>* workingImg;
+	const bc::DatagridProvider* workingImg;
 	bool operator() (poidex& a, poidex& b)
 	{
 		return workingImg->getLiner(a) > workingImg->getLiner(b);
 	}
 };
 
-template<class T>
-void BarcodeCreator<T>::sortPixels(bc::ProcType type)
-{
-	// do this hack to skip constructor calling for every point
-	poidex* data = new poidex[totalSize + 1];//256
-
-	//point * data = new point[total];
-
-	for (size_t i = 0; i < totalSize; ++i)//wid
-		data[i] = i;
-
-	myclassFromMin<T> cmp;
-	cmp.workingImg = workingImg;
-	std::sort(data, &data[totalSize], cmp);
-	if (type == ProcType::f255t0)
-	{
-		for (size_t i = 1; i < totalSize - 1; ++i)//wid
-		{
-			float v0 = static_cast<float>(workingImg->getLiner(data[i - 1]));
-			float v2 = static_cast<float>(workingImg->getLiner(data[i]));
-			assert(v0 >= v2);
-		}
-	}
-
-	this->sortedArr = data;
-}
 #include<map>
 
-//template<class T>
-//inline point* BarcodeCreator<T>::sort()
+//
+//inline point* BarcodeCreator::sort()
 //{
 //	std::map<T, int> hist;
 //	std::unordered_map<T, int> offs;
@@ -767,7 +728,7 @@ void BarcodeCreator<T>::sortPixels(bc::ProcType type)
 //		}
 //	}
 
-//	T prev;
+//	Barscalar prev;
 //	bool f = false;
 //	//auto const& [key, val]
 //	for (auto const& iter : hist)
@@ -792,7 +753,7 @@ void BarcodeCreator<T>::sortPixels(bc::ProcType type)
 //	{
 //		for (int j = 0; j < workingImg->hei(); ++j)//hei
 //		{
-//            T p = workingImg->get(i, j);
+//            Barscalar p = workingImg->get(i, j);
 //			data[offs[p]++] = point(i, j);
 //		}
 //	}
@@ -800,8 +761,8 @@ void BarcodeCreator<T>::sortPixels(bc::ProcType type)
 //}
 
 
-template<class T>
-void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, ProcType& type, ComponentType& comp)
+
+void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, ComponentType& comp)
 {
 	wid = src->wid();
 	hei = src->hei();
@@ -810,9 +771,9 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, ProcType& type,
 
 	if (type == ProcType::invertf0)
 	{
-		T mmin = 0, mmax = 0;
+		Barscalar mmin = 0, mmax = 0;
 		src->maxAndMin(mmin, mmax);
-		bc::BarImg<T>* newone = new BarImg<T>(src->wid(), src->hei());
+		bc::BarImg* newone = new BarImg(src->wid(), src->hei());
 		for (size_t i = 0; i < src->length(); ++i)
 		{
 			newone->setLiner(i, mmax - src->getLiner(i));
@@ -847,8 +808,8 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, ProcType& type,
 	}
 	// lastB = 0;
 
-	included = new Include<T>[totalSize];
-	memset(included, 0, totalSize * sizeof(Include<T>));
+	included = new Include[totalSize];
+	memset(included, 0, totalSize * sizeof(Include));
 
 #ifdef USE_OPENCV
 
@@ -863,8 +824,8 @@ void BarcodeCreator<T>::init(const bc::DatagridProvider<T>* src, ProcType& type,
 }
 //#include <QDebug>
 
-template<class T>
-void BarcodeCreator<T>::processHole(Barcontainer<T>* item)
+
+void BarcodeCreator::processHole(Barcontainer* item)
 {
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < totalSize; ++curIndexInSortedArr)
 	{
@@ -886,8 +847,8 @@ void BarcodeCreator<T>::processHole(Barcontainer<T>* item)
 	// lastB = 0;
 }
 
-template<class T>
-void BarcodeCreator<T>::processComp(Barcontainer<T>* item)
+
+void BarcodeCreator::processComp(Barcontainer* item)
 {
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < totalSize; ++curIndexInSortedArr)
 	{
@@ -905,7 +866,7 @@ void BarcodeCreator<T>::processComp(Barcontainer<T>* item)
 #endif
 		assert(included[wid * curpix.y + curpix.x]);
 
-}
+	}
 
 	//assert(((void)"ALARM! B0 is not one", lastB == 1));
 
@@ -928,12 +889,12 @@ struct Operator
 	}
 };
 
-template<class T>
-void BarcodeCreator<T>::addItemToCont(Barcontainer<T>* container)
+
+void BarcodeCreator::addItemToCont(Barcontainer* container)
 {
 	if (container != nullptr)
 	{
-		Baritem<T>* lines = new Baritem<T>(workingImg->wid());
+		Baritem* lines = new Baritem(workingImg->wid());
 
 		switch (settings.returnType)
 		{
@@ -954,8 +915,8 @@ void BarcodeCreator<T>::addItemToCont(Barcontainer<T>* container)
 	}
 }
 
-template<class T>
-void BarcodeCreator<T>::VISUAL_DEBUG()
+
+void BarcodeCreator::VISUAL_DEBUG()
 {
 	checkCloserB1();
 #ifdef USE_OPENCV
@@ -967,8 +928,8 @@ void BarcodeCreator<T>::VISUAL_DEBUG()
 #endif // DEBUG
 }
 
-template<class T>
-void BarcodeCreator<T>::VISUAL_DEBUG_COMP()
+
+void BarcodeCreator::VISUAL_DEBUG_COMP()
 {
 	checkCloserB0();
 #ifdef USE_OPENCV
@@ -980,8 +941,8 @@ void BarcodeCreator<T>::VISUAL_DEBUG_COMP()
 #endif // DEBUG
 }
 
-template<class T>
-void BarcodeCreator<T>::clearIncluded()
+
+void BarcodeCreator::clearIncluded()
 {
 	for (COMPP c : components)
 	{
@@ -993,7 +954,7 @@ void BarcodeCreator<T>::clearIncluded()
 
 	if (included != nullptr)
 	{
-		//memset(included, 0, totalSize * sizeof(Include<T>));
+		//memset(included, 0, totalSize * sizeof(Include));
 		delete[] included;
 		included = nullptr;
 	}
@@ -1014,8 +975,8 @@ void BarcodeCreator<T>::clearIncluded()
 }
 
 
-template<class T>
-bool compareLines(const barline<T>* i1, const barline<T>* i2)
+
+bool compareLines(const barline* i1, const barline* i2)
 {
 	if (i1->len() == i2->len())
 		return i1->start > i2->start;
@@ -1024,20 +985,20 @@ bool compareLines(const barline<T>* i1, const barline<T>* i2)
 }
 
 
-template<class T>
-void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
+
+void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 {
 	assert(n == 2 || n == 3);
 
 	// якорная линия
-	auto* rootNode = new BarRoot<T>(0, 0, workingImg->wid(), nullptr, 0);
+	auto* rootNode = new BarRoot(0, 0, workingImg->wid(), nullptr, 0);
 
 	for (COMPP c : components)
 	{
 		if (c == nullptr || c->resline == nullptr)
 			continue;
 
-		T len = c->resline->len();
+		Barscalar len = c->resline->len();
 
 		if (c->parent == nullptr)
 		{
@@ -1046,6 +1007,19 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 			if (settings.createGraph)
 				c->resline->setparent(rootNode);
 		}
+		//else
+		//{
+		//	if (len == 0)
+		//	{
+		//		assert(c->resline->children.size() == 0);
+
+		//		for (size_t i = 0; i < c->resline->matr.size(); i++)
+		//		{
+		//			c->parent->resline->matr.push_back(c->resline->matr[i]);
+		//		}
+		//		continue;
+		//	}
+		//}
 		//else
 			//assert(len != 0);
 
@@ -1068,8 +1042,8 @@ void BarcodeCreator<T>::computeNdBarcode(Baritem<T>* lines, int n)
 	}
 }
 
-template<class T>
-void BarcodeCreator<T>::processTypeF(barstruct& str, const bc::DatagridProvider<T>* src, Barcontainer<T>* item)
+
+void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* src, Barcontainer* item)
 {
 	init(src, str.proctype, str.comtype);
 
@@ -1096,24 +1070,27 @@ void BarcodeCreator<T>::processTypeF(barstruct& str, const bc::DatagridProvider<
 
 }
 
-template<class T>
-void BarcodeCreator<T>::processFULL(barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item)
+
+void BarcodeCreator::processFULL(barstruct& str, const bc::DatagridProvider* img, Barcontainer* item)
 {
 	bool rgb = (img->channels() != 1);
 	originalImg = true;
 	if (str.coltype == ColorType::rgb || (str.coltype == ColorType::native && rgb))
 	{
+		type = BarType::BYTE8_3;
 		assert(img->channels() == 3);
 		processTypeF(str, img, item);
 	}
 	else
 	{
+		type = BarType::BYTE8_1;
+
 		if (img->channels() != 1)
 		{
-			bc::BarImg<T> res(1, 1);
+			bc::BarImg res(1, 1);
 			cvtColorV3B2U1C(*img, res);
 			originalImg = false;
-			//const DatagridProvider<T>* temoing = dynamic_cast<const DatagridProvider<T>*>(res);
+			//const DatagridProvider* temoing = dynamic_cast<const DatagridProvider*>(res);
 			processTypeF(str, &res, item);
 		}
 		else
@@ -1123,13 +1100,12 @@ void BarcodeCreator<T>::processFULL(barstruct& str, const bc::DatagridProvider<T
 	}
 }
 
-template<class T>
-bc::Barcontainer<T>* BarcodeCreator<T>::createBarcode(const bc::DatagridProvider<T>* img, const BarConstructor<T>& structure)
+
+bc::Barcontainer* BarcodeCreator::createBarcode(const bc::DatagridProvider* img, const BarConstructor& structure)
 {
 	this->settings = structure;
 	settings.checkCorrect();
-
-	Barcontainer<T>* cont = new Barcontainer<T>();
+	Barcontainer* cont = new Barcontainer();
 
 	for (auto& it : settings.structure)
 	{
@@ -1149,8 +1125,8 @@ uchar dif(uchar a, uchar b)
 		return b - a;
 }
 
-//template<class T>
-//void BarcodeCreator<T>::Prepair()
+//
+//void BarcodeCreator::Prepair()
 //{
 //	const bcBarImg& mat = *workingImg;
 //	int N = 4;
@@ -1174,13 +1150,13 @@ uchar dif(uchar a, uchar b)
 //				if (subC == mainC && mainC != nullptr)
 //					continue;
 //
-//				T val = mat.get(p);
+//				Barscalar val = mat.get(p);
 //
 //				if (dif(val, curbright) <= settings.getStep())
 //				{
 //					if (subC == nullptr && mainC == nullptr)
 //					{
-//						mainC = new Component<T>(this->curpix, this);
+//						mainC = new Component(this->curpix, this);
 //						mainC->add(p);
 //					}
 //					else if (mainC != nullptr && subC == nullptr)
@@ -1199,15 +1175,15 @@ uchar dif(uchar a, uchar b)
 //				}
 //				if (mainC == nullptr)
 //				{
-//					mainC = new Component<T>(this->curpix, this);
+//					mainC = new Component(this->curpix, this);
 //				}
 //			}
 //		}
 //	}
 //}
 //
-//template<class T>
-//void BarcodeCreator<T>::ProcessFullPrepair(int* retBty, Barcontainer<T>* item)
+//
+//void BarcodeCreator::ProcessFullPrepair(int* retBty, Barcontainer* item)
 //{
 //	for (int i = 0; i < 256; ++i)
 //	{
@@ -1229,72 +1205,72 @@ uchar dif(uchar a, uchar b)
 //	lastB = 0;
 //}
 //
-//template<class T>
-//void BarcodeCreator<T>::ProcessPrepComp(int* retBty, Barcontainer<T>* item)
+//
+//void BarcodeCreator::ProcessPrepComp(int* retBty, Barcontainer* item)
 //{
 //	Prepair();
 //	processComp(retBty, item);
 //}
 
-template<>
-Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int hei, float nullVal)
-{
-	settings.createBinaryMasks = true;
-	settings.createGraph = true;
-	settings.returnType = ReturnType::barcode2d;
-	skipAddPointsToParent = true;
-	//[y * _wid + x]
-	img[hei * wid - 1] = 9999.f;//
-	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
-	this->needDelImg = true;
+//
+//Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int hei, float nullVal)
+//{
+//	settings.createBinaryMasks = true;
+//	settings.createGraph = true;
+//	settings.returnType = ReturnType::barcode2d;
+//	skipAddPointsToParent = true;
+//	//[y * _wid + x]
+//	img[hei * wid - 1] = 9999.f;//
+//	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
+//	this->needDelImg = true;
+//
+//	if (nullVal > -999)
+//	{
+//		for (size_t i = 0; i < workingImg->length(); ++i)
+//		{
+//			workingImg->getLiner(i) = -9999;
+//		}
+//		nullVal = -9999;
+//	}
+//	//	float maxs, mins;
+//	//	workingImg->maxAndMin(mins, maxs);
+//	//	settings.setMaxLen((maxs - mins) / 2);
+//	auto prec = ProcType::f255t0;
+//	auto comp = ComponentType::Component;
+//	init(workingImg, prec, comp);
+//
+//	for (curIndexInSortedArr = 0; curIndexInSortedArr < totalSize; ++curIndexInSortedArr)
+//	{
+//		curpoindex = sortedArr[curIndexInSortedArr];
+//		curpix = getPoint(curpoindex);
+//		curbright = workingImg->get(curpix);
+//
+//#ifdef VDEBUG
+//		VISUAL_DEBUG_COMP();
+//#else
+//		checkCloserB0();
+//#endif
+//	}
+//
+//
+//	Barcontainer<float>* item = new Barcontainer<float>();
+//
+//	addItemToCont(item);
+//	clearIncluded();
+//
+//	return item;
+//}
 
-	if (nullVal > -999)
-	{
-		for (size_t i = 0; i < workingImg->length(); ++i)
-		{
-			workingImg->getLiner(i) = -9999;
-		}
-		nullVal = -9999;
-	}
-	//	float maxs, mins;
-	//	workingImg->maxAndMin(mins, maxs);
-	//	settings.setMaxLen((maxs - mins) / 2);
-	auto prec = ProcType::f255t0;
-	auto comp = ComponentType::Component;
-	init(workingImg, prec, comp);
-
-	for (curIndexInSortedArr = 0; curIndexInSortedArr < totalSize; ++curIndexInSortedArr)
-	{
-		curpoindex = sortedArr[curIndexInSortedArr];
-		curpix = getPoint(curpoindex);
-		curbright = workingImg->get(curpix);
-
-#ifdef VDEBUG
-		VISUAL_DEBUG_COMP();
-#else
-		checkCloserB0();
-#endif
-	}
 
 
-	Barcontainer<float>* item = new Barcontainer<float>();
-
-	addItemToCont(item);
-	clearIncluded();
-
-	return item;
-}
-
-
-template<class T>
-Barcontainer<T>* BarcodeCreator<T>::searchHoles(float* /*img*/, int /*wid*/, int /*hei*/, float/* nullVal*/)
+Barcontainer* BarcodeCreator::searchHoles(float* /*img*/, int /*wid*/, int /*hei*/, float/* nullVal*/)
 {
 	return nullptr;
 }
 
 #ifdef _PYD
 
-template<>
+
 inline bc::Barcontainer<barvec3b>* bc::BarcodeCreator<barvec3b>::createBarcode(bn::ndarray& img, bc::BarConstructor<barvec3b>& structure)
 {
 	//auto shape = img.get_shape();
@@ -1318,12 +1294,12 @@ inline bc::Barcontainer<barvec3b>* bc::BarcodeCreator<barvec3b>::createBarcode(b
 	//printf(ex.what());
 	//}
 
-	//bc::BarImg<T> image(img.shape(1), img.shape(0), img.get_nd(), (uchar*)img.get_data(), false, false);
+	//bc::BarImg image(img.shape(1), img.shape(0), img.get_nd(), (uchar*)img.get_data(), false, false);
 	//return createBarcode(&image, structure);
 }
 
-template<class T>
-inline bc::Barcontainer<T>* bc::BarcodeCreator<T>::createBarcode(bn::ndarray& img, bc::BarConstructor<T>& structure)
+
+inline bc::Barcontainer* bc::BarcodeCreator::createBarcode(bn::ndarray& img, bc::BarConstructor& structure)
 {
 	//auto shape = img.get_shape();
 
@@ -1335,7 +1311,7 @@ inline bc::Barcontainer<T>* bc::BarcodeCreator<T>::createBarcode(bn::ndarray& im
 
 	//cv::imshow("test", image);
 	//cv::waitkey(0);
-	bc::BarNdarray<T> image(img);
+	bc::BarNdarray image(img);
 	//try
 	//{
 	return createBarcode(&image, structure);
@@ -1346,15 +1322,15 @@ inline bc::Barcontainer<T>* bc::BarcodeCreator<T>::createBarcode(bn::ndarray& im
 	//printf(ex.what());
 	//}
 
-	//bc::BarImg<T> image(img.shape(1), img.shape(0), img.get_nd(), (uchar*)img.get_data(), false, false);
+	//bc::BarImg image(img.shape(1), img.shape(0), img.get_nd(), (uchar*)img.get_data(), false, false);
 	//return createBarcode(&image, structure);
 }
 #endif
 // GEOMERTY
 
 
-template<class T>
-void BarcodeCreator<T>::processCompByRadius(Barcontainer<T>* item)
+
+void BarcodeCreator::processCompByRadius(Barcontainer* item)
 {
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
 	{
@@ -1366,8 +1342,8 @@ void BarcodeCreator<T>::processCompByRadius(Barcontainer<T>* item)
 		bc::point NextPoint = val.getNextPoint(curpix);
 		poidex NextPindex = NextPoint.getLiner(workingImg->wid());
 
-		Component<T>* first = getComp(curpoindex);
-		Component<T>* connected = getComp(NextPindex);
+		Component* first = getComp(curpoindex);
+		Component* connected = getComp(NextPindex);
 		if (first != nullptr)
 		{
 			//если в найденном уже есть этот элемент
@@ -1380,7 +1356,7 @@ void BarcodeCreator<T>::processCompByRadius(Barcontainer<T>* item)
 			{
 				if (!first->add(NextPindex, NextPoint))
 				{
-					connected = new Component<T>(NextPindex, this);
+					connected = new Component(NextPindex, this);
 					connected->add(curpoindex, getPoint(curpoindex));
 				}
 			}
@@ -1390,7 +1366,7 @@ void BarcodeCreator<T>::processCompByRadius(Barcontainer<T>* item)
 			// Ребро не создано или не получилось присоединить
 			if (connected == nullptr || !connected->add(curpoindex))
 			{
-				first = new Component<T>(curpoindex, this);
+				first = new Component(curpoindex, this);
 				first->add(NextPindex, NextPoint);
 			}
 		}
@@ -1398,12 +1374,12 @@ void BarcodeCreator<T>::processCompByRadius(Barcontainer<T>* item)
 #ifdef USE_OPENCV
 		if (settings.visualize)
 		{
-			const BarMat<T>* mat = reinterpret_cast<const BarMat<T>*>(this->workingImg);
+			const BarMat* mat = reinterpret_cast<const BarMat*>(this->workingImg);
 
 			if (mat)
 			{
 				Mat wimg;
-				bool is3d = typeid(T) != typeid(uchar);
+				bool is3d = this->type == BarType::BYTE8_3;
 				if (!is3d)
 					cv::cvtColor(mat->mat, wimg, cv::COLOR_GRAY2BGR);
 				else
@@ -1440,7 +1416,7 @@ void BarcodeCreator<T>::processCompByRadius(Barcontainer<T>* item)
 			cv::waitKey(settings.waitK);
 		}
 #endif // USE_OPENCV
-}
+	}
 
 
 	//totalSize = workingImg->length();
@@ -1453,7 +1429,6 @@ void BarcodeCreator<T>::processCompByRadius(Barcontainer<T>* item)
 	clearIncluded();
 }
 
-INIT_TEMPLATE_TYPE(bc::BarcodeCreator)
 
 //template bc::Barcontainer<ushort>* BarcodeCreator<ushort>::createBarcode(const bc::DatagridProvider<ushort>*, const BarConstructor<ushort>&)
 
