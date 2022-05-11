@@ -531,21 +531,21 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, size_t&
 			Barscalar next;
 
 			next = workingImg->get(w + 1, h - 1);
-			dist = indexCov::val_distance(cur, next);
+			dist = cur.val_distance(next);
 			if (dist <= maxRadius)
 				data[k++] = indexCov(offset, dist, topRight);
 
 			next = workingImg->get(w + 1, h);
-			dist = indexCov::val_distance(cur, next);
+			dist = cur.val_distance(next);
 			if (dist <= maxRadius)
 				data[k++] = indexCov(offset, dist, middleRight);
 
 			next = workingImg->get(w + 1, h + 1);
-			dist = indexCov::val_distance(cur, next);
+			dist = cur.val_distance(next);
 			if (dist <= maxRadius)
 				data[k++] = indexCov(offset, dist, downRight);
 
-			dist = indexCov::val_distance(cur, next);
+			dist = cur.val_distance(next);
 			next = workingImg->get(w, h + 1);
 			if (dist <= maxRadius)
 				data[k++] = indexCov(offset, dist, downCur);
@@ -561,17 +561,17 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, size_t&
 		Barscalar next;
 
 		next = workingImg->get(w + 1, 0);
-		dist = indexCov::val_distance(cur, next);
+		dist = cur.val_distance(next);
 		if (dist <= maxRadius)
 			data[k++] = indexCov(offset, dist, middleRight);
 
 		next = workingImg->get(w + 1, 1);
-		dist = indexCov::val_distance(cur, next);
+		dist = cur.val_distance(next);
 		if (dist <= maxRadius)
 			data[k++] = indexCov(offset, dist, downRight);
 
 		next = workingImg->get(w, 1);
-		dist = indexCov::val_distance(cur, next);
+		dist = cur.val_distance(next);
 		if (dist <= maxRadius)
 			data[k++] = indexCov(offset, dist, downCur);
 	}
@@ -584,12 +584,12 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, size_t&
 		Barscalar next;
 
 		next = workingImg->get(w + 1, lastH - 1);
-		dist = indexCov::val_distance(cur, next);
+		dist = cur.val_distance(next);
 		if (dist <= maxRadius)
 			data[k++] = indexCov(offset, dist, topRight);
 
 		next = workingImg->get(w + 1, lastH);
-		dist = indexCov::val_distance(cur, next);
+		dist = cur.val_distance(next);
 		if (dist <= maxRadius)
 			data[k++] = indexCov(offset, dist, middleRight);
 	}
@@ -601,7 +601,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, size_t&
 		Barscalar cur = workingImg->get(lastW, h);
 		Barscalar nextH = workingImg->get(lastW, h + 1);
 
-		dist = indexCov::val_distance(cur, nextH);
+		dist = cur.val_distance(nextH);
 		if (dist <= maxRadius)
 			data[k++] = indexCov(offset, dist, nextPoz::downCur);
 	}

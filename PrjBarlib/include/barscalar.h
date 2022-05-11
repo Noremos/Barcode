@@ -278,6 +278,35 @@ public:
 			return data.b1;
 	}
 
+
+private:
+	float difMax(uchar a, uchar b) const
+	{
+		return static_cast<float>(a > b ? a - b : b - a);
+	}
+
+	float sp(float v) const
+	{
+		return v * v;
+	}
+public: 
+	float val_distance(const Barscalar& R) const
+	{
+		if (type == BarType::BYTE8_3)
+		{
+			float res = 0;
+			for (char i = 0; i < 3; i++)
+			{
+				res += sp(difMax(data.b3[i], R.data.b3[i]));
+			}
+			return sqrtf(res);
+		}
+		else
+			return difMax(data.b1, R.data.b1);
+
+		float res;
+	}
+
 	explicit operator int() const
 	{
 		return (int)getAvgFloat();

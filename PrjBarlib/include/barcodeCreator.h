@@ -49,28 +49,6 @@ namespace bc {
 				return bc::point(p.x, p.y + 1);
 			}
 		}
-
-		inline static float safeDiffSqr(const float& a, const float& b)
-		{
-			return a > b ? ((a - b) * (a - b)) : ((b - a) * (b - a));
-		}
-
-		template<class TK, uint N>
-		inline static float val_distance(const Barscalar& fisrt, const Barscalar& second)
-		{
-			float dist = 0;
-			for (uint i = 0; i < N; ++i)
-			{
-				dist += safeDiffSqr(static_cast<float>(second[i]), static_cast<float>(fisrt[i]));
-			}
-			return sqrtf(dist);
-		}
-
-		template<class TK>
-		inline static float val_distance(const TK& a, const TK& b)
-		{
-			return a > b ? (float)(a - b) : (float)(b - a);
-		}
 	};
 
 	
