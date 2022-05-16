@@ -498,19 +498,19 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 	bcstruct.waitK = 1;
 	bcstruct.maxRadius = 9999;
 	//bcstruct.colorRange = 25;
-	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::RadiusComp);
+	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::Component);
 
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
 	Mat back = img;
-	//cvtColor(img, back, COLOR_BGR2GRAY);
 
 	show("baeck", back, 1);
 	cv::imwrite("source.png", back);
 
 	//back.at<uchar>(0, 0) = 0;
 	//back = 255 - back;
-	BarMat wrap(back, BarType::BYTE8_3);
+	cvtColor(img, back, COLOR_BGR2GRAY);
+	BarMat wrap(back);
 	Barcontainer* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
 	Baritem* item = containet->getItem(0);
 

@@ -46,6 +46,7 @@ class AllocatePool
 
 enum class BarType : char
 {
+	NONE,
 	BYTE8_1 = 0,
 	BYTE8_3,
 	//FLOAT32_1

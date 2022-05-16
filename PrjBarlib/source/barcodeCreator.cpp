@@ -626,67 +626,80 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, size_t&
 
 inline void BarcodeCreator::sortPixels(bc::ProcType type)
 {
-	if (workingImg->channels() == 3)
+	switch (workingImg->getType())
 	{
-		this->geometrySortedArr.reset(sortPixelsByRadius(workingImg, totalSize, type, settings.maxRadius, this->processCount));
-		return;
+	case BarType::BYTE8_1:
+	{
+		uint hist[256];//256
+		uint offs[256];//256
+		std::fill_n(hist, 256, 0);
+		std::fill_n(offs, 256, 0);
+
+		for (int j = 0; j < workingImg->hei(); ++j)//hei
+		{
+			for (int i = 0; i < workingImg->wid(); ++i)//wid
+			{
+				auto p = (int)workingImg->get(i, j);
+				++hist[p];//можно vector, но хз
+			}
+		}
+
+		for (size_t i = 1; i < 256; ++i)
+		{
+			hist[i] += hist[i - 1];
+			offs[i] = hist[i - 1];
+		}
+
+
+		poidex* data = new poidex[totalSize + 1];//256
+		for (size_t i = 0; i < totalSize; i++)
+		{
+			uchar p = workingImg->getLiner(i).data.b1;
+			data[offs[p]++] = i;
+		}
+
+		if (type == ProcType::f255t0)
+		{
+			std::reverse(data, data + totalSize);
+		}
+		this->sortedArr = data;
+		break;
 	}
-	//// do this hack to skip constructor calling for every point
-	//poidex* data = new poidex[totalSize + 1];//256
-
-	////point * data = new point[total];
-
-	//for (size_t i = 0; i < totalSize; ++i)//wid
-	//	data[i] = i;
-
-	//myclassFromMin cmp;
-	//cmp.workingImg = workingImg;
-	//std::sort(data, &data[totalSize], cmp);
-	//if (type == ProcType::f255t0)
+	case BarType::BYTE8_3:
+	{
+		assert(false);
+		break;
+	}
+	//case BarType::FLOAT:
 	//{
-	//	for (size_t i = 1; i < totalSize - 1; ++i)//wid
-	//	{
-	//		float v0 = static_cast<float>(workingImg->getLiner(data[i - 1]));
-	//		float v2 = static_cast<float>(workingImg->getLiner(data[i]));
-	//		assert(v0 >= v2);
-	//	}
+		//// do this hack to skip constructor calling for every point
+//poidex* data = new poidex[totalSize + 1];//256
+
+////point * data = new point[total];
+
+//for (size_t i = 0; i < totalSize; ++i)//wid
+//	data[i] = i;
+
+//myclassFromMin cmp;
+//cmp.workingImg = workingImg;
+//std::sort(data, &data[totalSize], cmp);
+//if (type == ProcType::f255t0)
+//{
+//	for (size_t i = 1; i < totalSize - 1; ++i)//wid
+//	{
+//		float v0 = static_cast<float>(workingImg->getLiner(data[i - 1]));
+//		float v2 = static_cast<float>(workingImg->getLiner(data[i]));
+//		assert(v0 >= v2);
+//	}
+//}
+
+//this->sortedArr = data;
+	//	break;
 	//}
 
-	//this->sortedArr = data;
-
-	uint hist[256];//256
-	uint offs[256];//256
-	memset(hist, 0, 256 * sizeof(int));
-	memset(offs, 0, 256 * sizeof(int));
-
-	for (int j = 0; j < workingImg->hei(); ++j)//hei
-	{
-		for (int i = 0; i < workingImg->wid(); ++i)//wid
-		{
-			auto p = (int)workingImg->get(i, j);
-			++hist[p];//можно vector, но хз
-		}
+	default:
+		break;
 	}
-
-	for (size_t i = 1; i < 256; ++i)
-	{
-		hist[i] += hist[i - 1];
-		offs[i] = hist[i - 1];
-	}
-
-
-	poidex* data = new poidex[totalSize + 1];//256
-	for (size_t i = 0; i < totalSize; i++)
-	{
-		uchar p = workingImg->getLiner(i).data.b1;
-		data[offs[p]++] = i;
-	}
-
-	if (type == ProcType::f255t0)
-	{
-		std::reverse(data, data + totalSize);
-	}
-	this->sortedArr = data;
 }
 
 struct myclassFromMin {

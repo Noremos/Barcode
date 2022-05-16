@@ -28,7 +28,7 @@ namespace bc {
 		int r, g, b;
 	};*/
 
-	
+
 	class EXPORT DatagridProvider
 	{
 	public:
@@ -36,13 +36,13 @@ namespace bc {
 		virtual int hei() const = 0;
 		virtual int channels() const = 0;
 
-		virtual void maxAndMin(Barscalar& min, Barscalar&max) const = 0;
+		virtual void maxAndMin(Barscalar& min, Barscalar& max) const = 0;
 		virtual size_t typeSize() const = 0;
 
 
-		virtual Barscalar& get(int x, int y) const = 0;
+		virtual Barscalar get(int x, int y) const = 0;
 
-		virtual Barscalar& get(point& p) const
+		virtual Barscalar get(point& p) const
 		{
 			return get(p.x, p.y);
 		}
@@ -53,9 +53,14 @@ namespace bc {
 		}
 
 		// wid * y + x;
-		virtual Barscalar& getLiner(size_t pos) const
+		virtual Barscalar getLiner(size_t pos) const
 		{
 			return get((int)(pos % wid()), (int)(pos / wid()));
+		}
+
+		inline BarType getType() const
+		{
+			return type;
 		}
 
 		point getPointAt(size_t iter) const
@@ -65,9 +70,11 @@ namespace bc {
 		virtual ~DatagridProvider()
 		{ }
 
+	public:
+		BarType type = BarType::BYTE8_1;
 	};
 
-	
+
 	class EXPORT BarImg : public DatagridProvider
 	{
 		typedef Barscalar* bar_iterator;
@@ -88,8 +95,8 @@ namespace bc {
 		bool _deleteData = true;
 	public:
 		bool diagReverce = false;
-		virtual int width(){ return wid();}
-		virtual int height(){ return hei();}
+		virtual int width() { return wid(); }
+		virtual int height() { return hei(); }
 
 	protected:
 
@@ -98,6 +105,10 @@ namespace bc {
 			this->_wid = width;
 			this->_hei = height;
 			this->_channels = chnls;
+			if (chnls == 3)
+				type = BarType::BYTE8_3;
+			else
+				type = BarType::BYTE8_1;
 			TSize = sizeof(Barscalar);
 			diagReverce = false;
 		}
@@ -224,7 +235,7 @@ namespace bc {
 		//		}
 		//#endif // OPENCV
 
-        virtual ~BarImg()
+		virtual ~BarImg()
 		{
 			valDelete();
 		}
@@ -338,7 +349,7 @@ namespace bc {
 			return TSize;
 		}
 
-		inline Barscalar& get(int x, int y) const override
+		inline Barscalar get(int x, int y) const override
 		{
 			//if (diagReverce)
 			//	return values[x * _wid + y];
@@ -407,7 +418,7 @@ namespace bc {
 			cachedMax.isCached = false;
 		}
 
-		virtual Barscalar& getLiner(size_t pos) const override
+		virtual Barscalar getLiner(size_t pos) const override
 		{
 			return values[pos];
 		}
@@ -422,18 +433,18 @@ namespace bc {
 			cachedMax.isCached = false;
 		}
 
-		void addToMat(Barscalar value)
-		{
-			for (size_t i = 0; i < this->length(); i++)
-			{
-				Barscalar& sval = this->getLiner(i);
-				sval += value;
-				assert(this->getLiner(i) == sval);
-			}
+		//void addToMat(Barscalar value)
+		//{
+		//	for (size_t i = 0; i < this->length(); i++)
+		//	{
+		//		Barscalar sval = this->getLiner(i);
+		//		sval += value;
+		//		assert(this->getLiner(i) == sval);
+		//	}
 
-			cachedMin.isCached = false;
-			cachedMax.isCached = false;
-		}
+		//	cachedMin.isCached = false;
+		//	cachedMax.isCached = false;
+		//}
 
 		void resize(int nwid, int nhei)
 		{
@@ -465,6 +476,7 @@ namespace bc {
 			valAssignCopyOf(copy.values);
 
 			this->diagReverce = copy.diagReverce;
+			this->type = copy.type;
 		}
 
 		void assignInstanceOf(const BarImg& inst)
@@ -472,6 +484,7 @@ namespace bc {
 			setMetadata(inst._wid, inst._hei, inst._channels);
 			valAssignInstanceOf(inst.values);
 
+			this->type = inst.type;
 			this->diagReverce = inst.diagReverce;
 		}
 
@@ -490,9 +503,32 @@ namespace bc {
 		mutable CachedValue cachedMin;
 	public:
 		Mat& mat;
-		BarType type;
-		BarMat(Mat& _mat, BarType type) : mat(_mat), type(type)
-		{ }
+		BarMat(Mat& _mat, BarType type = BarType::NONE) : mat(_mat)
+		{
+			if (type != BarType::NONE)
+			{
+				this->type = type;
+			}
+			else
+			{
+				switch (mat.type())
+				{
+				case CV_8UC1:
+					this->type = BarType::BYTE8_1;
+					break;
+
+				case CV_8UC3:
+					this->type = BarType::BYTE8_3;
+					break;
+
+				//case CV_32FC1:
+				//	this->type = BarType::FLOAT;
+				//	break;
+				default:
+					assert(false);
+				}
+			}
+		}
 
 		int wid() const
 		{
@@ -509,9 +545,19 @@ namespace bc {
 			return mat.channels();
 		}
 
-		Barscalar& get(int x, int y) const;
+		Barscalar get(int x, int y) const;
 
-		
+		//Перегрузка оператора присваивания
+		BarMat& operator= (const BarMat& drob)
+		{
+			mat = drob.mat;
+			type = drob.type;
+			cachedMax = drob.cachedMax;
+			cachedMin = drob.cachedMin;
+			return *this;
+		}
+
+
 		void maxAndMin(Barscalar& min, Barscalar& max) const override
 		{
 			if (cachedMin.isCached && cachedMax.isCached)
@@ -559,7 +605,7 @@ namespace bc {
 		bn::ndarray& mat;
 
 		BarNdarray(bn::ndarray& _mat) : mat(_mat)
-		{ 
+		{
 			strides = _mat.get_strides();
 		}
 		int wid() const
@@ -577,7 +623,7 @@ namespace bc {
 			return mat.get_nd() <= 2 ? 1 : mat.shape(2);
 		}
 
-		Barscalar& get(int x, int y) const
+		Barscalar get(int x, int y) const
 		{
 			return *reinterpret_cast<Barscalar*>(mat.get_data() + y * strides[0] + x * strides[1]);
 		}
@@ -614,17 +660,17 @@ namespace bc {
 			}
 		}
 
-		size_t typeSize() const 
+		size_t typeSize() const
 		{
 			return mat.get_dtype().get_itemsize();
 		}
-	};
+};
 
 	INIT_TEMPLATE_TYPE(BarNdarray)
 #endif // USE_OPENCV 
 
-	
-	static inline void split(const DatagridProvider& src, std::vector<BarImg*>& bgr)
+
+		static inline void split(const DatagridProvider& src, std::vector<BarImg*>& bgr)
 	{
 		size_t step = static_cast<size_t>(src.channels()) * src.typeSize();
 		for (int k = 0; k < src.channels(); k++)
@@ -650,7 +696,7 @@ namespace bc {
 		GRAY2BGR,
 	};
 
-	
+
 	static inline void cvtColorU1C2V3B(const bc::DatagridProvider& source, bc::BarImg& dest)
 	{
 		assert(source.channels() == 1);
@@ -666,13 +712,13 @@ namespace bc {
 			}
 		}
 	}
-	
+
 	static inline void cvtColorV3B2U1C(const bc::DatagridProvider& source, bc::BarImg& dest)
 	{
 		assert(dest.channels() == 1);
 		dest.resize(source.wid(), source.hei());
 		int chnls = source.channels();
-		double coof = 1.0 /chnls;
+		double coof = 1.0 / chnls;
 		for (size_t i = 0; i < source.length(); ++i)
 		{
 			float accum = 0;
@@ -687,12 +733,12 @@ namespace bc {
 	//}
 
 	//// note: this function is not a member function!
-	
+
 	//BarImg operator+(const Barscalar& c1, BarImg& c2);
 	//BarImg operator-(const Barscalar& c1, const BarImg& c2);
 
 #ifdef USE_OPENCV
-	
+
 	static cv::Mat convertProvider2Mat(DatagridProvider* img)
 	{
 		cv::Mat m = cv::Mat::zeros(img->hei(), img->wid(), CV_8UC1);

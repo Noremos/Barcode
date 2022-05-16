@@ -36,7 +36,8 @@ namespace bc
 		Baritem(int wid = 0);
 
 		//copy constr
-		Baritem(Baritem const& obj) {
+		Baritem(Baritem const& obj)
+		{
 			this->rootNode = obj.rootNode;
 			this->wid = obj.wid;
 
@@ -59,7 +60,7 @@ namespace bc
 		}
 
 		// move constr
-		Baritem(Baritem&& obj)
+		Baritem(Baritem&& obj) noexcept
 		{
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
