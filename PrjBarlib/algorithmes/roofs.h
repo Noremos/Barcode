@@ -153,7 +153,7 @@ void segment(string& path, bool revert = false, int radius = 0)
 			//size_t ny = p.getY(), yend = p.getY() * coofs;
 			//size_t nx = p.getX(), xend = p.getX() * coofs;
 			//cv::rectangle(backback, cv::Rect(nx, ny, xend - nx, yend - ny), scal, 2);
-			backback.at<cv::Vec3b>(p.getY(), p.getX()) = col;
+			backback.at<cv::Vec3b>(p.getY(), p.getX()) = line->start.toCvVec();
 		}
 		k++;
 	}
@@ -463,7 +463,7 @@ void getCounturFormMatr(barline* line, int rows, int cols, vector<vector<Point> 
 	contoursRet.push_back(contours[mi]);
 }
 
-void binarymatrInner(const string& path, vector<vector<Point>> &contours, bool revert);
+void binarymatrInner(string path, vector<vector<Point>> &contours, bool revert);
 Mat binarymatr(const string& path)
 {
 	Mat restbgr = cv::imread(path, cv::IMREAD_COLOR);
@@ -475,7 +475,7 @@ Mat binarymatr(const string& path)
 	return restbgr;
 }
 
-void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool revert)
+void binarymatrInner(string path, vector<vector<Point>>& contours, bool revert)
 {
 	int radius = 50;
 	bool skipPar = false;
@@ -498,8 +498,9 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 	bcstruct.waitK = 1;
 	bcstruct.maxRadius = 9999;
 	//bcstruct.colorRange = 25;
-	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::Component);
+	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::RadiusComp);
 
+	//path = "D:/Learning/BAR/base/ident-simple4.png";
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
 	Mat back = img;
@@ -576,7 +577,7 @@ void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool r
 				break;
 			}
 
-			if (bar2[ind]->getPointsSize() < 100)
+			if (bar2[ind]->getPointsSize() < 300)
 			{
 				continue;
 			}

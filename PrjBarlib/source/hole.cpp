@@ -115,7 +115,7 @@ inline void bc::Hole::add(const point& p)
 {
 	bool outDo = isOutside;
 	//auto temp = bc::Component::factory->getComp();
-	bc::Component::add(bc::Component::factory->GETOFF(p.x, p.y));
+	bc::Component::add(bc::Component::factory->GETOFF(p.x, p.y), p);
 	//    setB(p);
 
 	if (!isOutside)//ребро должно быть на границе

@@ -100,7 +100,6 @@ namespace bc
 
 
 		bool isContain(poidex index);
-		virtual bool add(const poidex index);
 		virtual bool add(const poidex index, const point p, bool forsed = false);
 		virtual void kill();
 		virtual void setParent(Component* parnt);

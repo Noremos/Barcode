@@ -32,7 +32,7 @@ bc::Component::Component(poidex pix, bc::BarcodeCreator* factory)
 
 	// factory->lastB++;
 
-	add(pix);
+	add(pix, factory->getPoint(pix));
 }
 
 
@@ -108,13 +108,6 @@ bool bc::Component::add(const poidex index, const point p, bool forsed)
 
 	return true;
 }
-
-
-bool bc::Component::add(const poidex index)
-{
-	return this->add(index, factory->curpix);
-}
-
 
 void bc::Component::kill()
 {

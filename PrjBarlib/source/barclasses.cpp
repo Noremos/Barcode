@@ -587,6 +587,7 @@ Barscalar bc::BarMat::get(int x, int y) const
 
 #endif // USE_OPENCV
 
+
 #include "barImg.h"
 
 bc::BarImg& bc::BarImg::operator+(const Barscalar& v)

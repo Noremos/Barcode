@@ -22,31 +22,38 @@ namespace bc {
 	// 0##
 	enum nextPoz : char
 	{
-		topRight = 0,
+		//topRight = 0,
 		middleRight = 1,
-		downRight = 2,
-		downCur = 3
+		bottomRight = 2,
+
+		//topCenter,
+		//middleCenter,
+		bottomCenter,
+
+		//topLeft,
+		//middleLeft,
+		bottomLeft
 	};
 	struct indexCov
 	{
 		poidex offset = 0;
 		float dist = 0;
 		nextPoz poz;
-		indexCov(uint _offset = 0, float _dist = 0, nextPoz _vert = topRight) : offset(_offset), dist(_dist), poz(_vert)
+		indexCov(uint _offset = 0, float _dist = 0, nextPoz _vert = middleRight) : offset(_offset), dist(_dist), poz(_vert)
 		{}
 
 		bc::point getNextPoint(const bc::point& p) const
 		{
 			switch (poz)
 			{
-			case topRight:
-				return bc::point(p.x + 1, p.y - 1);
 			case middleRight:
 				return bc::point(p.x + 1, p.y);
-			case downRight:
+			case bottomRight:
 				return bc::point(p.x + 1, p.y + 1);
-			case downCur:
+			case bottomCenter:
 				return bc::point(p.x, p.y + 1);
+			case bottomLeft:
+				return bc::point(p.x - 1, p.y + 1);
 			}
 		}
 	};

@@ -96,7 +96,7 @@ void BarcodeCreator::draw(std::string name)
 inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 {
 	//second->kill();
-	if (second->liveLen() == 0 || main->liveLen() == 0)
+	if (second->liveLen() == 0 && main->getStart() - second->getStart() == 0)
 	{
 #ifdef POINTS_ARE_AVAILABLE
 		for (const auto& val : second->resline->matr)
@@ -249,7 +249,7 @@ inline bool BarcodeCreator::checkCloserB0()
 						}
 					first = nullptr;
 				}
-				else if (!first->add(curpoindex))
+				else if (!first->add(curpoindex, curpix))
 					first = nullptr;
 				//setInclude(midP, first);//n--nt обяз нужно
 			}
@@ -512,114 +512,86 @@ inline bool BarcodeCreator::checkCloserB1()
 bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, size_t& totalSize, bc::ProcType type, float maxRadius, size_t& toProcess)
 {
 	int wid = workingImg->wid();
-	int lastW = wid - 1;
-	int lastH = workingImg->hei() - 1;
+	int hei = workingImg->hei();
 
-	totalSize = lastW * (lastH - 1) * 4 + lastW * 3 + lastW * 2 + lastH;
+	totalSize = 4 * static_cast<size_t>(wid) * hei + wid + hei;
 	float dist;
-	bc::indexCov* data = new bc::indexCov[totalSize];//256
+	bc::indexCov* data = new bc::indexCov[totalSize];
 	// Сичтаем расстояние между всеми соседними пикселями для каждого пикселя.
-	// Чтобы не считать повтороно, от текущего проверяем только уникальные - в форме перевёрнутой "г"
-	//
+	// Чтобы не считать повтороно, от текущего проверяем только уникальные - в форме отражённой по вертикали буквы "L"
+
 	int k = 0;
-	for (int h = 1; h < lastH; ++h)
+	for (int h = 0; h < hei - 1; ++h)
 	{
-		for (int w = 0; w < lastW; ++w)
+		for (int w = 0; w < wid - 1; ++w)
 		{
 			int offset = wid * h + w;
 			Barscalar cur = workingImg->get(w, h);
 			Barscalar next;
 
-			next = workingImg->get(w + 1, h - 1);
-			dist = cur.val_distance(next);
-			if (dist <= maxRadius)
-				data[k++] = indexCov(offset, dist, topRight);
-
+			// rigth
+			// c n
+			// 0 0
 			next = workingImg->get(w + 1, h);
 			dist = cur.val_distance(next);
-			if (dist <= maxRadius)
-				data[k++] = indexCov(offset, dist, middleRight);
 
+			data[k++] = indexCov(offset, dist, middleRight);
+
+			// bottom
+			// c 0
+			// n 0
+			next = workingImg->get(w, h + 1);
+			dist = cur.val_distance(next);
+
+			data[k++] = indexCov(offset, dist, bottomCenter);
+
+			// bottom rigth
+			// c 0
+			// 0 n
 			next = workingImg->get(w + 1, h + 1);
 			dist = cur.val_distance(next);
-			if (dist <= maxRadius)
-				data[k++] = indexCov(offset, dist, downRight);
 
-			dist = cur.val_distance(next);
+			data[k++] = indexCov(offset, dist, bottomRight);
+
+
+			// 0 c
+			// n 0
+			cur = workingImg->get(w + 1, h);
 			next = workingImg->get(w, h + 1);
-			if (dist <= maxRadius)
-				data[k++] = indexCov(offset, dist, downCur);
+			dist = cur.val_distance(next);
+			offset = wid * h + w + 1;
+
+			data[k++] = indexCov(offset, dist, bottomLeft);
 		}
 	}
 
-
-	//first line
-	for (int w = 0; w < lastW; ++w)
+	int wd = wid - 1;
+	for (int h = 0; h < hei - 1; ++h)
 	{
-		int offset = w;
-		Barscalar cur = workingImg->get(w, 0);
+		int offset = wid * h + wd;
+		Barscalar cur = workingImg->get(wd, h);
 		Barscalar next;
-
-		next = workingImg->get(w + 1, 0);
+		next = workingImg->get(wd, h + 1);
 		dist = cur.val_distance(next);
-		if (dist <= maxRadius)
-			data[k++] = indexCov(offset, dist, middleRight);
-
-		next = workingImg->get(w + 1, 1);
-		dist = cur.val_distance(next);
-		if (dist <= maxRadius)
-			data[k++] = indexCov(offset, dist, downRight);
-
-		next = workingImg->get(w, 1);
-		dist = cur.val_distance(next);
-		if (dist <= maxRadius)
-			data[k++] = indexCov(offset, dist, downCur);
+		data[k++] = indexCov(offset, dist, bottomCenter);
 	}
 
-	//last line (row)
-	for (int w = 0; w < lastW; ++w)
+	int hd = hei - 1;
+	for (int w = 0; w < wid - 1; ++w)
 	{
-		int offset = wid * lastH + w;
-		Barscalar cur = workingImg->get(w, lastH);
+		int offset = wid * hd + w;
+		Barscalar cur = workingImg->get(w, hd);
 		Barscalar next;
-
-		next = workingImg->get(w + 1, lastH - 1);
+		next = workingImg->get(w + 1, hd);
 		dist = cur.val_distance(next);
-		if (dist <= maxRadius)
-			data[k++] = indexCov(offset, dist, topRight);
-
-		next = workingImg->get(w + 1, lastH);
-		dist = cur.val_distance(next);
-		if (dist <= maxRadius)
-			data[k++] = indexCov(offset, dist, middleRight);
+		data[k++] = indexCov(offset, dist, middleRight);
 	}
-
-	//last column
-	for (int h = 0; h < lastH; ++h)
-	{
-		int offset = wid * h + lastW;
-		Barscalar cur = workingImg->get(lastW, h);
-		Barscalar nextH = workingImg->get(lastW, h + 1);
-
-		dist = cur.val_distance(nextH);
-		if (dist <= maxRadius)
-			data[k++] = indexCov(offset, dist, nextPoz::downCur);
-	}
-
 	// Тип не имеет занчение потому что соединяем не по яркости
-	//if (type == ProcType::f0t255)
-	//{
 	toProcess = k;
 	std::sort(data, data + toProcess, [](const indexCov& a, const indexCov& b) {
 		return a.dist < b.dist;
 		});
-	//}
-	//else // type == ProcType::f255t0
-	//{
-	//	std::sort(data, data + totalSize, [](const indexCov& a, const indexCov& b) {
-	//		return a.dist > b.dist;
-	//		});
-	//}
+
 	return data;
 }
 
@@ -806,8 +778,6 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, Compo
 		setWorkingImg(src);
 
 
-
-
 	//от 255 до 0
 	if (comp == ComponentType::RadiusComp)
 	{
@@ -830,7 +800,7 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, Compo
 	{
 		for (int b = 0; b < 255; b += 20)
 			for (int g = 255; g > 20; g -= 20)
-				for (int r = 0; r < 255; r += 50)
+				for (int r = 0; r < 255; r += 100)
 					colors.push_back(cv::Vec3b(b, g, r));
 	}
 #endif // USE_OPENCV
@@ -858,7 +828,7 @@ void BarcodeCreator::processHole(Barcontainer* item)
 	addItemToCont(item);
 	clearIncluded();
 	// lastB = 0;
-}
+	}
 
 
 void BarcodeCreator::processComp(Barcontainer* item)
@@ -917,9 +887,6 @@ void BarcodeCreator::addItemToCont(Barcontainer* container)
 		case ReturnType::barcode3d:
 		case ReturnType::barcode3dold:
 			computeNdBarcode(lines, 3);
-			break;
-
-
 			break;
 		default:
 			break;
@@ -1348,6 +1315,7 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
 	{
 		const indexCov& val = geometrySortedArr.get()[curIndexInSortedArr];
+		bool valid = val.dist <= settings.maxRadius;
 		curpoindex = val.offset;
 		curpix = getPoint(curpoindex);
 		curbright = workingImg->get(curpix.x, curpix.y);
@@ -1367,20 +1335,26 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 			}
 			else if (connected == nullptr)
 			{
-				if (!first->add(NextPindex, NextPoint))
+				if (!valid || !first->add(NextPindex, NextPoint))
 				{
 					connected = new Component(NextPindex, this);
-					connected->add(curpoindex, getPoint(curpoindex));
 				}
 			}
 		}
 		else
 		{
 			// Ребро не создано или не получилось присоединить
-			if (connected == nullptr || !connected->add(curpoindex))
+			if (connected == nullptr)
 			{
 				first = new Component(curpoindex, this);
-				first->add(NextPindex, NextPoint);
+				if (!valid || !first->add(NextPindex, NextPoint))
+				{
+					connected = new Component(NextPindex, this);
+				}
+			}
+			else if (!valid || !connected->add(curpoindex, curpix))
+			{
+				first = new Component(curpoindex, this);
 			}
 		}
 
