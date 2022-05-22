@@ -113,14 +113,14 @@ void tetsAll()
 //
 //	cv::waitKey(0);
 //}
-
-void prepSegm()
-{
-	//string path = "D:/Programs/Python/barcode/roofs/imgs/8.bmp";
-	string path = "D:/Learning/BAR/base/1.png";
-	segment(path);
-	//segment<uchar>(path);
-}
+//
+//void prepSegm()
+//{
+//	//string path = "D:/Programs/Python/barcode/roofs/imgs/8.bmp";
+//	string path = "D:/Learning/BAR/base/1.png";
+//	segment(path);
+//	//segment<uchar>(path);
+//}
 
 
 
