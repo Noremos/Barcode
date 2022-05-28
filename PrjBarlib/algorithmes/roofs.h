@@ -55,12 +55,14 @@ bool checkRect(const BarRect& rect, int wid, int hei)
 }
 
 
-void show(string name, Mat img, int wait = -1)
+int show(string name, Mat img, int wait = -1)
 {
 	cv::namedWindow(name, cv::WINDOW_KEEPRATIO);
 	cv::imshow(name, img);
 	if (wait >= 0)
-		waitKey(wait);
+		return waitKey(wait);
+	else
+		return -1;
 }
 
 
@@ -118,28 +120,35 @@ void binarymatr(string path)
 	//bcstruct.killOnMaxLen = true;;
 	bcstruct.visualize = false;
 	bcstruct.waitK = 1;
-	bcstruct.maxRadius = 9999;
+	//bcstruct.maxRadius = 50;
+	//bcstruct.maxLen.set(25);
 	//bcstruct.colorRange = 25;
 	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::RadiusComp);
 
-	//path = "D:/Learning/BAR/base/ident-simple4.png";
+	//path = "D:/Learning/BAR/base/ident.png";
+	//path = "D:/Learning/datasets/Floodnet/train-20220527T055812Z-001/train/train-org-img/6344.jpg";
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
+	if (img.rows >= 3000)
+	{
+		cv::resize(img, img, cv::Size(img.cols / 2, img.rows / 2));
+	}
 	Mat back = img;
 
 	show("baeck", back, 1);
-	cv::imwrite("source.png", back);
+	//cv::imwrite("source.png", back);
 
 	//back.at<uchar>(0, 0) = 0;
 	//back = 255 - back;
-	cvtColor(img, back, COLOR_BGR2GRAY);
+	//cvtColor(img, back, COLOR_BGR2GRAY);
 	BarMat wrap(back);
 	Barcontainer* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
 	Baritem* item = containet->getItem(0);
 
-	Mat binmap(img.rows, img.cols, CV_8UC1, Scalar(0));
+	Mat binmap(img.rows, img.cols, CV_8UC3, Scalar(0));
 	img.copyTo(binmap);
 
+	//item->sortBySize();
 	//barlinevector& bar2 = item->getRootNode()->children;
 	barlinevector& bar2 = item->barlines;
 	frange = bar2.size();
@@ -150,20 +159,26 @@ void binarymatr(string path)
 		int minlen = 0;
 		barvector& points = line->matr;
 
-		if (points.size() < 100 || points.size() > wrap.length() * 0.9)
+		if (points.size() < wrap.length() * 0.01 || points.size() > wrap.length() * 0.9)
 			continue;
+
+		//if (line->start < 10)
+		//	continue;
 		//assert(line->len() < 6);
-		for (size_t k = 0; k < points.size(); k++)
+		for (size_t k = 0; k < points.size(); ++k)
 		{
+			const barvalue& p = points[k];
+			//if (points[k].value > 100)
+			//	continue;
 			//if (line->len() > 100)
-			//binmap.at<Vec3b>(points[k].getY(), points[k].getX()) = colors[i % collen];
-			binmap.at<Vec3b>(points[k].getY(), points[k].getX()) = line->start.toCvVec();
-			//binmap.at<uchar>(points[k].getY(), points[k].getX()) = (uchar)(float)line->start;
+			binmap.at<Vec3b>(p.getY(), p.getX()) = colors[i % collen];
+			//binmap.at<Vec3b>(p.getY(), p.getX()) = line->end().toCvVec();
+			//binmap.at<Vec3b>(p.getY(), p.getX()) = Vec3b(255, 255,255);
+			//binmap.at<uchar>(p.getY(), p.getX()) = (uchar)(float)line->start;
 		}
 	}
 
-	show("result", binmap, 1);
-	cv::waitKey(0);
+	show("result", binmap, 0);
 
 	int ds = cv::waitKey(1);
 	int ind = 0;
@@ -177,7 +192,7 @@ void binarymatr(string path)
 		case 'd':
 		case 'D':
 			add = 1;
-			
+
 			break;
 		case 'a':
 		case 'A':
@@ -201,10 +216,10 @@ void binarymatr(string path)
 				break;
 			}
 
-			if (bar2[ind]->getPointsSize() < 300)
+			/*if (bar2[ind]->getPointsSize() < 300)
 			{
 				continue;
-			}
+			}*/
 
 			break;
 		}
@@ -219,7 +234,7 @@ void binarymatr(string path)
 		}
 		//break;
 
-		show("result", workingimg, 0);
+		ds = show("result", workingimg, 0);
 	}
 
 	show("da", binmap, 1);
