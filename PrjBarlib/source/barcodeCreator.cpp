@@ -158,7 +158,7 @@ inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 		return main;
 
 	case AttachMode::secondEatFirst:
-		if (main->getStart() < second->getStart())
+		if (main->startIndex < second->startIndex)
 		{
 			COMPP temp = main;
 			main = second;
@@ -190,7 +190,7 @@ inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 
 	case AttachMode::firstEatSecond:
 	default:
-		if (main->getStart() > second->getStart())
+		if (main->startIndex > second->startIndex)
 		{
 			COMPP temp = main;
 			main = second;
@@ -828,7 +828,7 @@ void BarcodeCreator::processHole(Barcontainer* item)
 	addItemToCont(item);
 	clearIncluded();
 	// lastB = 0;
-	}
+}
 
 
 void BarcodeCreator::processComp(Barcontainer* item)
@@ -877,7 +877,7 @@ void BarcodeCreator::addItemToCont(Barcontainer* container)
 {
 	if (container != nullptr)
 	{
-		Baritem* lines = new Baritem(workingImg->wid());
+		Baritem* lines = new Baritem(workingImg->wid(), type);
 
 		switch (settings.returnType)
 		{
@@ -1054,30 +1054,56 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 void BarcodeCreator::processFULL(barstruct& str, const bc::DatagridProvider* img, Barcontainer* item)
 {
 	bool rgb = (img->channels() != 1);
-	originalImg = true;
-	if (str.coltype == ColorType::rgb || (str.coltype == ColorType::native && rgb))
-	{
-		type = BarType::BYTE8_3;
-		assert(img->channels() == 3);
-		processTypeF(str, img, item);
-	}
-	else
-	{
-		type = BarType::BYTE8_1;
 
-		if (img->channels() != 1)
-		{
-			bc::BarImg res(1, 1);
-			cvtColorV3B2U1C(*img, res);
-			originalImg = false;
-			//const DatagridProvider* temoing = dynamic_cast<const DatagridProvider*>(res);
-			processTypeF(str, &res, item);
-		}
-		else
-		{
-			processTypeF(str, img, item);
-		}
+
+	if (str.comtype == ComponentType::Component && rgb)
+	{
+		BarImg *res = new BarImg();
+		cvtColorV3B2U1C(*img, *res);
+		originalImg = false;
+		needDelImg = true;
+		type = BarType::BYTE8_1;
+		processTypeF(str, res, item);
+		return;
 	}
+
+	switch (str.coltype)
+	{
+	// To RGB
+	case ColorType::rgb:
+	{
+		if (img->type == BarType::BYTE8_3)
+			break;
+
+		BarImg *res = new BarImg(-1, -1, 3);
+		cvtColorU1C2V3B(*img, *res);
+		originalImg = false;
+		needDelImg = true;
+		type = BarType::BYTE8_3;
+		processTypeF(str, res, item);
+		return;
+	}
+	case ColorType::gray:
+	{
+		if (img->type == BarType::BYTE8_1)
+			break;
+
+		BarImg *res = new BarImg();
+		cvtColorV3B2U1C(*img, *res);
+		originalImg = false;
+		needDelImg = true;
+		type = BarType::BYTE8_1;
+		processTypeF(str, res, item);
+		return;
+	}
+	default:
+		break;
+	}
+
+	type = img->type;
+	originalImg = true;
+	needDelImg = false;
+	processTypeF(str, img, item);
 }
 
 
@@ -1315,16 +1341,27 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
 	{
 		const indexCov& val = geometrySortedArr.get()[curIndexInSortedArr];
-		bool valid = val.dist <= settings.maxRadius;
+
+		//if (val.poz == nextPoz::middleRight)
+		//	continue;
 		curpoindex = val.offset;
 		curpix = getPoint(curpoindex);
 		curbright = workingImg->get(curpix.x, curpix.y);
+
 
 		bc::point NextPoint = val.getNextPoint(curpix);
 		poidex NextPindex = NextPoint.getLiner(workingImg->wid());
 
 		Component* first = getComp(curpoindex);
 		Component* connected = getComp(NextPindex);
+
+		/*if (val.dist > settings.maxRadius)
+		{
+			break;
+			new Component(curpoindex, this);
+			new Component(NextPindex, this);
+		}*/
+
 		if (first != nullptr)
 		{
 			//если в найденном уже есть этот элемент
@@ -1335,7 +1372,7 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 			}
 			else if (connected == nullptr)
 			{
-				if (!valid || !first->add(NextPindex, NextPoint))
+				if (!first->add(NextPindex, NextPoint))
 				{
 					connected = new Component(NextPindex, this);
 				}
@@ -1347,12 +1384,12 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 			if (connected == nullptr)
 			{
 				first = new Component(curpoindex, this);
-				if (!valid || !first->add(NextPindex, NextPoint))
+				if (!first->add(NextPindex, NextPoint))
 				{
 					connected = new Component(NextPindex, this);
 				}
 			}
-			else if (!valid || !connected->add(curpoindex, curpix))
+			else if (!connected->add(curpoindex, curpix))
 			{
 				first = new Component(curpoindex, this);
 			}

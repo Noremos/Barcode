@@ -42,7 +42,7 @@ namespace bc {
 
 		virtual Barscalar get(int x, int y) const = 0;
 
-		virtual Barscalar get(point& p) const
+		virtual Barscalar get(const point& p) const
 		{
 			return get(p.x, p.y);
 		}
@@ -73,6 +73,7 @@ namespace bc {
 	public:
 		BarType type = BarType::BYTE8_1;
 	};
+
 
 
 	class EXPORT BarImg : public DatagridProvider
@@ -196,12 +197,35 @@ namespace bc {
 			assignCopyOf(copy);
 		}
 
-		BarImg(const BarImg& copyImg, bool copy = true)
+		BarImg(const BarImg& copyImg)
+		{
+			assignCopyOf(copyImg);
+		}
+
+		BarImg(const BarImg& copyImg, bool copy)
 		{
 			if (copy)
 				assignCopyOf(copyImg);
 			else
 				assignInstanceOf(copyImg);
+		}
+
+		//Перегрузка оператора присваивания
+		BarImg& operator= (const BarImg& drob)
+		{
+			if (&drob != this)
+				assignCopyOf(drob);
+
+			return *this;
+		}
+
+		//Перегрузка оператора присваивания
+		BarImg& operator= (BarImg&& drob)
+		{
+			if (&drob != this)
+				assignCopyOf(drob);
+
+			return *this;
 		}
 
 		//#ifdef USE_OPENCV
@@ -405,13 +429,13 @@ namespace bc {
 			cachedMax.isCached = false;
 		}
 
-		inline void add(bc::point p, Barscalar val)
+		inline void add(bc::point p, const Barscalar& val)
 		{
 			add(p.x, p.y, val);
 		}
 
 
-		inline void setLiner(size_t pos, Barscalar val)
+		inline void setLiner(size_t pos, const Barscalar& val)
 		{
 			values[pos] = val;
 			cachedMin.isCached = false;
@@ -455,14 +479,7 @@ namespace bc {
 			_hei = nhei;
 			valAssignInstanceOf(new Barscalar[this->length()], true);
 		}
-		//Перегрузка оператора присваивания
-		BarImg& operator= (const BarImg& drob)
-		{
-			if (&drob != this)
-				assignCopyOf(drob);
 
-			return *this;
-		}
 
 		//Overload + operator to add two Box objects.
 		BarImg& operator+(const Barscalar& v);
@@ -706,10 +723,11 @@ namespace bc {
 		for (size_t i = 0; i < source.length(); ++i)
 		{
 			Barscalar u = source.getLiner(i);
-			for (size_t c = 0; c < source.channels(); c++)
-			{
-				dest.setLiner(i + c, u);
-			}
+			u.data.b3[0] = u.data.b1;
+			u.data.b3[1] = u.data.b1;
+			u.data.b3[2] = u.data.b1;
+			u.type = BarType::BYTE8_3;
+			dest.setLiner(i, u);
 		}
 	}
 
@@ -717,12 +735,10 @@ namespace bc {
 	{
 		assert(dest.channels() == 1);
 		dest.resize(source.wid(), source.hei());
-		int chnls = source.channels();
-		double coof = 1.0 / chnls;
+
 		for (size_t i = 0; i < source.length(); ++i)
 		{
-			float accum = 0;
-			accum += static_cast<float>(source.getLiner(i));
+			float accum = source.getLiner(i).getAvgFloat();
 			dest.setLiner(i, accum);
 		}
 	}

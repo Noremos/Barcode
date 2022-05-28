@@ -133,7 +133,7 @@ namespace bc {
 			return wid * y + x;
 		}
 
-		constexpr bool GETDIFF(const Barscalar &a, const Barscalar& b) const
+		bool GETDIFF(const Barscalar &a, const Barscalar& b) const
 		{
 			return (a > b ? a - b : b - a) <= this->settings.getMaxStepPorog();
 		}

@@ -7,9 +7,10 @@
 bc::Barbase::~Barbase() {}
 
 
-bc::Baritem::Baritem(int wid)
+bc::Baritem::Baritem(int wid, BarType type)
 {
 	this->wid = wid;
+	this->type = type;
 }
 
 

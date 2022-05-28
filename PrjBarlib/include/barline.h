@@ -37,6 +37,7 @@ namespace bc
 		bool isCopy = false;
 
 	public:
+
 		barline(int wid = 0)
 		{
 			matWid = wid;
@@ -92,6 +93,16 @@ namespace bc
 				this->bar3d = new barcounter();
 				this->bar3d->insert(this->bar3d->begin(), obj.bar3d->begin(), obj.bar3d->end());
 			}
+		}
+
+		bool operator==(barline const& obj)
+		{
+//			assert(this->start == obj.start);
+//			assert(this->m_end ==  obj.m_end);
+//			assert(matr.size() == obj.matr.size());
+
+			return this->start == obj.start && this->m_end ==  obj.m_end && matr.size() == obj.matr.size();
+//			return this->numberInParent = obj.numberInParent;
 		}
 
 		// move costr
@@ -215,7 +226,7 @@ namespace bc
 			int l, r, t, d;
 			r = l = matr[0].getX();
 			t = d = matr[0].getY();
-			for (int j = 0; j < matr.size(); ++j)
+			for (size_t j = 0; j < matr.size(); ++j)
 			{
 				if (l > matr[j].getX())
 					l = matr[j].getX();
@@ -233,6 +244,10 @@ namespace bc
 		void addCoord(const point& first, Barscalar bright)
 		{
 			matr.push_back(std::move(barvalue(first, bright)));
+			if (bright < start)
+				start = bright;
+			if (bright > m_end)
+				m_end = bright;
 		}
 
 		void addCoord(barvalue val)
@@ -294,7 +309,7 @@ namespace bc
 			return r;
 		}
 
-		Barscalar end() const
+		const Barscalar& end() const
 		{
 			return m_end;
 		}

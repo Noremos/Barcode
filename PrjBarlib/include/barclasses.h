@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 #include "presets.h"
 #include "barline.h"
 
@@ -32,8 +33,9 @@ namespace bc
 	private:
 		bc::BarRoot* rootNode = nullptr;
 		int wid;
+		BarType type;
 	public:
-		Baritem(int wid = 0);
+		Baritem(int wid = 0, BarType type = BarType::NONE);
 
 		//copy constr
 		Baritem(Baritem const& obj)
@@ -87,7 +89,10 @@ namespace bc
 		void relen();
 		Barscalar maxLen() const;
 		Baritem* clone() const;
-
+		inline BarType getType()
+		{
+			return type;
+		}
 		void getBettyNumbers(int* bs);
 
 		// remove lines than less then passed value
@@ -218,8 +223,17 @@ namespace bc
 		Barscalar maxLen() const;
 		size_t count();
 		//    Baritem *operator [](int i);
-		Baritem* getItem(size_t i);
+		Baritem *getItem(size_t i);
 
+		void setItem(size_t index, Baritem *newOne)
+		{
+			if (index < items.size())
+			{
+				auto *item = items[index];
+				delete item;
+				items[index] = newOne;
+			}
+		}
 
 		Baritem *exractItem(size_t index)
 		{

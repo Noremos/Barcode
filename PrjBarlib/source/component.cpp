@@ -66,7 +66,7 @@ bool bc::Component::add(const poidex index, const point p, bool forsed)
 
 	if (!forsed)
 	{
-		if (factory->settings.extracheckOnPixelConnect && !canBeConnected(p, true))
+		if (!canBeConnected(p, true))
 			return false;
 
 		if (cashedSize == factory->settings.colorRange)
@@ -115,7 +115,7 @@ void bc::Component::kill()
 		return;
 	lived = false;
 
-	resline->m_end = factory->curbright;
+//	resline->m_end = factory->curbright;
 
 	if (factory->settings.returnType == ReturnType::barcode3dold)
 	{
@@ -130,7 +130,7 @@ void bc::Component::kill()
 	{
 		for (barvalue& a : resline->matr)
 		{
-			a.value = factory->curbright - a.value;
+			a.value = resline->m_end - a.value;
 		}
 	}
 
@@ -194,6 +194,10 @@ void bc::Component::setParent(bc::Component* parnt)
 
 inline bool bc::Component::canBeConnected(const bc::point& p, bool incrSum)
 {
+
+	if (factory->settings.maxRadius < (lastVal.val_distance(factory->workingImg->get(p))))
+		return false;
+
 	if (!factory->settings.maxLen.isCached)
 		return true;
 	Barscalar val = factory->workingImg->get(p.x, p.y);

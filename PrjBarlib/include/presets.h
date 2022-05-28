@@ -1,5 +1,5 @@
 #pragma once
-//#define USE_OPENCV
+// #undef USE_OPENCV
 //#define VDEBUG
 
 
@@ -54,7 +54,7 @@ namespace bc
 
 	enum class ComponentType { Component, Hole, RadiusComp, FullPrepair, PrepairComp };
 	enum class ProcType { f0t255, f255t0, invertf0, experiment };
-	enum class ColorType { gray, rgb, native };
+	enum class ColorType { native, gray, rgb };
 
 	enum class ReturnType { barcode2d, barcode3d, barcode3dold };
 	enum class AttachMode { firstEatSecond, secondEatFirst, createNew, dontTouch, morePointsEatLow };
