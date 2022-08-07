@@ -179,6 +179,14 @@ namespace bc
 			return matWid;
 		}
 
+		const barvector &getMatrix() const
+		{
+			return matr;
+		}
+		barvector &getMatrix() {
+			return matr;
+		}
+
 		//bc::Component *comp;
 		//    cv::Mat binmat;
 #ifdef USE_OPENCV

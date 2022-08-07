@@ -192,7 +192,7 @@ void bc::Component::setParent(bc::Component* parnt)
 }
 
 
-inline bool bc::Component::canBeConnected(const bc::point& p, bool incrSum)
+ bool bc::Component::canBeConnected(const bc::point& p, bool incrSum)
 {
 
 	if (factory->settings.maxRadius < (lastVal.val_distance(factory->workingImg->get(p))))

@@ -365,7 +365,10 @@ namespace bc
 
 
 		barvalue()
-		{ }
+		{
+			index = 0;
+			value.type = BarType::NONE;
+		}
 
 		barvalue(const barvalue& other) /*: s(other.s)*/
 		{

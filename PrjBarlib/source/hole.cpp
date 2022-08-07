@@ -71,7 +71,7 @@ void bc::Hole::kill()
 }
 
 
-inline bool bc::Hole::isContain(int x, int y)
+ bool bc::Hole::isContain(int x, int y)
 {
 	if (Component::factory->IS_OUT_OF_REG(x, y))
 		return false;
@@ -111,7 +111,7 @@ bool bc::Hole::tryAdd(const point& p)
 }
 
 
-inline void bc::Hole::add(const point& p)
+ void bc::Hole::add(const point& p)
 {
 	bool outDo = isOutside;
 	//auto temp = bc::Component::factory->getComp();

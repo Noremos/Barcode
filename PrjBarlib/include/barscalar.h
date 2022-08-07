@@ -3,6 +3,8 @@
 #include<assert.h>
 #include<string.h>
 #include <math.h>
+#include "presets.h"
+#include "include_py.h"
 
 //#include <compare>
 
@@ -57,7 +59,7 @@ enum class BarType : char
 	//FLOAT32_1
 };
 
-class Barscalar
+class EXPORT Barscalar
 {
 	union BarValue
 	{
@@ -73,7 +75,7 @@ public:
 
 	Barscalar(uchar i = 0)
 	{
-		memset(&data, i, 3);
+		data.b1 = i;
 		type = BarType::BYTE8_1;
 	}
 
@@ -91,6 +93,7 @@ public:
 			data.b3[2] = i;
 			break;
 		default:
+			data.b1 = 0;
 			break;
 		}
 	}
@@ -105,10 +108,47 @@ public:
 
 	Barscalar(const Barscalar& R)
 	{
-		memcpy(&data, &R.data, 3);
+		memcpy(&data, &R.data, sizeof(BarValue));
 		type = R.type;
 	}
 
+	unsigned char getByte8()
+	{
+		return data.b1;
+	}
+
+#ifdef USE_OPENCV
+	cv::Vec3b toCvVec() const
+	{
+		switch (type)
+		{
+		case BarType::BYTE8_1:
+			return cv::Vec3b(data.b1, data.b1, data.b1);
+		case BarType::BYTE8_3:
+			return cv::Vec3b(data.b3[0], data.b3[1], data.b3[2]);
+		default:
+			break;
+		}
+	}
+#endif
+
+#ifdef _PYD
+
+	bp::tuple value()
+	{
+		switch (type)
+		{
+		case BarType::BYTE8_1:
+			return  bp::make_tuple(data.b1);
+			break;
+		case BarType::BYTE8_3:
+			return bp::make_tuple(data.b3[0], data.b3[1], data.b3[2]);
+			break;
+		default:
+			break;
+		}
+	}
+#endif
 
 private:
 	bool more(const Barscalar& X) const
@@ -268,31 +308,31 @@ public:
 		return equal(X);
 	}
 
-	bool operator>(const Barscalar &X) const
+	bool operator>(const Barscalar& X) const
 	{
 		//assert(type == X.type);
 		return more(X);
 	}
 
-	bool operator>=(const Barscalar &X) const
+	bool operator>=(const Barscalar& X) const
 	{
 		//assert(type == X.type);
 		return more_equal(X);
 	}
 
-	bool operator<(const Barscalar &X) const
+	bool operator<(const Barscalar& X) const
 	{
 		//assert(type == X.type);
 		return !more_equal(X);
 	}
 
-	bool operator<=(const Barscalar &X) const
+	bool operator<=(const Barscalar& X) const
 	{
 		//assert(type == X.type);
 		return !more(X);
 	}
 
-	bool operator!=(const Barscalar &X) const
+	bool operator!=(const Barscalar& X) const
 	{
 		//assert(type == X.type);
 		return !equal(X);
@@ -409,67 +449,67 @@ public:
 		return !more(X);
 	}
 
-//public:
-//	std::partial_ordering operator<=>(const Barscalar& X) const
-//	{
-//		switch (type)
-//		{
-//		case BarType::BYTE8_1:
-//			return data.b1 <=> X.data.b1;
-//		case BarType::BYTE8_3:
-//		default:
-//		{
-//			int t = 0, x = 0;
-//			t << this->data.b3[0] << this->data.b3[1] << this->data.b3[2];
-//			x << X.data.b3[0] << X.data.b3[1] << X.data.b3[2];
-//			return t <=> x;
-//		}
-//		}
-//	}
+	//public:
+	//	std::partial_ordering operator<=>(const Barscalar& X) const
+	//	{
+	//		switch (type)
+	//		{
+	//		case BarType::BYTE8_1:
+	//			return data.b1 <=> X.data.b1;
+	//		case BarType::BYTE8_3:
+	//		default:
+	//		{
+	//			int t = 0, x = 0;
+	//			t << this->data.b3[0] << this->data.b3[1] << this->data.b3[2];
+	//			x << X.data.b3[0] << X.data.b3[1] << X.data.b3[2];
+	//			return t <=> x;
+	//		}
+	//		}
+	//	}
 
-//	std::partial_ordering operator<=>(const uchar& X) const
-//	{
-//		switch (type)
-//		{
-//		case BarType::BYTE8_1:
-//			return data.b1 <=> X;
-//		case BarType::BYTE8_3:
-//		default:
-//		{
-//			int a = this->getAvgFloat();
-//			return (a <=> X);
-//		}
-//		}
-//	}
-//	std::partial_ordering operator<=>(const int& X) const
-//	{
-//		switch (type)
-//		{
-//		case BarType::BYTE8_1:
-//			return data.b1 <=> X;
-//		case BarType::BYTE8_3:
-//		default:
-//		{
-//			int a = this->getAvgFloat();
-//			return (a <=> X);
-//		}
-//		}
-//	}
+	//	std::partial_ordering operator<=>(const uchar& X) const
+	//	{
+	//		switch (type)
+	//		{
+	//		case BarType::BYTE8_1:
+	//			return data.b1 <=> X;
+	//		case BarType::BYTE8_3:
+	//		default:
+	//		{
+	//			int a = this->getAvgFloat();
+	//			return (a <=> X);
+	//		}
+	//		}
+	//	}
+	//	std::partial_ordering operator<=>(const int& X) const
+	//	{
+	//		switch (type)
+	//		{
+	//		case BarType::BYTE8_1:
+	//			return data.b1 <=> X;
+	//		case BarType::BYTE8_3:
+	//		default:
+	//		{
+	//			int a = this->getAvgFloat();
+	//			return (a <=> X);
+	//		}
+	//		}
+	//	}
 
-//	std::partial_ordering operator<=>(const float& X) const
-//	{
-//		switch (type)
-//		{
-//		case BarType::BYTE8_1:
-//			return data.b1 <=> X;
-//		case BarType::BYTE8_3:
-//		default:
-//		{
-//			float a = this->getAvgFloat();
-//			return (a <=> X);
-//		}
-//		}
-//	}
+	//	std::partial_ordering operator<=>(const float& X) const
+	//	{
+	//		switch (type)
+	//		{
+	//		case BarType::BYTE8_1:
+	//			return data.b1 <=> X;
+	//		case BarType::BYTE8_3:
+	//		default:
+	//		{
+	//			float a = this->getAvgFloat();
+	//			return (a <=> X);
+	//		}
+	//		}
+	//	}
 
 	Barscalar& operator= (const uchar fraction)
 	{
@@ -506,7 +546,7 @@ public:
 		default:
 			for (char i = 0; i < 3; ++i)
 			{
-				data.b3[i] = fraction;
+				data.b3[i] = static_cast<uchar>(fraction);
 			}
 		}
 
@@ -519,15 +559,15 @@ public:
 		switch (type)
 		{
 		case BarType::BYTE8_1:
-			data.b1 = fraction.type == BarType::BYTE8_1 ? fraction.data.b1 : fraction.getAvgFloat();
+			data.b1 = fraction.type == BarType::BYTE8_1 ? fraction.data.b1 : fraction.getAvgUchar();
 			break;
 		case BarType::BYTE8_3:
 		default:
 			if (fraction.type == BarType::BYTE8_3)
 			{
 
-			for (char i = 0; i < 3; ++i)
-				data.b3[i] = fraction.data.b3[i];
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] = fraction.data.b3[i];
 			}
 			else
 			{
@@ -549,6 +589,10 @@ public:
 			return data.b1;
 	}
 
+	inline float getAvgUchar() const
+	{
+		return static_cast<uchar>(getAvgFloat());
+	}
 
 private:
 	float difMax(uchar a, uchar b) const
@@ -560,7 +604,7 @@ private:
 	{
 		return v * v;
 	}
-public: 
+public:
 	float val_distance(const Barscalar& R) const
 	{
 		if (type == BarType::BYTE8_3)
@@ -575,8 +619,6 @@ public:
 		}
 		else
 			return difMax(data.b1, R.data.b1);
-
-		float res;
 	}
 
 	explicit operator int() const
@@ -631,7 +673,7 @@ public:
 		}
 		else
 		{
-			data.b1 += R.getAvgFloat();
+			data.b1 += static_cast<uchar>(R.getAvgFloat());
 		}
 
 		return *this;
@@ -663,9 +705,9 @@ public:
 			if (R.type == BarType::BYTE8_3)
 			{
 
-			data.b3[0] -= R.data.b3[0];
-			data.b3[1] -= R.data.b3[1];
-			data.b3[2] -= R.data.b3[2];
+				data.b3[0] -= R.data.b3[0];
+				data.b3[1] -= R.data.b3[1];
+				data.b3[2] -= R.data.b3[2];
 			}
 			else
 			{
@@ -676,7 +718,7 @@ public:
 		}
 		else
 		{
-			data.b1 -= R.getAvgFloat();
+			data.b1 -= static_cast<uchar>(R.getAvgFloat());
 		}
 
 		return *this;
@@ -719,7 +761,7 @@ public:
 		}
 		else
 		{
-			data.b1 *= R.getAvgFloat();
+			data.b1 *= static_cast<uchar>(R.getAvgFloat());
 		}
 
 		return *this;
@@ -762,7 +804,7 @@ public:
 		}
 		else
 		{
-			data.b1 /= R.getAvgFloat();
+			data.b1 /= R.getAvgUchar();
 		}
 
 		return *this;
@@ -835,20 +877,4 @@ public:
 		assert(index < 3);
 		return data.b3[index];
 	}
-
-#ifdef USE_OPENCV
-	cv::Vec3b toCvVec() const
-	{
-		switch (type)
-		{
-		case BarType::BYTE8_1:
-			return cv::Vec3b(data.b1, data.b1, data.b1);
-		case BarType::BYTE8_3:
-			return cv::Vec3b(data.b3[0], data.b3[1], data.b3[2]);
-		default:
-			break;
-		}
-	}
-#endif // USE_OPENCV
-
 };

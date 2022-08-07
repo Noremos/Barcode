@@ -1276,36 +1276,7 @@ Barcontainer* BarcodeCreator::searchHoles(float* /*img*/, int /*wid*/, int /*hei
 
 #ifdef _PYD
 
-
-inline bc::Barcontainer<barvec3b>* bc::BarcodeCreator<barvec3b>::createBarcode(bn::ndarray& img, bc::BarConstructor<barvec3b>& structure)
-{
-	//auto shape = img.get_shape();
-
-	/*	int type = cv_8uc1;
-	if (img.get_nd() == 3 && img.shape[2] == 3)
-	image = &barimg<bcvec3b>(shape[0], shape[1], img.get_data());
-	else if float
-	barimg image(shape[0], shape[1], img.get_data());*/
-
-	//cv::imshow("test", image);
-	//cv::waitkey(0);
-	bc::BarNdarray<barvec3b> image(img);
-	//try
-	//{
-	return createBarcode(&image, structure);
-	//}
-	//catch (const std::exception& ex)
-	//{
-	//printf("ERROR");
-	//printf(ex.what());
-	//}
-
-	//bc::BarImg image(img.shape(1), img.shape(0), img.get_nd(), (uchar*)img.get_data(), false, false);
-	//return createBarcode(&image, structure);
-}
-
-
-inline bc::Barcontainer* bc::BarcodeCreator::createBarcode(bn::ndarray& img, bc::BarConstructor& structure)
+bc::Barcontainer* bc::BarcodeCreator::createBarcode(bn::ndarray& img, bc::BarConstructor& structure)
 {
 	//auto shape = img.get_shape();
 

@@ -538,9 +538,9 @@ namespace bc {
 					this->type = BarType::BYTE8_3;
 					break;
 
-				//case CV_32FC1:
-				//	this->type = BarType::FLOAT;
-				//	break;
+					//case CV_32FC1:
+					//	this->type = BarType::FLOAT;
+					//	break;
 				default:
 					assert(false);
 				}
@@ -598,8 +598,8 @@ namespace bc {
 			double min, max;
 			cv::minMaxLoc(mat, &min, &max);
 
-			cachedMax.set(max);
-			cachedMin.set(min);
+			cachedMax.set(static_cast<uchar>(max));
+			cachedMin.set(static_cast<uchar>(min));
 			return max;
 		}
 
@@ -613,7 +613,6 @@ namespace bc {
 
 
 #ifdef _PYD
-	template <class Barscalar>
 	class BarNdarray : public DatagridProvider
 	{
 	public:
@@ -624,6 +623,7 @@ namespace bc {
 		BarNdarray(bn::ndarray& _mat) : mat(_mat)
 		{
 			strides = _mat.get_strides();
+			type = mat.get_nd() == 1 ? BarType::BYTE8_1 : BarType::BYTE8_3;
 		}
 		int wid() const
 		{
@@ -642,7 +642,15 @@ namespace bc {
 
 		Barscalar get(int x, int y) const
 		{
-			return *reinterpret_cast<Barscalar*>(mat.get_data() + y * strides[0] + x * strides[1]);
+			if (type == BarType::BYTE8_1)
+			{
+				return Barscalar(*(mat.get_data() + y * strides[0] + x * strides[1]));
+			}
+			else
+			{
+				char* off = mat.get_data() + y * strides[0] + x * strides[1];
+				return Barscalar(off[0], off[1], off[2]);
+			}
 		}
 
 		Barscalar max() const
@@ -681,13 +689,12 @@ namespace bc {
 		{
 			return mat.get_dtype().get_itemsize();
 		}
-};
+	};
 
-	INIT_TEMPLATE_TYPE(BarNdarray)
 #endif // USE_OPENCV 
 
 
-		static inline void split(const DatagridProvider& src, std::vector<BarImg*>& bgr)
+	static inline void split(const DatagridProvider& src, std::vector<BarImg*>& bgr)
 	{
 		size_t step = static_cast<size_t>(src.channels()) * src.typeSize();
 		for (int k = 0; k < src.channels(); k++)

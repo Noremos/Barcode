@@ -127,6 +127,7 @@ void binarymatr(string path)
 
 	//path = "D:/Learning/BAR/base/ident.png";
 	//path = "D:/Learning/datasets/Floodnet/train-20220527T055812Z-001/train/train-org-img/6344.jpg";
+	//path = "D:/1.png";
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
 	if (img.rows >= 3000)
