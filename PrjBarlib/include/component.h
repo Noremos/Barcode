@@ -41,7 +41,7 @@ namespace bc
 	protected:
 		int cashedSize = 0;
 		Barscalar lastVal = 0;
-		point startPoint;
+		//point startPoint;
 		bool lived = true;
 
 		float sums = 0;

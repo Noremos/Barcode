@@ -42,7 +42,7 @@ namespace bc {
 
 		virtual Barscalar get(int x, int y) const = 0;
 
-		virtual Barscalar get(const point& p) const
+		virtual Barscalar get(bc::point p) const
 		{
 			return get(p.x, p.y);
 		}
@@ -339,6 +339,21 @@ namespace bc {
 			cachedMax.set(_max);
 
 			return _max - _min;
+		}
+
+		void setDataU8(int width, int height, uchar* valuesData)
+		{
+			setMetadata(width, height, 1);
+			Barscalar* raw = new Barscalar[width * height];
+
+			int off = 0;
+			for (size_t i = 0; i < width * height; ++i)
+			{
+				raw[i].type = BarType::BYTE8_1;
+				raw[i].data.b1 = valuesData[i];
+			}
+
+			valAssignInstanceOf(raw);
 		}
 
 		void copyFromRawData(int width, int height, int chnls, uchar* rawData)

@@ -45,12 +45,13 @@ bc::Component::Component(bc::BarcodeCreator* factory, bool /*create*/)
 
 Barscalar bc::Component::getStart()
 {
+	assert(resline != NULL);
 	return resline->start;
 }
 
 Barscalar bc::Component::liveLen()
 {
-	return resline->start > lastVal ? resline->start - lastVal : lastVal - resline->start;
+	return resline->start > factory->curbright ? resline->start - factory->curbright : factory->curbright - resline->start;
 }
 
 
@@ -115,7 +116,10 @@ void bc::Component::kill()
 		return;
 	lived = false;
 
-//	resline->m_end = factory->curbright;
+	if (factory->curbright < resline->start)
+		resline->start = factory->curbright;
+	if (factory->curbright > resline->start)
+		resline->m_end = factory->curbright;
 
 	if (factory->settings.returnType == ReturnType::barcode3dold)
 	{

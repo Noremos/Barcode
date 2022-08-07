@@ -112,7 +112,7 @@ public:
 		type = R.type;
 	}
 
-	unsigned char getByte8()
+	unsigned char getByte8() const
 	{
 		return data.b1;
 	}
@@ -159,12 +159,14 @@ private:
 			return data.b1 > X.data.b1;
 			break;
 		case BarType::BYTE8_3:
-		default:
 		{
 			float a = this->getAvgFloat();
 			float b = X.getAvgFloat();
 			return (a > b);
 		}
+		default:
+			assert(false);
+			return false;
 		}
 	}
 
@@ -176,7 +178,6 @@ private:
 		case BarType::BYTE8_1:
 			return data.b1 == X.data.b1;
 		case BarType::BYTE8_3:
-		default:
 		{
 			if (X.type == BarType::BYTE8_3)
 			{
@@ -186,6 +187,9 @@ private:
 				return this->data.b3[0] == X.data.b1 && this->data.b3[1] == X.data.b1 && this->data.b3[2] == X.data.b1;
 
 		}
+		default:
+			assert(false);
+			return false;
 		}
 	}
 
@@ -196,12 +200,14 @@ private:
 		case BarType::BYTE8_1:
 			return data.b1 >= X.data.b1;
 		case BarType::BYTE8_3:
-		default:
 		{
 			float a = this->getAvgFloat();
 			float b = X.getAvgFloat();
 			return (a >= b);
 		}
+		default:
+			assert(false);
+			return false;
 		}
 	}
 
@@ -214,11 +220,13 @@ private:
 		case BarType::BYTE8_1:
 			return data.b1 > X;
 		case BarType::BYTE8_3:
-		default:
 		{
 			float a = this->getAvgFloat();
 			return (a > X);
 		}
+		default:
+			assert(false);
+			return false;
 		}
 	}
 
@@ -230,11 +238,13 @@ private:
 		case BarType::BYTE8_1:
 			return data.b1 == X;
 		case BarType::BYTE8_3:
-		default:
 		{
 			float a = this->getAvgFloat();
 			return a == X;
 		}
+		default:
+			assert(false);
+			return false;
 		}
 	}
 
@@ -245,11 +255,13 @@ private:
 		case BarType::BYTE8_1:
 			return data.b1 >= X;
 		case BarType::BYTE8_3:
-		default:
 		{
 			float a = this->getAvgFloat();
 			return (a >= X);
 		}
+		default:
+			assert(false);
+			return false;
 		}
 	}
 
@@ -262,11 +274,13 @@ private:
 		case BarType::BYTE8_1:
 			return data.b1 > X;
 		case BarType::BYTE8_3:
-		default:
 		{
 			float a = this->getAvgFloat();
 			return (a > X);
 		}
+		default:
+			assert(false);
+			return false;
 		}
 	}
 
@@ -278,11 +292,13 @@ private:
 		case BarType::BYTE8_1:
 			return data.b1 == X;
 		case BarType::BYTE8_3:
-		default:
 		{
 			float a = this->getAvgFloat();
 			return a == X;
 		}
+		default:
+			assert(false);
+			return false;
 		}
 	}
 
@@ -293,11 +309,13 @@ private:
 		case BarType::BYTE8_1:
 			return data.b1 >= X;
 		case BarType::BYTE8_3:
-		default:
 		{
 			float a = this->getAvgFloat();
 			return (a >= X);
 		}
+		default:
+			assert(false);
+			return false;
 		}
 	}
 
@@ -397,7 +415,7 @@ public:
 	bool operator>=(int X) const
 	{
 		//assert(type == X.type);
-		return !more_equal(X);
+		return more_equal(X);
 	}
 
 	bool operator<(int X) const
@@ -434,7 +452,7 @@ public:
 	bool operator>=(float X) const
 	{
 		//assert(type == X.type);
-		return !more_equal(X);
+		return more_equal(X);
 	}
 
 	bool operator<(float X) const
@@ -876,5 +894,11 @@ public:
 	{
 		assert(index < 3);
 		return data.b3[index];
+	}
+
+
+	Barscalar absDiff(const Barscalar& R) const
+	{
+		return this->getAvgFloat() > R.getAvgFloat() ? *this - R : R - *this;
 	}
 };

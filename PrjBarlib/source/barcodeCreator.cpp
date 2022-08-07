@@ -95,8 +95,7 @@ void BarcodeCreator::draw(std::string name)
 
 inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 {
-	//second->kill();
-	if (second->liveLen() == 0 && main->getStart() - second->getStart() == 0)
+	if (main->liveLen() == 0 && second->liveLen() == 0)
 	{
 #ifdef POINTS_ARE_AVAILABLE
 		for (const auto& val : second->resline->matr)
@@ -239,14 +238,14 @@ inline bool BarcodeCreator::checkCloserB0()
 			{
 				first = connected;
 				// if len more then maxlen, kill the component
-				if (curbright - first->getStart() > settings.maxLen.getOrDefault(0))
+				bool more = settings.maxLen.isCached && curbright.absDiff(first->getStart()) > settings.maxLen.getOrDefault(0);
+				if (more)
 				{
 					//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
 					if (settings.killOnMaxLen)
-						if (settings.killOnMaxLen)
-						{
-							first->kill(); //Интересный результат
-						}
+					{
+						first->kill(); //Интересный результат
+					}
 					first = nullptr;
 				}
 				else if (!first->add(curpoindex, curpix))
@@ -264,6 +263,7 @@ inline bool BarcodeCreator::checkCloserB0()
 			}
 		}
 	}
+
 	if (first == nullptr)
 	{
 		//lastB += 1;
@@ -978,8 +978,6 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 		if (c == nullptr || c->resline == nullptr)
 			continue;
 
-		Barscalar len = c->resline->len();
-
 		if (c->parent == nullptr)
 		{
 			//assert(c->isAlive() || settings.killOnMaxLen);
@@ -987,6 +985,10 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 			if (settings.createGraph)
 				c->resline->setparent(rootNode);
 		}
+
+		assert(!c->isAlive());
+
+		Barscalar len = c->resline->len();
 		//else
 		//{
 		//	if (len == 0)
@@ -1003,7 +1005,6 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 		//else
 			//assert(len != 0);
 
-		assert(!c->isAlive());
 
 
 		if (static_cast<int>(len) == INFINITY)
@@ -1058,7 +1059,7 @@ void BarcodeCreator::processFULL(barstruct& str, const bc::DatagridProvider* img
 
 	if (str.comtype == ComponentType::Component && rgb)
 	{
-		BarImg *res = new BarImg();
+		BarImg* res = new BarImg();
 		cvtColorV3B2U1C(*img, *res);
 		originalImg = false;
 		needDelImg = true;
@@ -1069,13 +1070,13 @@ void BarcodeCreator::processFULL(barstruct& str, const bc::DatagridProvider* img
 
 	switch (str.coltype)
 	{
-	// To RGB
+		// To RGB
 	case ColorType::rgb:
 	{
 		if (img->type == BarType::BYTE8_3)
 			break;
 
-		BarImg *res = new BarImg(-1, -1, 3);
+		BarImg* res = new BarImg(-1, -1, 3);
 		cvtColorU1C2V3B(*img, *res);
 		originalImg = false;
 		needDelImg = true;
@@ -1088,7 +1089,7 @@ void BarcodeCreator::processFULL(barstruct& str, const bc::DatagridProvider* img
 		if (img->type == BarType::BYTE8_1)
 			break;
 
-		BarImg *res = new BarImg();
+		BarImg* res = new BarImg();
 		cvtColorV3B2U1C(*img, *res);
 		originalImg = false;
 		needDelImg = true;
@@ -1110,6 +1111,8 @@ void BarcodeCreator::processFULL(barstruct& str, const bc::DatagridProvider* img
 bc::Barcontainer* BarcodeCreator::createBarcode(const bc::DatagridProvider* img, const BarConstructor& structure)
 {
 	this->settings = structure;
+	this->settings.createBinaryMasks = true;
+
 	settings.checkCorrect();
 	Barcontainer* cont = new Barcontainer();
 
