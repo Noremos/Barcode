@@ -67,6 +67,9 @@
     <ClInclude Include="include\barscalar.h">
       <Filter>classes</Filter>
     </ClInclude>
+    <ClInclude Include="algorithmes\ExportStats.h">
+      <Filter>algorithmes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint">

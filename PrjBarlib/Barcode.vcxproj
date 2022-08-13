@@ -86,6 +86,7 @@
     <ClInclude Include="algorithmes\detection.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="algorithmes\ExportStats.h" />
     <ClInclude Include="algorithmes\noise.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
     </ClInclude>
