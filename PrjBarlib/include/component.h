@@ -72,7 +72,7 @@ namespace bc
 			return lived;
 		}
 
-		Barscalar liveLen();
+		bool justCreated();
 
 		//Barscalar len()
 		//{

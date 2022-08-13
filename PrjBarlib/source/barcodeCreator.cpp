@@ -95,7 +95,7 @@ void BarcodeCreator::draw(std::string name)
 
 inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 {
-	if (main->liveLen() == 0 && second->liveLen() == 0)
+	if (main->justCreated() && second->justCreated())
 	{
 #ifdef POINTS_ARE_AVAILABLE
 		for (const auto& val : second->resline->matr)
@@ -140,12 +140,15 @@ inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 	//	std::swap(bottm2, top2);
 
 
-	Barscalar fs = main->getStart();
-	Barscalar sc = second->getStart();
-	Barscalar diff = (fs > sc) ? (fs - sc) : (sc - fs);
-	if (diff > settings.getMaxLen())
+	if (settings.maxLen.isCached)
 	{
-		return main;
+		Barscalar fs = main->getStart();
+		Barscalar sc = second->getStart();
+		Barscalar diff = (fs > sc) ? (fs - sc) : (sc - fs);
+		if (diff > settings.getMaxLen())
+		{
+			return main;
+		}
 	}
 
 	/*if (!((bottom <= bottm2 && bottm2 <= top) || (bottom <= top2 && top2 <= top)))
@@ -601,6 +604,7 @@ inline void BarcodeCreator::sortPixels(bc::ProcType type)
 	switch (workingImg->getType())
 	{
 	case BarType::BYTE8_1:
+	case BarType::BYTE8_3:
 	{
 		uint hist[256];//256
 		uint offs[256];//256
@@ -626,7 +630,7 @@ inline void BarcodeCreator::sortPixels(bc::ProcType type)
 		poidex* data = new poidex[totalSize + 1];//256
 		for (size_t i = 0; i < totalSize; i++)
 		{
-			uchar p = workingImg->getLiner(i).data.b1;
+			uchar p = workingImg->getLiner(i).getAvgUchar();
 			data[offs[p]++] = i;
 		}
 
@@ -637,11 +641,10 @@ inline void BarcodeCreator::sortPixels(bc::ProcType type)
 		this->sortedArr = data;
 		break;
 	}
-	case BarType::BYTE8_3:
-	{
-		assert(false);
-		break;
-	}
+//	{
+//		assert(false);
+//		break;
+//	}
 	//case BarType::FLOAT:
 	//{
 		//// do this hack to skip constructor calling for every point
@@ -670,6 +673,7 @@ inline void BarcodeCreator::sortPixels(bc::ProcType type)
 	//}
 
 	default:
+		assert(false);
 		break;
 	}
 }
@@ -779,7 +783,7 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, Compo
 
 
 	//от 255 до 0
-	if (comp == ComponentType::RadiusComp)
+	if (type == ProcType::Radius)
 	{
 		geometrySortedArr.reset(sortPixelsByRadius(workingImg, totalSize, type, settings.maxRadius, this->processCount));
 		sortedArr = nullptr;
@@ -795,7 +799,6 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, Compo
 	memset(included, 0, totalSize * sizeof(Include));
 
 #ifdef USE_OPENCV
-
 	if (colors.size() == 0 && settings.visualize)
 	{
 		for (int b = 0; b < 255; b += 20)
@@ -856,7 +859,7 @@ void BarcodeCreator::processComp(Barcontainer* item)
 	addItemToCont(item);
 	clearIncluded();
 	// lastB = 0;
-}
+	}
 
 // Parallel execution with function object.
 struct Operator
@@ -1031,13 +1034,16 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 	switch (str.comtype)
 	{
 	case  ComponentType::Component:
-		processComp(item);
-		break;
-	case  ComponentType::RadiusComp:
-		processCompByRadius(item);
+		if (str.proctype == ProcType::Radius)
+			processCompByRadius(item);
+		else
+			processComp(item);
 		break;
 	case  ComponentType::Hole:
-		processHole(item);
+		if (str.proctype == ProcType::Radius)
+			processCompByRadius(item);
+		else
+			processHole(item);
 		break;
 		//case  ComponentType::FullPrepair:
 		//	ProcessFullPrepair(b, item);

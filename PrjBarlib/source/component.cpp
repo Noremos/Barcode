@@ -49,9 +49,9 @@ Barscalar bc::Component::getStart()
 	return resline->start;
 }
 
-Barscalar bc::Component::liveLen()
+bool bc::Component::justCreated()
 {
-	return resline->start > factory->curbright ? resline->start - factory->curbright : factory->curbright - resline->start;
+	return resline->start == resline->m_end && resline->start == factory->curbright;
 }
 
 
