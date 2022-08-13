@@ -52,8 +52,8 @@ namespace bc
 {
 	enum class CompireStrategy { CommonToSum, CommonToLen, compire3dHist, compire3dBrightless, FromMethod, Complex, Temp1, Temp2 };
 
-	enum class ComponentType { Component, Hole, RadiusComp, FullPrepair, PrepairComp };
-	enum class ProcType { f0t255, f255t0, invertf0, experiment };
+	enum class ComponentType { Component = 0, Hole = 1, FullPrepair, PrepairComp };
+	enum class ProcType { f0t255 = 0, f255t0 = 1, Radius = 2, invertf0, experiment };
 	enum class ColorType { native, gray, rgb };
 
 	enum class ReturnType { barcode2d, barcode3d, barcode3dold };
