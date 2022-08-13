@@ -1,4 +1,4 @@
-#include "pch.h"
+//#include "pch.h"
 #include "CppUnitTest.h"
 
 #include "../PrjBarlib/include/barcodeCreator.h"
@@ -19,10 +19,50 @@ namespace BarcodeTests
 			bcont.createBinaryMasks = false;
 			bcont.returnType = bc::ReturnType::barcode2d;
 			//bcont.setMaxPorog(1);
-			//bcont.maxTypeValue.set(255);
+			//bcont.maxTypeValue.set(255);b
 
 			return bcont;
 		}
+
+
+		bc::BarImg restore255ToBarimg(bc::Barcontainer* cont, int wid, int hei, Barscalar maxval)
+		{
+			auto* it = cont->getItem(0);
+			auto& lines = it->barlines;
+			bc::BarImg img(wid, hei);
+			for (size_t i = 0; i < wid * hei; i++)
+			{
+				img.setLiner(i, maxval);
+			}
+
+			for (size_t i = 0; i < lines.size(); i++)
+			{
+				Barscalar start = lines[i]->start;
+				Barscalar end = start + lines[i]->len();
+				auto& matr = lines[i]->matr;
+				for (size_t k = 0; k < matr.size(); k++)
+				{
+					auto& p = matr[k];
+					//assert(start <= p.value && p.value <= end);
+					img.minus(p.getPoint(), p.value);
+				}
+			}
+			return img;
+		}
+
+		void compiteBarAndBar(bc::BarImg& img0, bc::BarImg& img1)
+		{
+			for (int i = 0; i < img0.hei(); i++)
+			{
+				for (int j = 0; j < img0.wid(); j++)
+				{
+					Barscalar av = img0.get(j, i);
+					Barscalar bv = img1.get(j, i);
+					Assert::AreEqual(av.getByte8(), bv.getByte8());
+				}
+			}
+		}
+
 	public:
 
 		TEST_METHOD(TestMethod6)
@@ -144,6 +184,29 @@ namespace BarcodeTests
 			Assert::AreEqual((size_t)2, itm->barlines.size());
 			Assert::AreEqual((float)1, itm->barlines[0]->len().getAvgUchar());
 			Assert::AreEqual((float)1, itm->barlines[1]->len().getAvgUchar());
+		}
+
+		TEST_METHOD(Testf255t0)
+		{
+			bc::BarImg img(1, 1);
+			bc::BarcodeCreator test;
+			auto bcont = defineConstr();
+			bcont.structure[0].proctype = bc::ProcType::f255t0;
+			const int k = 5;
+			uchar maxv = 239;
+			uchar* data5 = new uchar[k * k]{
+			63,121,73,14,120,
+			237,90,194,136,4,
+			90,212,193,199,88,
+			51,150,98,239,42,
+			65,141,145,34,203
+			};
+
+			img.setDataU8(k, k, data5);
+			bc::Barcontainer* ret = test.createBarcode(&img, bcont);
+			bc::BarImg out = restore255ToBarimg(ret, k, k, maxv);
+
+			compiteBarAndBar(img, out);
 		}
 	};
 }
