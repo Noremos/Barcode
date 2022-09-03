@@ -70,6 +70,12 @@
     <ClInclude Include="algorithmes\ExportStats.h">
       <Filter>algorithmes</Filter>
     </ClInclude>
+    <ClInclude Include="include\CellMachine.h">
+      <Filter>Genetic</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MachineProcessor.h">
+      <Filter>Genetic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint">
@@ -94,6 +100,9 @@
     </Filter>
     <Filter Include="pylib">
       <UniqueIdentifier>{9f157a27-63c7-4c3d-a4c7-9de387865fa6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Genetic">
+      <UniqueIdentifier>{b46579c0-86f7-46c4-808a-602863f36628}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

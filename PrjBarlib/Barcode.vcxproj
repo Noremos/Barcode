@@ -100,10 +100,12 @@
     <ClInclude Include="include\barcodeCreator.h" />
     <ClInclude Include="include\barclasses.h" />
     <ClInclude Include="include\barImg.h" />
+    <ClInclude Include="include\CellMachine.h" />
     <ClInclude Include="include\Component.h" />
     <ClInclude Include="include\Hole.h" />
     <ClInclude Include="include\include_cv.h" />
     <ClInclude Include="include\include_py.h" />
+    <ClInclude Include="include\MachineProcessor.h" />
     <ClInclude Include="include\presets.h" />
     <ClInclude Include="include\pytemplcalsses.h" />
   </ItemGroup>
