@@ -66,6 +66,7 @@ int show(string name, Mat img, int wait = -1)
 }
 
 
+
 void getCounturFormMatr(barline* line, int rows, int cols, vector<vector<Point> >& contoursRet)
 {
 	Mat objectsMask = Mat::zeros(rows, cols, CV_8UC1);
@@ -123,7 +124,7 @@ void binarymatr(string path)
 	//bcstruct.maxRadius = 50;
 	//bcstruct.maxLen.set(25);
 	//bcstruct.colorRange = 25;
-	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::RadiusComp);
+	bcstruct.addStructure(ProcType::Radius, ColorType::native, ComponentType::Component);
 
 	//path = "D:/Learning/BAR/base/ident.png";
 	//path = "D:/Learning/datasets/Floodnet/train-20220527T055812Z-001/train/train-org-img/6344.jpg";
@@ -246,8 +247,257 @@ void binarymatr(string path)
 	//cv::medianBlur(binmap, binmap, 3);
 }
 
+
+string getV(float x, float y, float z)
+{
+	string s = "v ";
+	s += to_string(x);
+	s += " ";
+	s += to_string(y);
+	s += " ";
+	s += to_string(z);
+	s += "\n";
+
+	return s;
+}
+
+string getF(int v1, int v2, int v3, int v4)
+{
+	string s = "f ";
+	s += to_string(v1);
+	s += " ";
+	s += to_string(v2);
+	s += " ";
+	s += to_string(v3);
+	s += " ";
+	s += to_string(v4);
+	s += "\n";
+
+	return s;
+}
+
+string getVt(float x, float z)
+{
+	string s = "vt ";
+	s += to_string(x);
+	s += " ";
+	s += to_string(z);
+	s += "\n";
+
+	return s;
+}
+
+
+string getVVt(float x, float y, float z, int wid, int hei)
+{
+	string s = "v ";
+	s += to_string(x);
+	s += " ";
+	s += to_string(y);
+	s += " ";
+	s += to_string(z);
+	s += "\n";
+
+	//s += "vt ";
+	//s += to_string(x / wid);
+	//s += " ";
+	//s += to_string(1.f - (float)z / hei);
+	//s += "\n";
+
+	return s;
+}
+
+int lastX = 0;
+int lastZ = 0;
+//
+//void writePixel(ofstream& out, int x, int z, Mat imp, float scale)
+//{
+//
+//}
+//
+//void writeFaces(ofstream& out, int& ind, int x, int z, Mat imp)
+//{
+//	uchar y = imp.at<uchar>(x, z);
+//
+//	float yof = y * 0.02;
+//	int hei = imp.cols;
+//
+//
+//	out << getF(ind++, ind++, ind++, ind++);
+//
+//	if (imp.at<uchar>(x + 1, z) != y)
+//		out << getF(ind++, ind++, ind++, ind++);
+//
+//	if (imp.at<uchar>(x, z + 1) != y)
+//		out << getF(ind++, ind++, ind++, ind++);
+//
+//	if (imp.at<uchar>(x + 1, z + 1) != y)
+//		out << getF(ind++, ind++, ind++, ind++);
+//}
+
+void writeObject(string path, Mat imp)
+{
+	int nameOf = path.rfind('/') + 1;
+	int dotPoz = path.rfind('.');
+	string objName = path.substr(nameOf, dotPoz - nameOf);
+	ofstream out;
+	out.open(path);
+
+
+	out << "o " << objName << endl;
+
+	float min = 9999;
+	float max = -9999;
+	int k = 0;
+
+	int wid = imp.cols;
+	int hei = imp.rows;
+	float scale = 0.5;
+	int ind = 1;
+	float jds = 0.02;
+
+	for (int h = 0; h < hei; h += 1)
+	{
+		for (int w = 0; w < wid; w += 1)
+		{
+			int x = w;
+			int z = h;
+			uchar y = imp.at<uchar>(h, w);
+
+
+			float xof = x * scale;
+			float zof = z * scale;
+			float yof = y * jds;
+
+			int oo = ind++;
+			int po = ind++;
+			int op = ind++;
+			int pp = ind++;
+
+			out << getVVt(xof, yof, zof, wid, hei);
+			out << getVVt(xof + scale, yof, zof, wid, hei);
+			out << getVVt(xof, yof, zof + scale, wid, hei);
+			out << getVVt(xof + scale, yof, zof + scale, wid, hei);
+			out << getF(oo, op, pp, po);
+
+			if (x + 1 < wid)
+			{
+				uchar yn = imp.at<uchar>(h, w + 1);
+				float ynof = yn * jds;
+				if (yn != y)
+				{
+					out << getVVt(xof + scale, ynof, zof, wid, hei);
+					out << getVVt(xof + scale, ynof, zof + scale, wid, hei);
+					out << getF(po, pp, ind++, ind++);
+				}
+			}
+
+			if (h + 1 < hei)
+			{
+				uchar yn = imp.at<uchar>(h + 1, w);
+				float ynof = yn * jds;
+				if (yn != y)
+				{
+					out << getVVt(xof, ynof, zof + scale, wid, hei);
+					out << getVVt(xof + scale, ynof, zof + scale, wid, hei);
+					out << getF(op, pp, ind++, ind++);
+				}
+			}
+		}
+	}
+
+	//int ind = 1;
+	//for (int h = 0; h < height - 1; h += 1)
+	//{
+	//	for (int w = 0; w < width - 1; w += 1)
+	//	{
+	//		writeFaces(out, ind, w, h, imp);
+	//	}
+	//}
+
+
+	out.close();
+}
+
+void get3d(Mat img, int maxLen, string outpath, bool writeInRange)
+{
+	BarcodeCreator barcodeFactory;
+	BarConstructor bcstruct;
+	bcstruct.returnType = bc::ReturnType::barcode2d;
+	bcstruct.createBinaryMasks = true;
+	bcstruct.visualize = false;
+	bcstruct.waitK = 1;
+	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::Component);
+
+	Mat back = img;
+
+	BarMat wrap(back);
+	Barcontainer* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
+	Baritem* item = containet->getItem(0);
+
+	//Mat binmap(img.rows, img.cols, CV_8UC1, Scalar(wrap.max().getAvgUchar()));
+	Mat binmap(img.rows, img.cols, CV_8UC1, Scalar(0));
+	barlinevector& bar2 = item->barlines;
+	int add = 0;
+	for (int i = 0; i < bar2.size(); ++i)
+	{
+		barline* line = bar2[i];
+		barvector& points = line->matr;
+
+		if (writeInRange)
+		{
+			if (line->len() >= maxLen)
+				continue;
+		}
+		else
+		{
+			if (line->len() < maxLen)
+				continue;
+		}
+
+		++add;
+
+		for (size_t k = 0; k < points.size(); ++k)
+		{
+			const barvalue& p = points[k];
+			//if (points[k].value > 100)
+			//	continue;
+			//if (line->len() > 100)
+			uchar& v = binmap.at<uchar>(p.getY(), p.getX());
+
+			v += p.value.getAvgUchar();
+		}
+	}
+
+	cout << add << " " << writeInRange << " "  << wrap.max().getAvgUchar()  << endl;
+
+	writeObject(outpath, binmap);
+}
+
 void getResults()
 {
+	string pathas = "D:/Learning/papers/CO_compressing/base16_inv.png";
+	//string path = "D:/Learning/papers/CO_compressing/base16t.png";
+	Mat img = cv::imread("noise.png", cv::IMREAD_GRAYSCALE);
+
+	//for (size_t i = 1; i < img.rows - 1; i++)
+	//{
+	//	for (size_t j = 1; j < img.cols - 1; j++)
+	//	{
+	//		img.at<uchar>(i, j) = rand() % 100;
+	//	}
+	//}
+	//cv::imwrite("noise.png", img);
+
+	get3d(img, 255, "D:/Learning/papers/CO_compressing/full.obj", true);
+	get3d(img, 50, "D:/Learning/papers/CO_compressing/50_main.obj", true);
+	get3d(img, 50, "D:/Learning/papers/CO_compressing/50_ost.obj", false);
+
+	get3d(img, 20, "D:/Learning/papers/CO_compressing/20_main.obj", true);
+	get3d(img, 20, "D:/Learning/papers/CO_compressing/20_ost.obj", false);
+
+	return;
+
 	string path = "D:/Programs/C++/Barcode/PrjBarlib/researching/e.png";
 	Mat bin_etalon = cv::imread(path, IMREAD_COLOR);
 	show("source", bin_etalon);

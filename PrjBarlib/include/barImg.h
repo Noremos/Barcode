@@ -788,6 +788,18 @@ namespace bc {
 		return m;
 	}
 
+
+	static cv::Mat convertRGBProvider2Mat(const DatagridProvider* img)
+	{
+		cv::Mat m = cv::Mat::zeros(img->hei(), img->wid(), CV_8UC3);
+		for (size_t i = 0; i < img->length(); i++)
+		{
+			auto p = img->getPointAt(i);
+			m.at<cv::Vec3b>(p.y, p.x) = img->get(p.x, p.y).toCvVec();
+		}
+		return m;
+	}
+
 #endif // USE_OPENCV
 }
 //split

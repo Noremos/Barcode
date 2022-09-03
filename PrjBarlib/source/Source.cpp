@@ -6,6 +6,7 @@
 #include "../algorithmes/detection.h"
 #include "../algorithmes/noise.h"
 #include "../algorithmes/roofs.h"
+#include "../algorithmes/ExportStats.h"
 #include "tests.h"
 
 void tetsAll()
@@ -123,13 +124,132 @@ void tetsAll()
 //}
 
 
+bc::BarConstructor defineConstr()
+{
+	bc::BarConstructor bcont;
+	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.createBinaryMasks = true;
+	bcont.createGraph = false;
+	bcont.createBinaryMasks = false;
+	bcont.returnType = bc::ReturnType::barcode2d;
+	//bcont.setMaxPorog(1);
+	//bcont.maxTypeValue.set(255);
+
+	return bcont;
+}
+
+bc::BarImg restore255ToBarimg(bc::Barcontainer* cont, int wid, int hei, Barscalar maxval)
+{
+	auto* it = cont->getItem(0);
+	auto& lines = it->barlines;
+	bc::BarImg img(wid, hei);
+	for (size_t i = 0; i < wid * hei; i++)
+	{
+		img.setLiner(i, maxval);
+	}
+
+	for (size_t i = 0; i < lines.size(); i++)
+	{
+		Barscalar start = lines[i]->start;
+		Barscalar end = lines[i]->end();
+		auto& matr = lines[i]->matr;
+		for (size_t k = 0; k < matr.size(); k++)
+		{
+			auto& p = matr[k];
+			//assert(start <= p.value && p.value <= end);
+			img.minus(p.getPoint(), p.value);
+		}
+	}
+	return img;
+}
+
+
+void compiteBarAndBar(BarImg& img0, BarImg& img1)
+{
+	for (int i = 0; i < img0.hei(); i++)
+	{
+		for (int j = 0; j < img0.wid(); j++)
+		{
+			Barscalar av = img0.get(j, i);
+			Barscalar bv = img1.get(j, i);
+			cout << (int)bv.data.b1 << " ";
+			assert(av == bv);
+		}
+	}
+}
+
+void printImg(BarImg& img0)
+{
+	for (int i = 0; i < img0.hei(); i++)
+	{
+		for (int j = 0; j < img0.wid(); j++)
+		{
+			std::cout << std::setw(4);
+			cout << (int)img0.get(j, i).getByte8();
+		}
+		std::cout << std::endl;
+	}
+}
+#include "MachineProcessor.h"
 
 int main()
 {
+	srand(time(0));
+
+	string pbase = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/";
+	//string path = "D:/Learning/papers/CO_compressing/base16t.png";
+	Mat imgs = cv::imread(pbase + "6_set.png", cv::IMREAD_COLOR);
+	Mat mask = cv::imread(pbase + "6_bld.png", cv::IMREAD_GRAYSCALE);
+	bc::BarMat imgsWrap(imgs, BarType::BYTE8_3);
+	bc::BarMat maskWrap(mask, BarType::BYTE8_1);
+
+	MachinePRocessor::fullProcess2(imgsWrap, maskWrap);
+
+	return 0;
+	getResultsExperts();
+	return 0;
+	bc::BarImg img(1, 1);
+	bc::BarcodeCreator test;
+	auto bcont = defineConstr();
+	bcont.structure[0].proctype = bc::ProcType::f0t255;
+	bcont.structure[0].comtype = bc::ComponentType::Hole;
+	bcont.visualize = true;
+	const int k = 3;
+	uchar maxv = 0;
+	uchar* data5 = new uchar[k * k]
+	{
+		1, 1, 6,
+		1, 9, 3,
+		5, 3, 3,
+	};
+	
+	srand(1);
+	for (size_t i = 0; i < k*k; i++)
+	{
+		//data5[i] = rand() % 255;
+		if (data5[i] > maxv)
+			maxv = data5[i];
+	}
+//	const int k = 2;
+//	uchar maxv = 5; 
+//	uchar* data5 = new uchar[k * k]{
+//4,5,
+//5,5
+//	};
+
+	img.setDataU8(k, k, data5);
+	printImg(img);
+
+	Barcontainer* ret = test.createBarcode(&img, bcont);
+	BarImg out = restore255ToBarimg(ret, k, k, maxv);
+
+	std::cout << std::endl;
+	printImg(out);
+	compiteBarAndBar(img, out);
 	// doMagickDOTA();
 	//  testAll();
 	//compireMethods();
 	//prepSegm();
-	getResults();
+	//getResults();
 	return 0;
 }
