@@ -353,3 +353,4 @@ analysis/.vscode
 *.lib
 PrjBarlib/researching/tiles
 PrjBarlib/researching/processed
+PrjBarlib/researching/res
