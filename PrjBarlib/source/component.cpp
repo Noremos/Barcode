@@ -87,6 +87,7 @@ bool bc::Component::add(const poidex index, const point p, bool forsed)
 	if (factory->settings.createBinaryMasks)
 	{
 		resline->addCoord(p, factory->curbright);
+		avgSr += factory->curbright;
 	}
 	// 3d barcode/ —читаем кол-во добавленных значений
 	if (factory->settings.returnType == ReturnType::barcode3d)
@@ -181,9 +182,10 @@ void bc::Component::setParent(bc::Component* parnt)
 					}
 				}*/
 
-				// Записываем длину сущщетвования точки
+			// Записываем длину сущщетвования точки
 			val.value = factory->curbright - val.value;
 
+			avgSr += factory->curbright;
 			// Эти точки сичтаются как только что присоединившиеся
 			parnt->resline->addCoord(barvalue(val.getPoint(), factory->curbright));
 		}
@@ -199,22 +201,28 @@ void bc::Component::setParent(bc::Component* parnt)
  bool bc::Component::canBeConnected(const bc::point& p, bool incrSum)
 {
 
-	if (factory->settings.maxRadius < (lastVal.val_distance(factory->workingImg->get(p))))
-		return false;
+//	if (factory->settings.maxRadius < (lastVal.val_distance(factory->workingImg->get(p))))
+//		return false;
 
-	if (!factory->settings.maxLen.isCached)
+//	if (!factory->settings.maxLen.isCached)
+//		return true;
+	if (totalCount == 0)
 		return true;
-	Barscalar val = factory->workingImg->get(p.x, p.y);
-	Barscalar diff;
-	if (val > resline->start)
-	{
-		diff = val - resline->start;
-	}
-	else
-	{
-		diff = resline->start - val;
-	}
-	return diff <= factory->settings.maxLen.val;
+
+	return ((avgSr.getAvgFloat() / totalCount) * 1.2f <= factory->curbright.getAvgFloat());
+
+
+//	Barscalar val = factory->workingImg->get(p.x, p.y);
+//	Barscalar diff;
+//	if (val > resline->start)
+//	{
+//		diff = val - resline->start;
+//	}
+//	else
+//	{
+//		diff = resline->start - val;
+//	}
+//	return diff <= factory->settings.maxLen.val;
 
 	//Component* comp = getMaxparent();
 	//if ((float)comp->totalCount / factory->workingImg->length() >= .1f)

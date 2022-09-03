@@ -41,6 +41,7 @@ namespace bc
 	protected:
 		int cashedSize = 0;
 		Barscalar lastVal = 0;
+		Barscalar avgSr = 0;
 		//point startPoint;
 		bool lived = true;
 
