@@ -6,7 +6,6 @@ namespace bc
 
 class Hole : public Component
 {
-    bool isOutside = false;
     int index = 0;
 public:
     Barscalar start, end;
@@ -25,20 +24,14 @@ public:
 //    void addAround();
     bool tryAdd(const point &p);
     //add withot checks. NOT SAFE. not add if valid
-    void add(const point &p);
     //************************************************************************//
-    bool checkValid(point p);
+    bool checkValid(const bc::point& p);
     //добовляет точку в дыру, если она там не содержится. Возвращает
 
     //явяется ли точка точкой соединения двух дыр
     bool findCross(point p, Hole* hole);
-    bool getIsOutside() const;
-    void setShadowOutside(bool outside);
-    void setOutside();
-    void kill();
-
     bool isContain(int x, int y);
-    bool isContain(bc::point p);
+    bool isContain(const bc::point& p);
 };
 
 }

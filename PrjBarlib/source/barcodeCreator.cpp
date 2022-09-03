@@ -61,10 +61,7 @@ void BarcodeCreator::draw(std::string name)
 		//		else
 		{
 			Hole* hd = dynamic_cast<Hole*>(comp);
-			if (hd && hd->getIsOutside())
-				col = cv::Vec3b(0, 0, 0);
-			else
-				col = colors[(size_t)comp->startIndex % size];
+			col = colors[(size_t)comp->startIndex % size];
 
 			marc = cv::MARKER_TILTED_CROSS;
 		}
@@ -301,7 +298,6 @@ COMPP BarcodeCreator::getInclude(const size_t pos)
 }
 
 
-
 HOLEP BarcodeCreator::getHole(uint x, uint y)
 {
 	if (x < 0 || y < 0 || x >= wid || y >= hei)
@@ -319,7 +315,6 @@ HOLEP BarcodeCreator::getHole(const point& p)
 }
 
 
-
 HOLEP BarcodeCreator::tryAttach(HOLEP main, HOLEP add, point p)
 {
 	if (main != add && main->findCross(p, add))
@@ -332,8 +327,8 @@ HOLEP BarcodeCreator::tryAttach(HOLEP main, HOLEP add, point p)
 		//	--lastB;
 
 		//как будет после соединения
-		main->setShadowOutside(main->getIsOutside() || add->getIsOutside());
-		add->setShadowOutside(main->getIsOutside());
+		//main->setShadowOutside(main->getIsOutside() || add->getIsOutside());
+		//add->setShadowOutside(main->getIsOutside());
 
 		HOLEP ret = dynamic_cast<HOLEP>(attach(main, add));
 		//if (ret->getIsOutside() && curbright != ret->end)
@@ -354,6 +349,7 @@ inline bool BarcodeCreator::checkCloserB1()
 	point p1;
 	point p2;
 
+	// 1. Ищем дыру или делаем её из мелких;
 	//после обовления дыры  к  ней можно будет присоединить все токи вокруг нее, кроме тточ, что на противоположном углу
 	for (int i = 0; i < 8; ++i)
 	{
@@ -378,16 +374,16 @@ inline bool BarcodeCreator::checkCloserB1()
 			//вариант 1 - они принадлежат одному объекту. Не валидные могут содержать только одну компоненту, значит, этот объект валидный
 			if (h1 == h2 && h1->isValid)
 			{
-				h1->add(curpix);
+				h1->add(curpix.getLiner(wid), curpix);
 				hr = h1;
 			}
 			//вариант 2 - h1 - валид, h2- не валид. Мы уже проверили, что треугольник p-p1-p2 есть
 			//cod 402
 			else if (h1->isValid && !h2->isValid)
 			{
+				delete h2;
 				hr = new Hole(curpix, p1, p2, this);
 
-				delete h2;
 				h1->tryAdd(curpix);
 				hr = tryAttach(hr, h1, curpix);
 			}
@@ -395,8 +391,8 @@ inline bool BarcodeCreator::checkCloserB1()
 			//cod 402
 			else if (h2->isValid && !h1->isValid)
 			{
-				hr = new Hole(curpix, p1, p2, this);
 				delete h1;
+				hr = new Hole(curpix, p1, p2, this);
 				h2->tryAdd(curpix);
 				hr = tryAttach(hr, h2, curpix);
 			}
@@ -404,9 +400,9 @@ inline bool BarcodeCreator::checkCloserB1()
 			else if (!h1->isValid && !h2->isValid)//не факт, что они не валидны
 			{
 				//Т.К. мы уже проверили вышле, что образуется треуготльник, можно смело создаать дыру
-				hr = new Hole(curpix, p1, p2, this);
 				delete h1;
 				delete h2;
+				hr = new Hole(curpix, p1, p2, this);
 
 			}
 			//вариант 5 - разные дыры и они валидны CDOC{590}
@@ -442,7 +438,9 @@ inline bool BarcodeCreator::checkCloserB1()
 		return false;
 	}
 
-	for (int i = 0; i < 16; ++i)
+	bool added = false;
+	// 2. Добалвяем недодыры
+	for (char i = 0; i < 8; ++i)
 	{
 		point curp = curpix + poss[i % 8];
 
@@ -453,55 +451,35 @@ inline bool BarcodeCreator::checkCloserB1()
 			if (h_t == hr)
 				continue;
 
-			Hole* h2 = nullptr;
+			// Сначала добавляем все недодыры
+			if (h_t->isValid)
+				continue;
 
-			point next = curpix + poss[(i % 8) + 1];
-			if (isContain(next))
-				h2 = getHole(next);
-			if (h2 == hr || h2 == h_t)
-				h2 = nullptr;
+			added = added || hr->tryAdd(curp);
+		}
+	}
+	if (added)
+	{
+		// Пытаемся объединить дыры
+		for (char i = 0; i < 8; ++i)
+		{
+			point sidep = curpix + poss[i % 8];
 
-			if (!h_t->isValid)
+			if (isContain(sidep))
 			{
-				if (h2 != nullptr && !h2->isValid)
-				{
-					delete h_t;
-					delete h2;
-					new Hole(curpix, curp, next, this);
-				}
-				else if (hr->tryAdd(curp))
-					delete h_t;
-			}
+				Hole* h_t = getHole(sidep);
+				//получена дыра
+				if (h_t == hr)
+					continue;
 
-			//вариант 2 - она валидна
-			else
-			{
-				bool add_t = h_t->tryAdd(curpix);
-				bool add_r = hr->tryAdd(curp);
-				if (h2 != nullptr)
-				{
-					bool added = h_t->tryAdd(next);
-					if (h2->isValid)
-					{
-						h_t = tryAttach(h_t, h2, next);
-					}
-					else
-					{
-						if (added)
-							delete h2;
-					}
-				}
-				if (add_t && add_r)
-					hr = tryAttach(hr, h_t, curpix);
-				else if (add_t && !add_r)
-				{
-					hr = tryAttach(hr, h_t, curpix);
-				}
-				else if (!add_t && add_r)
-				{
-					hr = tryAttach(hr, h_t, curp);
-				}
+				// Пытается соединить полноценные дыры
+				if (!h_t->isValid)
+					continue;
 
+				if (h_t->tryAdd(curpix))
+				{
+					h_t = tryAttach(hr, h_t, curpix);
+				}
 			}
 		}
 	}

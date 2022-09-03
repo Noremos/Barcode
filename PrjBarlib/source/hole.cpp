@@ -5,7 +5,7 @@
 bc::Hole::Hole(point p1, BarcodeCreator* factory) : Component(factory)
 {
 	isValid = false;
-	add(p1);
+	add(factory->GETPOFF(p1), p1);
 	index = factory->components.size() - 1;
 }
 
@@ -16,9 +16,9 @@ bc::Hole::Hole(point p1, point p2, point p3, BarcodeCreator* factory) : Componen
 	//    zeroStart = p1;
 		// ++factory->lastB;
 
-	add(p1);
-	add(p2);
-	add(p3);
+	add(factory->GETPOFF(p1), p1);
+	add(factory->GETPOFF(p2), p2);
+	add(factory->GETPOFF(p3), p3);
 }
 
 
@@ -26,48 +26,6 @@ bc::Hole::~Hole()
 {
 	if (!isValid)
 		Component::factory->components[index] = nullptr;
-}
-
-
-bool bc::Hole::getIsOutside() const
-{
-	return isOutside;
-}
-
-
-void bc::Hole::setShadowOutside(bool outside)
-{
-	isOutside = outside;
-}
-
-
-void bc::Hole::setOutside()
-{
-	if (!isOutside) {
-		isOutside = true;
-		if (isValid)
-		{
-			this->end = this->factory->curbright;
-			Component::kill();
-			Component::lived = true;
-
-			// --this->factory->lastB;
-		}
-	}
-}
-
-
-void bc::Hole::kill()
-{
-	if (!isOutside && isValid)
-	{
-		this->end = this->factory->curbright;
-		// --this->factory->lastB;
-
-		Component::kill();
-
-	}
-	Component::lived = false;
 }
 
 
@@ -79,11 +37,11 @@ void bc::Hole::kill()
 }
 
 
-bool bc::Hole::isContain(bc::point p)
+bool bc::Hole::isContain(const bc::point& p)
 {
 	if (Component::factory->IS_OUT_OF_REG(p.x, p.y))
 		return false;
-	return Component::factory->getComp(Component::factory->GETOFF(p.x, p.y)) == this;
+	return Component::factory->getComp(Component::factory->GETPOFF(p)) == this;
 }
 
 
@@ -95,15 +53,22 @@ bool bc::Hole::tryAdd(const point& p)
 		return true;*/
 		return false;
 	}
+
+	if (this->isContain(p))
+	{
+		return false;
+	}
+
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
-	for (size_t i = 0; i < 8; ++i)
+	for (char i = 0; i < 8; ++i)
 	{
 		//Она соединяется только с соседними ближйми ребрами
-		if (this->isContain((point)p + poss[i]) &&
-			(this->isContain((point)p + poss[i + 1]) || (i % 2 == 0 && this->isContain((point)p + poss[i + 2])))
+		if (this->isContain(p + poss[i]) && (this->isContain(p + poss[i + 1]) ||
+		   (i % 2 == 0 && this->isContain(p + poss[i + 2])))
 			)//есть ли нужное ребро
 		{
-			this->add(p);
+			poidex px = factory->GETPOFF(p);
+			this->add(px, p);
 			return true;
 		}
 	}
@@ -111,39 +76,7 @@ bool bc::Hole::tryAdd(const point& p)
 }
 
 
- void bc::Hole::add(const point& p)
-{
-	bool outDo = isOutside;
-	//auto temp = bc::Component::factory->getComp();
-	bc::Component::add(bc::Component::factory->GETOFF(p.x, p.y), p);
-	//    setB(p);
-
-	if (!isOutside)//ребро должно быть на границе
-	{
-		if ((p.x == 0 || p.x == this->factory->wid - 1) &&
-			(this->isContain(p.x, p.y - 1) || this->isContain(p.x, p.y + 1)))
-		{
-			isOutside = true;
-		}
-		else if ((p.y == 0 || p.y == this->factory->hei - 1) &&
-			(this->isContain(p.x - 1, p.y) || this->isContain(p.x + 1, p.y)))
-		{
-			isOutside = true;
-		}
-
-		if (isOutside != outDo)
-		{
-			this->end = this->factory->curbright;
-			// --this->factory->lastB;
-			Component::kill();
-			Component::lived = true;
-		}
-	}
-	//    ++size;
-}
-
-
-bool bc::Hole::checkValid(point p)
+bool bc::Hole::checkValid(const bc::point& p)
 {
 	if (this->getTotalSize() < 3)
 		return false;
@@ -176,7 +109,7 @@ bool bc::Hole::findCross(point p, bc::Hole* hole)
 	static char poss[5][2] = { { -1,0 },{ 0,-1 },{ 1,0 },{ 0,1 },{ -1,0 } };
 	static char poss2[5][2] = { { -1,-1 },{ 1,-1 },{ 1,1 },{ -1,1 } };
 	//static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 }};
-	if (this->isContain(p) && hole->isContain(p))
+	if (this->isContain(p) || hole->isContain(p))
 	{
 		//ВАЖНО! Две дыры можно соединить если у ниъ есть 2 общие точки. Если мы знаем одну, то вторая должна быть четко над/под/слева/справа от предыдужей.
 		//При дургом расопложении дыры не соединятся

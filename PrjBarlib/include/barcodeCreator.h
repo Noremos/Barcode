@@ -124,12 +124,12 @@ namespace bc {
 		{
 			return x < 0 || y < 0 || x >= wid || y >= hei;
 		}
-		int GETPOFF(const point& p) const
+		poidex GETPOFF(const point& p) const
 		{
 			return wid * p.y + p.x;
 		}
 
-		int GETOFF(uint x, uint y) const {
+		poidex GETOFF(uint x, uint y) const {
 			return wid * y + x;
 		}
 
@@ -138,7 +138,7 @@ namespace bc {
 			return (a > b ? a - b : b - a) <= this->settings.getMaxStepPorog();
 		}
 
-		point getPoint(uint i) const
+		point getPoint(poidex i) const
 		{
 			return point(i % wid, i / wid);
 		}

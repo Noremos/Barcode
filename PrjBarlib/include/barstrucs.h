@@ -235,7 +235,7 @@ namespace bc
 		}
 
 #ifdef USE_OPENCV
-		inline cv::Point cvPoint()
+		inline cv::Point cvPoint() const
 		{
 			return cv::Point(x, y);
 		}
@@ -249,23 +249,23 @@ namespace bc
 			return y * wid + x;
 		}
 
-		point operator+(int* xy)
+		point operator+(int* xy) const
 		{
 			return point(x + xy[0], y + xy[1]);
 		}
-		point operator+(char* xy)
+		point operator+(char* xy) const
 		{
 			return point(x + xy[0], y + xy[1]);
 		}
-		point operator*(int c)
+		point operator*(int c) const
 		{
 			return point(x * c, y * c);
 		}
-		point operator+(point p)
+		point operator+(point p) const
 		{
 			return point(x + p.x, y + p.y);
 		}
-		int operator[](int i)
+		int operator[](int i) const
 		{
 			return i == 0 ? x : y;
 		}
