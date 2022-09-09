@@ -1041,16 +1041,16 @@ void BarcodeCreator::processFULL(barstruct& str, const bc::DatagridProvider* img
 	bool rgb = (img->channels() != 1);
 
 
-	if (str.comtype == ComponentType::Component && rgb)
-	{
-		BarImg* res = new BarImg();
-		cvtColorV3B2U1C(*img, *res);
-		originalImg = false;
-		needDelImg = true;
-		type = BarType::BYTE8_1;
-		processTypeF(str, res, item);
-		return;
-	}
+//	if (str.comtype == ComponentType::Component && rgb)
+//	{
+//		BarImg* res = new BarImg();
+//		cvtColorV3B2U1C(*img, *res);
+//		originalImg = false;
+//		needDelImg = true;
+//		type = BarType::BYTE8_1;
+//		processTypeF(str, res, item);
+//		return;
+//	}
 
 	switch (str.coltype)
 	{

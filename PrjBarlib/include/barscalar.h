@@ -117,6 +117,21 @@ public:
 		return data.b1;
 	}
 
+	std::string text()
+	{
+		std::string out;
+		switch (type)
+		{
+		case BarType::BYTE8_1:
+			return std::to_string(data.b1);
+		case BarType::BYTE8_3:
+			out = "(" + std::to_string(data.b3[0]) + "," + std::to_string(data.b3[1]) + "," + std::to_string(data.b3[2]) + ")";
+		default:
+			break;
+		}
+		return out;
+	}
+
 #ifdef USE_OPENCV
 	cv::Vec3b toCvVec() const
 	{

@@ -1,7 +1,6 @@
 #pragma once
 
-#include "presets.h"
-#include "barstrucs.h"
+#include "GenCommon.h"
 #include "barImg.h"
 #include "CellMachine.h"
 
@@ -14,40 +13,6 @@ class MachinePRocessor
 {
 	std::vector<IncludeCell> included;
 	std::vector<IncludeCell> machines;
-
-	enum NextPoz : char
-	{
-		middleRight = 1,
-		bottomRight = 2,
-		bottomCenter,
-		bottomLeft
-	};
-
-	struct IndexCov
-	{
-		bc::poidex offset = 0;
-		float dist = 0;
-		NextPoz poz;
-		IndexCov(uint _offset = 0, float _dist = 0, NextPoz _vert = middleRight) : offset(_offset), dist(_dist), poz(_vert)
-		{}
-
-		bc::poidex getNextPoindex(int wid) const
-		{
-			int x = offset % wid;
-			int y = offset / wid;
-			switch (poz)
-			{
-			case middleRight:
-				return CREATE_PINDEX(x + 1, y, wid);
-			case bottomRight:
-				return CREATE_PINDEX(x + 1, y + 1, wid);
-			case bottomCenter:
-				return CREATE_PINDEX(x, y + 1, wid);
-			case bottomLeft:
-				return CREATE_PINDEX(x - 1, y + 1, wid);
-			}
-		}
-	};
 
 	IndexCov* sortPixelsByRadius(const bc::DatagridProvider& workingImg, size_t& totalSize, float maxRadius, size_t minCount)
 	{
@@ -75,7 +40,7 @@ class MachinePRocessor
 				next = workingImg.get(w + 1, h);
 				dist = cur.val_distance(next);
 
-				data[k++] = IndexCov(offset, dist, middleRight);
+				data[k++] = IndexCov(offset, dist, NextPoz::middleRight);
 
 				// bottom
 				// c 0
@@ -83,7 +48,7 @@ class MachinePRocessor
 				next = workingImg.get(w, h + 1);
 				dist = cur.val_distance(next);
 
-				data[k++] = IndexCov(offset, dist, bottomCenter);
+				data[k++] = IndexCov(offset, dist, NextPoz::bottomCenter);
 
 				// bottom rigth
 				// c 0
@@ -91,7 +56,7 @@ class MachinePRocessor
 				next = workingImg.get(w + 1, h + 1);
 				dist = cur.val_distance(next);
 
-				data[k++] = IndexCov(offset, dist, bottomRight);
+				data[k++] = IndexCov(offset, dist, NextPoz::bottomRight);
 
 
 				// 0 c
@@ -101,7 +66,7 @@ class MachinePRocessor
 				dist = cur.val_distance(next);
 				offset = wid * h + w + 1;
 
-				data[k++] = IndexCov(offset, dist, bottomLeft);
+				data[k++] = IndexCov(offset, dist, NextPoz::bottomLeft);
 			}
 		}
 
@@ -113,7 +78,7 @@ class MachinePRocessor
 			Barscalar next;
 			next = workingImg.get(wd, h + 1);
 			dist = cur.val_distance(next);
-			data[k++] = IndexCov(offset, dist, bottomCenter);
+			data[k++] = IndexCov(offset, dist, NextPoz::bottomCenter);
 		}
 
 		int hd = hei - 1;
@@ -124,7 +89,7 @@ class MachinePRocessor
 			Barscalar next;
 			next = workingImg.get(w + 1, hd);
 			dist = cur.val_distance(next);
-			data[k++] = IndexCov(offset, dist, middleRight);
+			data[k++] = IndexCov(offset, dist, NextPoz::middleRight);
 		}
 		// “ип не важен потому что соедин€ем не по €ркости
 
@@ -164,9 +129,15 @@ class MachinePRocessor
 		return bc::barvalue(getPoint(ind), img.getLiner(ind));
 	}
 
-	void createMachine(const bc::DatagridProvider& img, bc::poidex& ind)
+	bool createMachine(const bc::DatagridProvider& img, bc::poidex& ind)
 	{
-		CellMachine* no = new CellMachine(getBarvalue(img, ind), seed, simpleUchar);
+		barvalue val = getBarvalue(img, ind);
+		if (seed && seed->start.val_distance(val.value) > seed->maxDiff)
+		{
+			return false;
+		}
+
+		CellMachine* no = new CellMachine(val, seed, simpleUchar);
 		included[ind] = no;
 		machines.push_back(no);
 
@@ -175,6 +146,8 @@ class MachinePRocessor
 		auto drawCol = drawMat.at<cv::Vec3b>(curpoint.y, curpoint.x);
 		cv::Vec3b newCol = (drawCol / 2) + (col / 2);
 		drawMat.at<cv::Vec3b>(curpoint.y, curpoint.x) = newCol;
+
+		return true;
 	}
 
 	Mat drawMat;
@@ -190,8 +163,8 @@ class MachinePRocessor
 		wid = img.wid();
 		simpleUchar = img.type == BarType::BYTE8_1;
 		IndexCov* toPorcData = sortPixelsByRadius(img, toPocrss, maxRadius, minMachines);
-		included.resize(toPocrss);
-		std::fill_n(included.data(), toPocrss, nullptr);
+		included.resize(len);
+		std::fill_n(included.data(), len, nullptr);
 
 		for (size_t i = 0; i < toPocrss; i++)
 		{
@@ -217,18 +190,24 @@ class MachinePRocessor
 			}
 			else if (first == nullptr && second == nullptr)
 			{
-				createMachine(img, fiirstPoi);
-				CellMachine* first = included[fiirstPoi];
-				bool res = first->tryAdd(getBarvalue(img, secondPoi), len);
-				if (!res)
+				bool added = false;
+				if (createMachine(img, fiirstPoi))
+				{
+					CellMachine* first = included[fiirstPoi];
+					added = first->tryAdd(getBarvalue(img, secondPoi), len);
+				}
+				if (!added)
 				{
 					createMachine(img, secondPoi);
 				}
 			}
 		}
-		cv::namedWindow("cells", cv::WINDOW_NORMAL);
-		cv::imshow("cells", drawMat);
-		cv::waitKey(1);
+		if (seed && seed->accure > 10)
+		{
+			cv::namedWindow("cells", cv::WINDOW_NORMAL);
+			cv::imshow("cells", drawMat);
+			cv::waitKey(1);
+		}
 		delete[] toPorcData;
 	}
 
@@ -255,10 +234,15 @@ class MachinePRocessor
 		int totalAccur = 0;
 		for (size_t i = 0; i < included.size(); i++)
 		{
-			if (included[i])
+			bool incSet = included[i] != NULL;
+			bool maskMark = mask.getLiner(i) == 255;
+			if (maskMark != incSet)
 			{
-				bool maskMark = mask.getLiner(i) == 255;
-				totalAccur += (maskMark ? 1 : -1);
+				--totalAccur;
+			}
+			else if (maskMark)
+			{
+				++totalAccur;
 			}
 		}
 
@@ -301,73 +285,134 @@ public:
 		// 7 Go to step 4
 		srand(time(NULL));
 
-		Cells baseCells;
-		for (size_t i = 0; i < 100; i++)
+		const int bestSize = 20;
+		const int populationSize = 100;
+		const int maxGenNumber = 10;
+		const bool crossover = true;
+
+		bool is3d = img.type == BarType::BYTE8_3;
+		vector<CellMachine> population;
+		CellMachine bestCells[bestSize];
+
+		//{
+		//	MachinePRocessor procBase;
+		//	procBase.process(img);
+		//	procBase.calculateAccure(mask, population);
+		//}
+
+		int oldSize = population.size();
+		population.resize(populationSize);
+		for (size_t i = oldSize; i < populationSize; i++)
 		{
-			CellMachine mach(img.type == BarType::BYTE8_3);
-			MachinePRocessor procBase;
-			procBase.seed = &mach;
-			procBase.process(img);
-			mach.accure = procBase.calculateTotalAccure(mask);
-			baseCells.push_back(mach);
+			if (is3d)
+				population[i].initRandomVec3b();
+			else
+				population[i].initRandomUchar();
 		}
 
-		std::cout << "Got " << baseCells.size() << " base cells" << std::endl;
-
-		for (size_t i = 0; i < 200; i++)
+		std::cout << "Inited " << population.size() << " base population cells" << std::endl;
+		for (size_t i = 0; i < maxGenNumber; i++)
 		{
-			Cells randomCells;
-			for (size_t k = 0; k < 5; k++)
+			std::cout << "Porcessing " << population.size() << " populations" << std::endl;
+
+			for (auto& machine : population)
 			{
-				CellMachine mach(img.type == BarType::BYTE8_3);
-
-				MachinePRocessor procRandom;
-				procRandom.seed = &mach;
-				procRandom.process(img);
-				mach.accure = procRandom.calculateTotalAccure(mask);
-				randomCells.push_back(mach);
-			}
-			std::cout << "Got " << randomCells.size() << " random cells" << std::endl;
-
-
-			Cells out;
-			MachinePRocessor::combine(baseCells, randomCells, out);
-			std::cout << "Get " << out.size() << " inhed cells" << std::endl;
-			randomCells.clear();
-			baseCells.clear();
-
-			std::cout << "Calculating accure of the inheds cell... " << std::endl;
-
-			for (size_t k = 0; k < out.size(); k++)
-			{
-				MachinePRocessor proc;
-				proc.seed = &out.at(k);
-				proc.process(img);
-				out.at(k).accure = proc.calculateTotalAccure(mask);
+				MachinePRocessor procBase;
+				procBase.seed = &machine;
+				procBase.process(img);
+				machine.accure = procBase.calculateTotalAccure(mask);
+				machine.clear();
 			}
 
-			std::cout << "Sorting inheds cell... " << std::endl;
-			std::sort(out.begin(), out.end(), [](const CellMachine& a, const CellMachine& b) {
+			int getLEst = bestSize / 2;
+			//int getLEst = 0;
+			std::cout << "Sorting population cells... " << std::endl;
+			std::sort(population.begin(), population.end(), [](const CellMachine& a, const CellMachine& b) {
 				return a.accure > b.accure;
 				});
-
-			int nsize = out.size() * 0.10;
-			std::cout << "Get 10% of inheds cell. The new size is " << nsize << std::endl;
-
-			if (nsize == 0)
+			for (int j = 0; j < getLEst; j++)
 			{
-				baseCells = out;
-				break;
+				bestCells[j] = population[j];
 			}
-			out.resize(nsize);
+
+			for (size_t i = bestSize / 2; i < bestSize; i++)
+			{
+				int ind0 = 0, ind1 = 0, ind2 = 0;
+				while (ind0 == ind1 || ind0 == ind2 || ind1 == ind2)
+				{
+					ind0 =  CellMachine::randi(bestSize / 2, populationSize);
+					ind1 = CellMachine::randi(bestSize / 2, populationSize);
+					ind2 = CellMachine::randi(bestSize / 2, populationSize);
+					CellMachine* cells[3] = { &population[ind0],&population[ind1],&population[ind2] };
+					std::sort(cells, cells + 3, [](const CellMachine* a, const CellMachine* b) {
+						return a->accure < b->accure;
+						});
+					bestCells[i] = *cells[0];
+				}
+			}
+
+			float avgFitness = 0.f;
+			float maxS = -100000;
+			for (auto& machine : population)
+			{
+				avgFitness += machine.accure;
+				if (machine.accure > maxS)
+					maxS = machine.accure;
+			}
+			avgFitness /= populationSize;
+			std::cout << "Gen no. "<< i << ". Avg futness: " << avgFitness << "; Max: " << maxS << std::endl;
+
+			for (int j = 0; j < bestSize; j++)
+			{
+				bestCells[j] = population[j];
+				//if (rand() % 100 < 10)
+				//	bestCells[j].mutate(0.5f, 0.4f);
+				//else
+				//	bestCells[j].mutate(0.01f, 0.1f);
+				if (rand() % 100 < 10)
+					bestCells[j].mutate(1.f / 4, 0.1f);
+
+				std::cout << "b no." << "j; a:" << bestCells[j].accure
+					<< "; md: " << bestCells[j].maxDiff
+					<< "; mtl:" << bestCells[j].maxTotalLen
+					<< "; ms:" << bestCells[j].totalMtrixCount
+					<< "; str:" << bestCells[j].start.text()
+					<< endl;
+			}
+			std::cout << "Mutated " << bestSize << " cells" << std::endl;
+
+			for (auto& machine : population)
+			{
+				if (rand() % 100 >= 90)
+				{
+					int fs = rand() % bestSize;
+					fs = fs - fs % 2;
+					int sc = rand() % bestSize;
+					if (fs % 2 == 0)
+					{
+						fs += 1;
+						if (fs >= bestSize)
+							fs -= 2;
+					}
+
+					CellMachine::combineOne(bestCells[fs], bestCells[sc], machine);
+				}
+				else
+				{
+					machine = bestCells[rand() % bestSize];
+				}
+			}
+			std::cout << "Created new population from best " << bestSize << " cells" << std::endl;
 		}
 
-		CellMachine outCell = baseCells[0];
+		for (int i = 0; i < bestSize; i++)
 		{
+			std::cout << "Best no. " << i << "Futness: " << bestCells[i].accure << std::endl;
 
-			MachinePRocessor proc;
-			proc.seed = &outCell;
-			proc.process(img);
+			bestCells[i].accure = 11;
+			MachinePRocessor procBase;
+			procBase.seed = &bestCells[i];
+			procBase.process(img);
 			waitKey(0);
 		}
 	}

@@ -1,5 +1,4 @@
 #pragma once
-#include "presets.h"
 #include "barstrucs.h"
 #include "barImg.h"
 
@@ -75,6 +74,10 @@ public:
 		start = satrt.value;
 	}
 
+	int matrSize()
+	{
+		return matr.size();
+	}
 
 	void calculateAccure(const bc::DatagridProvider& mask)
 	{
@@ -91,15 +94,18 @@ public:
 	{
 		maxDiff = rand() % 128;
 		maxTotalLen = rand() % 256;
-		totalMtrixCount = rand() % 90;
+		totalMtrixCount = randf() * 0.5;
+		uchar randCol = rand() % 256;
+		start = Barscalar(randCol, BarType::BYTE8_3);
 		initRandomColor();
 	}
 
 	void initRandomVec3b()
 	{
-		maxDiff = rand() % 384;
+		maxDiff = rand() % 128;
 		maxTotalLen = rand() % 768;
-		totalMtrixCount = rand() % 90;
+		totalMtrixCount = randf() * 0.5;
+		start = Barscalar(rand() % 256, rand() % 256, rand() % 256);
 		initRandomColor();
 	}
 
@@ -159,7 +165,7 @@ public:
 		{
 			return false;
 		}
-		if (matr.size() / imgLen > totalMtrixCount)
+		if ((float)matr.size() / (float)imgLen > totalMtrixCount)
 		{
 			return false;
 		}
@@ -167,7 +173,6 @@ public:
 		matr.push_back(colval);
 		return true;
 	}
-
 
 	CellMachine& clear()
 	{
@@ -194,9 +199,53 @@ public:
 				if (coin())
 					break;
 			}
-			color.data.b3[1] += rand() % 10;
-			color.data.b3[2] += rand() % 10;
 		}
+	}
+
+	static int randi(int LO, int HI)
+	{
+		return LO + (rand() % (HI - LO));
+	}
+
+	static float randf()
+	{
+		return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	}
+
+	static float randf(float LO, float HI)
+	{
+		return LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+	}
+	
+	void mutate(float chance, float rate)
+	{
+		if (randf() < chance)
+		{
+			maxDiff += randf(-maxDiff * rate, maxDiff * rate);
+		}
+
+		if (randf() < chance)
+		{
+			maxTotalLen += randf(-maxTotalLen * rate, maxTotalLen * rate);
+		}
+
+		if (randf() < chance)
+		{
+			totalMtrixCount += randf(-totalMtrixCount * rate, totalMtrixCount * rate);
+		}
+
+		for (size_t i = 0; i < 3; i++)
+		{
+			int ind = rand() % 3;
+			if (coin())
+				color.data.b3[ind] += rand() % (int)(40 * rate);
+			else
+				color.data.b3[ind] -= rand() % (int)(40 * rate)	;
+
+			if (coin())
+				break;
+		}
+
 	}
 
 	static void combine(const CellMachine& fs, const CellMachine& sc, std::vector<CellMachine>& children)
@@ -219,10 +268,10 @@ public:
 	static void combineOne(const CellMachine& fs, const CellMachine& sc, CellMachine& outChild)
 	{
 		int k = 0;
-		for (size_t i = 0; i < 3; i++) // dont change start
+		for (size_t i = 0; i < 4; i++) // dont change start
 		{
 			k = i * 2 + (rand() % 2);
-			assert(k < 6);
+			assert(k < 8);
 			outChild.inheritParam(fs, sc, k);
 		}
 		outChild.inheritColor(fs, sc, true);

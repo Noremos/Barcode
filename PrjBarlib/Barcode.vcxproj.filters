@@ -17,6 +17,9 @@
     <ClCompile Include="source\Barpy.cpp">
       <Filter>pylib</Filter>
     </ClCompile>
+    <ClCompile Include="source\Neuro.cpp">
+      <Filter>Genetic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\barline.h">
@@ -74,6 +77,15 @@
       <Filter>Genetic</Filter>
     </ClInclude>
     <ClInclude Include="include\MachineProcessor.h">
+      <Filter>Genetic</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CellAutomat.h">
+      <Filter>Genetic</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CellAutomatProcessor.h">
+      <Filter>Genetic</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GenCommon.h">
       <Filter>Genetic</Filter>
     </ClInclude>
   </ItemGroup>

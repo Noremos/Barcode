@@ -191,6 +191,7 @@ void printImg(BarImg& img0)
 	}
 }
 #include "MachineProcessor.h"
+#include "CellAutomatProcessor.h"
 
 int main()
 {
@@ -198,11 +199,12 @@ int main()
 
 	string pbase = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/";
 	//string path = "D:/Learning/papers/CO_compressing/base16t.png";
-	Mat imgs = cv::imread(pbase + "6_set.png", cv::IMREAD_COLOR);
-	Mat mask = cv::imread(pbase + "6_bld.png", cv::IMREAD_GRAYSCALE);
+	Mat imgs = cv::imread(pbase + "5_set.png", cv::IMREAD_COLOR);
+	Mat mask = cv::imread(pbase + "5_bld.png", cv::IMREAD_GRAYSCALE);
 	bc::BarMat imgsWrap(imgs, BarType::BYTE8_3);
 	bc::BarMat maskWrap(mask, BarType::BYTE8_1);
 
+	//CellAutomatProcessor::fullProcess2(imgsWrap, maskWrap);
 	MachinePRocessor::fullProcess2(imgsWrap, maskWrap);
 
 	return 0;
