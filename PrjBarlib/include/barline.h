@@ -31,12 +31,12 @@ namespace bc
 		//Barscalar len;
 		Barscalar m_end;
 		int matWid;
-
 	private:
 		// System member
 		bool isCopy = false;
 
 	public:
+//		int dep = 0;
 
 		barline(int wid = 0)
 		{
@@ -313,7 +313,7 @@ namespace bc
 				++r;
 				temp = temp->parent;
 			}
-
+//			dep = sr;
 			return r;
 		}
 

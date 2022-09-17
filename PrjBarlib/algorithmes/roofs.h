@@ -69,14 +69,14 @@ int show(string name, Mat img, int wait = -1)
 
 void getCounturFormMatr(barline* line, int rows, int cols, vector<vector<Point> >& contoursRet)
 {
-	Mat objectsMask = Mat::zeros(rows, cols, CV_8UC1);
+	Mat objectsMask = Mat::zeros(rows+ 4, cols + 4, CV_8UC1);
 	for (barvalue& p : line->matr)
 	{
 		//if (p.getPyValue().value < avlVal)
 		//	continue;
 		int x = p.getX();
 		int y = p.getY();
-		objectsMask.at<uchar>(y, x) = 255;
+		objectsMask.at<uchar>(y + 2, x + 2) = 255;
 	}
 
 	vector<vector<Point> > contours;
@@ -504,4 +504,66 @@ void getResults()
 	binarymatr(path);
 
 	show("bin decress", bin_etalon);
+}
+
+
+
+void getResults23()
+{
+	bc::BarcodeCreator bc;
+	bc::BarConstructor constr;
+	constr.createBinaryMasks = true;
+	constr.createGraph = true;
+	constr.returnType = bc::ReturnType::barcode2d;
+	constr.addStructure(bc::ProcType::f0t255, (bc::ColorType::gray), (bc::ComponentType::Component));
+
+	// Build gray? радар.
+	// Channel = 2
+	string pathas = "D:/res-e.png";
+	//string path = "D:/Learning/papers/CO_compressing/base16t.png";
+	Mat img = cv::imread(pathas, cv::IMREAD_GRAYSCALE);
+	BarMat imgwrap(img);
+
+	string s = "D:\\Programs\\C++\\Barcode\\PrjBarlib\\researching\\tiles\\5_set.png";
+	Mat imgr = cv::imread(s, cv::IMREAD_COLOR);
+
+	auto* barcode = bc.createBarcode(&imgwrap, constr);
+
+	Baritem* bar = barcode->getItem(0);
+	int ed = bar->barlines.size();
+
+	vector<vector<Point>> contoursRet;
+	int minCount = img.rows * img.cols * 0.00005;
+	cout << "Min: " << minCount << std::endl;
+
+	//for (int i = 0; i < ed; ++i)
+	//{
+	//	auto& b = bar->barlines[i];
+	//	int depth = b->getDeath();
+	//	const auto& matr = b->getMatrix();
+	//	if (depth == 2)// && matr.size() > minCount)// && b->children.size() != 0)
+	//	{
+	//		getCounturFormMatr(b, img.rows, img.cols, contoursRet);
+	//	}
+	//}
+
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(img, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
+
+	Mat imgout;
+	cv::cvtColor(img, imgout, COLOR_GRAY2BGR);
+
+	for (size_t i = 0; i < contours.size(); i++)
+	{
+		//if (contours[i].size() >= minCount)
+		cv::drawContours(imgr, contours, i, cv::Scalar(0, 0, 255));
+	}
+
+
+	//cv::drawContours(imgr, contours, -1, cv::Scalar(0, 0, 255));
+	cv::namedWindow("rest", cv::WINDOW_NORMAL);
+	cv::imshow("rest", imgr);
+	cv::imwrite("d:\\rest_out.png", imgr);
+	cv::waitKey(0);
 }

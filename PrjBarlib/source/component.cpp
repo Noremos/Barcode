@@ -161,6 +161,7 @@ void bc::Component::setParent(bc::Component* parnt)
 	if (factory->settings.createBinaryMasks)
 	{
 		parnt->resline->matr.reserve(parnt->resline->matr.size() + resline->matr.size() + 1);
+
 		for (barvalue& val : resline->matr)
 		{
 			/*	if (factory->settings.returnType == ReturnType::barcode3dold)
@@ -183,6 +184,7 @@ void bc::Component::setParent(bc::Component* parnt)
 				}*/
 
 			// Записываем длину сущщетвования точки
+			//val.value = factory->curbright > val.value ? factory->curbright - val.value : val.value - factory->curbright;
 			val.value = factory->curbright - val.value;
 
 			avgSr += factory->curbright;
@@ -209,7 +211,8 @@ void bc::Component::setParent(bc::Component* parnt)
 	if (totalCount == 0)
 		return true;
 
-	return ((avgSr.getAvgFloat() / totalCount) * 1.2f <= factory->curbright.getAvgFloat());
+	return true;
+	//return ((avgSr.getAvgFloat() / totalCount) * 1.2f <= factory->curbright.getAvgFloat());
 
 
 //	Barscalar val = factory->workingImg->get(p.x, p.y);

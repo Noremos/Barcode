@@ -193,44 +193,84 @@ void printImg(BarImg& img0)
 #include "MachineProcessor.h"
 #include "CellAutomatProcessor.h"
 
-int main()
+
+void tryImg()
 {
-	srand(time(0));
-
-	string pbase = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/";
-	//string path = "D:/Learning/papers/CO_compressing/base16t.png";
-	Mat imgs = cv::imread(pbase + "5_set.png", cv::IMREAD_COLOR);
-	Mat mask = cv::imread(pbase + "5_bld.png", cv::IMREAD_GRAYSCALE);
-	bc::BarMat imgsWrap(imgs, BarType::BYTE8_3);
-	bc::BarMat maskWrap(mask, BarType::BYTE8_1);
-
-	//CellAutomatProcessor::fullProcess2(imgsWrap, maskWrap);
-	MachinePRocessor::fullProcess2(imgsWrap, maskWrap);
-
-	return 0;
-	getResultsExperts();
-	return 0;
-	bc::BarImg img(1, 1);
 	bc::BarcodeCreator test;
 	auto bcont = defineConstr();
-	bcont.structure[0].proctype = bc::ProcType::f0t255;
-	bcont.structure[0].comtype = bc::ComponentType::Hole;
-	bcont.visualize = true;
-	const int k = 3;
+	bcont.structure[0].proctype = bc::ProcType::experiment;
+	//bcont.visualize = true;
+	const int k = 500;
 	uchar maxv = 0;
+	bc::BarImg img(k, k);
 	uchar* data5 = new uchar[k * k]
 	{
 		1, 1, 6,
 		1, 9, 3,
 		5, 3, 3,
 	};
+
+	for (size_t i = 0; i < k; i++)
+	{
+		for (size_t j = 0; j < k; j++)
+		{
+			img.set(i, j, rand() % 255);
+		}
+	}
+
+	Barcontainer* ret = test.createBarcode(&img, bcont);
+	delete ret;
+}
+
+
+int main()
+{
+	//getResults23();
+	//return 0;
+	////tryImg();
+	////return 0;
+	//srand(time(0));
+
+	//string pbase = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/";
+	////string path = "D:/Learning/papers/CO_compressing/base16t.png";
+	//Mat imgs = cv::imread(pbase + "5_set.png", cv::IMREAD_COLOR);
+	//Mat mask = cv::imread(pbase + "5_bld.png", cv::IMREAD_GRAYSCALE);
+	//bc::BarMat imgsWrap(imgs, BarType::BYTE8_3);
+	//bc::BarMat maskWrap(mask, BarType::BYTE8_1);
+
+	////CellAutomatProcessor::fullProcess2(imgsWrap, maskWrap);
+	//MachinePRocessor::fullProcess2(imgsWrap, maskWrap);
+
+	//return 0;
+	//getResultsExperts();
+	//return 0;
+	bc::BarcodeCreator test;
+	auto bcont = defineConstr();
+	bcont.structure[0].proctype = bc::ProcType::Radius;
+	//bcont.structure[0].comtype = bc::ComponentType::Hole;
+	bcont.visualize = false;
+	const int k = 3;
+	uchar maxv = 0;
+	bc::BarImg img(k, k, 1);
+
+	uchar* data5 = new uchar[k * k]
+	{
+		5, 0, 4,
+		3, 3, 5,
+		4, 3, 5,
+
+		/*5, 0, 1,
+		3, 6, 6,
+		4, 2, 1,*/
+	};
 	
-	srand(1);
+	//srand(1);
 	for (size_t i = 0; i < k*k; i++)
 	{
+		img.setLiner(i, data5[i]);
 		//data5[i] = rand() % 255;
-		if (data5[i] > maxv)
-			maxv = data5[i];
+		//if (data5[i] > maxv)
+		//	maxv = data5[i];
 	}
 //	const int k = 2;
 //	uchar maxv = 5; 
@@ -239,15 +279,40 @@ int main()
 //5,5
 //	};
 
-	img.setDataU8(k, k, data5);
+	//img.setDataU8(k, k, data5);
 	printImg(img);
 
 	Barcontainer* ret = test.createBarcode(&img, bcont);
-	BarImg out = restore255ToBarimg(ret, k, k, maxv);
+	//BarImg out = restore255ToBarimg(ret, k, k, maxv);
+	Baritem* nf = ret->getItem(0);
+
+	for (size_t i = 0; i < nf->barlines.size(); i++)
+	{
+		uchar* dataE = new uchar[k * k]
+		{
+			0, 0, 0,
+			0, 0, 0,
+			0, 0, 0,
+		};
+		auto& d = nf->barlines[i]->getMatrix();
+		for (size_t j = 0; j < d.size(); j++)
+		{
+			dataE[d[j].getY() * 3 + d[j].getX()] = d[j].value.getAvgUchar();
+		}
+
+		for (int i = 0; i <3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				cout << (int)dataE[i * 3 + j] << " ";
+			}
+			std::cout << std::endl;
+		}
+	}
 
 	std::cout << std::endl;
-	printImg(out);
-	compiteBarAndBar(img, out);
+	//printImg(out);
+	//compiteBarAndBar(img, out);
 	// doMagickDOTA();
 	//  testAll();
 	//compireMethods();

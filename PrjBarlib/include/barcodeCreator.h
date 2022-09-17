@@ -118,6 +118,7 @@ namespace bc {
 		size_t processCount = 0;
 		size_t totalSize = 0;
 		poidex* sortedArr = nullptr;
+		bc::BarImg drawimg;
 
 		//***************************************************
 		constexpr bool IS_OUT_OF_REG(int x, int y)
@@ -186,6 +187,7 @@ namespace bc {
 		bool checkCloserB1();
 
 
+		int sortOrtoPixels(bc::ProcType type, int rtoe = 0, int off = 0, int offDop = 0);
 		void sortPixels(bc::ProcType type);
 
 		void clearIncluded();

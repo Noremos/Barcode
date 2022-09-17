@@ -37,3 +37,23 @@ struct IndexCov
 		}
 	}
 };
+
+
+class MRNG
+{
+public:
+	static float randf()
+	{
+		return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	}
+
+	static int randi(int LO, int HI)
+	{
+		return LO + (rand() % (HI - LO));
+	}
+
+	static float randf(float LO, float HI)
+	{
+		return LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+	}
+};

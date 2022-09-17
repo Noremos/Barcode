@@ -1,27 +1,8 @@
 #pragma once
-#pragma once
 #include "presets.h"
 #include "barstrucs.h"
 #include "barImg.h"
 
-class MRNG
-{
-public:
-	static float randf()
-	{
-		return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-	}
-
-	static int randi(int LO, int HI)
-	{
-		return LO + (rand() % (HI - LO));
-	}
-
-	static float randf(float LO, float HI)
-	{
-		return LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
-	}
-};
 
 
 const float octavesMin = 0.01f;
