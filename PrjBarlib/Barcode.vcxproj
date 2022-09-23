@@ -113,6 +113,7 @@
     <ClInclude Include="include\pytemplcalsses.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\GenCommand.h" />
     <ClCompile Include="source\barcodeCreator.cpp" />
     <ClCompile Include="source\barclasses.cpp" />
     <ClCompile Include="source\Barpy.cpp" />

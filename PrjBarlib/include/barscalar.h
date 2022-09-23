@@ -117,6 +117,20 @@ public:
 		return data.b1;
 	}
 
+	//float getProc(const Barscalar& r)
+	//{
+	//	switch (type)
+	//	{
+	//	case BarType::BYTE8_1:
+	//		return static_cast<float>(data.b1) / r.data.b1;
+	//	case BarType::BYTE8_3:
+	//		out = "(" + std::to_string(data.b3[0]) + "," + std::to_string(data.b3[1]) + "," + std::to_string(data.b3[2]) + ")";
+	//	default:
+	//		break;
+	//	}
+	//	return out;
+	//}
+
 	std::string text()
 	{
 		std::string out;

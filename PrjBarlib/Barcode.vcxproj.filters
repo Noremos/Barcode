@@ -20,6 +20,9 @@
     <ClCompile Include="source\Neuro.cpp">
       <Filter>Genetic</Filter>
     </ClCompile>
+    <ClCompile Include="include\GenCommand.h">
+      <Filter>Genetic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\barline.h">

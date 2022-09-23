@@ -870,7 +870,7 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, Compo
 
 
 	//от 255 до 0
-	if (type == ProcType::Radius)
+	if (type == ProcType::Radius || type == ProcType::StepRadius)
 	{
 		geometrySortedArr.reset(sortPixelsByRadius(workingImg, totalSize, type, settings.maxRadius, this->processCount));
 		sortedArr = nullptr;
@@ -1126,13 +1126,17 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 	switch (str.comtype)
 	{
 	case  ComponentType::Component:
-		if (str.proctype == ProcType::Radius)
-			processCompByRadius(item);
-		else if (str.proctype == ProcType::experiment)
+	{
+		switch (str.proctype)
 		{
-//			cv::namedWindow("drawimg", cv::WINDOW_NORMAL);
+		case ProcType::Radius:
+			processCompByRadius(item);
+			break;
+		case ProcType::experiment:
+		{
+			//			cv::namedWindow("drawimg", cv::WINDOW_NORMAL);
 
-//			drawimg = BarImg(workingImg->wid(), workingImg->hei(), 1);
+			//			drawimg = BarImg(workingImg->wid(), workingImg->hei(), 1);
 			totalSize = sortOrtoPixels(str.proctype, 2, 0); // go down-right
 			processComp();
 			delete[] sortedArr;
@@ -1183,19 +1187,26 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 				processComp();
 				delete[] sortedArr;
 				sortedArr = nullptr;
-			
-//				cv::imshow("drawimg", bc::convertProvider2Mat(&drawimg));
-//				cv::waitKey(0);
+
+				//				cv::imshow("drawimg", bc::convertProvider2Mat(&drawimg));
+				//				cv::waitKey(0);
 			}
 
 			addItemToCont(item);
 			clearIncluded();
 
-//			cv::waitKey(0);
+			//			cv::waitKey(0);
 		}
-		else
-			processComp(item);
 		break;
+		case ProcType::StepRadius:
+			processCompByStepRadius(item);
+			break;
+		default:
+			processComp(item);
+			break;
+		}
+		break;
+	}
 	case  ComponentType::Hole:
 		if (str.proctype == ProcType::Radius)
 			processCompByRadius(item);
@@ -1297,142 +1308,6 @@ uchar dif(uchar a, uchar b)
 		return b - a;
 }
 
-//
-//void BarcodeCreator::Prepair()
-//{
-//	const bcBarImg& mat = *workingImg;
-//	int N = 4;
-//	//	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };//эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
-//	static char poss[5][2] = { {-1, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, 0} }; //эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
-//	for (int c = 0; c < mat.wid(); ++c)//x //wid
-//	{
-//		for (int r = 0; r < mat.hei(); ++r)//y //hei
-//		{
-//			this->curbright = mat.get(r, c);
-//			this->curpix = point(c, r);
-//			COMPP mainC = getComp(c, r);
-//			for (int off = 0; off < N; ++off)
-//			{
-//				point p(c + poss[off][0], r + poss[off][1]);
-//
-//				if (p.x < 0 || p.y < 0 || p.x >= wid || p.y >= hei)
-//					continue;
-//
-//				COMPP subC = getComp(p);
-//				if (subC == mainC && mainC != nullptr)
-//					continue;
-//
-//				Barscalar val = mat.get(p);
-//
-//				if (dif(val, curbright) <= settings.getStep())
-//				{
-//					if (subC == nullptr && mainC == nullptr)
-//					{
-//						mainC = new Component(this->curpix, this);
-//						mainC->add(p);
-//					}
-//					else if (mainC != nullptr && subC == nullptr)
-//					{
-//						mainC->add(p);
-//					}
-//					else if (mainC == nullptr && subC != nullptr)
-//					{
-//						mainC = subC;
-//						mainC->add(curpix);
-//					}
-//					else //if (mainC != nullptr && subC != nullptr)
-//					{
-//						mainC = attach(mainC, subC);
-//					}
-//				}
-//				if (mainC == nullptr)
-//				{
-//					mainC = new Component(this->curpix, this);
-//				}
-//			}
-//		}
-//	}
-//}
-//
-//
-//void BarcodeCreator::ProcessFullPrepair(int* retBty, Barcontainer* item)
-//{
-//	for (int i = 0; i < 256; ++i)
-//	{
-//		settings.setStep(i);
-//		Prepair();
-//		retBty[i] = this->lastB;
-//	}
-//
-//	for (auto* c : components)
-//	{
-//		if (c->isAlive())
-//		{
-//			c->kill();
-//			break;
-//		}
-//	}
-//	addItemToCont(item);
-//	clearIncluded();
-//	lastB = 0;
-//}
-//
-//
-//void BarcodeCreator::ProcessPrepComp(int* retBty, Barcontainer* item)
-//{
-//	Prepair();
-//	processComp(retBty, item);
-//}
-
-//
-//Barcontainer<float>* BarcodeCreator<float>::searchHoles(float* img, int wid, int hei, float nullVal)
-//{
-//	settings.createBinaryMasks = true;
-//	settings.createGraph = true;
-//	settings.returnType = ReturnType::barcode2d;
-//	skipAddPointsToParent = true;
-//	//[y * _wid + x]
-//	img[hei * wid - 1] = 9999.f;//
-//	workingImg = new BarImg<float>(wid, hei, 1, reinterpret_cast<uchar*>(img), false, false);
-//	this->needDelImg = true;
-//
-//	if (nullVal > -999)
-//	{
-//		for (size_t i = 0; i < workingImg->length(); ++i)
-//		{
-//			workingImg->getLiner(i) = -9999;
-//		}
-//		nullVal = -9999;
-//	}
-//	//	float maxs, mins;
-//	//	workingImg->maxAndMin(mins, maxs);
-//	//	settings.setMaxLen((maxs - mins) / 2);
-//	auto prec = ProcType::f255t0;
-//	auto comp = ComponentType::Component;
-//	init(workingImg, prec, comp);
-//
-//	for (curIndexInSortedArr = 0; curIndexInSortedArr < totalSize; ++curIndexInSortedArr)
-//	{
-//		curpoindex = sortedArr[curIndexInSortedArr];
-//		curpix = getPoint(curpoindex);
-//		curbright = workingImg->get(curpix);
-//
-//#ifdef VDEBUG
-//		VISUAL_DEBUG_COMP();
-//#else
-//		checkCloserB0();
-//#endif
-//	}
-//
-//
-//	Barcontainer<float>* item = new Barcontainer<float>();
-//
-//	addItemToCont(item);
-//	clearIncluded();
-//
-//	return item;
-//}
-
 
 
 Barcontainer* BarcodeCreator::searchHoles(float* /*img*/, int /*wid*/, int /*hei*/, float/* nullVal*/)
@@ -1490,49 +1365,13 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 		Component* first = getComp(curpoindex);
 		Component* connected = getComp(NextPindex);
 
-		/*if (val.dist > settings.maxRadius)
-		{
-			break;
-			new Component(curpoindex, this);
-			new Component(NextPindex, this);
-		}*/
-
-		if (first != nullptr)
-		{
-			curbright = workingImg->get(NextPoint.x, NextPoint.y);
-
-			//если в найденном уже есть этот элемент
-			//существует ли ребро вокруг
-			if (connected != nullptr && first != connected)
-			{
-				attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
-			}
-			else if (connected == nullptr)
-			{
-				if (!first->add(NextPindex, NextPoint))
-				{
-					connected = new Component(NextPindex, this);
-				}
-			}
-		}
-		else
-		{
-			curbright = workingImg->get(curpix.x, curpix.y);
-
-			// Ребро не создано или не получилось присоединить
-			if (connected == nullptr)
-			{
-				first = new Component(curpoindex, this);
-				if (!first->add(NextPindex, NextPoint))
-				{
-					connected = new Component(NextPindex, this);
-				}
-			}
-			else if (!connected->add(curpoindex, curpix))
-			{
-				first = new Component(curpoindex, this);
-			}
-		}
+		//if (val.dist > settings.maxRadius)
+		//{
+		//	break;
+		//	//new Component(curpoindex, this);
+		//	//new Component(NextPindex, this);
+		//}
+		processRadar(val, true);
 
 #ifdef USE_OPENCV
 		if (settings.visualize)
@@ -1564,7 +1403,6 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 					cv::Vec3b col = colors[(size_t)comp->startIndex % size];
 
 					wimg.at<cv::Vec3b>(y, x) = col;
-
 				}
 				//wimg.at<cv::Vec3b>(curpix.y, curpix.x) = cv::Vec3b(255, 0, 0);
 				//wimg.at<cv::Vec3b>(NextPoint.y, NextPoint.x) = cv::Vec3b(0,0,255);
@@ -1595,3 +1433,87 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 
 //template bc::Barcontainer<ushort>* BarcodeCreator<ushort>::createBarcode(const bc::DatagridProvider<ushort>*, const BarConstructor<ushort>&)
 
+
+
+void BarcodeCreator::processCompByStepRadius(Barcontainer* item)
+{
+	Barscalar samax, sadym;
+	workingImg->maxAndMin(sadym, samax);
+	int smax = (int)samax.getAvgUchar();
+	int foundSt = 0;
+	settings.maxRadius = 0.f;
+	for (float& i = settings.maxRadius; i <= smax; ++i)
+	{
+		curIndexInSortedArr = foundSt;
+		foundSt = 0;
+		for (; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
+		{
+			const indexCov& val = geometrySortedArr.get()[curIndexInSortedArr];
+
+			if (val.dist > settings.maxRadius && foundSt == 0)
+				foundSt = curIndexInSortedArr;
+
+			processRadar(val, foundSt == 0);
+		}
+	}
+	addItemToCont(item);
+	clearIncluded();
+}
+
+
+void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
+{
+	curpoindex = val.offset;
+	curpix = getPoint(curpoindex);
+
+	bc::point NextPoint = val.getNextPoint(curpix);
+	poidex NextPindex = NextPoint.getLiner(workingImg->wid());
+
+	Component* first = getComp(curpoindex);
+	Component* connected = getComp(NextPindex);
+
+	if (first != nullptr)
+	{
+		curbright = workingImg->get(NextPoint.x, NextPoint.y);
+		curpoindex = NextPindex;
+		curpix = NextPoint;
+
+		//если в найденном уже есть этот элемент
+		//существует ли ребро вокруг
+		if (connected != nullptr && first != connected)
+		{
+			if (allowAttach)
+				attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
+		}
+		else if (connected == nullptr)
+		{
+			curbright = workingImg->get(NextPoint.x, NextPoint.y);
+			if (!first->add(NextPindex, NextPoint))
+			{
+				connected = new Component(NextPindex, this);
+			}
+		}
+	}
+	else
+	{
+		curbright = workingImg->get(curpix.x, curpix.y);
+		// Ребро не создано или не получилось присоединить
+		if (connected == nullptr)
+		{
+			first = new Component(curpoindex, this);
+
+			curbright = workingImg->get(NextPoint.x, NextPoint.y);
+			curpoindex = NextPindex;
+			curpix = NextPoint;
+
+			if (!first->add(NextPindex, NextPoint))
+			{
+				connected = new Component(NextPindex, this);
+			}
+		}
+		else if (!connected->add(curpoindex, curpix))
+		{
+			first = new Component(curpoindex, this);
+		}
+	}
+}

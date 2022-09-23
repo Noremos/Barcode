@@ -47,6 +47,11 @@ public:
 		return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 	}
 
+	static bool coin()
+	{
+		return randf() < 0.5;
+	}
+
 	static int randi(int LO, int HI)
 	{
 		return LO + (rand() % (HI - LO));

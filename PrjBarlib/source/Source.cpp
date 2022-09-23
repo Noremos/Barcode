@@ -223,30 +223,86 @@ void tryImg()
 }
 
 
+MatrImg drawImg(DatagridProvider* img, const bc::Baritem::barsplitvec& input)
+{
+	MatrImg res(img->wid(), img->hei(), img->channels());
+	for (size_t i = 0; i < img->length(); i++)
+		res.setLiner(i, img->getLiner(i));
+
+	float totSize = img->length();
+	int oked = 0;
+	for (auto& line : input)
+	{
+		auto& matr = line.line->matr;
+		float sizes = matr.size();
+		Barscalar color = Barscalar(MRNG::randi(0, 255), MRNG::randi(0, 255), MRNG::randi(0, 255));
+		for (size_t w = 0; w < matr.size(); ++w)
+		{
+			res.set(matr[w].getX(), matr[w].getY(), color);
+		}
+	}
+
+	return res;
+}
+
+void entrotySplit(DatagridProvider* img)
+{
+	BarcodeCreator creator;
+	bc::BarConstructor consrt;
+	consrt.addStructure((bc::ProcType::invertf0), (bc::ColorType::rgb), bc::ComponentType::Component);
+	consrt.createBinaryMasks = true;
+	consrt.createGraph = true;
+	consrt.returnType = ReturnType::barcode2d;
+
+	bc::Barcontainer* bar = creator.createBarcode(img, consrt);
+
+	Baritem::barsplitvec low, high;
+	bar->getItem(0)->splitByValue(low, high);
+	MatrImg lowImg = drawImg(img, low);
+	MatrImg highImg = drawImg(img, high);
+
+	cv::namedWindow("low", cv::WINDOW_NORMAL);
+	cv::imshow("low", bc::convertProvider2Mat(&lowImg));
+
+	cv::namedWindow("hith", cv::WINDOW_NORMAL);
+	cv::imshow("hith", bc::convertProvider2Mat(&highImg));
+	cv::waitKey(0);
+	delete bar;
+}
+
+
 int main()
 {
+	//MasResultsExperts();
+	//return 0;
 	//getResults23();
 	//return 0;
 	////tryImg();
 	////return 0;
 	//srand(time(0));
 
-	//string pbase = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/";
-	////string path = "D:/Learning/papers/CO_compressing/base16t.png";
-	//Mat imgs = cv::imread(pbase + "5_set.png", cv::IMREAD_COLOR);
-	//Mat mask = cv::imread(pbase + "5_bld.png", cv::IMREAD_GRAYSCALE);
-	//bc::BarMat imgsWrap(imgs, BarType::BYTE8_3);
-	//bc::BarMat maskWrap(mask, BarType::BYTE8_1);
+	string pbase = "D:/Programs/C++/Barcode/PrjBarlib/researching/tiles/";
+	//string path = "D:/Learning/papers/CO_compressing/base16t.png";
+	Mat imgs = cv::imread(pbase + "5_set.png", cv::IMREAD_COLOR);
+	Mat mask = cv::imread(pbase + "5_bld.png", cv::IMREAD_GRAYSCALE);
+	bc::BarMat imgsWrap(imgs, BarType::BYTE8_3);
+	bc::BarMat maskWrap(mask, BarType::BYTE8_1);
+
+	entrotySplit(&imgsWrap);
+	//MachComb(imgsWrap, maskWrap);
+	return 0;
+
+
 
 	////CellAutomatProcessor::fullProcess2(imgsWrap, maskWrap);
 	//MachinePRocessor::fullProcess2(imgsWrap, maskWrap);
 
 	//return 0;
 	//getResultsExperts();
-	//return 0;
+	return 0;
 	bc::BarcodeCreator test;
 	auto bcont = defineConstr();
-	bcont.structure[0].proctype = bc::ProcType::Radius;
+	bcont.structure[0].proctype = bc::ProcType::StepRadius;
 	//bcont.structure[0].comtype = bc::ComponentType::Hole;
 	bcont.visualize = false;
 	const int k = 3;
@@ -263,23 +319,23 @@ int main()
 		3, 6, 6,
 		4, 2, 1,*/
 	};
-	
+
 	//srand(1);
-	for (size_t i = 0; i < k*k; i++)
+	for (size_t i = 0; i < k * k; i++)
 	{
 		img.setLiner(i, data5[i]);
 		//data5[i] = rand() % 255;
 		//if (data5[i] > maxv)
 		//	maxv = data5[i];
 	}
-//	const int k = 2;
-//	uchar maxv = 5; 
-//	uchar* data5 = new uchar[k * k]{
-//4,5,
-//5,5
-//	};
+	//	const int k = 2;
+	//	uchar maxv = 5; 
+	//	uchar* data5 = new uchar[k * k]{
+	//4,5,
+	//5,5
+	//	};
 
-	//img.setDataU8(k, k, data5);
+		//img.setDataU8(k, k, data5);
 	printImg(img);
 
 	Barcontainer* ret = test.createBarcode(&img, bcont);
@@ -300,7 +356,7 @@ int main()
 			dataE[d[j].getY() * 3 + d[j].getX()] = d[j].value.getAvgUchar();
 		}
 
-		for (int i = 0; i <3; i++)
+		for (int i = 0; i < 3; i++)
 		{
 			for (int j = 0; j < 3; j++)
 			{

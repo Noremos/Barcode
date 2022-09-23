@@ -107,8 +107,8 @@ namespace bc {
 		point curpix;
 		int wid;
 		int hei;
-		Barscalar sourceMax;
-		Barscalar sourceMin;
+		//Barscalar sourceMax;
+		//Barscalar sourceMin;
 		// int lastB;
 		friend class Component;
 		friend class Hole;
@@ -211,13 +211,6 @@ namespace bc {
 		void computeNdBarcode(Baritem* lines, int n);
 
 	public:
-		BarcodeCreator()
-		{
-		}
-		BarcodeCreator(const BarcodeCreator&)
-		{
-
-		}
 
 		bc::Barcontainer* createBarcode(const bc::DatagridProvider* img, const BarConstructor& structure);
 		/*{
@@ -252,8 +245,9 @@ namespace bc {
 		///////////GEOMETRY
 	private:
 		void processCompByRadius(Barcontainer* item);
-		
+		void processCompByStepRadius(Barcontainer* item);
 
+		void processRadar(const indexCov& val, bool allowAttach);
 
 		std::unique_ptr<indexCov> geometrySortedArr;
 	};

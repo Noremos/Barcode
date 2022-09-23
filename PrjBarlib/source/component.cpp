@@ -184,10 +184,10 @@ void bc::Component::setParent(bc::Component* parnt)
 				}*/
 
 			// Записываем длину сущщетвования точки
-			//val.value = factory->curbright > val.value ? factory->curbright - val.value : val.value - factory->curbright;
-			val.value = factory->curbright - val.value;
+			val.value = factory->curbright > val.value ? factory->curbright - val.value : val.value - factory->curbright;
+			//val.value = factory->curbright - val.value;
 
-			avgSr += factory->curbright;
+			avgSr += val.value;
 			// Эти точки сичтаются как только что присоединившиеся
 			parnt->resline->addCoord(barvalue(val.getPoint(), factory->curbright));
 		}
@@ -203,8 +203,8 @@ void bc::Component::setParent(bc::Component* parnt)
  bool bc::Component::canBeConnected(const bc::point& p, bool incrSum)
 {
 
-//	if (factory->settings.maxRadius < (lastVal.val_distance(factory->workingImg->get(p))))
-//		return false;
+	if (factory->settings.maxRadius < (lastVal.val_distance(factory->curbright)))
+		return false;
 
 //	if (!factory->settings.maxLen.isCached)
 //		return true;

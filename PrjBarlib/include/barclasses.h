@@ -3,6 +3,7 @@
 #include <string>
 #include "presets.h"
 #include "barline.h"
+#include <iostream>
 
 namespace bc
 {
@@ -42,6 +43,7 @@ namespace bc
 		{
 			this->rootNode = obj.rootNode;
 			this->wid = obj.wid;
+			this->type = obj.type;
 
 			for (auto* barval : obj.barlines)
 			{
@@ -54,6 +56,7 @@ namespace bc
 		{
 			this->rootNode = obj.rootNode;
 			this->wid = obj.wid;
+			this->type = obj.type;
 
 			for (auto* barval : obj.barlines)
 			{
@@ -76,6 +79,7 @@ namespace bc
 		{
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
+			this->type = obj.type;
 
 			this->barlines = obj.barlines;
 			obj.barlines.clear();
@@ -126,6 +130,246 @@ namespace bc
 					_max = b->start + b->len();
 			}
 			return _max;
+		}
+
+
+		class EXPORT BarscalHash
+		{
+		public:
+			size_t operator()(const Barscalar& p) const
+			{
+				return ((size_t)0 << 32) + ((size_t)p.data.b3[2] << 16) +
+						((size_t)p.data.b3[1] << 8) + ((size_t)p.data.b3[0]);
+			}
+		};
+
+
+		typedef std::unordered_map<Barscalar, int, BarscalHash> maphist;
+
+
+		class Barlfd
+		{
+		public:
+			barline* line = NULL;
+			float acc = 0;
+			maphist hist;
+
+		/*	void caclHist()
+			{
+				hist.clear();
+				for (size_t i = 0; i < line->matr.size(); ++i)
+				{
+					Barscalar& scl = line->matr.at(i).value;
+					auto asd = hist.find(scl);
+					if (asd != hist.end())
+					{
+						++asd->second;
+					}
+					else
+						hist.insert<pair< Barscalar, int>>(pair<Barscalar, int>(scl, 1));
+				}
+			}
+
+			void appendHist(maphist& outHist)
+			{
+				for (auto& val : hist)
+				{
+					auto asd = outHist.find(val.second);
+					if (asd != outHist.end())
+					{
+						asd->second += val.second;
+					}
+					else
+						outHist.insert<pair< Barscalar, int>>(val);
+				}
+			}*/
+
+			void calculateEntropy(maphist& hist)
+			{
+				float s = 0;
+				size_t total = line->matr.size();
+				for (size_t i = 0; i < total; i++)
+				{
+					Barscalar& scl = line->matr.at(i).value;
+					auto asd = hist.find(scl);
+					float lacc = asd->second / total;
+					s += lacc * log(lacc);
+				}
+
+				acc = s;
+			}
+
+			void calculateMask(DatagridProvider& mask)
+			{
+				float s = 0;
+				for (size_t w = 0; w < line->matr.size(); ++w)
+				{
+					if (mask.get(line->matr[w].getPoint()) > 128)
+					{
+						s += 1;
+					}
+				}
+
+				acc =  s / mask.length();
+			}
+		};
+
+		typedef std::vector<Barlfd> barsplitvec;
+
+		float calcEntrpyByValues(const barsplitvec::iterator begin, const barsplitvec::iterator end)
+		{
+			maphist hist;
+
+			for(auto it = begin; it != end; it++)
+			{
+				//it->appendHist(hist);
+			}
+
+			float s = 0;
+			for (auto it = begin; it != end; it++)
+			{
+				it->calculateEntropy(hist);
+				s += it->acc * log(it->acc);
+			}
+			
+			return -s;
+		}
+
+		float calcEntrpyByMask(const barsplitvec::iterator begin, const barsplitvec::iterator end, DatagridProvider& mask)
+		{
+			float s = 0;
+			for (auto it = begin; it != end; it++)
+			{
+				it->calculateMask(mask);
+				s += it->acc * log(it->acc);
+			}
+
+			return -s;
+		}
+
+		float calcEntropySimple(const barsplitvec::const_iterator begin, const barsplitvec::const_iterator end)
+		{
+			float s = 0;
+			for (auto it = begin; it != end; it++)
+			{
+				s += it->acc * log(it->acc);
+			}
+
+			return -s;
+		}
+		// left - low entorpy; ritht - big
+		void splitRes(barsplitvec& input, barsplitvec& left, barsplitvec& right)
+		{
+			int bestI = 0; //  a = { <= I}; b = {>I}
+			const barsplitvec::iterator begin = input.begin();
+			const barsplitvec::iterator end = input.end();
+			barsplitvec::iterator spkit = begin + 1;
+			
+			for (auto it = begin; it != end; ++it)
+			{
+				//it->caclHist();
+			}
+			
+			if (input.size() == 1)
+			{
+				left.insert(left.end(), begin, begin + 1);
+				return;
+			}
+			if (input.size() == 2)
+			{
+				float s0 = calcEntrpyByValues(begin, begin + 1);
+				float s1 = calcEntrpyByValues(begin + 1, end);
+				if (s0 < s1)
+				{
+					left.push_back(input[0]);
+					right.push_back(input[1]);
+				}
+				else
+				{
+					left.push_back(input[1]);
+					right.push_back(input[0]);
+				}
+				return;
+			}
+
+			float s = calcEntrpyByValues(begin, end);
+			if (s == 0)
+			{
+				left.insert(left.end(), begin, end);
+				return;
+			}
+
+			std::cout << "Start with len: " << input.size() << std::endl;
+			float minS = s;
+			bool leftBigger = true;
+			for (auto it = begin + 1; it != end; ++it)
+			{
+				float s0 = calcEntrpyByValues(begin, it);
+				float s1 = calcEntrpyByValues(it, end);
+				float sAvg = (s0 + s1) / 2;
+				if (sAvg < minS)
+				{
+					leftBigger = s0 > s1;
+					minS = sAvg;
+					spkit = it;
+					//break;
+				}
+			}
+			if (spkit == end)
+			{
+				left.insert(left.end(), begin, end);
+				return;
+			}
+			barsplitvec leftInput;
+			barsplitvec rightInput;
+			if (leftBigger)
+			{
+				// ≈сли лева€ часть больше, мен€ем местами
+				leftInput.insert(leftInput.end(), spkit, end);
+				rightInput.insert(rightInput.end(), begin, spkit);
+			}
+			else
+			{
+				leftInput.insert(leftInput.end(), begin, spkit);
+				rightInput.insert(rightInput.end(), spkit, end);
+			}
+
+			std::cout << "Left len: " << leftInput.size() << std::endl;
+			std::cout << "Right len: " << rightInput.size() << std::endl;
+			
+			splitRes(leftInput, left, right);
+			splitRes(rightInput, left, right);
+		}
+
+		void splitByValue(barsplitvec& low, barsplitvec& high)
+		{
+			barsplitvec input;
+			for (size_t i = 0; i < barlines.size(); i++)
+			{
+				input.push_back({ barlines[i], 0 });
+			}
+			splitRes(input, low, high);
+		}
+
+		void splitByMask(barlinevector& left, barlinevector& right, DatagridProvider& mask)
+		{
+
+			barsplitvec barvec;
+			for (size_t i = 0; i < barlines.size(); i++)
+			{
+				Barlfd as;
+				as.line = barlines.at(i);
+				auto& matr = as.line->matr;
+				for (size_t w = 0; w < matr.size(); ++w)
+				{
+					if (mask.get(matr[w].getPoint()) > 128)
+					{
+						as.acc += 1;
+					}
+				}
+
+				as.acc /= mask.length();
+			}
 		}
 
 #ifdef _PYD
