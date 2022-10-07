@@ -1,44 +1,45 @@
 #pragma once
 #include <vector>
+#include <string>
 #include "presets.h"
 #include "barline.h"
+#include <iostream>
 
 namespace bc
 {
-	template<class T>
+	
 	class EXPORT Barbase
 	{
 	public:
-		virtual void removePorog(T const porog) = 0;
-		virtual void preprocessBar(T const& porog, bool normalize) = 0;
-		virtual float compireFull(const Barbase<T>* Y, bc::CompireStrategy strat) const = 0;
-		virtual Barbase<T>* clone() const = 0;
-		virtual T sum() const = 0;
+		virtual void removePorog(Barscalar const porog) = 0;
+		virtual void preprocessBar(Barscalar const& porog, bool normalize) = 0;
+		virtual float compireFull(const Barbase* Y, bc::CompireStrategy strat) const = 0;
+		virtual Barbase* clone() const = 0;
+		virtual Barscalar sum() const = 0;
 		virtual void relen() = 0;
 		//    virtual void fullCompite(barbase const *bc, CompireFunction fn, float poroc = 0.5f) = 0;
 		virtual ~Barbase();
 	};
 
 	
-	template<class T>
-	using barlinevector = std::vector<bc::barline<T>*>;
-
-	template<class T>
-	class EXPORT Baritem : public Barbase<T>
+	class EXPORT Baritem : public Barbase
 	{
 	public:
-		barlinevector<T> barlines;
+		barlinevector barlines;
 
 	private:
-		bc::BarRoot<T>* rootNode = nullptr;
+		bc::BarRoot* rootNode = nullptr;
 		int wid;
+		BarType type;
 	public:
-		Baritem(int wid = 0);
+		Baritem(int wid = 0, BarType type = BarType::NONE);
 
 		//copy constr
-		Baritem(Baritem const& obj) {
+		Baritem(Baritem const& obj)
+		{
 			this->rootNode = obj.rootNode;
 			this->wid = obj.wid;
+			this->type = obj.type;
 
 			for (auto* barval : obj.barlines)
 			{
@@ -51,6 +52,7 @@ namespace bc
 		{
 			this->rootNode = obj.rootNode;
 			this->wid = obj.wid;
+			this->type = obj.type;
 
 			for (auto* barval : obj.barlines)
 			{
@@ -58,9 +60,9 @@ namespace bc
 			}
 		}
 
-		// move costr
-		Baritem(Baritem&& obj) {
-
+		// move constr
+		Baritem(Baritem&& obj) noexcept
+		{
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
 
@@ -69,31 +71,36 @@ namespace bc
 		}
 
 		// move assign
-		void operator=(Baritem&& obj) {
+		void operator=(Baritem&& obj)
+		{
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
+			this->type = obj.type;
 
 			this->barlines = obj.barlines;
 			obj.barlines.clear();
 		}
 
 		//    cv::Mat binmap;
-		void add(T st, T len);
-		void add(barline<T>* line);
+		void add(Barscalar st, Barscalar len);
+		void add(barline* line);
 
-		T sum() const;
+		Barscalar sum() const;
 		void relen();
-		T maxLen() const;
-		Baritem<T>* clone() const;
-
+		Barscalar maxLen() const;
+		Baritem* clone() const;
+		inline BarType getType()
+		{
+			return type;
+		}
 		void getBettyNumbers(int* bs);
 
 		// remove lines than less then passed value
-		void removePorog(T const porog);
-		void preprocessBar(T const& porog, bool normalize);
-		float compireFull(const Barbase<T>* bc, bc::CompireStrategy strat) const;
-		float compireBestRes(Baritem<T> const* bc, bc::CompireStrategy strat) const;
-		float compareOccurrence(Baritem<T> const* bc, bc::CompireStrategy strat) const;
+		void removePorog(Barscalar const porog);
+		void preprocessBar(Barscalar const& porog, bool normalize);
+		float compireFull(const Barbase* bc, bc::CompireStrategy strat) const;
+		float compireBestRes(Baritem const* bc, bc::CompireStrategy strat) const;
+		float compareOccurrence(Baritem const* bc, bc::CompireStrategy strat) const;
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 
 		void normalize();
@@ -101,18 +108,18 @@ namespace bc
 		void getJsonLinesArray(std::string &out);
 		~Baritem();
 
-		bc::BarRoot<T>* getRootNode()
+		bc::BarRoot* getRootNode()
 		{
 			return rootNode;
 		}
-		void setRootNode(bc::BarRoot<T>* root)
+		void setRootNode(bc::BarRoot* root)
 		{
 			rootNode = root;
 		}
 
-		T getMax()
+		Barscalar getMax()
 		{
-			T _max{ 0 };
+			Barscalar _max{ 0 };
 			for (auto* b : this->barlines)
 			{
 				if (b->start + b->len() > _max)
@@ -121,9 +128,249 @@ namespace bc
 			return _max;
 		}
 
+
+		class EXPORT BarscalHash
+		{
+		public:
+			size_t operator()(const Barscalar& p) const
+			{
+				return ((size_t)0 << 32) + ((size_t)p.data.b3[2] << 16) +
+						((size_t)p.data.b3[1] << 8) + ((size_t)p.data.b3[0]);
+			}
+		};
+
+
+		typedef std::unordered_map<Barscalar, int, BarscalHash> maphist;
+
+
+		class Barlfd
+		{
+		public:
+			barline* line = NULL;
+			float acc = 0;
+			maphist hist;
+
+		/*	void caclHist()
+			{
+				hist.clear();
+				for (size_t i = 0; i < line->matr.size(); ++i)
+				{
+					Barscalar& scl = line->matr.at(i).value;
+					auto asd = hist.find(scl);
+					if (asd != hist.end())
+					{
+						++asd->second;
+					}
+					else
+						hist.insert<pair< Barscalar, int>>(pair<Barscalar, int>(scl, 1));
+				}
+			}
+
+			void appendHist(maphist& outHist)
+			{
+				for (auto& val : hist)
+				{
+					auto asd = outHist.find(val.second);
+					if (asd != outHist.end())
+					{
+						asd->second += val.second;
+					}
+					else
+						outHist.insert<pair< Barscalar, int>>(val);
+				}
+			}*/
+
+			void calculateEntropy(maphist& hist)
+			{
+				float s = 0;
+				size_t total = line->matr.size();
+				for (size_t i = 0; i < total; i++)
+				{
+					Barscalar& scl = line->matr.at(i).value;
+					auto asd = hist.find(scl);
+					float lacc = asd->second / total;
+					s += lacc * log(lacc);
+				}
+
+				acc = s;
+			}
+
+			void calculateMask(DatagridProvider& mask)
+			{
+				float s = 0;
+				for (size_t w = 0; w < line->matr.size(); ++w)
+				{
+					if (mask.get(line->matr[w].getPoint()) > 128)
+					{
+						s += 1;
+					}
+				}
+
+				acc =  s / mask.length();
+			}
+		};
+
+		typedef std::vector<Barlfd> barsplitvec;
+
+		float calcEntrpyByValues(const barsplitvec::iterator begin, const barsplitvec::iterator end)
+		{
+			maphist hist;
+
+			for(auto it = begin; it != end; it++)
+			{
+				//it->appendHist(hist);
+			}
+
+			float s = 0;
+			for (auto it = begin; it != end; it++)
+			{
+				it->calculateEntropy(hist);
+				s += it->acc * log(it->acc);
+			}
+			
+			return -s;
+		}
+
+		float calcEntrpyByMask(const barsplitvec::iterator begin, const barsplitvec::iterator end, DatagridProvider& mask)
+		{
+			float s = 0;
+			for (auto it = begin; it != end; it++)
+			{
+				it->calculateMask(mask);
+				s += it->acc * log(it->acc);
+			}
+
+			return -s;
+		}
+
+		float calcEntropySimple(const barsplitvec::const_iterator begin, const barsplitvec::const_iterator end)
+		{
+			float s = 0;
+			for (auto it = begin; it != end; it++)
+			{
+				s += it->acc * log(it->acc);
+			}
+
+			return -s;
+		}
+		// left - low entorpy; ritht - big
+		void splitRes(barsplitvec& input, barsplitvec& left, barsplitvec& right)
+		{
+			int bestI = 0; //  a = { <= I}; b = {>I}
+			const barsplitvec::iterator begin = input.begin();
+			const barsplitvec::iterator end = input.end();
+			barsplitvec::iterator spkit = begin + 1;
+			
+			for (auto it = begin; it != end; ++it)
+			{
+				//it->caclHist();
+			}
+			
+			if (input.size() == 1)
+			{
+				left.insert(left.end(), begin, begin + 1);
+				return;
+			}
+			if (input.size() == 2)
+			{
+				float s0 = calcEntrpyByValues(begin, begin + 1);
+				float s1 = calcEntrpyByValues(begin + 1, end);
+				if (s0 < s1)
+				{
+					left.push_back(input[0]);
+					right.push_back(input[1]);
+				}
+				else
+				{
+					left.push_back(input[1]);
+					right.push_back(input[0]);
+				}
+				return;
+			}
+
+			float s = calcEntrpyByValues(begin, end);
+			if (s == 0)
+			{
+				left.insert(left.end(), begin, end);
+				return;
+			}
+
+			std::cout << "Start with len: " << input.size() << std::endl;
+			float minS = s;
+			bool leftBigger = true;
+			for (auto it = begin + 1; it != end; ++it)
+			{
+				float s0 = calcEntrpyByValues(begin, it);
+				float s1 = calcEntrpyByValues(it, end);
+				float sAvg = (s0 + s1) / 2;
+				if (sAvg < minS)
+				{
+					leftBigger = s0 > s1;
+					minS = sAvg;
+					spkit = it;
+					//break;
+				}
+			}
+			if (spkit == end)
+			{
+				left.insert(left.end(), begin, end);
+				return;
+			}
+			barsplitvec leftInput;
+			barsplitvec rightInput;
+			if (leftBigger)
+			{
+				// ≈сли лева€ часть больше, мен€ем местами
+				leftInput.insert(leftInput.end(), spkit, end);
+				rightInput.insert(rightInput.end(), begin, spkit);
+			}
+			else
+			{
+				leftInput.insert(leftInput.end(), begin, spkit);
+				rightInput.insert(rightInput.end(), spkit, end);
+			}
+
+			std::cout << "Left len: " << leftInput.size() << std::endl;
+			std::cout << "Right len: " << rightInput.size() << std::endl;
+			
+			splitRes(leftInput, left, right);
+			splitRes(rightInput, left, right);
+		}
+
+		void splitByValue(barsplitvec& low, barsplitvec& high)
+		{
+			barsplitvec input;
+			for (size_t i = 0; i < barlines.size(); i++)
+			{
+				input.push_back({ barlines[i], 0 });
+			}
+			splitRes(input, low, high);
+		}
+
+		void splitByMask(barlinevector& left, barlinevector& right, DatagridProvider& mask)
+		{
+
+			barsplitvec barvec;
+			for (size_t i = 0; i < barlines.size(); i++)
+			{
+				Barlfd as;
+				as.line = barlines.at(i);
+				auto& matr = as.line->matr;
+				for (size_t w = 0; w < matr.size(); ++w)
+				{
+					if (mask.get(matr[w].getPoint()) > 128)
+					{
+						as.acc += 1;
+					}
+				}
+
+				as.acc /= mask.length();
+			}
+		}
+
 #ifdef _PYD
 		// only for uchar
-		bp::list calcHistByBarlen(/*T maxLen*/)
+		bp::list calcHistByBarlen(/*Barscalar maxLen*/)
 		{
 			int maxLen = 256;
 			int* hist = new int[maxLen];
@@ -135,7 +382,7 @@ namespace bc
 			bp::list pyhist;
 			for (size_t i = 0; i < maxLen; i++)
 				pyhist.append(hist[i]);
-			
+
 			delete[] hist;
 
 			return pyhist;
@@ -153,7 +400,7 @@ namespace bc
 		}
 
 		// only for uchar
-		bp::list calcHistByPointsSize(/*T maxLen*/)
+		bp::list calcHistByPointsSize(/*Barscalar maxLen*/)
 		{
 			int rm = 0;
 			for (size_t i = 0; i < barlines.size(); i++)
@@ -189,9 +436,9 @@ namespace bc
 			return lines;
 		}
 		
-		float cmp(const Baritem<T>* bitem, bc::CompireStrategy strat) const
+		float cmp(const Baritem* bitem, bc::CompireStrategy strat) const
 		{
-			return compireFull((const Baritem<T>*)bitem, strat);
+			return compireFull((const Baritem*)bitem, strat);
 		}
 
 
@@ -203,23 +450,32 @@ namespace bc
 	};
 
 	//template<size_t N>
-	template<class T>
-	class EXPORT Barcontainer : public Barbase<T>
+	
+	class EXPORT Barcontainer : public Barbase
 	{
-		std::vector<Baritem<T>*> items;
+		std::vector<Baritem*> items;
 	public:
 		Barcontainer();
 
-		T sum() const;
+		Barscalar sum() const;
 		void relen();
-		Barbase<T>* clone() const;
-		T maxLen() const;
+		Barbase* clone() const;
+		Barscalar maxLen() const;
 		size_t count();
 		//    Baritem *operator [](int i);
-		Baritem<T>* getItem(size_t i);
+		Baritem *getItem(size_t i);
 
+		void setItem(size_t index, Baritem *newOne)
+		{
+			if (index < items.size())
+			{
+				auto *item = items[index];
+				delete item;
+				items[index] = newOne;
+			}
+		}
 
-		Baritem<T> *exractItem(size_t index)
+		Baritem *exractItem(size_t index)
 		{
 			if (index < items.size())
 			{
@@ -230,7 +486,7 @@ namespace bc
 			return nullptr;
 		}
 
-		void exractItems(std::vector<Baritem<T> *> extr)
+		void exractItems(std::vector<Baritem *> extr)
 		{
 			for (size_t i = 0; i < items.size(); ++i)
 			{
@@ -239,14 +495,14 @@ namespace bc
 			}
 			items.clear();
 		}
-		Baritem<T>* lastItem();
-		void addItem(Baritem<T>* item);
+		Baritem* lastItem();
+		void addItem(Baritem* item);
 		// remove lines than less then passed value
-		void removePorog(T const porog);
-		void preprocessBar(T const& porog, bool normalize);
+		void removePorog(Barscalar const porog);
+		void preprocessBar(Barscalar const& porog, bool normalize);
 
-		float compireFull(const Barbase<T>* bc, bc::CompireStrategy strat) const;
-		float compireBest(const Baritem<T>* bc, bc::CompireStrategy strat) const;
+		float compireFull(const Barbase* bc, bc::CompireStrategy strat) const;
+		float compireBest(const Baritem* bc, bc::CompireStrategy strat) const;
 
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		~Barcontainer();

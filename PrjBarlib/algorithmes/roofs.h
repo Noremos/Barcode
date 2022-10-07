@@ -14,15 +14,15 @@ int getFromHex(const char* s)
 
 cv::Vec3b getCol(const char* name)
 {
-	return cv::Vec3b(getFromHex(name), getFromHex(name + 3), getFromHex(name + 5));
+	return cv::Vec3b(getFromHex(name + 1), getFromHex(name + 3), getFromHex(name + 5));
 }
 
 
 cv::Vec3b colors[] =
 {
+	getCol("#FF0000"),
 	getCol("#00FF00"),
 	getCol("#0000FF"),
-	getCol("#FF0000"),
 	getCol("#01FFFE"),
 	getCol("#FFA6FE"),
 	getCol("#FFDB66"),
@@ -47,373 +47,6 @@ cv::Vec3b colors[] =
 };
 const int collen = sizeof(colors) / sizeof(Vec3b);
 
-
-Mat experemental6(const string& path, bool debug = false);
-Mat experemental6()
-{
-	string path = "D:/Learning/BAR/base/1.png";
-	path = "D:/Learning/BAR/base/ident.png";
-
-	path = "D:/Programs/Python/barcode/roofs/imgs/4.bmp";
-	return experemental6(path, true);
-}
-
-template<class T>
-void segment(string& path, bool revert = false, int radius = 0)
-{
-	experemental6();
-	return;
-	path = "D:/Learning/BAR/base/1.png";
-	path = "D:/Programs/Python/barcode/roofs/imgs/5.bmp";
-	//path = "D:/Programs/Python/barcode/roofs/imgs/5m.bmp";
-
-	bool is3d = typeid(T) != typeid(uchar);
-	Mat img = cv::imread(path, cv::IMREAD_COLOR);
-
-
-	if (!is3d)
-	{
-		cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
-	}
-
-
-	cv::namedWindow("nasl", cv::WINDOW_NORMAL);
-	//cv::resizeWindow("nasl", 720, 480);
-	cv::imshow("nasl", img);
-
-
-	//int ncols = 300;
-	//float coofs = img.cols / ncols;
-	//int nrows = img.rows / coofs;
-	//int ocols = img.cols;
-	//int orows = img.rows;
-	//cv::resize(img, img, cv::Size(ncols, nrows));
-
-
-	Mat backback;
-	img.copyTo(backback);
-
-	BarcodeCreator<T> barcodeFactory;
-	//if (is3d) :
-	//    barcodeFactory = BarcodeCreator3d()
-	//    bcstruct = BarConstructor3d()
-	//else:
-	//barcodeFactory = BarcodeCreator()
-
-	BarConstructor<T> bcstruct;
-
-	bcstruct.returnType = bc::ReturnType::barcode2d;
-	bcstruct.createBinaryMasks = true;
-	bcstruct.createGraph = true;
-	bcstruct.attachMode = AttachMode::morePointsEatLow;
-	//bcstruct.attachMode = AttachMode::createNew;
-	bcstruct.visualize = false;
-	//bcstruct.stepPorog.set(60.0);
-	bcstruct.waitK = 0;
-	if (radius > 0)
-		bcstruct.setStep(radius);
-
-	Mat back;
-	img.copyTo(back);
-	//cv::resize(back, back, cv::Size(ncols, nrows));
-
-
-	if (is3d)
-		bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::RadiusComp);
-	else
-		bcstruct.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::Component);
-
-	BarMat<T> val(back);
-	Barcontainer<T>* containet = barcodeFactory.createBarcode(&val, bcstruct);
-	Baritem<T>* item = containet->getItem(0);
-	item->sortBySize();
-	bc::barlinevector<T>& bar = item->barlines;
-
-
-	int ll = bar.size();
-	int k = 0;
-	for (size_t i = 0; i < ll; i++)
-	{
-		barline<T>* line = bar[i];
-		barvector<T>& points = line->matr;
-
-		BarRect v = line->getBarRect();
-
-		//if (v.coof() < 1.5)
-		//	continue;
-
-
-		if (points.size() < 100 || points.size() > val.length() * 0.9)
-			continue;
-
-		Vec3b col = colors[k % collen];
-		Scalar scal(col.val[0], col.val[1], col.val[2]);
-		for (barvalue<T>& p : points)
-		{
-			//size_t ny = p.getY(), yend = p.getY() * coofs;
-			//size_t nx = p.getX(), xend = p.getX() * coofs;
-			//cv::rectangle(backback, cv::Rect(nx, ny, xend - nx, yend - ny), scal, 2);
-			backback.at<cv::Vec3b>(p.getY(), p.getX()) = col;
-		}
-		k++;
-	}
-
-
-	cv::namedWindow("result", cv::WINDOW_NORMAL);
-	cv::imshow("result", backback);
-	int ds = cv::waitKey(0);
-	int ind = 0;
-	while (ds != 'q')
-	{
-		Mat workingimg;
-		img.copyTo(workingimg);
-		switch (ds)
-		{
-		case 'd':
-		case 'D':
-			ind += 1;
-			if (ind >= ll)
-				ind = ll - 1;
-			break;
-		case 'a':
-		case 'A':
-			ind -= 1;
-			if (ind < 0)
-				ind = 0;
-			break;
-		}
-
-		barline<T>* line = bar[ind];
-		barvector<T>& points = line->matr;
-
-		for (barvalue<T>& p : points)
-		{
-			workingimg.at<Vec3b>(p.getY(), p.getX()) = colors[k % collen];
-		}
-		cv::namedWindow("result", cv::WINDOW_NORMAL);
-		cv::imshow("result", workingimg);
-		ds = cv::waitKey(0);
-	}
-
-	delete containet;
-
-}
-using btype = uchar;
-
-Mat experemental6(const string& path, bool debug)
-{
-	BarcodeCreator<btype> barcodeFactory;
-
-	BarConstructor<btype> bcstruct;
-
-	bcstruct.returnType = bc::ReturnType::barcode2d;
-	bcstruct.createBinaryMasks = true;
-	bcstruct.createGraph = true;
-	bcstruct.attachMode = AttachMode::morePointsEatLow;
-	//bcstruct.attachMode = AttachMode::createNew;
-	bcstruct.visualize = false;
-	bcstruct.extracheckOnPixelConnect = false;
-	bcstruct.waitK = 0;
-
-	bcstruct.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::Component);
-
-	Mat img = cv::imread(path, cv::IMREAD_COLOR);
-	//Mat img = cv::imread(path, cv::IMREAD_GRAYSCALE);
-	//cv::threshold(img, img, 127, 255, cv::THRESH_OTSU);
-	//return img;
-
-	if (debug)
-	{
-		cv::namedWindow("nasl", cv::WINDOW_NORMAL);
-		//cv::resizeWindow("nasl", 720, 480);
-		//cv::resizeWindow("nasl", 720, 480);
-		cv::imshow("nasl", img);
-	}
-
-
-	int ncols = img.cols / 2;
-	//int ncols = 100;
-	float coofs = img.cols / ncols;
-	int nrows = img.rows / coofs;
-	int ocols = img.cols;
-	int orows = img.rows;
-
-	cv::resize(img, img, cv::Size(ncols, nrows));
-
-
-	Mat back;
-	img.copyTo(back);
-	cv::cvtColor(img, back, cv::COLOR_BGR2GRAY);
-	BarMat<btype> wrap(back);
-
-	Mat backback;
-	img.copyTo(backback);
-
-	Barcontainer<btype>* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
-	Baritem<btype>* item = containet->getItem(0);
-	item->sortBySize();
-	bc::barlinevector<btype>& bar = item->barlines;
-
-
-	int collen = sizeof(colors) / sizeof(Vec3b);
-	int k = 0;
-	size_t ll = bar.size();
-	BarRoot<btype>* root = item->getRootNode();
-	Mat mainMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
-
-	for (size_t i = 0; i < ll; i++)
-	{
-		barline<btype>* line = bar[i];
-		if (line->getDeath() > 0)
-		{
-			continue;
-		}
-		barvector<btype> points = line->getEnclusivePoints();// encluseve - только точки чайлов
-		for (barvalue<btype>& p : points)
-		{
-			mainMask.at<uchar>(p.getY(), p.getX()) = 255;
-		}
-	}
-	if (debug)
-	{
-		cv::namedWindow("main mask", cv::WINDOW_NORMAL);
-		cv::imshow("main mask", mainMask);
-	}
-
-
-	++k;
-
-	const int deepSt = 2;
-	const int deepEnd = 4;
-
-	float avg = 0;
-	int coun = 0;
-	vector<vector<Point> > conres;
-
-
-	for (size_t i = 0; i < ll; i++)
-	{
-		barline<btype>* line = bar[i];
-		//barvector<btype> points = line->getExclusivePoints();
-		barvector<btype> points = line->matr;
-
-		if (points.size() < 50)// || points.size() > wrap.length() * 0.7)
-			continue;
-
-
-		int d = line->getDeath();
-		if (deepSt <= d && d <= deepEnd)
-		{
-			int sz = points.size();
-
-			cv::Point p0 = points.at(0).getPoint().cvPoint();
-			cv::Point p1 = points.at(sz / 2).getPoint().cvPoint();
-			cv::Point p2 = points.at(sz - 1).getPoint().cvPoint();
-			int ks = 0;
-
-			int avlVal = (float)line->len() / 2;
-			//if (mainMask.at<uchar>(p0.y, p0.x) == 255 && mainMask.at<uchar>(p1.y, p1.x) == 255 && mainMask.at<uchar>(p2.y, p2.x) == 255)
-			{
-				Mat objectsMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
-				int xs = points[0].getX(), xe = points[0].getX();
-				int ys = points[0].getY(), ye = points[0].getY();
-				for (barvalue<btype>& p : points)
-				{
-					if (p.getPyValue().value < avlVal)
-						continue;
-					int x = p.getX();
-					int y = p.getY();
-					objectsMask.at<uchar>(y, x) = 255;
-					if (x < xs)
-						xs = x;
-					else if (x > xe)
-						xe = x;
-
-					if (y < ys)
-						ys = y;
-					else if (y > ye)
-						ye = y;
-				}
-
-				vector<vector<Point> > contours;
-				vector<Vec4i> hierarchy;
-				findContours(objectsMask, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
-
-
-				if (contours.size() == 0)
-					continue;
-
-				int mi = 0;
-				int mm = 0;
-				for (size_t i = 0; i < contours.size(); i++)
-				{
-					if (contours[i].size() > mm)
-					{
-						mm = contours[i].size();
-						mi = i;
-					}
-				}
-
-				approxPolyDP(contours[mi], contours[mi], 2, true);
-				//avg += boundingRect(contours[mi]).area();
-				avg += contours[mi].size();
-				coun++;
-
-				conres.push_back(std::move(contours[mi]));
-			}
-
-		}
-	}
-	if (debug)
-	{
-		Mat sad;
-		img.copyTo(sad);
-		cv::drawContours(sad, conres, -1, Scalar(0, 0, 255), 1);
-		cv::namedWindow("object mask", cv::WINDOW_NORMAL);
-		cv::imshow("object mask", sad);
-	}
-
-	k = 0;
-	mainMask = Mat::zeros(img.rows, img.cols, CV_8UC1);
-
-	float dev = 1.1f; // насколько можно отклониться от среднего ( в процентах)
-	avg /= (float)coun;
-	const float defmin = avg * (1 - dev);// 0.5
-	const float defmax = avg * (1 + dev);//1.5
-	for (size_t i = 0; i < coun; i++)
-	{
-		int szsa = conres[i].size();
-
-		if (defmin <= szsa && szsa <= defmax)
-		{
-
-			cv::drawContours(mainMask, conres, i, Scalar(255), cv::FILLED);
-			if (debug)
-				cv::drawContours(backback, conres, i, Scalar(0, 255, 0), 1);
-			++k;
-		}
-		/*else
-			cv::drawContours(backback, conres, i, Scalar(0, 0, 255), 2);*/
-
-	}
-
-	delete containet;
-
-	if (debug)
-	{
-		cv::namedWindow("result", cv::WINDOW_NORMAL);
-		cv::imshow("result", backback);
-
-		cv::namedWindow("result mask", cv::WINDOW_NORMAL);
-		cv::imshow("result mask", mainMask);
-
-		int d = cv::waitKey(0);
-	}
-
-	return mainMask;
-}
-
-
 using std::filesystem::exists;
 
 bool checkRect(const BarRect& rect, int wid, int hei)
@@ -422,25 +55,28 @@ bool checkRect(const BarRect& rect, int wid, int hei)
 }
 
 
-void show(string name, Mat img, int wait = -1)
+int show(string name, Mat img, int wait = -1)
 {
-	cv::namedWindow(name, cv::WINDOW_NORMAL);
+	cv::namedWindow(name, cv::WINDOW_KEEPRATIO);
 	cv::imshow(name, img);
 	if (wait >= 0)
-		waitKey(wait);
+		return waitKey(wait);
+	else
+		return -1;
 }
 
-template<class T>
-void getCounturFormMatr(barline<T>* line, int rows, int cols, vector<vector<Point> >& contoursRet)
+
+
+void getCounturFormMatr(barline* line, int rows, int cols, vector<vector<Point> >& contoursRet)
 {
-	Mat objectsMask = Mat::zeros(rows, cols, CV_8UC1);
-	for (barvalue<btype>& p : line->matr)
+	Mat objectsMask = Mat::zeros(rows+ 4, cols + 4, CV_8UC1);
+	for (barvalue& p : line->matr)
 	{
 		//if (p.getPyValue().value < avlVal)
 		//	continue;
 		int x = p.getX();
 		int y = p.getY();
-		objectsMask.at<uchar>(y, x) = 255;
+		objectsMask.at<uchar>(y + 2, x + 2) = 255;
 	}
 
 	vector<vector<Point> > contours;
@@ -463,236 +99,471 @@ void getCounturFormMatr(barline<T>* line, int rows, int cols, vector<vector<Poin
 	contoursRet.push_back(contours[mi]);
 }
 
-using matrtype = uchar;
 
-void binarymatrInner(const string& path, vector<vector<Point>> &contours, bool revert);
-Mat binarymatr(const string& path)
-{
-	Mat restbgr = cv::imread(path, cv::IMREAD_COLOR);
-
-	vector<vector<Point>> contours;
-	binarymatrInner(path, contours, false);
-	binarymatrInner(path, contours, true);
-	drawContours(restbgr, contours, -1, Scalar(0, 0, 255), 2);
-	return restbgr;
-}
-
-void binarymatrInner(const string& path, vector<vector<Point>>& contours, bool revert)
+void binarymatr(string path)
 {
 	int radius = 50;
 	bool skipPar = false;
 	int frange = 2;
 
-	BarcodeCreator<matrtype> barcodeFactory;
+	BarcodeCreator barcodeFactory;
 
-	BarConstructor<matrtype> bcstruct;
+	BarConstructor bcstruct;
 
 	bcstruct.returnType = bc::ReturnType::barcode2d;
 	bcstruct.createBinaryMasks = true;
 	bcstruct.createGraph = true;
-	bcstruct.attachMode = AttachMode::morePointsEatLow;
+	bcstruct.attachMode = AttachMode::firstEatSecond;
 	//bcstruct.attachMode = AttachMode::createNew;
-	bcstruct.visualize = false;
 	bcstruct.extracheckOnPixelConnect = false;
 	//bcstruct.setStep(radius);
-	//bcstruct.setMaxLen(radius);
+	//bcstruct.setMaxLen(25);
 	//bcstruct.killOnMaxLen = true;;
-	bcstruct.waitK = 0;
+	bcstruct.visualize = false;
+	bcstruct.waitK = 1;
+	//bcstruct.maxRadius = 50;
+	//bcstruct.maxLen.set(25);
+	//bcstruct.colorRange = 25;
+	bcstruct.addStructure(ProcType::Radius, ColorType::native, ComponentType::Component);
 
-	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::Component);
-
+	//path = "D:/Learning/BAR/base/ident.png";
+	//path = "D:/Learning/datasets/Floodnet/train-20220527T055812Z-001/train/train-org-img/6344.jpg";
+	//path = "D:/1.png";
 	Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
+	if (img.rows >= 3000)
+	{
+		cv::resize(img, img, cv::Size(img.cols / 2, img.rows / 2));
+	}
 	Mat back = img;
-	cvtColor(img, back, COLOR_BGR2GRAY);
-	back *= 2;
-	if (revert)
-		back = 255 - back;
 
-	cv::medianBlur(back, back, 3);
 	show("baeck", back, 1);
-	back.at<uchar>(0, 0) = 0;
+	//cv::imwrite("source.png", back);
 
-	BarMat<matrtype> wrap(back);
-	Barcontainer< matrtype>* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
-	Baritem<matrtype>* item = containet->getItem(0);
-	item->sortBySize();
-	//# item.removePorog(1)
-	barlinevector<matrtype>& bar = item->barlines;
+	//back.at<uchar>(0, 0) = 0;
+	//back = 255 - back;
+	//cvtColor(img, back, COLOR_BGR2GRAY);
+	BarMat wrap(back);
+	Barcontainer* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
+	Baritem* item = containet->getItem(0);
 
-	//back = backback;
-	//back.fill(0);
-	Mat binmap(img.rows, img.cols, CV_8UC1, Scalar(0));
-	//img.copyTo(binmap);
-	//# frange = min(frange, len(bar))
-	frange = bar.size();
+	Mat binmap(img.rows, img.cols, CV_8UC3, Scalar(0));
+	img.copyTo(binmap);
 
+	//item->sortBySize();
+	//barlinevector& bar2 = item->getRootNode()->children;
+	barlinevector& bar2 = item->barlines;
+	frange = bar2.size();
+	int add = 0;
+	for (int i = 0; i < bar2.size(); ++i)
+	{
+		barline* line = bar2[i];
+		int minlen = 0;
+		barvector& points = line->matr;
+
+		if (points.size() < wrap.length() * 0.01 || points.size() > wrap.length() * 0.9)
+			continue;
+
+		//if (line->start < 10)
+		//	continue;
+		//assert(line->len() < 6);
+		for (size_t k = 0; k < points.size(); ++k)
+		{
+			const barvalue& p = points[k];
+			//if (points[k].value > 100)
+			//	continue;
+			//if (line->len() > 100)
+			binmap.at<Vec3b>(p.getY(), p.getX()) = colors[i % collen];
+			//binmap.at<Vec3b>(p.getY(), p.getX()) = line->end().toCvVec();
+			//binmap.at<Vec3b>(p.getY(), p.getX()) = Vec3b(255, 255,255);
+			//binmap.at<uchar>(p.getY(), p.getX()) = (uchar)(float)line->start;
+		}
+	}
+
+	show("result", binmap, 0);
 
 	int ds = cv::waitKey(1);
 	int ind = 0;
 	while (ds != 'q')
 	{
+		add = 0;
 		Mat workingimg;
 		img.copyTo(workingimg);
 		switch (ds)
 		{
 		case 'd':
 		case 'D':
-			ind += 1;
-			if (ind >= frange)
-				ind = frange - 1;
+			add = 1;
+
 			break;
 		case 'a':
 		case 'A':
-			ind -= 1;
-			if (ind < 0)
-				ind = 0;
+			add = -1;
+
 			break;
 		}
 
-		barline<matrtype>* line = bar[ind];
-		barvector<matrtype>& points = line->matr;
+		while (add != 0)
+		{
+			ind += add;
+			if (ind < 0)
+			{
+				ind = 0;
+				break;
+			}
 
-		for (barvalue<matrtype>& p : points)
+			if (ind >= frange)
+			{
+				ind = frange - 1;
+				break;
+			}
+
+			/*if (bar2[ind]->getPointsSize() < 300)
+			{
+				continue;
+			}*/
+
+			break;
+		}
+
+		barline* line = bar2[ind];
+		barvector& points = line->matr;
+
+		for (barvalue& p : points)
 		{
 			////if (p.value < 50)				continue;
-
 			workingimg.at<Vec3b>(p.getY(), p.getX()) = colors[ind % collen];
 		}
-		break;
+		//break;
 
-		cv::namedWindow("result", cv::WINDOW_NORMAL);
-		cv::imshow("result", workingimg);
-		ds = cv::waitKey(0);
-	}
-
-
-	//vector<vector<Point>> contours;
-
-	for (int i = 0; i < frange; ++i)
-	{
-		barline<matrtype>* line = bar[i];
-		BarRect r = line->getBarRect();
-		int minlen = 0;
-		//minlen = line->len() * 0.0;// +15;
-		//minlen = 15;
-		if (line->getDeath() != 2)
-			continue;
-
-		//if (line->len() < 70 || line->len() > 110)
-		//	continue;
-
-		//if (line->getPointsSize() > img.rows * img.cols * 0.5)
-		//	continue;
-		//if (line->getPointsSize() < 30)
-		//	continue;
-		if (line->getPointsSize() > 1000)
-			continue;
-		//if (checkRect(r, img.cols, img.rows) && line->len() > 60)
-		{
-			barvector<matrtype>& points = line->matr;
-			getCounturFormMatr(line, img.rows, img.cols, contours);
-			float len = contours[contours.size() - 1].size();
-			float s = (float)points.size() / len;
-			//if (s > 5 or s < 1)
-			//	continue;
-
-			for (size_t i = 0; i < points.size(); i++)
-			{
-				//if (points[i].value < 20)				continue;
-				binmap.at<uchar>(points[i].getY(), points[i].getX()) = 255;
-			}
-		}
+		ds = show("result", workingimg, 0);
 	}
 
 	show("da", binmap, 1);
 
-	//return contours;
 
 	//Mat kernel(3, 3, CV_8U);
-
 	//cv::morphologyEx(binmap, binmap, cv::MORPH_ERODE, kernel);
-	////cv::morphologyEx(binmap, binmap, cv::MORPH_OPEN, kernel);
 	//cv::medianBlur(binmap, binmap, 3);
-	//return restbgr;
+}
+
+
+string getV(float x, float y, float z)
+{
+	string s = "v ";
+	s += to_string(x);
+	s += " ";
+	s += to_string(y);
+	s += " ";
+	s += to_string(z);
+	s += "\n";
+
+	return s;
+}
+
+string getF(int v1, int v2, int v3, int v4)
+{
+	string s = "f ";
+	s += to_string(v1);
+	s += " ";
+	s += to_string(v2);
+	s += " ";
+	s += to_string(v3);
+	s += " ";
+	s += to_string(v4);
+	s += "\n";
+
+	return s;
+}
+
+string getVt(float x, float z)
+{
+	string s = "vt ";
+	s += to_string(x);
+	s += " ";
+	s += to_string(z);
+	s += "\n";
+
+	return s;
+}
+
+
+string getVVt(float x, float y, float z, int wid, int hei)
+{
+	string s = "v ";
+	s += to_string(x);
+	s += " ";
+	s += to_string(y);
+	s += " ";
+	s += to_string(z);
+	s += "\n";
+
+	//s += "vt ";
+	//s += to_string(x / wid);
+	//s += " ";
+	//s += to_string(1.f - (float)z / hei);
+	//s += "\n";
+
+	return s;
+}
+
+int lastX = 0;
+int lastZ = 0;
+//
+//void writePixel(ofstream& out, int x, int z, Mat imp, float scale)
+//{
+//
+//}
+//
+//void writeFaces(ofstream& out, int& ind, int x, int z, Mat imp)
+//{
+//	uchar y = imp.at<uchar>(x, z);
+//
+//	float yof = y * 0.02;
+//	int hei = imp.cols;
+//
+//
+//	out << getF(ind++, ind++, ind++, ind++);
+//
+//	if (imp.at<uchar>(x + 1, z) != y)
+//		out << getF(ind++, ind++, ind++, ind++);
+//
+//	if (imp.at<uchar>(x, z + 1) != y)
+//		out << getF(ind++, ind++, ind++, ind++);
+//
+//	if (imp.at<uchar>(x + 1, z + 1) != y)
+//		out << getF(ind++, ind++, ind++, ind++);
+//}
+
+void writeObject(string path, Mat imp)
+{
+	int nameOf = path.rfind('/') + 1;
+	int dotPoz = path.rfind('.');
+	string objName = path.substr(nameOf, dotPoz - nameOf);
+	ofstream out;
+	out.open(path);
+
+
+	out << "o " << objName << endl;
+
+	float min = 9999;
+	float max = -9999;
+	int k = 0;
+
+	int wid = imp.cols;
+	int hei = imp.rows;
+	float scale = 0.5;
+	int ind = 1;
+	float jds = 0.02;
+
+	for (int h = 0; h < hei; h += 1)
+	{
+		for (int w = 0; w < wid; w += 1)
+		{
+			int x = w;
+			int z = h;
+			uchar y = imp.at<uchar>(h, w);
+
+
+			float xof = x * scale;
+			float zof = z * scale;
+			float yof = y * jds;
+
+			int oo = ind++;
+			int po = ind++;
+			int op = ind++;
+			int pp = ind++;
+
+			out << getVVt(xof, yof, zof, wid, hei);
+			out << getVVt(xof + scale, yof, zof, wid, hei);
+			out << getVVt(xof, yof, zof + scale, wid, hei);
+			out << getVVt(xof + scale, yof, zof + scale, wid, hei);
+			out << getF(oo, op, pp, po);
+
+			if (x + 1 < wid)
+			{
+				uchar yn = imp.at<uchar>(h, w + 1);
+				float ynof = yn * jds;
+				if (yn != y)
+				{
+					out << getVVt(xof + scale, ynof, zof, wid, hei);
+					out << getVVt(xof + scale, ynof, zof + scale, wid, hei);
+					out << getF(po, pp, ind++, ind++);
+				}
+			}
+
+			if (h + 1 < hei)
+			{
+				uchar yn = imp.at<uchar>(h + 1, w);
+				float ynof = yn * jds;
+				if (yn != y)
+				{
+					out << getVVt(xof, ynof, zof + scale, wid, hei);
+					out << getVVt(xof + scale, ynof, zof + scale, wid, hei);
+					out << getF(op, pp, ind++, ind++);
+				}
+			}
+		}
+	}
+
+	//int ind = 1;
+	//for (int h = 0; h < height - 1; h += 1)
+	//{
+	//	for (int w = 0; w < width - 1; w += 1)
+	//	{
+	//		writeFaces(out, ind, w, h, imp);
+	//	}
+	//}
+
+
+	out.close();
+}
+
+void get3d(Mat img, int maxLen, string outpath, bool writeInRange)
+{
+	BarcodeCreator barcodeFactory;
+	BarConstructor bcstruct;
+	bcstruct.returnType = bc::ReturnType::barcode2d;
+	bcstruct.createBinaryMasks = true;
+	bcstruct.visualize = false;
+	bcstruct.waitK = 1;
+	bcstruct.addStructure(ProcType::f0t255, ColorType::native, ComponentType::Component);
+
+	Mat back = img;
+
+	BarMat wrap(back);
+	Barcontainer* containet = barcodeFactory.createBarcode(&wrap, bcstruct);
+	Baritem* item = containet->getItem(0);
+
+	//Mat binmap(img.rows, img.cols, CV_8UC1, Scalar(wrap.max().getAvgUchar()));
+	Mat binmap(img.rows, img.cols, CV_8UC1, Scalar(0));
+	barlinevector& bar2 = item->barlines;
+	int add = 0;
+	for (int i = 0; i < bar2.size(); ++i)
+	{
+		barline* line = bar2[i];
+		barvector& points = line->matr;
+
+		if (writeInRange)
+		{
+			if (line->len() >= maxLen)
+				continue;
+		}
+		else
+		{
+			if (line->len() < maxLen)
+				continue;
+		}
+
+		++add;
+
+		for (size_t k = 0; k < points.size(); ++k)
+		{
+			const barvalue& p = points[k];
+			//if (points[k].value > 100)
+			//	continue;
+			//if (line->len() > 100)
+			uchar& v = binmap.at<uchar>(p.getY(), p.getX());
+
+			v += p.value.getAvgUchar();
+		}
+	}
+
+	cout << add << " " << writeInRange << " "  << wrap.max().getAvgUchar()  << endl;
+
+	writeObject(outpath, binmap);
 }
 
 void getResults()
 {
-	string ds = "D:/Learning/papers/CO4/test.png";
-	Mat bin_etalon = cv::imread(ds, IMREAD_COLOR);
-	cv::namedWindow("source", cv::WINDOW_NORMAL);
-	cv::imshow("source", bin_etalon);
-	//experemental6(ds, true);
-	Mat bar_result = binarymatr(ds);
-	cv::namedWindow("barres", cv::WINDOW_NORMAL);
-	cv::imshow("barres", bar_result);
-	cv::waitKey(0);
+	string pathas = "D:/Learning/papers/CO_compressing/base16_inv.png";
+	//string path = "D:/Learning/papers/CO_compressing/base16t.png";
+	Mat img = cv::imread("noise.png", cv::IMREAD_GRAYSCALE);
+
+	//for (size_t i = 1; i < img.rows - 1; i++)
+	//{
+	//	for (size_t j = 1; j < img.cols - 1; j++)
+	//	{
+	//		img.at<uchar>(i, j) = rand() % 100;
+	//	}
+	//}
+	//cv::imwrite("noise.png", img);
+
+	get3d(img, 255, "D:/Learning/papers/CO_compressing/full.obj", true);
+	get3d(img, 50, "D:/Learning/papers/CO_compressing/50_main.obj", true);
+	get3d(img, 50, "D:/Learning/papers/CO_compressing/50_ost.obj", false);
+
+	get3d(img, 20, "D:/Learning/papers/CO_compressing/20_main.obj", true);
+	get3d(img, 20, "D:/Learning/papers/CO_compressing/20_ost.obj", false);
+
 	return;
 
-	const int N = 100;
+	string path = "D:/Programs/C++/Barcode/PrjBarlib/researching/e.png";
+	Mat bin_etalon = cv::imread(path, IMREAD_COLOR);
+	show("source", bin_etalon);
+	binarymatr(path);
 
-	string mainPath = "./researching/tiles/";
+	show("bin decress", bin_etalon);
+}
 
-	float totalCor = 0.f;
-	int totalImgs = 0;
-	for (size_t i = 0; i < N; i++)
+
+
+void getResults23()
+{
+	bc::BarcodeCreator bc;
+	bc::BarConstructor constr;
+	constr.createBinaryMasks = true;
+	constr.createGraph = true;
+	constr.returnType = bc::ReturnType::barcode2d;
+	constr.addStructure(bc::ProcType::f0t255, (bc::ColorType::gray), (bc::ComponentType::Component));
+
+	// Build gray? радар.
+	// Channel = 2
+	string pathas = "D:/res-e.png";
+	//string path = "D:/Learning/papers/CO_compressing/base16t.png";
+	Mat img = cv::imread(pathas, cv::IMREAD_GRAYSCALE);
+	BarMat imgwrap(img);
+
+	string s = "D:\\Programs\\C++\\Barcode\\PrjBarlib\\researching\\tiles\\5_set.png";
+	Mat imgr = cv::imread(s, cv::IMREAD_COLOR);
+
+	auto* barcode = bc.createBarcode(&imgwrap, constr);
+
+	Baritem* bar = barcode->getItem(0);
+	int ed = bar->barlines.size();
+
+	vector<vector<Point>> contoursRet;
+	int minCount = img.rows * img.cols * 0.00005;
+	cout << "Min: " << minCount << std::endl;
+
+	//for (int i = 0; i < ed; ++i)
+	//{
+	//	auto& b = bar->barlines[i];
+	//	int depth = b->getDeath();
+	//	const auto& matr = b->getMatrix();
+	//	if (depth == 2)// && matr.size() > minCount)// && b->children.size() != 0)
+	//	{
+	//		getCounturFormMatr(b, img.rows, img.cols, contoursRet);
+	//	}
+	//}
+
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(img, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
+
+	Mat imgout;
+	cv::cvtColor(img, imgout, COLOR_GRAY2BGR);
+
+	for (size_t i = 0; i < contours.size(); i++)
 	{
-		const string setlPath = mainPath + to_string(i) + "_set.png";
-		if (!exists(setlPath))
-			break;
-
-		const string binPath = mainPath + to_string(i) + "_bld.png";
-
-		Mat bin_etalon = cv::imread(binPath, IMREAD_GRAYSCALE);
-		Mat bar_result = binarymatr(setlPath);
-		//Mat bar_result = experemental6(setlPath);
-
-		//cv::resize(bar_result, bar_result, cv::Size(bar_result.cols * 2, bar_result.rows * 2));
-		cv::resize(bar_result, bar_result, cv::Size(bin_etalon.cols, bin_etalon.rows));
-		/*	assert(bin_etalon.cols == bar_result.cols);
-			assert(bin_etalon.rows == bar_result.rows);*/
-
-		int common = 0;
-		int total = 0;
-		for (size_t r = 0; r < bin_etalon.rows; r++)
-		{
-			for (size_t c = 0; c < bin_etalon.cols; c++)
-			{
-				uchar eval = bin_etalon.at<uchar>(r, c);
-				uchar bval = bar_result.at<uchar>(r, c);
-
-				common += ((eval == 255 && bval == 255) ? 1 : 0);
-				total += ((eval == 255 || bval == 255) ? 1 : 0);
-				//total += (eval == 255 ? 1 : 0);
-			}
-		}
-		float cor = total > 0 ? static_cast<float>(common) / total : 0;
-		std::cout << "For " << setlPath << ":" << cor << endl;
-
-		cv::namedWindow("etalon", cv::WINDOW_NORMAL);
-		cv::namedWindow("barres", cv::WINDOW_NORMAL);
-
-		cv::imshow("etalon", bin_etalon);
-		cv::imshow("barres", bar_result);
-
-		//Mat org = cv::imread(setlPath, cv::IMREAD_GRAYSCALE);
-		//cv::Canny(org, org, 238, 255);
-		//cv::threshold(org, org, 127, 255, cv::THRESH_OTSU);
-		//cv::namedWindow("canny", cv::WINDOW_NORMAL);
-		//cv::imshow("canny", org);
-
-		Mat orgn = cv::imread(setlPath, cv::IMREAD_COLOR);
-
-		cv::namedWindow("origin", cv::WINDOW_NORMAL);
-		cv::imshow("origin", orgn);
-
-		cv::waitKey(0);
-
-		totalCor += cor;
-		++totalImgs;
+		//if (contours[i].size() >= minCount)
+		cv::drawContours(imgr, contours, i, cv::Scalar(0, 0, 255));
 	}
 
-	totalCor /= totalImgs;
-	std::cout << "Total cor: " << totalCor << endl;
+
+	//cv::drawContours(imgr, contours, -1, cv::Scalar(0, 0, 255));
+	cv::namedWindow("rest", cv::WINDOW_NORMAL);
+	cv::imshow("rest", imgr);
+	cv::imwrite("d:\\rest_out.png", imgr);
+	cv::waitKey(0);
 }

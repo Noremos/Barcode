@@ -342,7 +342,6 @@ healthchecksdb
 x64
 test
 QTGUI
-build
 PrjTests/data/shapes
 analysis
 analysis/data
@@ -352,3 +351,11 @@ analysis/.vscode
 *.dll
 *.lib
 PrjBarlib/researching/tiles
+PrjBarlib/researching/processed
+PrjBarlib/researching/res
+PrjBarlib/researching/base*
+PrjBarlib/CMakeLists.txt
+PrjBarlib/CMakeFiles
+PrjBarlib/CMakeCache.txt
+PrjBarlib/cmake_install.cmake
+PrjBarlib/Makefile

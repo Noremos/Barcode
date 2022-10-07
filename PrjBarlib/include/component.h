@@ -6,15 +6,13 @@
 //#define POINTS_ARE_AVAILABLE
 namespace bc
 {
-	typedef uint poidex;
-
-	template<class T>
+	
 	class BarcodeCreator;
 
-	template<class T>
+	
 	struct barline;
 
-	template<class T>
+	
 	class Component
 	{
 	public:
@@ -33,17 +31,18 @@ namespace bc
 		size_t totalCount = 0/*, ownSize = 0*/;
 #endif // !POINTS_ARE_AVAILABLE
 	protected:
-		BarcodeCreator<T>* factory;
-		Component<T>* cachedMaxParent = nullptr;
+		BarcodeCreator* factory;
+		Component* cachedMaxParent = nullptr;
 
 	public:
-		Component<T>* parent = nullptr;
-		barline<T>* resline = nullptr;
+		Component* parent = nullptr;
+		barline* resline = nullptr;
 
 	protected:
 		int cashedSize = 0;
-		T lastVal = 0;
-		point startPoint;
+		Barscalar lastVal = 0;
+		Barscalar avgSr = 0;
+		//point startPoint;
 		bool lived = true;
 
 		float sums = 0;
@@ -51,18 +50,20 @@ namespace bc
 	private:
 		//0 - nan
 
-		void init(BarcodeCreator<T>* factory);
+		void init(BarcodeCreator* factory);
 	public:
 
-		Component(poidex pix, BarcodeCreator<T>* factory);
-		Component(BarcodeCreator<T>* factory, bool create = false);
+		Component(poidex pix, BarcodeCreator* factory);
+		Component(BarcodeCreator* factory, bool create = false);
 
-		T getStart()
+		int getLastRowSize()
 		{
-			return resline->start;
+			return cashedSize;
 		}
 
-		T getLast()
+		Barscalar getStart();
+
+		Barscalar getLast()
 		{
 			return lastVal;
 		}
@@ -72,14 +73,16 @@ namespace bc
 			return lived;
 		}
 
-		//T len()
+		bool justCreated();
+
+		//Barscalar len()
 		//{
 		//	//return round(100000 * (end - start)) / 100000;
 		//	return  abs(resline->len());
 		//	//return end - start;
 		//}
 		//    cv::Mat binmap;
-		Component<T>* getMaxparent()
+		Component* getMaxparent()
 		{
 			if (parent == nullptr)
 				return this;
@@ -98,32 +101,12 @@ namespace bc
 
 
 		bool isContain(poidex index);
-		virtual bool add(poidex index);
-		virtual bool add(poidex index, const point p);
+		virtual bool add(const poidex index, const point p, bool forsed = false);
 		virtual void kill();
-		virtual void setParent(Component<T>* parnt);
+		virtual void setParent(Component* parnt);
 
 
-		bool canBeConnected(const bc::point& p, bool incrSum = false)
-		{
-			float val = (float)factory->workingImg->get(p.x, p.y);
-			Component<T>* comp = getMaxparent();
-			if ((float)comp->totalCount / factory->workingImg->length() >= .1f)
-			{
-				float st = (float)comp->getStart();
-				//float avg = ((float)comp->sums + val) / (comp->totalCount + 1);
-				float avg = ((float)lastVal - st) / 2;
-				float dff = abs((float)st - avg);
-				if (abs(val - avg) > dff)
-				{
-					return false;
-				}
-			}
-			if (incrSum)
-				comp->sums += val;
-
-			return true;
-		}
+		bool canBeConnected(const bc::point& p, bool incrSum = false);
 
 		virtual ~Component();
 

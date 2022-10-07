@@ -3,47 +3,47 @@
 
 #include <unordered_map>
 
-template<class T>
-bc::Barbase<T>::~Barbase() {}
 
-template<class T>
-bc::Baritem<T>::Baritem(int wid)
+bc::Barbase::~Barbase() {}
+
+
+bc::Baritem::Baritem(int wid, BarType type)
 {
 	this->wid = wid;
+	this->type = type;
 }
 
 
-template<class T>
-void bc::Baritem<T>::add(T st, T len)
+
+void bc::Baritem::add(Barscalar st, Barscalar len)
 {
-	barlines.push_back(new barline<T>(st, len, wid));
+	barlines.push_back(new barline(st, len, wid));
 }
 
 
-template<class T>
-void bc::Baritem<T>::add(bc::barline<T>* line)
+
+void bc::Baritem::add(bc::barline* line)
 {
 	barlines.push_back(line);
 }
 
-template<class T>
-T bc::Baritem<T>::sum() const
+
+Barscalar bc::Baritem::sum() const
 {
-	T ssum = 0;
-	for (const barline<T>* l : barlines)
+	Barscalar ssum = 0;
+	for (const barline* l : barlines)
 		ssum += l->len();
 
 	return ssum;
 }
 
-template<>
-void bc::Baritem<uchar>::getBettyNumbers(int* bs)
+void bc::Baritem::getBettyNumbers(int* bs)
 {
 	memset(bs, 0, 256 * sizeof(int));
 
-	for (const barline<uchar>* l : barlines)
+	for (const barline* l : barlines)
 	{
-		for (size_t i = l->start; i < l->end(); ++i)
+		for (size_t i = l->start.data.b1; i < l->end().data.b1; ++i)
 		{
 			++bs[i];
 		}
@@ -51,15 +51,10 @@ void bc::Baritem<uchar>::getBettyNumbers(int* bs)
 }
 
 
-template<class T>
-void bc::Baritem<T>::getBettyNumbers(int* /*bs*/)
-{
-}
 
 
-
-//template<class T>
-//void cloneGraph(bc::barline<T>* old, bc::barline<T>* newone)
+//
+//void cloneGraph(bc::barline* old, bc::barline* newone)
 //{
 //	for (size_t i = 0; i < old->children.size(); i++)
 //	{
@@ -68,11 +63,11 @@ void bc::Baritem<T>::getBettyNumbers(int* /*bs*/)
 //	}
 //}
 
-template<class T>
-bc::Baritem<T>* bc::Baritem<T>::clone() const
+
+bc::Baritem* bc::Baritem::clone() const
 {
-	std::unordered_map<barline<T>*, barline<T>*> oldNew;
-	Baritem<T>* nb = new Baritem<T>(wid);
+	std::unordered_map<barline*, barline*> oldNew;
+	Baritem* nb = new Baritem(wid);
 	nb->barlines.insert(nb->barlines.begin(), barlines.begin(), barlines.end());
 	bool createGraph = false;
 	if ((barlines.size() > 0 && barlines[0]->parent != nullptr) || barlines[0]->children.size() > 0)
@@ -82,7 +77,7 @@ bc::Baritem<T>* bc::Baritem<T>::clone() const
 	{
 		auto* nnew = nb->barlines[i]->clone();
 		if (createGraph)
-			oldNew.insert(std::pair<barline<T>*, barline<T>*>(nb->barlines[i], nnew));
+			oldNew.insert(std::pair<barline*, barline*>(nb->barlines[i], nnew));
 
 		nb->barlines[i] = nnew;
 	}
@@ -100,24 +95,24 @@ bc::Baritem<T>* bc::Baritem<T>::clone() const
 	return nb;
 }
 
-template<class T>
-T bc::Baritem<T>::maxLen() const
+
+Barscalar bc::Baritem::maxLen() const
 {
-	T max = 0;
-	for (const barline<T>* l : barlines)
+	Barscalar max = 0;
+	for (const barline* l : barlines)
 		if (l->len() > max)
 			max = l->len();
 
 	return max;
 }
 
-template<class T>
-void bc::Baritem<T>::relen()
+
+void bc::Baritem::relen()
 {
 	if (barlines.size() == 0)
 		return;
 
-	T mini = barlines[0]->start;
+	Barscalar mini = barlines[0]->start;
 	for (size_t i = 1; i < barlines.size(); ++i)
 		if (barlines[i]->start < mini)
 			mini = barlines[i]->start;
@@ -129,15 +124,15 @@ void bc::Baritem<T>::relen()
 	//std::for_each(arr.begin(), arr.end(), [mini](barline &n) {return n.start - uchar(mini); });
 }
 
-template<class T>
-void bc::Baritem<T>::removePorog(const T porog)
+
+void bc::Baritem::removePorog(const Barscalar porog)
 {
 	if (porog == 0)
 		return;
-	std::vector<barline<T>*> res;
+	std::vector<barline*> res;
 	for (size_t i = 0; i < barlines.size(); i++)
 	{
-		barline<T>* line = barlines[i];
+		barline* line = barlines[i];
 		if (line->len() >= porog)
 			res.push_back(line);
 		else// if (line->isCopy)
@@ -147,8 +142,8 @@ void bc::Baritem<T>::removePorog(const T porog)
 	barlines.insert(barlines.begin(), res.begin(), res.end());
 }
 
-template<class T>
-void bc::Baritem<T>::preprocessBar(const T& porog, bool normalize)
+
+void bc::Baritem::preprocessBar(const Barscalar& porog, bool normalize)
 {
 	this->removePorog(porog);
 
@@ -156,26 +151,40 @@ void bc::Baritem<T>::preprocessBar(const T& porog, bool normalize)
 		this->relen();
 }
 
-template<class T>
-float findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat)
+
+float findCoof(bc::barline* X, bc::barline* Y, bc::CompireStrategy& strat)
 {
-    float maxlen, minlen;
+	const Barscalar &Xst = X->start < X->end() ? X->start : X->end();
+	const Barscalar &Xed = X->start < X->end() ? X->end() : X->start;
+
+	const Barscalar &Yst = Y->start < Y->end() ? Y->start : Y->end();
+	const Barscalar &Yed = Y->start < Y->end() ? Y->end() : Y->start;
+
+
+	float maxlen, minlen;
 	if (strat == bc::CompireStrategy::CommonToSum)
 	{
-		T st = MAX(X->start, Y->start);
-		T ed = MIN(X->end(), Y->end());
-        minlen = static_cast<float>(ed - st);
+		if (Xst == Yst && Xed == Yed)
+			return 1.f;
 
-		st = MIN(X->start, Y->start);
-		ed = MAX(X->end(), Y->end());
-        maxlen = static_cast<float>(ed - st);
+		float st = MAX(Xst, Yst).getAvgFloat();
+		float ed = MIN(Xed, Yed).getAvgFloat();
+		minlen = ed - st;
+
+		st = MIN(Xst, Yst).getAvgFloat();
+		ed = MAX(Xed, Yed).getAvgFloat();
+		maxlen = ed - st;
 	}
 	else if (strat == bc::CompireStrategy::CommonToLen)
 	{
-		T st = MAX(X->start, Y->start);
-		T ed = MIN(X->end(), Y->end());
-        minlen = static_cast<float>(ed - st);
-        maxlen = static_cast<float>(MAX(X->len(), Y->len()));
+		if (Xst == Yst && Xed == Yed)
+			return 1.f;
+
+		// Start всегда меньше end
+		float st = MAX(Xst, Yst).getAvgFloat();
+		float ed = MIN(Xed, Yed).getAvgFloat();
+		minlen = ed - st; // Может быть меньше 0, если воообще не перекасаются
+		maxlen = MAX(X->lenFloat(), Y->lenFloat());
 	}
 	else
 	{
@@ -185,26 +194,27 @@ float findCoof(bc::barline<T>* X, bc::barline<T>* Y, bc::CompireStrategy& strat)
 	if (minlen <= 0 || maxlen <= 0)
 		return -1;
 
+	assert(minlen <= maxlen);
 	return minlen / maxlen;
 }
 
 #include <algorithm>
 
-template<class T>
-void soirBarlens(bc::barlinevector<T>& barl)
+
+void soirBarlens(bc::barlinevector& barl)
 {
-	std::sort(barl.begin(), barl.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
+	std::sort(barl.begin(), barl.end(), [](const bc::barline* a, const bc::barline* b)
 		{
 			return a->len() > b->len();
 		});
 }
 
 
-template<class T>
-float bc::Baritem<T>::compireBestRes(const bc::Baritem<T>* bc, bc::CompireStrategy strat) const
+
+float bc::Baritem::compireBestRes(const bc::Baritem* bc, bc::CompireStrategy strat) const
 {
-	barlinevector<T> Xbarlines = barlines;
-	barlinevector<T> Ybarlines = dynamic_cast<const Baritem<T>*>(bc)->barlines;
+	barlinevector Xbarlines = barlines;
+	barlinevector Ybarlines = dynamic_cast<const Baritem*>(bc)->barlines;
 
 	if (Xbarlines.size() == 0 || Ybarlines.size() == 0)
 		return 0;
@@ -230,7 +240,7 @@ float bc::Baritem<T>::compireBestRes(const bc::Baritem<T>* bc, bc::CompireStrate
 				if (coof > maxCoof)
 				{
 					maxCoof = coof;
-					maxsum = (float)(Xbarlines[i]->len() + Ybarlines[j]->len());
+					maxsum = Xbarlines[i]->len().getAvgFloat() + Ybarlines[j]->len().getAvgFloat();
 					ik = i;
 					jk = j;
 				}
@@ -244,19 +254,19 @@ float bc::Baritem<T>::compireBestRes(const bc::Baritem<T>* bc, bc::CompireStrate
 	return tsum / totalsum;
 }
 
-template<class T>
-float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy strat) const
+
+float bc::Baritem::compireFull(const bc::Barbase* bc, bc::CompireStrategy strat) const
 {
-	barlinevector<T> Xbarlines = barlines;
-	barlinevector<T> Ybarlines = dynamic_cast<const Baritem<T>*>(bc)->barlines;
+	barlinevector Xbarlines = barlines;
+	barlinevector Ybarlines = dynamic_cast<const Baritem*>(bc)->barlines;
 
 	if (Xbarlines.size() == 0 || Ybarlines.size() == 0)
 		return 0;
 
 	float totalsum = 0;
     size_t n = MIN(Xbarlines.size(), Ybarlines.size());
-	soirBarlens<T>(Xbarlines);
-	soirBarlens<T>(Ybarlines);
+	soirBarlens(Xbarlines);
+	soirBarlens(Ybarlines);
 
 	float tcoof = 0.f;
 	for (size_t i = 0; i < n; ++i)
@@ -265,25 +275,25 @@ float bc::Baritem<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy 
 		if (coof < 0)
 			continue;
 
-        float xysum = static_cast<float>(Xbarlines[i]->len() + Ybarlines[i]->len());
+		float xysum = static_cast<float>(Xbarlines[i]->len()) + static_cast<float>(Ybarlines[i]->len());
 		totalsum += xysum;
 		tcoof += xysum * coof;
 	}
-	return totalsum!=0 ? tcoof / totalsum : 0;
+	return totalsum !=0 ? tcoof / totalsum : 0;
 }
 
-template<class T>
-float bc::Baritem<T>::compareOccurrence(const bc::Baritem<T>* bc, bc::CompireStrategy strat) const
+
+float bc::Baritem::compareOccurrence(const bc::Baritem* bc, bc::CompireStrategy strat) const
 {
-	barlinevector<T> Xbarlines = barlines;
-	barlinevector<T> Ybarlines = dynamic_cast<const Baritem<T>*>(bc)->barlines;
+	barlinevector Xbarlines = barlines;
+	barlinevector Ybarlines = dynamic_cast<const Baritem*>(bc)->barlines;
 
 	if (Xbarlines.size() == 0 || Ybarlines.size() == 0)
 		return 0;
 
 	size_t n = static_cast<int>(MIN(Xbarlines.size(), Ybarlines.size()));
-	soirBarlens<T>(Xbarlines);
-	soirBarlens<T>(Ybarlines);
+	soirBarlens(Xbarlines);
+	soirBarlens(Ybarlines);
 
 	float coofsum = 0.f, totalsum = 0.f;
 	for (size_t re = 0; re < n; ++re)
@@ -311,14 +321,14 @@ float bc::Baritem<T>::compareOccurrence(const bc::Baritem<T>* bc, bc::CompireStr
 	return coofsum / totalsum;
 }
 
-template<class T>
-void bc::Baritem<T>::normalize()
+
+void bc::Baritem::normalize()
 {
 	if (barlines.size() == 0)
 		return;
 
-	T mini = barlines[0]->start;
-	T maxi = barlines[0]->end();
+	Barscalar mini = barlines[0]->start;
+	Barscalar maxi = barlines[0]->end();
 	for (size_t i = 1; i < barlines.size(); ++i)
 	{
 		if (barlines[i]->start < mini)
@@ -336,8 +346,8 @@ void bc::Baritem<T>::normalize()
 
 using std::string;
 
-template<class T>
-void bc::Baritem<T>::getJsonObejct(std::string &out)
+
+void bc::Baritem::getJsonObejct(std::string &out)
 {
 	string nl = "\r\n";
 
@@ -347,14 +357,14 @@ void bc::Baritem<T>::getJsonObejct(std::string &out)
 	out += nl + '}';
 }
 
-template<class T>
-void bc::Baritem<T>::getJsonLinesArray(std::string &out)
+
+void bc::Baritem::getJsonLinesArray(std::string &out)
 {
 	string nl = "\r\n";
 
 	out = "[ ";
 
-	for (bc::barline<T> *line : barlines)
+	for (bc::barline *line : barlines)
 	{
 		line->getJsonObject(out);
 		out += ",";
@@ -364,32 +374,32 @@ void bc::Baritem<T>::getJsonLinesArray(std::string &out)
 }
 
 
-template<class T>
-void bc::Baritem<T>::sortByLen()
+
+void bc::Baritem::sortByLen()
 {
-	soirBarlens<T>(barlines);
+	soirBarlens(barlines);
 }
 
-template<class T>
-void bc::Baritem<T>::sortBySize()
+
+void bc::Baritem::sortBySize()
 {
-	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
+	std::sort(barlines.begin(), barlines.end(), [](const bc::barline* a, const bc::barline* b)
 		{
 			return a->matr.size() > b->matr.size();
 		});
 }
 
-template<class T>
-void bc::Baritem<T>::sortByStart()
+
+void bc::Baritem::sortByStart()
 {
-	std::sort(barlines.begin(), barlines.end(), [](const bc::barline<T>* a, const bc::barline<T>* b)
+	std::sort(barlines.begin(), barlines.end(), [](const bc::barline* a, const bc::barline* b)
 		{
 			return a->start > b->start;
 		});
 }
 
-template<class T>
-bc::Baritem<T>::~Baritem()
+
+bc::Baritem::~Baritem()
 {
 	for (auto* bline : barlines)
 	{
@@ -404,16 +414,16 @@ bc::Baritem<T>::~Baritem()
 
 //=======================barcontainer=====================
 
-template<class T>
-bc::Barcontainer<T>::Barcontainer()
+
+bc::Barcontainer::Barcontainer()
 {
 }
 
-template<class T>
-T bc::Barcontainer<T>::sum() const
+
+Barscalar bc::Barcontainer::sum() const
 {
-	T sm = 0;
-	for (const Baritem<T> *it : items)
+	Barscalar sm = 0;
+	for (const Baritem *it : items)
 	{
 		if (it!=nullptr)
 			sm += it->sum();
@@ -421,25 +431,25 @@ T bc::Barcontainer<T>::sum() const
 	return sm;
 }
 
-template<class T>
-void bc::Barcontainer<T>::relen()
+
+void bc::Barcontainer::relen()
 {
-	for (Baritem<T> *it : items)
+	for (Baritem *it : items)
 	{
 		if (it!=nullptr)
 			it->relen();
 	}
 }
 
-template<class T>
-T bc::Barcontainer<T>::maxLen() const
+
+Barscalar bc::Barcontainer::maxLen() const
 {
-	T mx = 0;
-	for (const Baritem<T>* it : items)
+	Barscalar mx = 0;
+	for (const Baritem* it : items)
 	{
 		if (it!=nullptr)
 		{
-			T curm = it->maxLen();
+			Barscalar curm = it->maxLen();
 			if (curm > mx)
 				mx = curm;
 		}
@@ -448,14 +458,14 @@ T bc::Barcontainer<T>::maxLen() const
 	return mx;
 }
 
-template<class T>
-size_t bc::Barcontainer<T>::count()
+
+size_t bc::Barcontainer::count()
 {
 	return items.size();
 }
 
-template<class T>
-bc::Baritem<T>* bc::Barcontainer<T>::getItem(size_t i)
+
+bc::Baritem* bc::Barcontainer::getItem(size_t i)
 {
 	if (items.size() == 0)
 		return nullptr;
@@ -483,8 +493,8 @@ bc::Baritem<T>* bc::Barcontainer<T>::getItem(size_t i)
 //    return items[i];
 //}
 
-template<class T>
-bc::Baritem<T>* bc::Barcontainer<T>::lastItem()
+
+bc::Baritem* bc::Barcontainer::lastItem()
 {
 	if (items.size() == 0)
 		return nullptr;
@@ -492,47 +502,47 @@ bc::Baritem<T>* bc::Barcontainer<T>::lastItem()
 	return items[items.size() - 1];
 }
 
-template<class T>
-void bc::Barcontainer<T>::addItem(bc::Baritem<T>* item)
+
+void bc::Barcontainer::addItem(bc::Baritem* item)
 {
 	items.push_back(item);
 }
 
-template<class T>
-void bc::Barcontainer<T>::removePorog(const T porog)
+
+void bc::Barcontainer::removePorog(const Barscalar porog)
 {
-	for (Baritem<T> *it : items)
+	for (Baritem *it : items)
 	{
 		if (it!=nullptr)
 			it->removePorog(porog);
 	}
 }
 
-template<class T>
-void bc::Barcontainer<T>::preprocessBar(const T& porog, bool normalize)
+
+void bc::Barcontainer::preprocessBar(const Barscalar& porog, bool normalize)
 {
-	for (Baritem<T> *it : items)
+	for (Baritem *it : items)
 	{
 		if (it!=nullptr)
 			it->preprocessBar(porog, normalize);
 	}
 }
 
-template<class T>
-bc::Barbase<T>* bc::Barcontainer<T>::clone() const
-{
-	Barcontainer* newBar = new Barcontainer<T>();
 
-	for (Baritem<T>* it : items)
+bc::Barbase* bc::Barcontainer::clone() const
+{
+	Barcontainer* newBar = new Barcontainer();
+
+	for (Baritem* it : items)
 	{
 		if (it!=nullptr)
-			newBar->items.push_back(new Baritem<T>(*it));
+			newBar->items.push_back(new Baritem(*it));
 	}
 	return newBar;
 }
 
-template<class T>
-float bc::Barcontainer<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStrategy strat) const
+
+float bc::Barcontainer::compireFull(const bc::Barbase* bc, bc::CompireStrategy strat) const
 {
 	const Barcontainer* bcr = dynamic_cast<const Barcontainer*>(bc);
     float res = 0;
@@ -547,8 +557,8 @@ float bc::Barcontainer<T>::compireFull(const bc::Barbase<T>* bc, bc::CompireStra
 }
 
 
-template<class T>
-float bc::Barcontainer<T>::compireBest(const bc::Baritem<T>* bc, bc::CompireStrategy strat) const
+
+float bc::Barcontainer::compireBest(const bc::Baritem* bc, bc::CompireStrategy strat) const
 {
 	float res = 0;
 	for (size_t i = 0; i < items.size(); i++)
@@ -561,8 +571,8 @@ float bc::Barcontainer<T>::compireBest(const bc::Baritem<T>* bc, bc::CompireStra
 }
 
 
-template<class T>
-bc::Barcontainer<T>::Barcontainer::~Barcontainer()
+
+bc::Barcontainer::Barcontainer::~Barcontainer()
 {
 	for (size_t i = 0; i < items.size(); ++i)
 	{
@@ -572,24 +582,71 @@ bc::Barcontainer<T>::Barcontainer::~Barcontainer()
 	items.clear();
 }
 
-INIT_TEMPLATE_TYPE(bc::Barbase)
-INIT_TEMPLATE_TYPE(bc::Baritem)
-INIT_TEMPLATE_TYPE(bc::Barcontainer)
 
 #ifdef USE_OPENCV
 
 
 //-------------BARIMG
-template<>
-barvec3b& bc::BarMat<barvec3b>::get(int x, int y) const
+
+Barscalar bc::BarMat::get(int x, int y) const
 {
-	return *reinterpret_cast<barvec3b*>(&mat.at<cv::Vec3b>(y, x));
+	if (type == BarType::BYTE8_3)
+	{
+		cv::Vec3b v = mat.at<cv::Vec3b>(y, x);
+		return Barscalar(v.val[0], v.val[1], v.val[2]);
+	}
+	else
+	{
+		return Barscalar(mat.at<uchar>(y, x), BarType::BYTE8_1);
+	}
 }
 
-template<class T>
-T& bc::BarMat<T>::get(int x, int y) const
-{
-	return mat.at<T>(y, x);
-}
 #endif // USE_OPENCV
 
+
+#include "barImg.h"
+
+bc::BarImg& bc::BarImg::operator+(const Barscalar& v)
+{
+	BarImg* box = this->getCopy();
+
+	//box->addToMat(v);
+	assert(false);
+
+	return *box;
+}
+
+//// Overload + operator to add two Box objects.
+bc::BarImg& bc::BarImg::operator-(const Barscalar& v)
+{
+	bc::BarImg* box = this->getCopy();
+
+	assert(false);
+	for (size_t i = 0; i < box->length(); ++i)
+	{
+		Barscalar val = box->getLiner(i);
+		val -= v;
+		assert(box->getLiner(i) == val);
+	}
+	return *box;
+}
+//
+//bc::BarImg bc::BarImg::operator+(const Barscalar& c1, BarImg& c2)
+//{
+//	// use the Cents constructor and operator+(int, int)
+//	// we can access m_cents directly because this is a friend function
+//	BarImg nimg = c2;
+//	nimg.addToMat(c1);
+//	return nimg;
+//}
+//
+//
+//bc::BarImg bc::BarImg::operator-(const Barscalar& c1, const BarImg& c2)
+//{
+//	// use the Cents constructor and operator+(int, int)
+//	// we can access m_cents directly because this is a friend function
+//	BarImg ret(1, 1);
+//	ret.assignCopyOf(c2);
+//	ret.minusFrom(c1);
+//	return ret;
+//}

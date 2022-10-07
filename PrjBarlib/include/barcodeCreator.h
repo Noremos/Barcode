@@ -8,78 +8,63 @@
 
 #include <unordered_map>
 
-#define COMPP Component<T>*
-#define HOLEP Hole<T>*
+#define COMPP Component*
+#define HOLEP Hole*
 
 #include "include_py.h"
 #include "include_cv.h"
 
 namespace bc {
 
-	// # - позиции; * - текущий поинт
+	// # - пїЅпїЅпїЅпїЅпїЅпїЅпїЅ; * - пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	// 00#
 	// 0*#
 	// 0##
 	enum nextPoz : char
 	{
-		topRight = 0,
+		//topRight = 0,
 		middleRight = 1,
-		downRight = 2,
-		downCur = 3
+		bottomRight = 2,
+
+		//topCenter,
+		//middleCenter,
+		bottomCenter,
+
+		//topLeft,
+		//middleLeft,
+		bottomLeft
 	};
 	struct indexCov
 	{
 		poidex offset = 0;
 		float dist = 0;
 		nextPoz poz;
-		indexCov(uint _offset = 0, float _dist = 0, nextPoz _vert = topRight) : offset(_offset), dist(_dist), poz(_vert)
+		indexCov(uint _offset = 0, float _dist = 0, nextPoz _vert = middleRight) : offset(_offset), dist(_dist), poz(_vert)
 		{}
 
 		bc::point getNextPoint(const bc::point& p) const
 		{
 			switch (poz)
 			{
-			case topRight:
-				return bc::point(p.x + 1, p.y - 1);
 			case middleRight:
 				return bc::point(p.x + 1, p.y);
-			case downRight:
+			case bottomRight:
 				return bc::point(p.x + 1, p.y + 1);
-			case downCur:
+			case bottomCenter:
 				return bc::point(p.x, p.y + 1);
+			case bottomLeft:
+				return bc::point(p.x - 1, p.y + 1);
 			}
-		}
-
-		inline static float safeDiffSqr(const float& a, const float& b)
-		{
-			return a > b ? ((a - b) * (a - b)) : ((b - a) * (b - a));
-		}
-
-		template<class TK, uint N>
-		inline static float val_distance(const barVector<TK, N>& fisrt, const barVector<TK, N>& second)
-		{
-			float dist = 0;
-			for (uint i = 0; i < N; ++i)
-			{
-				dist += safeDiffSqr(static_cast<float>(second[i]), static_cast<float>(fisrt[i]));
-			}
-			return sqrtf(dist);
-		}
-
-		template<class TK>
-		inline static float val_distance(const TK& a, const TK& b)
-		{
-			return a > b ? (a - b) : (b - a);
 		}
 	};
 
-	template<class T>
-	using Include = Component<T>*;
+	
+	using Include = Component*;
 
-	template<class T>
+	
 	class EXPORT BarcodeCreator
 	{
-		typedef bc::DatagridProvider<T> bcBarImg;
+		typedef bc::DatagridProvider bcBarImg;
 
 		bool originalImg = true;
 		std::vector<COMPP> components;
@@ -88,11 +73,11 @@ namespace bc {
 		std::vector<cv::Vec3b> colors;
 #endif
 
-		BarConstructor<T> settings;
+		BarConstructor settings;
 		bool skipAddPointsToParent = false;
 
-		Include<T>* included = nullptr;
-		const DatagridProvider<T>* workingImg = nullptr;
+		Include* included = nullptr;
+		const DatagridProvider* workingImg = nullptr;
 		void setWorkingImg(const bcBarImg* newWI)
 		{
 			if (workingImg != nullptr && needDelImg)
@@ -102,7 +87,7 @@ namespace bc {
 
 			if (!settings.stepPorog.isCached || !settings.maxLen.isCached)
 			{
-				T maxVal, minVal;
+				Barscalar maxVal, minVal;
 				workingImg->maxAndMin(minVal, maxVal);
 
 				if (!settings.stepPorog.isCached)
@@ -113,44 +98,48 @@ namespace bc {
 			}
 		}
 
+		BarType type;
+
 		bool needDelImg = false;
-		T curbright;
+		Barscalar curbright;
 		poidex curpoindex;
 		uint curIndexInSortedArr;
 		point curpix;
 		int wid;
 		int hei;
-		T sourceMax;
-		T sourceMin;
+		//Barscalar sourceMax;
+		//Barscalar sourceMin;
 		// int lastB;
-		friend class Component<T>;
-		friend class Hole<T>;
-		//		friend struct BarRoot<T>;
-		friend class Baritem<T>;
+		friend class Component;
+		friend class Hole;
+		//		friend struct BarRoot;
+		friend class Baritem;
 
+		size_t processCount = 0;
 		size_t totalSize = 0;
 		poidex* sortedArr = nullptr;
+		bc::BarImg drawimg;
 
 		//***************************************************
 		constexpr bool IS_OUT_OF_REG(int x, int y)
 		{
 			return x < 0 || y < 0 || x >= wid || y >= hei;
 		}
-		int GETPOFF(const point& p) const
+		poidex GETPOFF(const point& p) const
 		{
 			return wid * p.y + p.x;
 		}
 
-		int GETOFF(uint x, uint y) const {
+		poidex GETOFF(uint x, uint y) const {
 			return wid * y + x;
 		}
 
-		constexpr bool GETDIFF(T a, T b) const
+		bool GETDIFF(const Barscalar &a, const Barscalar& b) const
 		{
 			return (a > b ? a - b : b - a) <= this->settings.getMaxStepPorog();
 		}
 
-		point getPoint(uint i) const
+		point getPoint(poidex i) const
 		{
 			return point(i % wid, i / wid);
 		}
@@ -163,7 +152,7 @@ namespace bc {
 			return included[ind] != nullptr;
 		}
 
-		inline void setInclude(poidex ind, COMPP comp)
+		inline void setInclude(const poidex ind, COMPP comp)
 		{
 			included[ind] = comp;
 		}
@@ -198,6 +187,7 @@ namespace bc {
 		bool checkCloserB1();
 
 
+		int sortOrtoPixels(bc::ProcType type, int rtoe = 0, int off = 0, int offDop = 0);
 		void sortPixels(bc::ProcType type);
 
 		void clearIncluded();
@@ -207,34 +197,27 @@ namespace bc {
 		void VISUAL_DEBUG_COMP();
 
 
-		void init(const bc::DatagridProvider<T>* src, ProcType& type, ComponentType& comp);
+		void init(const bc::DatagridProvider* src, ProcType& type, ComponentType& comp);
 
-		void processComp(Barcontainer<T>* item = nullptr);
-		void processHole(Barcontainer<T>* item = nullptr);
-		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer<T>* item = nullptr);
+		void processComp(Barcontainer* item = nullptr);
+		void processHole(Barcontainer* item = nullptr);
+		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
 
-		void processTypeF(barstruct& str, const bc::DatagridProvider<T>* img, Barcontainer<T>* item = nullptr);
+		void processTypeF(barstruct& str, const bc::DatagridProvider* img, Barcontainer* item = nullptr);
 
-		void processFULL(barstruct& str, const bc::DatagridProvider<T>* img, bc::Barcontainer<T>* item);
-		void addItemToCont(Barcontainer<T>* item);
+		void processFULL(barstruct& str, const bc::DatagridProvider* img, bc::Barcontainer* item);
+		void addItemToCont(Barcontainer* item);
 
-		void computeNdBarcode(Baritem<T>* lines, int n);
+		void computeNdBarcode(Baritem* lines, int n);
 
 	public:
-		BarcodeCreator()
-		{
-		}
-		BarcodeCreator(const BarcodeCreator&)
-		{
 
-		}
-
-		bc::Barcontainer<T>* createBarcode(const bc::DatagridProvider<T>* img, const BarConstructor<T>& structure);
+		bc::Barcontainer* createBarcode(const bc::DatagridProvider* img, const BarConstructor& structure);
 		/*{
 			this->settings = structure;
 			settings.checkCorrect();
 
-			Barcontainer<T>* cont = new Barcontainer<T>();
+			Barcontainer* cont = new Barcontainer();
 
 			for (const auto& it : settings.structure)
 			{
@@ -243,7 +226,7 @@ namespace bc {
 			return cont;
 		}*/
 
-		bc::Barcontainer<T>* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
+		bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 
 
 		virtual ~BarcodeCreator()
@@ -256,20 +239,23 @@ namespace bc {
 
 #ifdef _PYD
 
-		bc::Barcontainer<T>* createBarcode(bn::ndarray& img, bc::BarConstructor<T>& structure);
+		bc::Barcontainer* createBarcode(bn::ndarray& img, bc::BarConstructor& structure);
 #endif // _PYD
 
 		///////////GEOMETRY
 	private:
-		void processCompByRadius(Barcontainer<T>* item);
-		
+		void processCompByRadius(Barcontainer* item);
+		void processCompByStepRadius(Barcontainer* item);
+		void processByValueRadius(Barcontainer* item);
+
+		void processRadar(const indexCov& val, bool allowAttach);
 
 
 		std::unique_ptr<indexCov> geometrySortedArr;
 	};
 
-	template<class T>
-	static Barcontainer<T>* createBarcode(bc::BarType type, const bc::DatagridProvider<T>* img, BarConstructor<T>& _struct)
+	/*
+	static Barcontainer* createBarcode(bc::BarType type, const bc::DatagridProvider* img, BarConstructor& _struct)
 	{
 		switch (type)
 		{
@@ -301,5 +287,5 @@ namespace bc {
 		default:
 			return nullptr;
 		}
-	}
+	}*/
 }

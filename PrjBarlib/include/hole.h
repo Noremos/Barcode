@@ -3,18 +3,17 @@
 namespace bc
 {
 
-template<class T>
-class Hole : public Component<T>
+
+class Hole : public Component
 {
-    bool isOutside = false;
     int index = 0;
 public:
-    T start, end;
+    Barscalar start, end;
     bool isValid = false;
     pmap crossHoles;
 
-    Hole(point p1, point p2, point p3, BarcodeCreator<T>* factory);
-    Hole(point p1, BarcodeCreator<T>* factory);
+    Hole(point p1, point p2, point p3, BarcodeCreator* factory);
+    Hole(point p1, BarcodeCreator* factory);
     ~Hole();
 
 //        void setOutside(bool b) {
@@ -25,20 +24,14 @@ public:
 //    void addAround();
     bool tryAdd(const point &p);
     //add withot checks. NOT SAFE. not add if valid
-    void add(const point &p);
     //************************************************************************//
-    bool checkValid(point p);
+    bool checkValid(const bc::point& p);
     //добовляет точку в дыру, если она там не содержится. Возвращает
 
     //явяется ли точка точкой соединения двух дыр
-    bool findCross(point p, Hole<T>* hole);
-    bool getIsOutside() const;
-    void setShadowOutside(bool outside);
-    void setOutside();
-    void kill();
-
+    bool findCross(point p, Hole* hole);
     bool isContain(int x, int y);
-    bool isContain(bc::point p);
+    bool isContain(const bc::point& p);
 };
 
 }
