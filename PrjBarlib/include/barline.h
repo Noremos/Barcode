@@ -625,7 +625,7 @@ namespace bc
 				lines.push_back(this->clone());
 			}
 
-			for (int i = 0, total = children.size(); i < total; ++i)
+			for (size_t i = 0, total = children.size(); i < total; ++i)
 			{
 				children[i]->getChilredAsList(lines, true);
 			}

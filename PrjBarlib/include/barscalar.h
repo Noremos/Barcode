@@ -57,20 +57,20 @@ enum class BarType : char
 	NONE = 0,
 	BYTE8_1,
 	BYTE8_3,
-	//FLOAT32_1
+	FLOAT32_1
 };
 
 class EXPORT Barscalar
 {
-	union BarValue
+	union BarData
 	{
 		unsigned char b1;
 		unsigned char b3[3];
+		float f;
 	};
 
-
 public:
-	BarValue data;
+	BarData data;
 	BarType type;
 	// Overloaded assignment
 
@@ -80,7 +80,8 @@ public:
 		type = BarType::BYTE8_1;
 	}
 
-	Barscalar(uchar i, BarType type)
+	template<typename T>
+	Barscalar(T i, BarType type)
 	{
 		this->type = type;
 		switch (type)
@@ -93,6 +94,9 @@ public:
 			data.b3[1] = i;
 			data.b3[2] = i;
 			break;
+		case BarType::FLOAT32_1:
+			data.f = i;
+			assert(false);
 		default:
 			data.b1 = 0;
 			break;
@@ -109,7 +113,7 @@ public:
 
 	Barscalar(const Barscalar& R)
 	{
-		memcpy(&data, &R.data, sizeof(BarValue));
+		memcpy(&data, &R.data, sizeof(BarData));
 		type = R.type;
 	}
 
@@ -117,20 +121,6 @@ public:
 	{
 		return data.b1;
 	}
-
-	//float getProc(const Barscalar& r)
-	//{
-	//	switch (type)
-	//	{
-	//	case BarType::BYTE8_1:
-	//		return static_cast<float>(data.b1) / r.data.b1;
-	//	case BarType::BYTE8_3:
-	//		out = "(" + std::to_string(data.b3[0]) + "," + std::to_string(data.b3[1]) + "," + std::to_string(data.b3[2]) + ")";
-	//	default:
-	//		break;
-	//	}
-	//	return out;
-	//}
 
 	std::string text(bool asArray = false)
 	{
@@ -145,6 +135,8 @@ public:
 			else
 				out = "(" + std::to_string(data.b3[0]) + "," + std::to_string(data.b3[1]) + "," + std::to_string(data.b3[2]) + ")";
 			break;
+		case BarType::FLOAT32_1:
+			return std::to_string(data.f);
 		default:
 			break;
 		}
@@ -162,7 +154,7 @@ public:
 		case BarType::BYTE8_3:
 			return cv::Vec3b(data.b3[0], data.b3[1], data.b3[2]);
 		default:
-			break;
+			return cv::Vec3b();
 		}
 	}
 #endif
@@ -175,12 +167,12 @@ public:
 		{
 		case BarType::BYTE8_1:
 			return  bp::make_tuple(data.b1);
-			break;
 		case BarType::BYTE8_3:
 			return bp::make_tuple(data.b3[0], data.b3[1], data.b3[2]);
-			break;
+		case BarType::FLOAT_32_1:
+			return bp::make_tuple(data.f);
 		default:
-			break;
+			return bp::make_tuple(0);
 		}
 	}
 #endif
@@ -192,8 +184,8 @@ private:
 		{
 		case BarType::BYTE8_1:
 			return data.b1 > X.data.b1;
-			break;
 		case BarType::BYTE8_3:
+		case BarType::FLOAT32_1:
 		{
 			float a = this->getAvgFloat();
 			float b = X.getAvgFloat();
@@ -205,23 +197,59 @@ private:
 		}
 	}
 
-
 	bool equal(const Barscalar& X) const
 	{
 		switch (type)
 		{
 		case BarType::BYTE8_1:
-			return data.b1 == X.data.b1;
+		{
+			switch (X.type)
+			{
+			case BarType::BYTE8_1:
+				return this->data.b1 == X.data.b1;
+			case BarType::BYTE8_3:
+				return this->data.b1 == X.data.b3[0] && this->data.b1 == X.data.b3[1] && this->data.b1 == X.data.b3[2];
+			case BarType::FLOAT32_1:
+				return this->data.f == static_cast<uchar>(X.data.f);
+			default:
+				assert(false);
+				return false;
+			}
+		}
 		case BarType::BYTE8_3:
 		{
-			if (X.type == BarType::BYTE8_3)
+			switch (X.type)
 			{
-				return this->data.b3[0] == X.data.b3[0] && this->data.b3[1] == X.data.b3[1] && this->data.b3[2] == X.data.b3[2];
-			}
-			else
+			case BarType::BYTE8_1:
 				return this->data.b3[0] == X.data.b1 && this->data.b3[1] == X.data.b1 && this->data.b3[2] == X.data.b1;
-
+			case BarType::BYTE8_3:
+				return this->data.b3[0] == X.data.b3[0] && this->data.b3[1] == X.data.b3[1] && this->data.b3[2] == X.data.b3[2];
+			case BarType::FLOAT32_1:
+			{
+				uchar xf = static_cast<uchar>(X.data.f);
+				return this->data.b3[0] == xf && this->data.b3[1] == xf && this->data.b3[2] == xf;
+			}
+			default:
+				assert(false);
+				return false;
+			}
 		}
+		case BarType::FLOAT32_1:
+			switch (X.type)
+			{
+			case BarType::BYTE8_1:
+				return this->data.b1 == static_cast<float>(X.data.b1);
+			case BarType::BYTE8_3:
+			{
+				uchar xf = X.data.f;
+				return xf == static_cast<float>(X.data.b3[0]) && xf == static_cast<float>(X.data.b3[1]) && xf == static_cast<float>(X.data.b3[2]);
+			}
+			case BarType::FLOAT32_1:
+				return this->data.f == X.data.f;
+			default:
+				assert(false);
+				return false;
+			}
 		default:
 			assert(false);
 			return false;
@@ -235,6 +263,7 @@ private:
 		case BarType::BYTE8_1:
 			return data.b1 >= X.data.b1;
 		case BarType::BYTE8_3:
+		case BarType::FLOAT32_1:
 		{
 			float a = this->getAvgFloat();
 			float b = X.getAvgFloat();
@@ -246,15 +275,15 @@ private:
 		}
 	}
 
-	// int
-
-	bool more(int& X) const
+	template<typename T>
+	bool more(T X) const
 	{
 		switch (type)
 		{
 		case BarType::BYTE8_1:
 			return data.b1 > X;
 		case BarType::BYTE8_3:
+		case BarType::FLOAT32_1:
 		{
 			float a = this->getAvgFloat();
 			return (a > X);
@@ -265,14 +294,15 @@ private:
 		}
 	}
 
-
-	bool equal(int X) const
+	template<typename T>
+	bool equal(T X) const
 	{
 		switch (type)
 		{
 		case BarType::BYTE8_1:
 			return data.b1 == X;
 		case BarType::BYTE8_3:
+		case BarType::FLOAT32_1:
 		{
 			float a = this->getAvgFloat();
 			return a == X;
@@ -283,67 +313,15 @@ private:
 		}
 	}
 
-	bool more_equal(int& X) const
+	template<typename T>
+	bool more_equal(T X) const
 	{
 		switch (type)
 		{
 		case BarType::BYTE8_1:
 			return data.b1 >= X;
 		case BarType::BYTE8_3:
-		{
-			float a = this->getAvgFloat();
-			return (a >= X);
-		}
-		default:
-			assert(false);
-			return false;
-		}
-	}
-
-	// float
-
-	bool more(float& X) const
-	{
-		switch (type)
-		{
-		case BarType::BYTE8_1:
-			return data.b1 > X;
-		case BarType::BYTE8_3:
-		{
-			float a = this->getAvgFloat();
-			return (a > X);
-		}
-		default:
-			assert(false);
-			return false;
-		}
-	}
-
-
-	bool equal(float X) const
-	{
-		switch (type)
-		{
-		case BarType::BYTE8_1:
-			return data.b1 == X;
-		case BarType::BYTE8_3:
-		{
-			float a = this->getAvgFloat();
-			return a == X;
-		}
-		default:
-			assert(false);
-			return false;
-		}
-	}
-
-	bool more_equal(float& X) const
-	{
-		switch (type)
-		{
-		case BarType::BYTE8_1:
-			return data.b1 >= X;
-		case BarType::BYTE8_3:
+		case BarType::FLOAT32_1:
 		{
 			float a = this->getAvgFloat();
 			return (a >= X);
@@ -357,11 +335,13 @@ private:
 public:
 	float val_div(const Barscalar &X) const
 	{
+		assert(X.type == type);
 		switch (type)
 		{
 		case BarType::BYTE8_1:
 			return static_cast<float>(data.b1) / X.data.b1;
-		case BarType::BYTE8_3: {
+		case BarType::BYTE8_3:
+		{
 			float res = 0.f;
 			for (char i = 0; i < 3; ++i)
 			{
@@ -369,6 +349,8 @@ public:
 			}
 			return res / 3;
 		}
+		case BarType::FLOAT32_1:
+			return static_cast<float>(data.f) / X.data.f;
 		default:
 			assert(false);
 			break;
@@ -584,45 +566,24 @@ public:
 	//		}
 	//	}
 
-	Barscalar& operator= (const uchar fraction)
+	template<typename T>
+	Barscalar& operator= (const T fraction)
 	{
-		return *this;
-	}
-
-	Barscalar& operator= (const int fraction)
-	{
-
 		switch (type)
 		{
 		case BarType::BYTE8_1:
 			data.b1 = fraction;
 			break;
 		case BarType::BYTE8_3:
-		default:
 			for (char i = 0; i < 3; ++i)
-			{
 				data.b3[i] = fraction;
-			}
-		}
-
-		return *this;
-	}
-
-	Barscalar& operator= (const float fraction)
-	{
-		switch (type)
-		{
-		case BarType::BYTE8_1:
-			data.b1 = fraction;
 			break;
-		case BarType::BYTE8_3:
+		case BarType::FLOAT32_1:
+			data.f = fraction;
+			break;
 		default:
-			for (char i = 0; i < 3; ++i)
-			{
-				data.b3[i] = static_cast<uchar>(fraction);
-			}
+			assert(false);
 		}
-
 		return *this;
 	}
 
@@ -632,21 +593,32 @@ public:
 		switch (type)
 		{
 		case BarType::BYTE8_1:
-			data.b1 = fraction.type == BarType::BYTE8_1 ? fraction.data.b1 : fraction.getAvgUchar();
+			data.b1 = fraction.getAvgUchar();
 			break;
 		case BarType::BYTE8_3:
+			switch (fraction.type)
+			{
+				case BarType::BYTE8_1:
+					for (char i = 0; i < 3; ++i)
+						data.b3[i] = fraction.data.b1;
+					break;
+				case BarType::BYTE8_3:
+					for (char i = 0; i < 3; ++i)
+						data.b3[i] = fraction.data.b3[i];
+					break;
+				case BarType::FLOAT32_1:
+					for (char i = 0; i < 3; ++i)
+						data.b3[i] = fraction.data.f;
+					break;
+				default:
+					assert(false);
+			}
+			break;
+		case BarType::FLOAT32_1:
+			data.f = fraction.getAvgFloat();
+			break;
 		default:
-			if (fraction.type == BarType::BYTE8_3)
-			{
-
-				for (char i = 0; i < 3; ++i)
-					data.b3[i] = fraction.data.b3[i];
-			}
-			else
-			{
-				for (char i = 0; i < 3; ++i)
-					data.b3[i] = fraction.data.b1;
-			}
+			assert(false);
 		}
 
 		return *this;
@@ -654,21 +626,43 @@ public:
 
 	inline float getAvgFloat() const
 	{
-		if (type == BarType::BYTE8_3)
+		switch (type)
 		{
+		case BarType::BYTE8_1:
+			return static_cast<float>(data.b1);
+		case BarType::BYTE8_3:
 			return ((float)data.b3[0] + (float)data.b3[1] + (float)data.b3[2]) / 3.f;
+		case BarType::FLOAT32_1:
+			return data.f;
+		default:
+			assert(false);
+			return 0;
 		}
-		else
-			return data.b1;
 	}
 
-	inline float getAvgUchar() const
+	inline uchar getAvgUchar() const
 	{
-		return static_cast<uchar>(getAvgFloat());
+		switch (type)
+		{
+		case BarType::BYTE8_1:
+			return data.b1;
+		case BarType::BYTE8_3:
+			return ((int)data.b3[0] + (int)data.b3[1] + (int)data.b3[2]) / 3;
+		case BarType::FLOAT32_1:
+			return static_cast<uchar>(data.f);
+		default:
+			assert(false);
+			return 0;
+		}
 	}
 
 private:
 	float difMax(uchar a, uchar b) const
+	{
+		return static_cast<float>(a > b ? a - b : b - a);
+	}
+
+	float difMax(float a, float b) const
 	{
 		return static_cast<float>(a > b ? a - b : b - a);
 	}
@@ -680,18 +674,26 @@ private:
 public:
 	float val_distance(const Barscalar& R) const
 	{
-		if (type == BarType::BYTE8_3)
+		assert(type == R.type);
+
+		switch (type)
 		{
-			assert(R.type == BarType::BYTE8_3);
+		case BarType::BYTE8_1:
+			return difMax(data.b1, R.data.b1);
+		case BarType::BYTE8_3:
+		{
 			float res = 0;
 			for (char i = 0; i < 3; i++)
-			{
 				res += sp(difMax(data.b3[i], R.data.b3[i]));
-			}
+
 			return sqrtf(res);
 		}
-		else
-			return difMax(data.b1, R.data.b1);
+		case BarType::FLOAT32_1:
+			return difMax(data.f, R.data.f);
+		default:
+			assert(false);
+			return 0;
+		}
 	}
 
 	explicit operator int() const
@@ -701,7 +703,7 @@ public:
 
 	explicit operator uchar() const
 	{
-		return (uchar)getAvgFloat();
+		return getAvgUchar();
 	}
 
 	explicit operator float() const
@@ -709,7 +711,8 @@ public:
 		return getAvgFloat();
 	}
 
-	auto& operator+=(const uchar R)
+	template<typename T>
+	auto& operator+=(const T R)
 	{
 		switch (type)
 		{
@@ -717,11 +720,14 @@ public:
 			data.b1 += R;
 			break;
 		case BarType::BYTE8_3:
-		default:
 			for (char i = 0; i < 3; ++i)
-			{
 				data.b3[i] += R;
-			}
+			break;
+		case BarType::FLOAT32_1:
+			data.f += R;
+			break;
+		default:
+			assert(false);
 		}
 
 		return *this;
@@ -729,31 +735,45 @@ public:
 
 	auto& operator+=(const Barscalar& R)
 	{
-		if (type == BarType::BYTE8_3)
+		switch (type)
 		{
-			if (R.type == BarType::BYTE8_3)
+		case BarType::BYTE8_1:
+			data.b1 += R.getAvgUchar();
+			break;
+		case BarType::BYTE8_3:
+		{
+			switch (type)
 			{
-				data.b3[0] += R.data.b3[0];
-				data.b3[1] += R.data.b3[1];
-				data.b3[2] += R.data.b3[2];
+			case BarType::BYTE8_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] += R.data.b1;
+				break;
+			case BarType::BYTE8_3:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] += R.data.b3[i];
+				break;
+			case BarType::FLOAT32_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] += R.data.f;
+				break;
+			default:
+				assert(false);
 			}
-			else
-			{
-				data.b3[0] += R.data.b1;
-				data.b3[1] += R.data.b1;
-				data.b3[2] += R.data.b1;
-			}
+			break;
 		}
-		else
-		{
-			data.b1 += static_cast<uchar>(R.getAvgFloat());
+		case BarType::FLOAT32_1:
+			data.f += R.getAvgFloat();
+			break;
+		default:
+			assert(false);
 		}
 
 		return *this;
 	}
 
 
-	auto& operator-=(const uchar R)
+	template<typename T>
+	auto& operator-=(const T R)
 	{
 		switch (type)
 		{
@@ -761,43 +781,75 @@ public:
 			data.b1 -= R;
 			break;
 		case BarType::BYTE8_3:
-		default:
-			for (char i = 0; i < 3; ++i)
+		{
+			switch (type)
 			{
-				data.b3[i] -= R;
+			case BarType::BYTE8_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] -= R;
+				break;
+			case BarType::BYTE8_3:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] -= R;
+				break;
+			case BarType::FLOAT32_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] -= R;
+				break;
+			default:
+				assert(false);
 			}
+			break;
 		}
-
+		case BarType::FLOAT32_1:
+			data.f -= R;
+			break;
+		default:
+			assert(false);
+		}
 		return *this;
 	}
 
 	auto& operator-=(const Barscalar& R)
 	{
-		if (type == BarType::BYTE8_3)
+		switch (type)
 		{
-			if (R.type == BarType::BYTE8_3)
+		case BarType::BYTE8_1:
+			data.b1 -= R.getAvgUchar();
+			break;
+		case BarType::BYTE8_3:
+		{
+			switch (type)
 			{
-
-				data.b3[0] -= R.data.b3[0];
-				data.b3[1] -= R.data.b3[1];
-				data.b3[2] -= R.data.b3[2];
+			case BarType::BYTE8_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] -= R.data.b1;
+				break;
+			case BarType::BYTE8_3:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] -= R.data.b3[i];
+				break;
+			case BarType::FLOAT32_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] -= R.data.f;
+				break;
+			default:
+				assert(false);
 			}
-			else
-			{
-				data.b3[0] -= R.data.b1;
-				data.b3[1] -= R.data.b1;
-				data.b3[2] -= R.data.b1;
-			}
+			break;
 		}
-		else
-		{
-			data.b1 -= static_cast<uchar>(R.getAvgFloat());
+		case BarType::FLOAT32_1:
+			data.f -= R.getAvgFloat();
+			break;
+		default:
+			assert(false);
 		}
 
 		return *this;
 	}
 
-	auto& operator*=(const uchar R)
+	template<typename T>
+	auto& operator*=(T R)
 	{
 		switch (type)
 		{
@@ -805,11 +857,11 @@ public:
 			data.b1 *= R;
 			break;
 		case BarType::BYTE8_3:
-		default:
 			for (char i = 0; i < 3; ++i)
-			{
 				data.b3[i] *= R;
-			}
+			break;
+		default:
+			data.f *= R;
 		}
 
 		return *this;
@@ -817,30 +869,44 @@ public:
 
 	auto& operator*=(const Barscalar& R)
 	{
-		if (type == BarType::BYTE8_3)
+		switch (type)
 		{
-			if (R.type == BarType::BYTE8_3)
+		case BarType::BYTE8_1:
+			data.b1 *= R.getAvgUchar();
+			break;
+		case BarType::BYTE8_3:
+		{
+			switch (type)
 			{
-				data.b3[0] *= R.data.b3[0];
-				data.b3[1] *= R.data.b3[1];
-				data.b3[2] *= R.data.b3[2];
+			case BarType::BYTE8_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] *= R.data.b1;
+				break;
+			case BarType::BYTE8_3:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] *= R.data.b3[i];
+				break;
+			case BarType::FLOAT32_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] *= R.data.f;
+				break;
+			default:
+				assert(false);
 			}
-			else
-			{
-				data.b3[0] *= R.data.b1;
-				data.b3[1] *= R.data.b1;
-				data.b3[2] *= R.data.b1;
-			}
+			break;
 		}
-		else
-		{
-			data.b1 *= static_cast<uchar>(R.getAvgFloat());
+		case BarType::FLOAT32_1:
+			data.f *= R.getAvgFloat();
+			break;
+		default:
+			assert(false);
 		}
 
 		return *this;
 	}
 
-	auto& operator/=(const uchar R)
+	template<typename T>
+	auto& operator/=(const T R)
 	{
 		switch (type)
 		{
@@ -848,42 +914,76 @@ public:
 			data.b1 /= R;
 			break;
 		case BarType::BYTE8_3:
-		default:
-			for (char i = 0; i < 3; ++i)
+		{
+			switch (type)
 			{
-				data.b3[i] /= R;
+			case BarType::BYTE8_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] /= R;
+				break;
+			case BarType::BYTE8_3:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] /= R;
+				break;
+			case BarType::FLOAT32_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] /= R;
+				break;
+			default:
+				assert(false);
 			}
+			break;
 		}
-
+		case BarType::FLOAT32_1:
+			data.f /= R;
+			break;
+		default:
+			assert(false);
+		}
 		return *this;
 	}
 
 	auto& operator/=(const Barscalar& R)
 	{
-		if (type == BarType::BYTE8_3)
+		switch (type)
 		{
-			if (R.type == BarType::BYTE8_3)
-			{
-				data.b3[0] /= R.data.b3[0];
-				data.b3[1] /= R.data.b3[1];
-				data.b3[2] /= R.data.b3[2];
-			}
-			else
-			{
-				data.b3[0] /= R.data.b1;
-				data.b3[1] /= R.data.b1;
-				data.b3[2] /= R.data.b1;
-			}
-		}
-		else
-		{
+		case BarType::BYTE8_1:
 			data.b1 /= R.getAvgUchar();
+			break;
+		case BarType::BYTE8_3:
+		{
+			switch (type)
+			{
+			case BarType::BYTE8_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] /= R.data.b1;
+				break;
+			case BarType::BYTE8_3:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] /= R.data.b3[i];
+				break;
+			case BarType::FLOAT32_1:
+				for (char i = 0; i < 3; ++i)
+					data.b3[i] /= R.data.f;
+				break;
+			default:
+				assert(false);
+			}
+			break;
+		}
+		case BarType::FLOAT32_1:
+			data.f /= R.getAvgFloat();
+			break;
+		default:
+			assert(false);
 		}
 
 		return *this;
 	}
 
+
 	// Operators
+
 	auto operator+(const Barscalar& R) const
 	{
 		Barscalar res = *this;
@@ -891,19 +991,14 @@ public:
 		return res;
 	}
 
-	auto operator+(const uchar R) const
+	template<typename T>
+	auto operator+(const T R) const
 	{
 		Barscalar res = *this;
 		res += R;
 		return res;
 	}
 
-	auto operator-(const uchar R) const
-	{
-		Barscalar res = *this;
-		res -= R;
-		return res;
-	}
 	auto operator-(const Barscalar& R) const
 	{
 		Barscalar res = *this;
@@ -911,13 +1006,14 @@ public:
 		return res;
 	}
 
-
-	Barscalar operator* (const uchar& R) const
+	template<typename T>
+	auto operator-(const T R) const
 	{
 		Barscalar res = *this;
-		res *= R;
+		res -= R;
 		return res;
 	}
+
 	Barscalar operator* (const Barscalar& R) const
 	{
 		Barscalar res = *this;
@@ -925,10 +1021,11 @@ public:
 		return res;
 	}
 
-	Barscalar operator/ (const uchar& R) const
+	template<typename T>
+	Barscalar operator* (const T R) const
 	{
 		Barscalar res = *this;
-		res /= R;
+		res *= R;
 		return res;
 	}
 
@@ -939,18 +1036,41 @@ public:
 		return res;
 	}
 
+	template<typename T>
+	Barscalar operator/ (const T R) const
+	{
+		Barscalar res = *this;
+		res /= R;
+		return res;
+	}
+
 	uchar& operator[](unsigned int index)
 	{
-		assert(index < 3);
-		return data.b3[index];
+		switch (type)
+		{
+		case BarType::BYTE8_3:
+			assert(index < 3);
+			return data.b3[index];
+		case BarType::BYTE8_1:
+		case BarType::FLOAT32_1:
+		default:
+			assert(false);
+		}
 	}
 
 	uchar operator[](unsigned int index) const
 	{
-		assert(index < 3);
-		return data.b3[index];
+		switch (type)
+		{
+		case BarType::BYTE8_3:
+			assert(index < 3);
+			return data.b3[index];
+		case BarType::BYTE8_1:
+		case BarType::FLOAT32_1:
+		default:
+			assert(false);
+		}
 	}
-
 
 	Barscalar absDiff(const Barscalar& R) const
 	{

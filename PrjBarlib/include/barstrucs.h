@@ -180,34 +180,6 @@ namespace bc
 		}
 	};
 
-
-	
-	//static BarConstructor* createStructure(bc::BarType type)
-	//{
-	//	switch (type)
-	//	{
-	//	case bc::BarType::bc_byte:
-	//		return new BarConstructor<uchar>();
-	//		break;
-	//	case bc::BarType::bc_float:
-	//		return new BarConstructor<float>();
-	//		break;
-	//	case bc::BarType::bc_int:
-	//		return new BarConstructor<int>();
-	//		break;
-	//	case bc::BarType::bc_short:
-	//		return new BarConstructor<short>();
-	//		break;
-	//	case bc::BarType::bc_ushort:
-	//		return new BarConstructor<ushort>();
-	//		break;
-	//	default:
-	//		return nullptr;
-	//		break;
-	//	}
-	//}
-
-
 	struct EXPORT point
 	{
 		int x = -1;
