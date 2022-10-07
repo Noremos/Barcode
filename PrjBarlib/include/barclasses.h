@@ -22,10 +22,6 @@ namespace bc
 	};
 
 	
-	
-	using barlinevector = std::vector<bc::barline*>;
-
-	
 	class EXPORT Baritem : public Barbase
 	{
 	public:

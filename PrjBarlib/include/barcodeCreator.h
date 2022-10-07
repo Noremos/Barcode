@@ -246,8 +246,10 @@ namespace bc {
 	private:
 		void processCompByRadius(Barcontainer* item);
 		void processCompByStepRadius(Barcontainer* item);
+		void processByValueRadius(Barcontainer* item);
 
 		void processRadar(const indexCov& val, bool allowAttach);
+
 
 		std::unique_ptr<indexCov> geometrySortedArr;
 	};

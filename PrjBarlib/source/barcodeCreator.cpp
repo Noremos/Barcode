@@ -490,12 +490,12 @@ inline bool BarcodeCreator::checkCloserB1()
 
 
 
-bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, size_t& totalSize, bc::ProcType type, float maxRadius, size_t& toProcess)
+bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::ProcType type, float maxRadius, size_t& toProcess)
 {
 	int wid = workingImg->wid();
 	int hei = workingImg->hei();
 
-	totalSize = 4 * static_cast<size_t>(wid) * hei + wid + hei;
+	int totalSize = 4 * static_cast<size_t>(wid) * hei + wid + hei;
 	float dist;
 	bc::indexCov* data = new bc::indexCov[totalSize];
 	// Сичтаем расстояние между всеми соседними пикселями для каждого пикселя.
@@ -567,6 +567,80 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, size_t&
 		dist = cur.val_distance(next);
 		data[k++] = indexCov(offset, dist, middleRight);
 	}
+
+	assert(k < totalSize);
+
+	// Тип не имеет занчение потому что соединяем не по яркости
+	toProcess = k;
+	std::sort(data, data + toProcess, [](const indexCov& a, const indexCov& b) {
+		return a.dist < b.dist;
+		});
+
+	return data;
+}
+
+
+bc::indexCov* sortPixelsByRadius4(const bc::DatagridProvider* workingImg, bc::ProcType type, float maxRadius, size_t& toProcess)
+{
+	int wid = workingImg->wid();
+	int hei = workingImg->hei();
+
+	int totalSize = 2 * static_cast<size_t>(wid) * hei;
+	float dist;
+	bc::indexCov* data = new bc::indexCov[totalSize];
+	// Сичтаем расстояние между всеми соседними пикселями для каждого пикселя.
+	// Чтобы не считать повтороно, от текущего проверяем только уникальные - в форме отражённой по вертикали буквы "L"
+
+	int k = 0;
+	for (int h = 0; h < hei - 1; ++h)
+	{
+		for (int w = 0; w < wid - 1; ++w)
+		{
+			int offset = wid * h + w;
+			Barscalar cur = workingImg->get(w, h);
+			Barscalar next;
+
+			// rigth
+			// c n
+			// 0 0
+			next = workingImg->get(w + 1, h);
+			dist = cur.val_distance(next);
+
+			data[k++] = indexCov(offset, dist, middleRight);
+
+			// bottom
+			// c 0
+			// n 0
+			next = workingImg->get(w, h + 1);
+			dist = cur.val_distance(next);
+
+			data[k++] = indexCov(offset, dist, bottomCenter);
+		}
+	}
+
+	int wd = wid - 1;
+	for (int h = 0; h < hei - 1; ++h)
+	{
+		int offset = wid * h + wd;
+		Barscalar cur = workingImg->get(wd, h);
+		Barscalar next;
+		next = workingImg->get(wd, h + 1);
+		dist = cur.val_distance(next);
+		data[k++] = indexCov(offset, dist, bottomCenter);
+	}
+
+	int hd = hei - 1;
+	for (int w = 0; w < wid - 1; ++w)
+	{
+		int offset = wid * hd + w;
+		Barscalar cur = workingImg->get(w, hd);
+		Barscalar next;
+		next = workingImg->get(w + 1, hd);
+		dist = cur.val_distance(next);
+		data[k++] = indexCov(offset, dist, middleRight);
+	}
+	assert(k < totalSize);
+
 	// Тип не имеет занчение потому что соединяем не по яркости
 	toProcess = k;
 	std::sort(data, data + toProcess, [](const indexCov& a, const indexCov& b) {
@@ -868,22 +942,34 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, Compo
 	else
 		setWorkingImg(src);
 
+	totalSize = workingImg->length();
 
 	//от 255 до 0
-	if (type == ProcType::Radius || type == ProcType::StepRadius)
+	switch (type)
 	{
-		geometrySortedArr.reset(sortPixelsByRadius(workingImg, totalSize, type, settings.maxRadius, this->processCount));
+	case ProcType::Radius:
+		geometrySortedArr.reset(sortPixelsByRadius(workingImg, type, settings.maxRadius, this->processCount));
 		sortedArr = nullptr;
-	}
-	else
-	{
-		totalSize = workingImg->length();
+		break;
+	case ProcType::StepRadius:
+		geometrySortedArr.reset(sortPixelsByRadius4(workingImg, type, settings.maxRadius, this->processCount));
+		sortedArr = nullptr;
+		break;
+	case ProcType::ValueRadius:
+		break;
+	case ProcType::f0t255:
+	case ProcType::f255t0:
+	case ProcType::invertf0:
+	case ProcType::experiment:
 		sortPixels(type);
+		break;
+	default:
+		assert(false);
 	}
 	// lastB = 0;
 
 	included = new Include[totalSize];
-	memset(included, 0, totalSize * sizeof(Include));
+	memset(included, NULL, totalSize * sizeof(Include));
 
 #ifdef USE_OPENCV
 	if (colors.size() == 0 && settings.visualize)
@@ -1201,6 +1287,9 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 		case ProcType::StepRadius:
 			processCompByStepRadius(item);
 			break;
+		case ProcType::ValueRadius:
+			processByValueRadius(item);
+			break;
 		default:
 			processComp(item);
 			break;
@@ -1516,4 +1605,64 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 			first = new Component(curpoindex, this);
 		}
 	}
+}
+
+void BarcodeCreator::processByValueRadius(Barcontainer* item)
+{
+	Barscalar samax, sadym;
+	workingImg->maxAndMin(sadym, samax);
+	int smax = (int)samax.getAvgUchar();
+	int foundSt = 0;
+	settings.maxRadius = 0.f;
+	BarImg img(workingImg->wid(), workingImg->hei(), workingImg->channels());
+	for (size_t i = 0; i < workingImg->length(); i++)
+		img.setLiner(i, workingImg->getLiner(i));
+
+	for (float& i = settings.maxRadius; i <= smax; ++i)
+	{
+		for (auto* comp : components)
+		{
+			if (comp->resline == nullptr)
+				continue;
+
+			float avg[3]{ 0, 0, 0 };
+			auto& matr = comp->resline->matr;
+			size_t msize = matr.size();
+			for (size_t i = 0; i < msize; i++)
+			{
+				auto sc = workingImg->get(matr[i].getPoint());
+				avg[0] += sc.data.b3[0];
+				avg[1] += sc.data.b3[1];
+				avg[2] += sc.data.b3[2];
+			}
+
+			avg[0] /= msize;
+			avg[1] /= msize;
+			avg[2] /= msize;
+
+			Barscalar avgSCl(avg[0], avg[1], avg[2]);
+
+			for (size_t i = 0; i < msize; i++)
+			{
+				img.set(matr[i].getPoint(), avgSCl);
+			}
+		}
+
+		geometrySortedArr.reset(sortPixelsByRadius4(&img, ProcType::ValueRadius, settings.maxRadius, processCount));
+		for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
+		{
+			const indexCov& val = geometrySortedArr.get()[curIndexInSortedArr];
+
+			if (val.dist > settings.maxRadius)
+				break;
+
+			processRadar(val, true);
+		}
+
+		if (curIndexInSortedArr == processCount)
+			break;
+	}
+
+	addItemToCont(item);
+	clearIncluded();
 }

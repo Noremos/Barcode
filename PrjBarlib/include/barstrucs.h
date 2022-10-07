@@ -413,9 +413,19 @@ namespace bc
 			return bc::point(getX(), getY());
 		}
 
-		int getIndex(int wid = 0) const
+		uint getIndex(int widr = MAX_WID) const
 		{
-			return OPTTIF(index, y * wid + x);
+			return OPTTIF(index, y * widr + x);
+		}
+
+		static uint getStatInd(int x, int y, int wid = MAX_WID)
+		{
+			return y * wid + x;
+		}
+
+		static bc::point getStatPoint(uint index)
+		{
+			return bc::point(index % MAX_WID, index / MAX_WID);
 		}
 
 		int getX() const

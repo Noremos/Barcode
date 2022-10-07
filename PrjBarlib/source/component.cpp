@@ -117,10 +117,14 @@ void bc::Component::kill()
 		return;
 	lived = false;
 
-	if (factory->curbright < resline->start)
-		resline->start = factory->curbright;
-	if (factory->curbright > resline->start)
-		resline->m_end = factory->curbright;
+	resline->m_end = factory->curbright;
+
+	//if (factory->curbright < resline->start)
+	//	resline->start = factory->curbright;
+	//if (factory->curbright > resline->m_end)
+	//	resline->m_end = factory->curbright;
+
+//	assert(resline->len() != 0);
 
 	if (factory->settings.returnType == ReturnType::barcode3dold)
 	{

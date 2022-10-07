@@ -12,6 +12,8 @@
 
 namespace bc
 {
+	struct barline;
+	using barlinevector = std::vector<bc::barline*>;
 
 	struct EXPORT barline
 	{
@@ -251,11 +253,11 @@ namespace bc
 
 		void addCoord(const point& first, Barscalar bright)
 		{
-			matr.push_back(std::move(barvalue(first, bright)));
-			if (bright < start)
-				start = bright;
-			if (bright > m_end)
-				m_end = bright;
+			matr.push_back(barvalue(first, bright));
+//			if (bright < start)
+//				start = bright;
+//			if (bright > m_end)
+//				m_end = bright;
 		}
 
 		void addCoord(barvalue val)
@@ -302,6 +304,13 @@ namespace bc
 		Barscalar len() const
 		{
 			return m_end > start ? m_end - start : start - m_end;
+		}
+
+		float lenFloat() const
+		{
+			return m_end > start ?
+					m_end.getAvgFloat() - start.getAvgFloat() :
+					start.getAvgFloat() - m_end.getAvgFloat();
 		}
 
 		int getDeath()
@@ -359,6 +368,7 @@ namespace bc
 		{
 			for (barline* chil : this->children)
 			{
+//				getChildsMatr(vect);
 				for (barvalue& val : chil->matr)
 				{
 					vect.push_back(val);
@@ -449,7 +459,7 @@ namespace bc
 			bc::barvector out;
 			getChildsMatr(out);
 
-			return std::move(out);
+			return out;
 		}
 
 		bc::barvector getExclusivePoints()
@@ -464,7 +474,7 @@ namespace bc
 					out.push_back(matr[i]);
 			}
 
-			return std::move(out);
+			return out;
 		}
 
 #ifdef _PYD
@@ -565,19 +575,39 @@ namespace bc
 			//			std::string nl = "\r\n";
 			outObj += "{";
 
+
+			outObj += "\"start\":" + start.text(true);
+			outObj += ", \"end\":" + m_end.text(true);
+
+
 			if (exportGraph)
 			{
-				// TODO
+				outObj += ", \"children\":[";
+				int total = children.size();
+				if (total > 0)
+				{
+					assert(total < 16410954);
+					for (int i = 0; i < total; ++i)
+					{
+						if (children[i] == NULL)
+							continue;
 
-				// numberInParent = 0;
-				// parent = nullptr;
-				// children;
+						children[i]->getJsonObject(outObj, exportGraph, export3dbar, expotrBinaryMask);
+						outObj += ",";
+					}
+				}
+
+				char &lastChar = outObj.at(outObj.length() - 1);
+				if (lastChar == ',')
+					lastChar = ']';
+				else
+					outObj += "]";
 			}
 			if (export3dbar && bar3d)
 			{
 				// TODO
 
-//				barcounter* bar3d = nullptr;
+				//				barcounter* bar3d = nullptr;
 			}
 			if (expotrBinaryMask)
 			{
@@ -585,9 +615,20 @@ namespace bc
 
 				// matr
 			}
+			outObj += "}";
+		}
 
-			outObj += "start:" + std::to_string(static_cast<float>((start)));
-			outObj += ", len:" + std::to_string(static_cast<float>(len())) + "}";
+		void getChilredAsList(bc::barlinevector& lines, bool includeItself)
+		{
+			if (includeItself)
+			{
+				lines.push_back(this->clone());
+			}
+
+			for (int i = 0, total = children.size(); i < total; ++i)
+			{
+				children[i]->getChilredAsList(lines, true);
+			}
 		}
 
 		bool is3dmoreing() const

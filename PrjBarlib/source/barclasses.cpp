@@ -154,23 +154,37 @@ void bc::Baritem::preprocessBar(const Barscalar& porog, bool normalize)
 
 float findCoof(bc::barline* X, bc::barline* Y, bc::CompireStrategy& strat)
 {
-    float maxlen, minlen;
+	const Barscalar &Xst = X->start < X->end() ? X->start : X->end();
+	const Barscalar &Xed = X->start < X->end() ? X->end() : X->start;
+
+	const Barscalar &Yst = Y->start < Y->end() ? Y->start : Y->end();
+	const Barscalar &Yed = Y->start < Y->end() ? Y->end() : Y->start;
+
+
+	float maxlen, minlen;
 	if (strat == bc::CompireStrategy::CommonToSum)
 	{
-		Barscalar st = MAX(X->start, Y->start);
-		Barscalar ed = MIN(X->end(), Y->end());
-        minlen = static_cast<float>(ed - st);
+		if (Xst == Yst && Xed == Yed)
+			return 1.f;
 
-		st = MIN(X->start, Y->start);
-		ed = MAX(X->end(), Y->end());
-        maxlen = static_cast<float>(ed - st);
+		float st = MAX(Xst, Yst).getAvgFloat();
+		float ed = MIN(Xed, Yed).getAvgFloat();
+		minlen = ed - st;
+
+		st = MIN(Xst, Yst).getAvgFloat();
+		ed = MAX(Xed, Yed).getAvgFloat();
+		maxlen = ed - st;
 	}
 	else if (strat == bc::CompireStrategy::CommonToLen)
 	{
-		Barscalar st = MAX(X->start, Y->start);
-		Barscalar ed = MIN(X->end(), Y->end());
-        minlen = static_cast<float>(ed - st);
-        maxlen = static_cast<float>(MAX(X->len(), Y->len()));
+		if (Xst == Yst && Xed == Yed)
+			return 1.f;
+
+		// Start всегда меньше end
+		float st = MAX(Xst, Yst).getAvgFloat();
+		float ed = MIN(Xed, Yed).getAvgFloat();
+		minlen = ed - st; // Может быть меньше 0, если воообще не перекасаются
+		maxlen = MAX(X->lenFloat(), Y->lenFloat());
 	}
 	else
 	{
@@ -180,6 +194,7 @@ float findCoof(bc::barline* X, bc::barline* Y, bc::CompireStrategy& strat)
 	if (minlen <= 0 || maxlen <= 0)
 		return -1;
 
+	assert(minlen <= maxlen);
 	return minlen / maxlen;
 }
 
@@ -225,7 +240,7 @@ float bc::Baritem::compireBestRes(const bc::Baritem* bc, bc::CompireStrategy str
 				if (coof > maxCoof)
 				{
 					maxCoof = coof;
-					maxsum = (float)(Xbarlines[i]->len() + Ybarlines[j]->len());
+					maxsum = Xbarlines[i]->len().getAvgFloat() + Ybarlines[j]->len().getAvgFloat();
 					ik = i;
 					jk = j;
 				}
@@ -260,11 +275,11 @@ float bc::Baritem::compireFull(const bc::Barbase* bc, bc::CompireStrategy strat)
 		if (coof < 0)
 			continue;
 
-        float xysum = static_cast<float>(Xbarlines[i]->len() + Ybarlines[i]->len());
+		float xysum = static_cast<float>(Xbarlines[i]->len()) + static_cast<float>(Ybarlines[i]->len());
 		totalsum += xysum;
 		tcoof += xysum * coof;
 	}
-	return totalsum!=0 ? tcoof / totalsum : 0;
+	return totalsum !=0 ? tcoof / totalsum : 0;
 }
 
 

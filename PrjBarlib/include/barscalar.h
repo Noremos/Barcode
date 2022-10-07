@@ -3,6 +3,7 @@
 #include<assert.h>
 #include<string.h>
 #include <math.h>
+#include <string>
 #include "presets.h"
 #include "include_py.h"
 
@@ -131,7 +132,7 @@ public:
 	//	return out;
 	//}
 
-	std::string text()
+	std::string text(bool asArray = false)
 	{
 		std::string out;
 		switch (type)
@@ -139,12 +140,17 @@ public:
 		case BarType::BYTE8_1:
 			return std::to_string(data.b1);
 		case BarType::BYTE8_3:
-			out = "(" + std::to_string(data.b3[0]) + "," + std::to_string(data.b3[1]) + "," + std::to_string(data.b3[2]) + ")";
+			if (asArray)
+				out = "[" + std::to_string(data.b3[0]) + "," + std::to_string(data.b3[1]) + "," + std::to_string(data.b3[2]) + "]";
+			else
+				out = "(" + std::to_string(data.b3[0]) + "," + std::to_string(data.b3[1]) + "," + std::to_string(data.b3[2]) + ")";
+			break;
 		default:
 			break;
 		}
 		return out;
 	}
+
 
 #ifdef USE_OPENCV
 	cv::Vec3b toCvVec() const
@@ -349,6 +355,26 @@ private:
 	}
 
 public:
+	float val_div(const Barscalar &X) const
+	{
+		switch (type)
+		{
+		case BarType::BYTE8_1:
+			return static_cast<float>(data.b1) / X.data.b1;
+		case BarType::BYTE8_3: {
+			float res = 0.f;
+			for (char i = 0; i < 3; ++i)
+			{
+				res += static_cast<float>(data.b3[i]) / static_cast<float>(X.data.b3[i]);
+			}
+			return res / 3;
+		}
+		default:
+			assert(false);
+			break;
+		}
+		return 0;
+	}
 
 	bool operator==(const Barscalar& X) const
 	{
