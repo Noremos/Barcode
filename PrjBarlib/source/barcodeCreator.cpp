@@ -4,6 +4,10 @@
 #include <assert.h>
 #include <algorithm>
 
+#ifdef __linux
+#include <climits>
+#endif // __linux
+
 using namespace bc;
 
 #pragma warning(disable : 4996)
