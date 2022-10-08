@@ -486,6 +486,17 @@ namespace bc
 			return nullptr;
 		}
 
+		void remoeLast()
+		{
+			int s = items.size();
+			if (s > 0)
+			{
+				delete items[s - 1];
+				items[s - 1] = nullptr;
+				items.pop_back();
+			}
+		}
+
 		void exractItems(std::vector<Baritem *> extr)
 		{
 			for (size_t i = 0; i < items.size(); ++i)

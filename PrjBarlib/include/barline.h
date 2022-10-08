@@ -618,16 +618,16 @@ namespace bc
 			outObj += "}";
 		}
 
-		void getChilredAsList(bc::barlinevector& lines, bool includeItself)
+		void getChilredAsList(bc::barlinevector& lines, bool includeItself, bool clone)
 		{
 			if (includeItself)
 			{
-				lines.push_back(this->clone());
+				lines.push_back(clone ? this->clone() : this);
 			}
 
 			for (size_t i = 0, total = children.size(); i < total; ++i)
 			{
-				children[i]->getChilredAsList(lines, true);
+				children[i]->getChilredAsList(lines, true, clone);
 			}
 		}
 
