@@ -5,7 +5,7 @@
 bc::Hole::Hole(point p1, BarcodeCreator* factory) : Component(factory)
 {
 	isValid = false;
-	add(factory->GETPOFF(p1), p1);
+	add(factory->GETPOFF(p1), p1, factory->curbright);
 	index = factory->components.size() - 1;
 }
 
@@ -16,9 +16,9 @@ bc::Hole::Hole(point p1, point p2, point p3, BarcodeCreator* factory) : Componen
 	//    zeroStart = p1;
 		// ++factory->lastB;
 
-	add(factory->GETPOFF(p1), p1);
-	add(factory->GETPOFF(p2), p2);
-	add(factory->GETPOFF(p3), p3);
+	add(factory->GETPOFF(p1), p1, factory->curbright);
+	add(factory->GETPOFF(p2), p2, factory->curbright);
+	add(factory->GETPOFF(p3), p3, factory->curbright);
 }
 
 
@@ -68,7 +68,7 @@ bool bc::Hole::tryAdd(const point& p)
 			)//есть ли нужное ребро
 		{
 			poidex px = factory->GETPOFF(p);
-			this->add(px, p);
+			this->add(px, p, factory->curbright);
 			return true;
 		}
 	}

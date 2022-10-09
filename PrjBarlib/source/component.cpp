@@ -4,7 +4,7 @@
 #include <assert.h>
 
 
-void bc::Component::init(BarcodeCreator* factory)
+void bc::Component::init(BarcodeCreator* factory, const Barscalar& val)
 {
 #ifndef POINTS_ARE_AVAILABLE
 	startIndex = factory->curIndexInSortedArr;
@@ -15,10 +15,9 @@ void bc::Component::init(BarcodeCreator* factory)
 	factory->components.push_back(this);
 
 	resline = new barline(factory->workingImg->wid());
-	resline->start = factory->curbright;
-	resline->m_end = factory->curbright;
-
-	lastVal = factory->curbright;
+	resline->start = val;
+	resline->m_end = val;
+	lastVal = val;
 
 	if (factory->settings.returnType == bc::ReturnType::barcode3d ||
 		factory->settings.returnType == bc::ReturnType::barcode3dold)
@@ -26,21 +25,19 @@ void bc::Component::init(BarcodeCreator* factory)
 }
 
 
-bc::Component::Component(poidex pix, bc::BarcodeCreator* factory)
+bc::Component::Component(poidex pix, const Barscalar& val, bc::BarcodeCreator* factory)
 {
-	init(factory);
+	init(factory, val);
 
 	// factory->lastB++;
 
-	add(pix, factory->getPoint(pix));
+	add(pix, factory->getPoint(pix), val);
 }
 
 
 bc::Component::Component(bc::BarcodeCreator* factory, bool /*create*/)
 {
-	init(factory);
-
-	// if (create)	factory->lastB++;
+	init(factory, factory->curbright);
 }
 
 Barscalar bc::Component::getStart()
@@ -61,7 +58,7 @@ bool bc::Component::isContain(poidex index)
 }
 
 
-bool bc::Component::add(const poidex index, const point p, bool forsed)
+bool bc::Component::add(const poidex index, const point p, const Barscalar& col, bool forsed)
 {
 	assert(lived);
 
@@ -86,18 +83,18 @@ bool bc::Component::add(const poidex index, const point p, bool forsed)
 
 	if (factory->settings.createBinaryMasks)
 	{
-		resline->addCoord(p, factory->curbright);
-		avgSr += factory->curbright;
+		resline->addCoord(p, col);
+		avgSr += col;
 	}
 	// 3d barcode/ —читаем кол-во добавленных значений
 	if (factory->settings.returnType == ReturnType::barcode3d)
 	{
-		if (factory->curbright != lastVal)
+		if (col != lastVal)
 		{
 			resline->bar3d->push_back(bar3dvalue(lastVal, cashedSize)); //всего
 		}
 	}
-	else if (factory->curbright != lastVal)
+	else if (col != lastVal)
 	{
 		if (factory->settings.returnType == ReturnType::barcode3dold)
 		{
@@ -106,23 +103,28 @@ bool bc::Component::add(const poidex index, const point p, bool forsed)
 		cashedSize = 0;
 	}
 	++cashedSize;
-	lastVal = factory->curbright;
+	lastVal = col;
 
 	return true;
 }
 
 void bc::Component::kill()
 {
+	kill(lastVal);
+}
+
+void bc::Component::kill(const Barscalar& endScalar)
+{
 	if (!lived)
 		return;
 	lived = false;
 
-	resline->m_end = factory->curbright;
+	resline->m_end = endScalar;
 
-	//if (factory->curbright < resline->start)
-	//	resline->start = factory->curbright;
-	//if (factory->curbright > resline->m_end)
-	//	resline->m_end = factory->curbright;
+	//if (col < resline->start)
+	//	resline->start = col;
+	//if (col > resline->m_end)
+	//	resline->m_end = col;
 
 //	assert(resline->len() != 0);
 
@@ -143,7 +145,7 @@ void bc::Component::kill()
 		}
 	}
 
-	lastVal = factory->curbright;
+	lastVal = endScalar;
 	cashedSize = 0;
 }
 
@@ -162,89 +164,41 @@ void bc::Component::setParent(bc::Component* parnt)
 	// at moment when this must be dead
 	assert(lived);
 
+	const Barscalar& endScalar = lastVal;
 	if (factory->settings.createBinaryMasks)
 	{
 		parnt->resline->matr.reserve(parnt->resline->matr.size() + resline->matr.size() + 1);
 
 		for (barvalue& val : resline->matr)
 		{
-			/*	if (factory->settings.returnType == ReturnType::barcode3dold)
-				{
-					if (val.value != parnt->lastVal)
-					{
-						parnt->resline->bar3d->push_back(bar3dvalue(parnt->lastVal, parnt->lastVal->cashedSize));
-						parnt->lastVal = factory->curbright;
-						parnt->lastVal->cashedSize = 0;
-					}
-					++parnt->lastVal->cashedSize;
-				}
-				else if (factory->settings.returnType == ReturnType::barcode3d)
-				{
-					if (val.value != parnt->lastVal)
-					{
-						parnt->resline->bar3d->push_back(bar3dvalue(parnt->lastVal, parnt->totalCount));
-						parnt->lastVal = val.value;
-					}
-				}*/
-
 			// Записываем длину сущщетвования точки
-			val.value = factory->curbright > val.value ? factory->curbright - val.value : val.value - factory->curbright;
-			//val.value = factory->curbright - val.value;
+			val.value = endScalar > val.value ? endScalar - val.value : val.value - endScalar;
+			//val.value = col - val.value;
 
 			avgSr += val.value;
 			// Эти точки сичтаются как только что присоединившиеся
-			parnt->resline->addCoord(barvalue(val.getPoint(), factory->curbright));
+			parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
 		}
 	}
 
-	kill();
+	kill(endScalar);
 
 	if (factory->settings.createGraph)
 		resline->setparent(parnt->resline);
 }
 
 
- bool bc::Component::canBeConnected(const bc::point& p, bool incrSum)
+bool bc::Component::canBeConnected(const bc::point& p, bool incrSum)
 {
-
-	if (factory->settings.maxRadius < (lastVal.val_distance(factory->curbright)))
-		return false;
-
-//	if (!factory->settings.maxLen.isCached)
-//		return true;
-	if (totalCount == 0)
-		return true;
-
 	return true;
-	//return ((avgSr.getAvgFloat() / totalCount) * 1.2f <= factory->curbright.getAvgFloat());
 
-
-//	Barscalar val = factory->workingImg->get(p.x, p.y);
-//	Barscalar diff;
-//	if (val > resline->start)
-//	{
-//		diff = val - resline->start;
-//	}
-//	else
-//	{
-//		diff = resline->start - val;
-//	}
-//	return diff <= factory->settings.maxLen.val;
-
-	//Component* comp = getMaxparent();
-	//if ((float)comp->totalCount / factory->workingImg->length() >= .1f)
-	//{
-	//	float st = (float)comp->getStart();
-	//	//float avg = ((float)comp->sums + val) / (comp->totalCount + 1);
-	//	float avg = ((float)lastVal - st) / 2;
-	//	float dff = abs((float)st - avg);
-	//	if (abs(val - avg) > dff)
-	//	{
+	//	if (factory->settings.maxRadius < (lastVal.val_distance(factory->curbright)))
 	//		return false;
-	//	}
-	//}
-	//if (incrSum)
-	//	comp->sums += val;
+	//
+	////	if (!factory->settings.maxLen.isCached)
+	////		return true;
+	//	if (totalCount == 0)
+	//		return true;
 
 	return true;
 }

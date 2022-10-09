@@ -213,20 +213,7 @@ namespace bc {
 	public:
 
 		bc::Barcontainer* createBarcode(const bc::DatagridProvider* img, const BarConstructor& structure);
-		/*{
-			this->settings = structure;
-			settings.checkCorrect();
-
-			Barcontainer* cont = new Barcontainer();
-
-			for (const auto& it : settings.structure)
-			{
-				processFULL(it, img, cont);
-			}
-			return cont;
-		}*/
-
-		bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
+		//bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 
 
 		virtual ~BarcodeCreator()
@@ -253,39 +240,4 @@ namespace bc {
 
 		std::unique_ptr<indexCov> geometrySortedArr;
 	};
-
-	/*
-	static Barcontainer* createBarcode(bc::BarType type, const bc::DatagridProvider* img, BarConstructor& _struct)
-	{
-		switch (type)
-		{
-		case bc::BarType::bc_byte:
-		{
-			BarcodeCreator<ushort> t;
-			return t.createBarcode(img, _struct);
-		}
-		case bc::BarType::bc_float:
-		{
-			BarcodeCreator<float> t;
-			return t.createBarcode(img, _struct);
-		}
-		case bc::BarType::bc_int:
-		{
-			BarcodeCreator<int> t;
-			return t.createBarcode(img, _struct);
-		}
-		case bc::BarType::bc_short:
-		{
-			BarcodeCreator<short> t;
-			return t.createBarcode(img, _struct);
-		}
-		case bc::BarType::bc_ushort:
-		{
-			BarcodeCreator<ushort> t;
-			return t.createBarcode(img, _struct);
-		}
-		default:
-			return nullptr;
-		}
-	}*/
 }

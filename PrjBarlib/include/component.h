@@ -50,10 +50,11 @@ namespace bc
 	private:
 		//0 - nan
 
-		void init(BarcodeCreator* factory);
+		void init(BarcodeCreator* factory, const Barscalar& val);
 	public:
 
-		Component(poidex pix, BarcodeCreator* factory);
+
+		Component(poidex pix, const Barscalar& val, bc::BarcodeCreator* factory);
 		Component(BarcodeCreator* factory, bool create = false);
 
 		int getLastRowSize()
@@ -101,8 +102,9 @@ namespace bc
 
 
 		bool isContain(poidex index);
-		virtual bool add(const poidex index, const point p, bool forsed = false);
-		virtual void kill();
+		virtual bool add(const poidex index, const point p, const Barscalar& col, bool forsed = false);
+		void kill();
+		virtual void kill(const Barscalar& endScalar);
 		virtual void setParent(Component* parnt);
 
 

@@ -119,7 +119,7 @@ inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 		{
 			const barvalue& val = second->resline->matr[rind];
 			const bc::point p = val.getPoint();
-			main->add(p.getLiner(wid), p, true);
+			main->add(p.getLiner(wid), p, val.value, true);
 		}
 
 		main->startIndex = MIN(second->startIndex, main->startIndex);
@@ -248,11 +248,11 @@ inline bool BarcodeCreator::checkCloserB0()
 					//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
 					if (settings.killOnMaxLen)
 					{
-						first->kill(); //Интересный результат
+						first->kill(curbright); //Интересный результат
 					}
 					first = nullptr;
 				}
-				else if (!first->add(curpoindex, curpix))
+				else if (!first->add(curpoindex, curpix, curbright))
 					first = nullptr;
 				//setInclude(midP, first);//n--nt обяз нужно
 			}
@@ -272,7 +272,7 @@ inline bool BarcodeCreator::checkCloserB0()
 	{
 		//lastB += 1;
 
-		new Component(curpoindex, this);
+		new Component(curpoindex, curbright, this);
 		return true;
 	}
 	return false;
@@ -378,7 +378,7 @@ inline bool BarcodeCreator::checkCloserB1()
 			//вариант 1 - они принадлежат одному объекту. Не валидные могут содержать только одну компоненту, значит, этот объект валидный
 			if (h1 == h2 && h1->isValid)
 			{
-				h1->add(curpix.getLiner(wid), curpix);
+				h1->add(curpix.getLiner(wid), curpix, curbright);
 				hr = h1;
 			}
 			//вариант 2 - h1 - валид, h2- не валид. Мы уже проверили, что треугольник p-p1-p2 есть
@@ -1166,7 +1166,7 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 		if (c->parent == nullptr)
 		{
 			//assert(c->isAlive() || settings.killOnMaxLen);
-			c->kill();
+			c->kill(curbright);
 			if (settings.createGraph)
 				c->resline->setparent(rootNode);
 		}
@@ -1403,10 +1403,10 @@ uchar dif(uchar a, uchar b)
 
 
 
-Barcontainer* BarcodeCreator::searchHoles(float* /*img*/, int /*wid*/, int /*hei*/, float/* nullVal*/)
-{
-	return nullptr;
-}
+//Barcontainer* BarcodeCreator::searchHoles(float* /*img*/, int /*wid*/, int /*hei*/, float/* nullVal*/)
+//{
+//	return nullptr;
+//}
 
 #ifdef _PYD
 
@@ -1567,9 +1567,9 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 
 	if (first != nullptr)
 	{
-		curbright = workingImg->get(NextPoint.x, NextPoint.y);
-		curpoindex = NextPindex;
-		curpix = NextPoint;
+		Barscalar Nscalar = workingImg->get(NextPoint.x, NextPoint.y);
+		//curpoindex = NextPindex;
+		//curpix = NextPoint;
 
 		//если в найденном уже есть этот элемент
 		//существует ли ребро вокруг
@@ -1580,10 +1580,9 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 		}
 		else if (connected == nullptr)
 		{
-			curbright = workingImg->get(NextPoint.x, NextPoint.y);
-			if (!first->add(NextPindex, NextPoint))
+			if (!first->add(NextPindex, NextPoint, Nscalar))
 			{
-				connected = new Component(NextPindex, this);
+				connected = new Component(NextPindex, Nscalar, this);
 			}
 		}
 	}
@@ -1593,20 +1592,20 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 		// Ребро не создано или не получилось присоединить
 		if (connected == nullptr)
 		{
-			first = new Component(curpoindex, this);
+			first = new Component(curpoindex, curbright, this);
 
-			curbright = workingImg->get(NextPoint.x, NextPoint.y);
-			curpoindex = NextPindex;
-			curpix = NextPoint;
+			Barscalar Nscalar = workingImg->get(NextPoint.x, NextPoint.y);
+			//curpoindex = NextPindex;
+			//curpix = NextPoint;
 
-			if (!first->add(NextPindex, NextPoint))
+			if (!first->add(NextPindex, NextPoint, Nscalar))
 			{
-				connected = new Component(NextPindex, this);
+				connected = new Component(NextPindex, Nscalar, this);
 			}
 		}
-		else if (!connected->add(curpoindex, curpix))
+		else if (!connected->add(curpoindex, curpix, curbright))
 		{
-			first = new Component(curpoindex, this);
+			first = new Component(curpoindex, curbright, this);
 		}
 	}
 }
