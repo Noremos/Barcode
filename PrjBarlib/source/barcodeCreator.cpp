@@ -1074,7 +1074,7 @@ void BarcodeCreator::addItemToCont(Barcontainer* container)
 			computeNdBarcode(lines, 3);
 			break;
 		default:
-			break;
+			assert(false);
 		}
 		container->addItem(lines);
 	}
@@ -1446,24 +1446,11 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
 	{
 		const indexCov& val = geometrySortedArr.get()[curIndexInSortedArr];
+		if (val.dist > settings.maxRadius)
+		{
+			break;
+		}
 
-		//if (val.poz == nextPoz::middleRight)
-		//	continue;
-		curpoindex = val.offset;
-		curpix = getPoint(curpoindex);
-
-		bc::point NextPoint = val.getNextPoint(curpix);
-		poidex NextPindex = NextPoint.getLiner(workingImg->wid());
-
-		Component* first = getComp(curpoindex);
-		Component* connected = getComp(NextPindex);
-
-		//if (val.dist > settings.maxRadius)
-		//{
-		//	break;
-		//	//new Component(curpoindex, this);
-		//	//new Component(NextPindex, this);
-		//}
 		processRadar(val, true);
 
 #ifdef USE_OPENCV

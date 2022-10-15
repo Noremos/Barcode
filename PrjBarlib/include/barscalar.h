@@ -286,7 +286,7 @@ private:
 		case BarType::FLOAT32_1:
 		{
 			float a = this->getAvgFloat();
-			return (a > X);
+			return a > X;
 		}
 		default:
 			assert(false);
@@ -566,60 +566,57 @@ public:
 	//		}
 	//	}
 
-	template<typename T>
-	Barscalar& operator= (const T fraction)
+	Barscalar& operator= (const uchar c)
 	{
-		switch (type)
-		{
-		case BarType::BYTE8_1:
-			data.b1 = fraction;
-			break;
-		case BarType::BYTE8_3:
-			for (char i = 0; i < 3; ++i)
-				data.b3[i] = fraction;
-			break;
-		case BarType::FLOAT32_1:
-			data.f = fraction;
-			break;
-		default:
-			assert(false);
-		}
+		type = BarType::BYTE8_1;
+		data.b1 = c;
+
 		return *this;
 	}
 
-	Barscalar& operator= (const Barscalar& fraction)
+	Barscalar& operator= (const float fraction)
 	{
-		type = fraction.type;
-		switch (type)
-		{
-		case BarType::BYTE8_1:
-			data.b1 = fraction.getAvgUchar();
-			break;
-		case BarType::BYTE8_3:
-			switch (fraction.type)
-			{
-				case BarType::BYTE8_1:
-					for (char i = 0; i < 3; ++i)
-						data.b3[i] = fraction.data.b1;
-					break;
-				case BarType::BYTE8_3:
-					for (char i = 0; i < 3; ++i)
-						data.b3[i] = fraction.data.b3[i];
-					break;
-				case BarType::FLOAT32_1:
-					for (char i = 0; i < 3; ++i)
-						data.b3[i] = fraction.data.f;
-					break;
-				default:
-					assert(false);
-			}
-			break;
-		case BarType::FLOAT32_1:
-			data.f = fraction.getAvgFloat();
-			break;
-		default:
-			assert(false);
-		}
+		type = BarType::FLOAT32_1;
+		data.f = fraction;
+
+		return *this;
+	}
+
+	Barscalar& operator= (const Barscalar& R)
+	{
+		type = R.type;
+		memcpy(&data, &R.data, sizeof(BarData));
+
+//		switch (type)
+//		{
+//		case BarType::BYTE8_1:
+//			data.b1 = fraction.getAvgUchar();
+//			break;
+//		case BarType::BYTE8_3:
+//			switch (fraction.type)
+//			{
+//				case BarType::BYTE8_1:
+//					for (char i = 0; i < 3; ++i)
+//						data.b3[i] = fraction.data.b1;
+//					break;
+//				case BarType::BYTE8_3:
+//					for (char i = 0; i < 3; ++i)
+//						data.b3[i] = fraction.data.b3[i];
+//					break;
+//				case BarType::FLOAT32_1:
+//					for (char i = 0; i < 3; ++i)
+//						data.b3[i] = fraction.data.f;
+//					break;
+//				default:
+//					assert(false);
+//			}
+//			break;
+//		case BarType::FLOAT32_1:
+//			data.f = fraction.getAvgFloat();
+//			break;
+//		default:
+//			assert(false);
+//		}
 
 		return *this;
 	}

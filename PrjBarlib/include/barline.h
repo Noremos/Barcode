@@ -18,7 +18,7 @@ namespace bc
 	struct EXPORT barline
 	{
 		// Graph
-		std::vector<barline*> children;
+		barlinevector children;
 		barline* parent = nullptr;
 		size_t numberInParent = 0;
 
@@ -408,7 +408,7 @@ namespace bc
 				for (size_t i = 0; i < bar3d->size(); ++i)
 				{
 					bc::bar3dvalue& b = bar3d->at(i);
-					s0[(int)b.value] = (int)b.count;
+					s0[(int)b.value] = (uchar)b.count;
 					x2 += b.count * b.count;
 				}
 
@@ -417,7 +417,7 @@ namespace bc
 				for (size_t i = 0; i < inc->bar3d->size(); ++i)
 				{
 					bc::bar3dvalue& b = inc->bar3d->at(i);
-					s1[(int)b.value] = (int)b.count;
+					s1[(int)b.value] = (uchar)b.count;
 					y2 += b.count * b.count;
 				}
 

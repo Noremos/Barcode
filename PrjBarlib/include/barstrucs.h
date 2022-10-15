@@ -124,7 +124,7 @@ namespace bc
 		//Barscalar foneStart;
 		//Barscalar foneEnd;
 		std::vector<barstruct> structure;
-		ReturnType returnType;
+		ReturnType returnType = ReturnType::barcode2d;
 		BarType type;
 
 		bool createGraph = false;
@@ -390,9 +390,9 @@ namespace bc
 			return OPTTIF(index, y * widr + x);
 		}
 
-		static uint getStatInd(int x, int y, int wid = MAX_WID)
+		static uint getStatInd(int x, int y, int widr = MAX_WID)
 		{
-			return y * wid + x;
+			return y * widr + x;
 		}
 
 		static bc::point getStatPoint(uint index)
