@@ -183,7 +183,6 @@ private:
 		switch (type)
 		{
 		case BarType::BYTE8_1:
-			return data.b1 > X.data.b1;
 		case BarType::BYTE8_3:
 		case BarType::FLOAT32_1:
 		{
@@ -261,7 +260,6 @@ private:
 		switch (type)
 		{
 		case BarType::BYTE8_1:
-			return data.b1 >= X.data.b1;
 		case BarType::BYTE8_3:
 		case BarType::FLOAT32_1:
 		{
@@ -1071,6 +1069,7 @@ public:
 
 	Barscalar absDiff(const Barscalar& R) const
 	{
-		return this->getAvgFloat() > R.getAvgFloat() ? *this - R : R - *this;
+		const Barscalar& L = *this;
+		return L.getAvgFloat() > R.getAvgFloat() ? L - R : R - L;
 	}
 };
