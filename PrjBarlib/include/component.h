@@ -41,11 +41,12 @@ namespace bc
 	protected:
 		int cashedSize = 0;
 		Barscalar lastVal = 0;
-		Barscalar avgSr = 0;
+		bool same = true;
+		//Barscalar avgSr = 0;
 		//point startPoint;
 		bool lived = true;
 
-		float sums = 0;
+		//float sums = 0;
 
 	private:
 		//0 - nan

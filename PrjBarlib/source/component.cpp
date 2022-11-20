@@ -48,7 +48,7 @@ Barscalar bc::Component::getStart()
 
 bool bc::Component::justCreated()
 {
-	return resline->start == resline->m_end && resline->start == factory->curbright;
+	return lastVal == factory->curbright && same;
 }
 
 
@@ -64,8 +64,8 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 
 	if (!forsed)
 	{
-		if (!canBeConnected(p, true))
-			return false;
+		//if (!canBeConnected(p, true))
+		//	return false;
 
 		if (cashedSize == factory->settings.colorRange)
 		{
@@ -84,24 +84,23 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 	if (factory->settings.createBinaryMasks)
 	{
 		resline->addCoord(p, col);
-		avgSr += col;
 	}
+	bool eq = col == lastVal;
+	same = same && eq;
 	// 3d barcode/ —читаем кол-во добавленных значений
-	if (factory->settings.returnType == ReturnType::barcode3d)
+	if (!eq)
 	{
-		if (col != lastVal)
+		if (factory->settings.returnType == ReturnType::barcode3d)
 		{
 			resline->bar3d->push_back(bar3dvalue(lastVal, cashedSize)); //всего
 		}
-	}
-	else if (col != lastVal)
-	{
-		if (factory->settings.returnType == ReturnType::barcode3dold)
+		else if (factory->settings.returnType == ReturnType::barcode3dold)
 		{
 			resline->bar3d->push_back(bar3dvalue(lastVal, cashedSize)); // сколкьо было доабвлено
+			cashedSize = 0;
 		}
-		cashedSize = 0;
 	}
+
 	++cashedSize;
 	lastVal = col;
 
@@ -139,9 +138,20 @@ void bc::Component::kill(const Barscalar& endScalar)
 
 	if (parent == nullptr && factory->settings.createBinaryMasks)
 	{
+		Barscalar bot = resline->start;
+		Barscalar top = resline->m_end;
+
+		if (bot > top)
+		{
+			bot = resline->m_end;
+			top = resline->start;
+		}
+
 		for (barvalue& a : resline->matr)
 		{
-			a.value = resline->m_end - a.value;
+			assert(bot <= a.value);
+			assert(a.value <= top);
+			a.value = resline->m_end.absDiff(a.value);
 		}
 	}
 
@@ -158,27 +168,31 @@ void bc::Component::setParent(bc::Component* parnt)
 #ifndef POINTS_ARE_AVAILABLE
 	this->parent->totalCount += totalCount;
 	parnt->startIndex = MIN(parnt->startIndex, startIndex);
-	parnt->sums += this->sums;
+	//parnt->sums += this->sums;
 #endif // ! POINTS_ARE_AVAILABLE
 
 	// at moment when this must be dead
 	assert(lived);
 
-	const Barscalar& endScalar = lastVal;
-	if (factory->settings.createBinaryMasks)
+	// Мы объединяем, потому что одинаковый добавился (но для оптимизации не добавлятся в конце)
+	const Barscalar& endScalar = factory->curbright;
+	if (factory->settings.createBinaryMasks && resline->matr.size() > 0)
 	{
 		parnt->resline->matr.reserve(parnt->resline->matr.size() + resline->matr.size() + 1);
 
 		for (barvalue& val : resline->matr)
 		{
 			// Записываем длину сущщетвования точки
-			val.value = endScalar > val.value ? endScalar - val.value : val.value - endScalar;
+			val.value = endScalar.absDiff(val.value);
 			//val.value = col - val.value;
 
-			avgSr += val.value;
+			//avgSr += val.value;
 			// Эти точки сичтаются как только что присоединившиеся
 			parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
 		}
+		parnt->same = false;
+		// Мы объединяем, потому что одинаковый добавился, т.е. считаем, что lasVal одинаковыйы
+		//parnt->lastVal = lastVal;
 	}
 
 	kill(endScalar);
