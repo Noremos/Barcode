@@ -104,6 +104,7 @@ namespace bc {
 		Barscalar curbright;
 		poidex curpoindex;
 		uint curIndexInSortedArr;
+		//uint compIndex = 0;
 		point curpix;
 		int wid;
 		int hei;
@@ -136,7 +137,7 @@ namespace bc {
 
 		bool GETDIFF(const Barscalar &a, const Barscalar& b) const
 		{
-			return (a > b ? a - b : b - a) <= this->settings.getMaxStepPorog();
+			return !this->settings.stepPorog.isCached || (a > b ? a - b : b - a) <= this->settings.getMaxStepPorog();
 		}
 
 		point getPoint(poidex i) const

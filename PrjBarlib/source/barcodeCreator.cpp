@@ -96,7 +96,9 @@ void BarcodeCreator::draw(std::string name)
 
 inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 {
-	if (main->justCreated() && second->justCreated())
+	bool mJC = main->justCreated();
+	bool sJC = second->justCreated();
+	if ((mJC || sJC) && !(sJC && sJC)) // Строго или
 	{
 #ifdef POINTS_ARE_AVAILABLE
 		for (const auto& val : second->resline->matr)
@@ -107,8 +109,8 @@ inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 			main->add(val.getIndex());
 		}
 #else
-		//Чем больше startIndex, тем меньше перебирать. Надо, чтобы second была с большим
-		if (second->startIndex < main->startIndex)
+		// Если главный толко создан - меням местами
+		if (mJC)
 		{
 			COMPP temp = main;
 			main = second;
@@ -1031,7 +1033,6 @@ void BarcodeCreator::processComp(Barcontainer* item)
 
 #endif
 		assert(included[wid * curpix.y + curpix.x]);
-
 	}
 
 	//assert(((void)"ALARM! B0 is not one", lastB == 1));
@@ -1156,7 +1157,12 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 	assert(n == 2 || n == 3);
 
 	// якорная линия
-	auto* rootNode = new BarRoot(0, 0, workingImg->wid(), nullptr, 0);
+	BarRoot* rootNode = nullptr;
+	if (settings.createGraph)
+	{
+		rootNode = new BarRoot(0, 0, workingImg->wid(), nullptr, 0);
+		lines->setRootNode(rootNode);
+	}
 
 	for (COMPP c : components)
 	{
@@ -1170,41 +1176,8 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 			if (settings.createGraph)
 				c->resline->setparent(rootNode);
 		}
-
 		assert(!c->isAlive());
-
-		Barscalar len = c->resline->len();
-		//else
-		//{
-		//	if (len == 0)
-		//	{
-		//		assert(c->resline->children.size() == 0);
-
-		//		for (size_t i = 0; i < c->resline->matr.size(); i++)
-		//		{
-		//			c->parent->resline->matr.push_back(c->resline->matr[i]);
-		//		}
-		//		continue;
-		//	}
-		//}
-		//else
-			//assert(len != 0);
-
-
-
-		if (static_cast<int>(len) == INFINITY)
-			continue;
-
 		lines->add(c->resline);
-	}
-
-	if (settings.createGraph)
-	{
-		lines->setRootNode(rootNode);
-	}
-	else
-	{
-		delete rootNode;
 	}
 }
 
