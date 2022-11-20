@@ -138,19 +138,20 @@ void bc::Component::kill(const Barscalar& endScalar)
 
 	if (parent == nullptr && factory->settings.createBinaryMasks)
 	{
-		Barscalar bot = resline->start;
-		Barscalar top = resline->m_end;
+		// Not working for radius
+		//Barscalar bot = resline->start;
+		//Barscalar top = resline->m_end;
 
-		if (bot > top)
-		{
-			bot = resline->m_end;
-			top = resline->start;
-		}
+		//if (bot > top)
+		//{
+		//	bot = resline->m_end;
+		//	top = resline->start;
+		//}
 
 		for (barvalue& a : resline->matr)
 		{
-			assert(bot <= a.value);
-			assert(a.value <= top);
+			//assert(bot <= a.value);
+			//assert(a.value <= top);
 			a.value = resline->m_end.absDiff(a.value);
 		}
 	}
