@@ -515,6 +515,15 @@ namespace bc
 		float compireFull(const Barbase* bc, bc::CompireStrategy strat) const;
 		float compireBest(const Baritem* bc, bc::CompireStrategy strat) const;
 
+		void clear()
+		{
+			for (size_t i = 0; i < items.size(); ++i)
+			{
+				if (items[i] != nullptr)
+					delete items[i];
+			}
+			items.clear();
+		}
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		~Barcontainer();
 

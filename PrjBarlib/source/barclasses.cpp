@@ -574,12 +574,7 @@ float bc::Barcontainer::compireBest(const bc::Baritem* bc, bc::CompireStrategy s
 
 bc::Barcontainer::Barcontainer::~Barcontainer()
 {
-	for (size_t i = 0; i < items.size(); ++i)
-	{
-		if (items[i] != nullptr)
-			delete items[i];
-	}
-	items.clear();
+	clear();
 }
 
 
