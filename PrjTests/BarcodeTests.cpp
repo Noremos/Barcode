@@ -165,7 +165,7 @@ namespace BarcodeTests
 			bc::BarImg img(1, 1);
 			bc::BarcodeCreator test;
 			auto bcont = defineConstr();
-			bcont.structure[0].comtype = bc::ComponentType::RadiusComp;
+			//bcont.structure[0].comtype = bc::ComponentType::RadiusComp;
 
 			uchar* data3 = new uchar[9]{
 			0,1,0,
@@ -182,8 +182,8 @@ namespace BarcodeTests
 			bar.reset(test.createBarcode(&img, bcont));
 			bc::Baritem* itm = bar->getItem(0);
 			Assert::AreEqual((size_t)2, itm->barlines.size());
-			Assert::AreEqual((float)1, itm->barlines[0]->len().getAvgUchar());
-			Assert::AreEqual((float)1, itm->barlines[1]->len().getAvgUchar());
+			Assert::AreEqual((float)1, itm->barlines[0]->len().getAvgFloat());
+			Assert::AreEqual((float)1, itm->barlines[1]->len().getAvgFloat());
 		}
 
 		TEST_METHOD(Testf255t0)
