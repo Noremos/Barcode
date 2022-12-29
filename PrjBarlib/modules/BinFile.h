@@ -1,11 +1,8 @@
 #pragma once
 
-#include <QDataStream>
-#include <QFile>
-#include <QDebug>
-#include <QMap>
 #include <bitset>
 #include "barcodeCreator.h"
+#include <fstream>
 
 struct uint_6bit
 {
@@ -15,7 +12,7 @@ struct uint_6bit
 	uint8_t v : 6;
 	uint_6bit(uint v = 0) : x1(0), x2(0), v(v) {}
 
-	const char *ptr() { return reinterpret_cast<const char *>(this); }
+	const char* ptr() { return reinterpret_cast<const char*>(this); }
 };
 
 struct uint_14bit
@@ -26,7 +23,7 @@ struct uint_14bit
 	uint16_t v : 14;
 	uint_14bit(uint val = 0) : x1(0), x2(1), v(val) {}
 
-	const char *ptr() { return reinterpret_cast<const char *>(this); }
+	const char* ptr() { return reinterpret_cast<const char*>(this); }
 };
 
 struct uint_22bit
@@ -52,9 +49,9 @@ struct uint_22bit
 		return out;
 	}
 
-	const char *ptr()
+	const char* ptr()
 	{
-		return reinterpret_cast<const char *>(this);
+		return reinterpret_cast<const char*>(this);
 	}
 };
 
@@ -67,16 +64,16 @@ struct uint_30bit
 	uint_30bit(uchar val) : x1(1), x2(1), v(val)
 	{}
 
-	const char *ptr()
+	const char* ptr()
 	{
-		return reinterpret_cast<const char *>(this);
+		return reinterpret_cast<const char*>(this);
 	}
 };
 
-static_assert(sizeof (uint_6bit) == 1, "not 1 byte");
-static_assert(sizeof (uint_14bit) == 2, "not 2 byte");
-static_assert(sizeof (uint_22bit) == 3, "not 3 byte");
-static_assert(sizeof (uint_30bit) == 4, "not 4 byte");
+static_assert(sizeof(uint_6bit) == 1, "not 1 byte");
+static_assert(sizeof(uint_14bit) == 2, "not 2 byte");
+static_assert(sizeof(uint_22bit) == 3, "not 3 byte");
+static_assert(sizeof(uint_30bit) == 4, "not 4 byte");
 
 
 class BarcodeHolder
@@ -126,7 +123,7 @@ public:
 
 //class BinState
 //{
-//	QDataStream* stream;
+//	std::fstream* stream;
 
 //public:
 //	using act = uint;
@@ -155,10 +152,10 @@ public:
 
 //class BinStateRead : public BinState
 //{
-//	std::function<Barscalar(QDataStream* stream)> parseBarscal;
+//	std::function<Barscalar(std::fstream* stream)> parseBarscal;
 //	QByteArray raw;
 
-//	QDataStream* backup = nullptr;
+//	std::fstream* backup = nullptr;
 //	std::uniqe_ptr<bc::Baritem> itemPtr;
 //public:
 
@@ -174,26 +171,26 @@ public:
 //		switch (bt)
 //		{
 //		case BarType::BYTE8_1:
-//			parseBarscal = [](QDataStream *stream) {
+//			parseBarscal = [](std::fstream *stream) {
 //				Barscalar scal;
 //				scal.type = BarType::BYTE8_1;
-//				stream->readRawData((char *) &scal.data.b1, 1);
+//				stream->read((char *) &scal.data.b1, 1);
 //				return scal;
 //			};
 //			ysize = 1;
 //			break;
 //		case BarType::BYTE8_3:
-//			parseBarscal = [](QDataStream *stream) {
+//			parseBarscal = [](std::fstream *stream) {
 //				Barscalar scal;
 //				scal.type = BarType::BYTE8_3;
-//				stream->readRawData((char *) scal.data.b3, 3);
+//				stream->read((char *) scal.data.b3, 3);
 //				return scal;
 //			};
 //			ysize = 3;
 //			break;
 //		case BarType::FLOAT32_1:
 //			break;
-//			parseBarscal = [](QDataStream *stream) {
+//			parseBarscal = [](std::fstream *stream) {
 //				Barscalar scal;
 //				scal.type = BarType::FLOAT32_1;
 //				(*stream) >> scal.data.f;
@@ -247,7 +244,7 @@ public:
 //	act pFixedArray(act arraySize, act elementSize)
 //	{
 //		raw.resize(arraySize * elementSize);
-//		stream->readRawData(raw.data(), raw.length());
+//		stream->read(raw.data(), raw.length());
 //		assert(backup == nullptr);
 //		backup = stream;
 //		stream = new linestream(&raw, QIODevice::ReadOnly);
@@ -274,7 +271,7 @@ public:
 
 //class BinStateWrite
 //{
-//	std::function<void(QDataStream & stream, const Barscalar &scal)> valueFunction;
+//	std::function<void(std::fstream & stream, const Barscalar &scal)> valueFunction;
 
 //public:
 //	bc::Baritem* item;
@@ -285,14 +282,14 @@ public:
 //		switch (bt)
 //		{
 //		case BarType::BYTE8_1:
-//			valueFunction = [](QDataStream *stream, const Barscalar &scal) { stream->writeRawData((const char *) &scal.data.b1, 1); };
+//			valueFunction = [](std::fstream *stream, const Barscalar &scal) { stream->writeRawData((const char *) &scal.data.b1, 1); };
 //			break;
 //		case BarType::BYTE8_3:
-//			valueFunction = [](QDataStream *stream, const Barscalar &scal) { stream->writeRawData((const char *) scal.data.b3, 3); };
+//			valueFunction = [](std::fstream *stream, const Barscalar &scal) { stream->writeRawData((const char *) scal.data.b3, 3); };
 //			break;
 //		case BarType::FLOAT32_1:
 //			break;
-//			valueFunction = [](QDataStream *stream, const Barscalar &scal) { stream << scal.data.f; };
+//			valueFunction = [](std::fstream *stream, const Barscalar &scal) { stream << scal.data.f; };
 //		default:
 //			break;
 //		}
@@ -347,7 +344,7 @@ public:
 //struct BarBinFile
 //{
 //private:
-//	QDataStream stream;
+//	std::fstream stream;
 //	QFile binFile;
 
 //	bool writeMode;
@@ -439,18 +436,18 @@ public:
 	using act = uint;
 
 private:
-	QDataStream stream;
-	QFile binFile;
+	std::fstream stream;
+	//QFile binFile;
 
 	bool writeMode;
 
-	uint readInt(QDataStream &stream)
+	uint readInt(std::iostream& stream)
 	{
 		uint vale;
 		stream >> vale;
 		return vale;
 
-		uchar data[4]{0, 0, 0, 0};
+		uchar data[4]{ 0, 0, 0, 0 };
 		stream >> data[0];
 
 		std::bitset<2> flag(data[0]);
@@ -467,7 +464,7 @@ private:
 			stream >> data[2];
 			return static_cast<uint_22bit>(*data).get();
 		case 3:
-			stream.readRawData((char *) data + 1, 3);
+			stream.read((char*)data + 1, 3);
 			return static_cast<uint_30bit>(*data).v;
 		default:
 			throw;
@@ -475,7 +472,7 @@ private:
 		}
 	}
 
-	void writeInt(QDataStream &stream, uint val)
+	void writeInt(std::fstream& stream, uint val)
 	{
 		stream << val;
 		return;
@@ -483,34 +480,33 @@ private:
 		if (val < 64)
 		{
 			uint_6bit v(val);
-			stream.writeRawData(v.ptr(), 1);
+			stream.write(v.ptr(), 1);
 		}
 		else if (val < 16384)
 		{
 			uint_14bit v(val);
-			stream.writeRawData(v.ptr(), 2);
+			stream.write(v.ptr(), 2);
 		}
 		else if (val < 16777216)
 		{
 			uint_22bit v(val);
-			stream.writeRawData(v.ptr(), 3);
+			stream.write(v.ptr(), 3);
 		}
 		else
 		{
 			uint_30bit v(val);
-			stream.writeRawData(v.ptr(), 4);
+			stream.write(v.ptr(), 4);
 		}
 	}
 
 public:
-	bool openRead(QString path)
+	bool openRead(const std::string& path)
 	{
 		writeMode = false;
-		binFile.setFileName(path);
-		stream.setDevice(&binFile);
+		//binFile.setFileName(path);
+		stream.open(path, std::ios::in);
 
-		bool b = binFile.open(QIODevice::ReadOnly);
-		if (b)
+		if (stream.is_open())
 		{
 			uint size;
 			stream >> size;
@@ -526,20 +522,19 @@ public:
 			return false;
 	}
 
-	bool openWrite(QString path, int maxBufferSize = 10000)
+	bool openWrite(std::string path, int maxBufferSize = 10000)
 	{
 		writeMode = true;
-		binFile.setFileName(path);
-		stream.setDevice(&binFile);
+		stream.open(path, std::ios::out);
 
-		return binFile.open(QIODevice::WriteOnly);
+		return stream.is_open();
 	}
 
 
 	std::vector<size_t> memoffs;
 	void writeHeaderProto(int iteemsSize)
 	{
-		stream << (uint) iteemsSize;
+		stream << (uint)iteemsSize;
 		for (int i = 0; i < iteemsSize; ++i)
 		{
 			size_t memOff = 0;
@@ -552,26 +547,26 @@ public:
 		int totalSize;
 	};
 
-	bool ended() { return binFile.atEnd(); }
-
-
+	bool ended()
+	{
+		return stream.eof();
+	}
 
 	BarcodeHolder* readItem(const int index)
 	{
 		for (size_t var = 0; var < memoffs.size(); ++var)
 		{
-			binFile.seek(memoffs[var]);
-			stream.setDevice(&binFile);
+			// seekg for input
+			stream.seekg(memoffs[var]);
 
 			int sindex;
 			stream >> sindex;
 			if (sindex == index)
 			{
-				binFile.seek(memoffs[var]);
-				stream.setDevice(&binFile);
+				stream.seekg(memoffs[var]);
 				BarcodesHolder tmp = read(sindex);
 				assert(tmp.lines.size() > 0);
-				auto *line = tmp.lines[0];
+				auto* line = tmp.lines[0];
 				tmp.lines.clear();
 				return line;
 			}
@@ -579,46 +574,46 @@ public:
 		return nullptr;
 	}
 
-	BarcodesHolder read(int &index)
+	BarcodesHolder read(int& index)
 	{
-		QMap<uint, bc::barline *> ids;
+		std::unordered_map<uint, bc::barline*> ids;
 
 		stream >> index;
-		qDebug() << "ID:" << index;
+		//qDebug() << "ID:" << index;
 
 		BarType bt;
 		int btRaw;
 		stream >> btRaw;
-		bt = (BarType) btRaw;
+		bt = (BarType)btRaw;
 
 		BarcodesHolder rsitem;
 
-		std::function<Barscalar(QDataStream & stream)> parseBarscal;
+		std::function<Barscalar(std::iostream& stream)> parseBarscal;
 
 		int ysize;
 		switch (bt)
 		{
 		case BarType::BYTE8_1:
-			parseBarscal = [](QDataStream &stream) {
+			parseBarscal = [](std::iostream& stream) {
 				Barscalar scal;
 				scal.type = BarType::BYTE8_1;
-				stream.readRawData((char *) &scal.data.b1, 1);
+				stream.read((char*)&scal.data.b1, 1);
 				return scal;
 			};
 			ysize = 1;
 			break;
 		case BarType::BYTE8_3:
-			parseBarscal = [](QDataStream &stream) {
+			parseBarscal = [](std::iostream& stream) {
 				Barscalar scal;
 				scal.type = BarType::BYTE8_3;
-				stream.readRawData((char *) scal.data.b3, 3);
+				stream.read((char*)scal.data.b3, 3);
 				return scal;
 			};
 			ysize = 3;
 			break;
 		case BarType::FLOAT32_1:
 			break;
-			parseBarscal = [](QDataStream &stream) {
+			parseBarscal = [](std::iostream& stream) {
 				Barscalar scal;
 				scal.type = BarType::FLOAT32_1;
 				stream >> scal.data.f;
@@ -629,13 +624,13 @@ public:
 			break;
 		}
 
-		auto &vec = rsitem.lines;
+		auto& vec = rsitem.lines;
 		size_t vecSize;
 		stream >> vecSize;
 
 		for (size_t i = 0; i < vecSize; ++i)
 		{
-			BarcodeHolder *barlines = new BarcodeHolder();
+			BarcodeHolder* barlines = new BarcodeHolder();
 			vec.push_back(barlines);
 
 			uint id = readInt(stream);					// Read 4 (id)
@@ -643,19 +638,20 @@ public:
 			Barscalar end = parseBarscal(stream);		// Read barscalar
 			barlines->depth = readInt(stream);			// Read 4 (id)
 
-			bc::barline *line = new bc::barline(start, end, 0);
+			bc::barline* line = new bc::barline(start, end, 0);
 			barlines->lines.push_back(line);
 
-//			ids.insert(id, line);
-//			qDebug() << "ID:" << id;
+			//			ids.insert(id, line);
+			//			qDebug() << "ID:" << id;
 
 			act arrSize = readInt(stream);				// Read 4 (N)
 			if (arrSize > 0)
 			{
-				QByteArray raw;
+				std::vector<char> raw;
 				raw.resize(arrSize * (4 + ysize));
-				stream.readRawData(raw.data(), raw.length());
-				QDataStream linestream(&raw, QIODevice::ReadOnly);
+				stream.read(raw.data(), raw.size());
+				std::stringstream linestream;
+				linestream.write(raw.data(), raw.size());
 
 				for (act j = 0; j < arrSize; ++j)
 				{
@@ -668,91 +664,91 @@ public:
 			}
 
 			act arrSize2 = readInt(stream);			// Read 4 (N)
-			qDebug() << "arr:" << arrSize2;
+			//qDebug() << "arr:" << arrSize2;
 			for (size_t jk = 0; jk < arrSize2; ++jk)
 			{
 				Barscalar start2 = parseBarscal(stream);	// Read barscalar * N
 				Barscalar end2 = parseBarscal(stream);		// Read barscalar * N
 
-				bc::barline *line2 = new bc::barline(start2, end2, 0);
+				bc::barline* line2 = new bc::barline(start2, end2, 0);
 				barlines->lines.push_back(line2);
 			}
 		}
 
-//		for (size_t i = 0; i < vecSize; ++i)
-//		{
-//			uint chlSize = readInt(stream);
+		//		for (size_t i = 0; i < vecSize; ++i)
+		//		{
+		//			uint chlSize = readInt(stream);
 
-//			//			QByteArray raw2;
-//			//			raw2.resize(chlSize * (sizeof(size_t)));
-//			//			stream.readRawData(raw2.data(), raw2.length());
-//			//			QDataStream ctream(&raw2, QIODevice::ReadOnly);
+		//			//			QByteArray raw2;
+		//			//			raw2.resize(chlSize * (sizeof(size_t)));
+		//			//			stream.read(raw2.data(), raw2.length());
+		//			//			std::fstream ctream(&raw2, QIODevice::ReadOnly);
 
-//			auto *prnt = vec[i];
-//			for (act j = 0; j < chlSize; ++j)
-//			{
-//				uint idc = readInt(stream);
-//				assert(ids.contains(idc));
-////				if (ids.contains(idc))
-//				ids[idc]->setparent(prnt);
-//			}
-//		}
+		//			auto *prnt = vec[i];
+		//			for (act j = 0; j < chlSize; ++j)
+		//			{
+		//				uint idc = readInt(stream);
+		//				assert(ids.contains(idc));
+		////				if (ids.contains(idc))
+		//				ids[idc]->setparent(prnt);
+		//			}
+		//		}
 
 		return rsitem;
 	}
 
-	void write(const bc::Baritem *item, int index, sets& set)
+	void write(const bc::Baritem* item, int index, sets& set)
 	{
-		QMap<bc::barline *, uint> ids;
-//		uint counter = 0;
+		std::unordered_map<bc::barline*, uint> ids;
+		//		uint counter = 0;
 
-		memoffs.push_back((size_t) binFile.pos());
+		memoffs.push_back((size_t)stream.tellp());
 
 		stream << index;
 		BarType bt = item->barlines[0]->matr[0].value.type;
-		stream << (int) bt;
+		stream << (int)bt;
 
-		std::function<void(QDataStream & stream, const Barscalar &scal)> valueFunction;
+		std::function<void(std::fstream& stream, const Barscalar& scal)> valueFunction;
 
 		switch (bt)
 		{
 		case BarType::BYTE8_1:
-			valueFunction = [](QDataStream &stream, const Barscalar &scal) { stream.writeRawData((const char *) &scal.data.b1, 1); };
+			valueFunction = [](std::fstream& stream, const Barscalar& scal) { stream.write((const char*)&scal.data.b1, 1); };
 			break;
 		case BarType::BYTE8_3:
-			valueFunction = [](QDataStream &stream, const Barscalar &scal) { stream.writeRawData((const char *) scal.data.b3, 3); };
+			valueFunction = [](std::fstream& stream, const Barscalar& scal) { stream.write((const char*)scal.data.b3, 3); };
 			break;
 		case BarType::FLOAT32_1:
 			break;
-			valueFunction = [](QDataStream &stream, const Barscalar &scal) { stream << scal.data.f; };
+			valueFunction = [](std::fstream& stream, const Barscalar& scal) { stream << scal.data.f; };
 		default:
 			break;
 		}
 
-		size_t afterPos = binFile.pos();
-		const bc::barlinevector &vec = item->barlines;
+		size_t afterPos = stream.tellp();
+		const bc::barlinevector& vec = item->barlines;
 		stream << vec.size();
 
 		size_t realIndex = 0;
 		for (size_t i = 0; i < vec.size(); ++i)
 		{
-			bc::barline *line = vec[i];
+			bc::barline* line = vec[i];
 
-			float proc = 100.f * (float) line->matr.size() / set.totalSize;
-//			if (proc < 0.01 || proc > 10)
-//			{
-//				continue;
-//			}
+			float proc = 100.f * (float)line->matr.size() / set.totalSize;
+			//			if (proc < 0.01 || proc > 10)
+			//			{
+			//				continue;
+			//			}
 
 			uint rid = realIndex++;
-			ids.insert(line, rid);
+			ids.insert(std::make_pair(line, rid));
 
 			writeInt(stream, rid);						// Write int (id)
 			valueFunction(stream, line->start);			// Write barscalar
 			valueFunction(stream, line->end());			// Write barscalar
 			writeInt(stream, line->getDeath());			// Write int (depth)
 
-			auto &arr = line->matr;
+			auto& arr = line->matr;
 			assert(arr.size() < 4294967295);
 			writeInt(stream, (act)arr.size());		// Write 4 bytes (N)
 			for (act j = 0; j < arr.size(); ++j)
@@ -768,11 +764,11 @@ public:
 				assert(barhold.lines.size() < 4294967295);
 				act arrSize2 = barhold.lines.size();
 				writeInt(stream, arrSize2); 	// Write 4 bytes (N)
-				qDebug() << arrSize2;
+				//qDebug() << arrSize2;
 
 				for (size_t jk = 0; jk < arrSize2; ++jk)
 				{
-					bc::barline *line2 = barhold.lines[jk];
+					bc::barline* line2 = barhold.lines[jk];
 
 					valueFunction(stream, line2->start);	// Write barscalar * N
 					valueFunction(stream, line2->end());	// Write barscalar * N
@@ -781,39 +777,38 @@ public:
 			}
 		}
 
-		size_t curPos = binFile.pos();
-		binFile.seek(afterPos);
+		size_t curPos = stream.tellp();
+		stream.seekp(afterPos);
 		stream << realIndex;
-		binFile.seek(curPos);
+		stream.seekp(curPos);
 
-//		for (size_t i = 0; i < vec.size(); ++i)
-//		{
-//			bc::barline *line = vec[i];
-//			auto &chl = line->children;
-//			act chlSize = chl.size();
-//			writeInt(stream, chlSize);
-//			for (act i = 0; i < chlSize; ++i)
-//			{
-//				assert(ids.contains(chl[i]));
-//				writeInt(stream, ids[chl[i]]);
-//			}
-//		}
+		//		for (size_t i = 0; i < vec.size(); ++i)
+		//		{
+		//			bc::barline *line = vec[i];
+		//			auto &chl = line->children;
+		//			act chlSize = chl.size();
+		//			writeInt(stream, chlSize);
+		//			for (act i = 0; i < chlSize; ++i)
+		//			{
+		//				assert(ids.contains(chl[i]));
+		//				writeInt(stream, ids[chl[i]]);
+		//			}
+		//		}
 	}
 
 	void close()
 	{
 		if (writeMode)
 		{
-			binFile.seek(0);
-			stream.setDevice(&binFile);
+			stream.seekp(0);
 
-			stream << (uint) memoffs.size();
+			stream << (uint)memoffs.size();
 			for (size_t i = 0; i < memoffs.size(); ++i)
 			{
-				stream << (size_t) memoffs[i];
+				stream << (size_t)memoffs[i];
 			}
 			writeMode = false;
 		}
-		binFile.close();
+		stream.close();
 	}
 };

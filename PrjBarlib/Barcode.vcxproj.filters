@@ -109,7 +109,7 @@
     <ClInclude Include="modules\base.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\imgui\GeoBar\backend\BinFile.h">
+    <ClInclude Include="modules\BinFile.h">
       <Filter>Modules</Filter>
     </ClInclude>
   </ItemGroup>
