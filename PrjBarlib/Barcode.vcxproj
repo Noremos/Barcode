@@ -83,6 +83,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\imgui\GeoBar\backend\BinFile.h" />
     <ClInclude Include="algorithmes\detection.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
     </ClInclude>
@@ -111,9 +112,15 @@
     <ClInclude Include="include\MachineProcessor.h" />
     <ClInclude Include="include\presets.h" />
     <ClInclude Include="include\pytemplcalsses.h" />
+    <ClInclude Include="modules\base.h" />
+    <ClInclude Include="modules\convertion.h" />
+    <ClInclude Include="modules\decoder.h" />
+    <ClInclude Include="modules\tiffreader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="include\GenCommand.h" />
+    <ClCompile Include="modules\convertation.cpp" />
+    <ClCompile Include="modules\tiffreader.cpp" />
     <ClCompile Include="source\barcodeCreator.cpp" />
     <ClCompile Include="source\barclasses.cpp" />
     <ClCompile Include="source\Barpy.cpp" />

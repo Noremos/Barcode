@@ -68,7 +68,7 @@ enum class glColor {
 
 
 template<class T>
-struct staticArray
+struct StaticArray
 {
 private:
 	T* m_buffer = nullptr;
@@ -76,14 +76,14 @@ private:
 
 
 public:
-	staticArray() {}
-	staticArray(const staticArray& other) /*: s(other.s)*/
+	StaticArray() {}
+	StaticArray(const StaticArray& other) /*: s(other.s)*/
 	{
 		allocate(other.m_size);
 		std::copy(other.m_buffer, other.m_buffer + other.m_size, m_buffer);
 	}
 	/*std::cout << "move failed!\n";*/
-	staticArray(staticArray&& other) /*: s(std::move(o.s))*/
+	StaticArray(StaticArray&& other) /*: s(std::move(o.s))*/
 	{
 		m_buffer = std::exchange(other.m_buffer, nullptr); // leave other in valid state
 		m_size = std::exchange(other.m_size, 0);
@@ -132,7 +132,7 @@ public:
 	}
 
 	// copy assignment
-	staticArray& operator=(const staticArray& other)
+	StaticArray& operator=(const StaticArray& other)
 	{
 		// Guard self assignment
 		if (this == &other)
@@ -145,7 +145,7 @@ public:
 	}
 
 	// move assignment
-	staticArray& operator=(staticArray&& other) noexcept
+	StaticArray& operator=(StaticArray&& other) noexcept
 	{
 		// Guard self assignment
 		if (this == &other)
@@ -166,12 +166,12 @@ public:
 		m_size = 0;
 	}
 
-	~staticArray()
+	~StaticArray()
 	{
 		release();
 	}
 };
 
-using vbuffer = staticArray<uchar>;
+using vbuffer = StaticArray<uchar>;
 
 #endif // BASE_H

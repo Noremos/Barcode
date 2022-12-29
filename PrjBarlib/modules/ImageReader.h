@@ -1,25 +1,6 @@
 #include "ReaderTypes.h"
 
 
-static int getImgTypeSize(ImageType type)
-{
-	switch (type)
-	{
-	case ImageType::int8:
-		return 1;
-	case ImageType::int16:
-		return 2;
-	case ImageType::int32:
-		//	case ImageType::argb8:
-	case ImageType::float32:
-		return 4;
-	default:
-		std::invalid_argument("");
-	}
-	return 0;
-}
-
-
 class ImageReader
 {
 public:

@@ -1,4 +1,24 @@
+#include "base.h"
+
 enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rdb8, argb8 };
+
+static int getImgTypeSize(ImageType type)
+{
+	switch (type)
+	{
+	case ImageType::int8:
+		return 1;
+	case ImageType::int16:
+		return 2;
+	case ImageType::int32:
+		//	case ImageType::argb8:
+	case ImageType::float32:
+		return 4;
+	default:
+		throw std::exception("");
+	}
+	return 0;
+}
 
 
 

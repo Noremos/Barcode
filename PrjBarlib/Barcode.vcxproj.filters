@@ -23,6 +23,12 @@
     <ClCompile Include="include\GenCommand.h">
       <Filter>Genetic</Filter>
     </ClCompile>
+    <ClCompile Include="modules\convertation.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\tiffreader.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\barline.h">
@@ -91,6 +97,21 @@
     <ClInclude Include="include\GenCommon.h">
       <Filter>Genetic</Filter>
     </ClInclude>
+    <ClInclude Include="modules\convertion.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\tiffreader.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\decoder.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\base.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\imgui\GeoBar\backend\BinFile.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint">
@@ -118,6 +139,9 @@
     </Filter>
     <Filter Include="Genetic">
       <UniqueIdentifier>{b46579c0-86f7-46c4-808a-602863f36628}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules">
+      <UniqueIdentifier>{a41a5521-13b4-4b8e-83af-470762347d48}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
