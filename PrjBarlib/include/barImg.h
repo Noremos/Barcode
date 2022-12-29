@@ -12,7 +12,6 @@
 #include "barstrucs.h"
 
 
-
 namespace bc {
 
 
@@ -38,7 +37,6 @@ namespace bc {
 
 		virtual void maxAndMin(Barscalar& min, Barscalar& max) const = 0;
 		virtual size_t typeSize() const = 0;
-
 
 		virtual Barscalar get(int x, int y) const = 0;
 
@@ -346,7 +344,6 @@ namespace bc {
 			setMetadata(width, height, 1);
 			Barscalar* raw = new Barscalar[width * height];
 
-			int off = 0;
 			for (size_t i = 0; i < width * height; ++i)
 			{
 				raw[i].type = BarType::BYTE8_1;
@@ -623,7 +620,7 @@ namespace bc {
 			return mat.depth();
 		}
 	};
-#endif // USE_OPENCV 
+#endif // USE_OPENCV
 
 
 
@@ -706,7 +703,7 @@ namespace bc {
 		}
 	};
 
-#endif // USE_OPENCV 
+#endif // USE_OPENCV
 
 
 	static inline void split(const DatagridProvider& src, std::vector<BarImg*>& bgr)

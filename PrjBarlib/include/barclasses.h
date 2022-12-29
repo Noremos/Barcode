@@ -102,10 +102,41 @@ namespace bc
 		float compireBestRes(Baritem const* bc, bc::CompireStrategy strat) const;
 		float compareOccurrence(Baritem const* bc, bc::CompireStrategy strat) const;
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
-
 		void normalize();
-		void getJsonObejct(std::string &out);
-		void getJsonLinesArray(std::string &out);
+
+		template<class TSTR, typename TO_STR>
+		void getJsonObject(TSTR &out, bool exportGraph = false,
+						   bool export3dbar = false,
+						   bool expotrBinaryMask = false) const
+		{
+			TSTR nlt = "\r\n";
+
+			out = "{";
+			out += nlt;
+			out += "lines: ";
+
+			getJsonLinesArray<TSTR, TO_STR>(out, exportGraph, export3dbar, expotrBinaryMask);
+			out += nlt;
+			out += '}';
+		}
+
+		template<class TSTR, typename TO_STR>
+		void getJsonLinesArray(TSTR &out, bool exportGraph = false,
+							   bool export3dbar = false,
+							   bool expotrBinaryMask = false) const
+		{
+			out = "[ ";
+
+			for (bc::barline *line : barlines)
+			{
+				line->getJsonObject<TSTR, TO_STR>(out, exportGraph, export3dbar, expotrBinaryMask);
+				out += ",";
+			}
+
+			out[out.length() - 1] = ']';
+		}
+
+
 		~Baritem();
 
 		bc::BarRoot* getRootNode()
@@ -320,7 +351,7 @@ namespace bc
 			barsplitvec rightInput;
 			if (leftBigger)
 			{
-				// Если левая часть больше, меняем местами
+				// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				leftInput.insert(leftInput.end(), spkit, end);
 				rightInput.insert(rightInput.end(), begin, spkit);
 			}

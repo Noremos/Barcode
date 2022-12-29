@@ -122,21 +122,38 @@ public:
 		return data.b1;
 	}
 
-	std::string text(bool asArray = false)
+	template<class TSTR, typename TO_STRING>
+	TSTR text(bool asArray = false) const
 	{
-		std::string out;
+		TSTR out;
 		switch (type)
 		{
 		case BarType::BYTE8_1:
-			return std::to_string(data.b1);
+			return TO_STRING::toStr(data.b1);
 		case BarType::BYTE8_3:
 			if (asArray)
-				out = "[" + std::to_string(data.b3[0]) + "," + std::to_string(data.b3[1]) + "," + std::to_string(data.b3[2]) + "]";
+			{
+				out = "[";
+				out += TO_STRING::toStr(data.b3[0]);
+				out += ",";
+				out += TO_STRING::toStr(data.b3[1]);
+				out += ",";
+				out += TO_STRING::toStr(data.b3[2]);
+				out += "]";
+			}
 			else
-				out = "(" + std::to_string(data.b3[0]) + "," + std::to_string(data.b3[1]) + "," + std::to_string(data.b3[2]) + ")";
+			{
+				out = "(";
+				out += TO_STRING::toStr(data.b3[0]);
+				out += ",";
+				out += TO_STRING::toStr(data.b3[1]);
+				out += ",";
+				out += TO_STRING::toStr(data.b3[2]);
+				out += ")";
+			}
 			break;
 		case BarType::FLOAT32_1:
-			return std::to_string(data.f);
+			return TO_STRING::toStr(data.f);
 		default:
 			break;
 		}

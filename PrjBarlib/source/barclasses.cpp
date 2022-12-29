@@ -13,20 +13,15 @@ bc::Baritem::Baritem(int wid, BarType type)
 	this->type = type;
 }
 
-
-
 void bc::Baritem::add(Barscalar st, Barscalar len)
 {
 	barlines.push_back(new barline(st, len, wid));
 }
 
-
-
 void bc::Baritem::add(bc::barline* line)
 {
 	barlines.push_back(line);
 }
-
 
 Barscalar bc::Baritem::sum() const
 {
@@ -50,9 +45,6 @@ void bc::Baritem::getBettyNumbers(int* bs)
 	}
 }
 
-
-
-
 //
 //void cloneGraph(bc::barline* old, bc::barline* newone)
 //{
@@ -62,7 +54,6 @@ void bc::Baritem::getBettyNumbers(int* bs)
 //		old->children[i] = newone->children[i]->clone();
 //	}
 //}
-
 
 bc::Baritem* bc::Baritem::clone() const
 {
@@ -95,7 +86,6 @@ bc::Baritem* bc::Baritem::clone() const
 	return nb;
 }
 
-
 Barscalar bc::Baritem::maxLen() const
 {
 	Barscalar max = 0;
@@ -105,7 +95,6 @@ Barscalar bc::Baritem::maxLen() const
 
 	return max;
 }
-
 
 void bc::Baritem::relen()
 {
@@ -124,7 +113,6 @@ void bc::Baritem::relen()
 	//std::for_each(arr.begin(), arr.end(), [mini](barline &n) {return n.start - uchar(mini); });
 }
 
-
 void bc::Baritem::removePorog(const Barscalar porog)
 {
 	if (porog == 0)
@@ -142,7 +130,6 @@ void bc::Baritem::removePorog(const Barscalar porog)
 	barlines.insert(barlines.begin(), res.begin(), res.end());
 }
 
-
 void bc::Baritem::preprocessBar(const Barscalar& porog, bool normalize)
 {
 	this->removePorog(porog);
@@ -150,7 +137,6 @@ void bc::Baritem::preprocessBar(const Barscalar& porog, bool normalize)
 	if (normalize)
 		this->relen();
 }
-
 
 float findCoof(bc::barline* X, bc::barline* Y, bc::CompireStrategy& strat)
 {
@@ -209,8 +195,6 @@ void soirBarlens(bc::barlinevector& barl)
 		});
 }
 
-
-
 float bc::Baritem::compireBestRes(const bc::Baritem* bc, bc::CompireStrategy strat) const
 {
 	barlinevector Xbarlines = barlines;
@@ -254,7 +238,6 @@ float bc::Baritem::compireBestRes(const bc::Baritem* bc, bc::CompireStrategy str
 	return tsum / totalsum;
 }
 
-
 float bc::Baritem::compireFull(const bc::Barbase* bc, bc::CompireStrategy strat) const
 {
 	barlinevector Xbarlines = barlines;
@@ -281,7 +264,6 @@ float bc::Baritem::compireFull(const bc::Barbase* bc, bc::CompireStrategy strat)
 	}
 	return totalsum !=0 ? tcoof / totalsum : 0;
 }
-
 
 float bc::Baritem::compareOccurrence(const bc::Baritem* bc, bc::CompireStrategy strat) const
 {
@@ -321,7 +303,6 @@ float bc::Baritem::compareOccurrence(const bc::Baritem* bc, bc::CompireStrategy 
 	return coofsum / totalsum;
 }
 
-
 void bc::Baritem::normalize()
 {
 	if (barlines.size() == 0)
@@ -344,42 +325,10 @@ void bc::Baritem::normalize()
 	}
 }
 
-using std::string;
-
-
-void bc::Baritem::getJsonObejct(std::string &out)
-{
-	string nl = "\r\n";
-
-	out = "{" + nl + "lines: ";
-
-	getJsonLinesArray(out);
-	out += nl + '}';
-}
-
-
-void bc::Baritem::getJsonLinesArray(std::string &out)
-{
-	string nl = "\r\n";
-
-	out = "[ ";
-
-	for (bc::barline *line : barlines)
-	{
-		line->getJsonObject(out);
-		out += ",";
-	}
-
-	out[out.length() - 1] = ']';
-}
-
-
-
 void bc::Baritem::sortByLen()
 {
 	soirBarlens(barlines);
 }
-
 
 void bc::Baritem::sortBySize()
 {
@@ -389,7 +338,6 @@ void bc::Baritem::sortBySize()
 		});
 }
 
-
 void bc::Baritem::sortByStart()
 {
 	std::sort(barlines.begin(), barlines.end(), [](const bc::barline* a, const bc::barline* b)
@@ -398,12 +346,11 @@ void bc::Baritem::sortByStart()
 		});
 }
 
-
 bc::Baritem::~Baritem()
 {
 	for (auto* bline : barlines)
 	{
-		if (bline!=nullptr)
+		if (bline != nullptr)
 			delete bline;
 	}
 	barlines.clear();
@@ -419,7 +366,6 @@ bc::Barcontainer::Barcontainer()
 {
 }
 
-
 Barscalar bc::Barcontainer::sum() const
 {
 	Barscalar sm = 0;
@@ -431,7 +377,6 @@ Barscalar bc::Barcontainer::sum() const
 	return sm;
 }
 
-
 void bc::Barcontainer::relen()
 {
 	for (Baritem *it : items)
@@ -440,7 +385,6 @@ void bc::Barcontainer::relen()
 			it->relen();
 	}
 }
-
 
 Barscalar bc::Barcontainer::maxLen() const
 {
@@ -458,12 +402,10 @@ Barscalar bc::Barcontainer::maxLen() const
 	return mx;
 }
 
-
 size_t bc::Barcontainer::count()
 {
 	return items.size();
 }
-
 
 bc::Baritem* bc::Barcontainer::getItem(size_t i)
 {

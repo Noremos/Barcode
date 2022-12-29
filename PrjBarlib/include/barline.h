@@ -32,7 +32,7 @@ namespace bc
 		Barscalar start;
 		//Barscalar len;
 		Barscalar m_end;
-		int matWid;
+//		int matWid;
 	private:
 		// System member
 		bool isCopy = false;
@@ -42,13 +42,14 @@ namespace bc
 
 		barline(int wid = 0)
 		{
-			matWid = wid;
+//			matWid = wid;
 		}
-		barline(Barscalar _start, Barscalar _end, int wid, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), m_end(_end), matWid(wid)
+		barline(Barscalar _start, Barscalar _end, int wid, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), m_end(_end)
+//			  ,matWid(wid)
 		{
 			matr.reserve(coordsSize);
 			bar3d = _barc;
-			assert(matWid != 0);
+//			assert(matWid != 0);
 		}
 
 		//copy const
@@ -56,7 +57,7 @@ namespace bc
 		{
 			this->start = obj.start;
 			this->m_end = obj.m_end;
-			this->matWid = obj.matWid;
+//			this->matWid = obj.matWid;
 			this->numberInParent = obj.numberInParent;
 			this->parent = obj.parent;
 			this->children = obj.children;
@@ -79,7 +80,7 @@ namespace bc
 		{
 			this->start = obj.start;
 			this->m_end = obj.m_end;
-			this->matWid = obj.matWid;
+//			this->matWid = obj.matWid;
 
 			this->numberInParent = obj.numberInParent;
 			this->parent = obj.parent;
@@ -112,7 +113,7 @@ namespace bc
 		{
 			this->start = obj.start;
 			this->m_end = obj.m_end;
-			this->matWid = obj.matWid;
+//			this->matWid = obj.matWid;
 
 			this->numberInParent = obj.numberInParent;
 			this->parent = std::exchange(obj.parent, nullptr);
@@ -135,7 +136,7 @@ namespace bc
 		{
 			this->start = obj.start;
 			this->m_end = obj.m_end;
-			this->matWid = obj.matWid;
+//			this->matWid = obj.matWid;
 			this->isCopy = false;
 
 			this->numberInParent = obj.numberInParent;
@@ -176,10 +177,10 @@ namespace bc
 			matr.clear();
 		}
 
-		int getWid()
-		{
-			return matWid;
-		}
+//		int getWid()
+//		{
+//			return matWid;
+//		}
 
 		const barvector &getMatrix() const
 		{
@@ -268,15 +269,15 @@ namespace bc
 		//    barline(uchar _start, uchar _len) :binmat(0,0,CV_8UC1), start(_start), len(_len) {}
 
 
-		barline* clone() const
+		barline* clone(bool cloneMatrix = true) const
 		{
-			barline* temp = new barline(start, m_end, matWid, nullptr);
+			barline* temp = new barline(start, m_end, /*matWid*/0, nullptr);
 
 			temp->numberInParent = this->numberInParent;
 			temp->parent = this->parent;
 			temp->children = this->children;
 
-			if (matr.size() != 0)
+			if (matr.size() != 0 && cloneMatrix)
 			{
 				temp->matr.insert(temp->matr.begin(), matr.begin(), matr.end());
 			}
@@ -292,7 +293,7 @@ namespace bc
 
 		void setparent(barline* node)
 		{
-			assert(parent == nullptr || parent == node);
+//			assert(parent == nullptr || parent == node);
 			if (this->parent == node)
 				return;
 
@@ -567,39 +568,65 @@ namespace bc
 		}
 #endif // _PYD
 
-		void getJsonObject(std::string& outObj,
-			bool exportGraph = false,
+		enum class ExportGraphType
+		{
+			noExport,
+			exportIndeies,
+			exportLines
+		};
+
+		template<class TSTR, typename TO_STRING>
+		void getJsonObject(TSTR& outObj,
+			ExportGraphType exportGraph = ExportGraphType::noExport,
 			bool export3dbar = false,
-			bool expotrBinaryMask = false)
+			bool expotrBinaryMask = false) const
 		{
 			//			std::string nl = "\r\n";
 			outObj += "{";
 
+			outObj += "\"i\":";
+			outObj += TO_STRING::toStr(reinterpret_cast<size_t>(this));
+			outObj += ",\"s\":";
+			outObj += start.text<TSTR, TO_STRING>(true);
+			outObj += ",\"e\":";
+			outObj += m_end.text<TSTR, TO_STRING>(true);
 
-			outObj += "\"start\":" + start.text(true);
-			outObj += ", \"end\":" + m_end.text(true);
 
-
-			if (exportGraph)
+			if (exportGraph != ExportGraphType::noExport)
 			{
-				outObj += ", \"children\":[";
+				outObj += ",\"c\":[";
 				int total = children.size();
 				if (total > 0)
 				{
 					assert(total < 16410954);
-					for (int i = 0; i < total; ++i)
-					{
-						if (children[i] == NULL)
-							continue;
 
-						children[i]->getJsonObject(outObj, exportGraph, export3dbar, expotrBinaryMask);
-						outObj += ",";
+					if (exportGraph == ExportGraphType::exportIndeies)
+					{
+						for (int i = 0; i < total; ++i)
+						{
+							if (children[i] == NULL)
+								continue;
+
+							outObj += TO_STRING::toStr(reinterpret_cast<size_t>(children[i]));
+							outObj += ",";
+						}
+					}
+					else
+					{
+						for (int i = 0; i < total; ++i)
+						{
+							if (children[i] == NULL)
+								continue;
+
+							children[i]->getJsonObject<TSTR, TO_STRING>(outObj, exportGraph, export3dbar, expotrBinaryMask);
+							outObj += ",";
+						}
 					}
 				}
 
-				char &lastChar = outObj.at(outObj.length() - 1);
+				auto lastChar = outObj.at(outObj.length() - 1);
 				if (lastChar == ',')
-					lastChar = ']';
+					outObj[outObj.length() - 1] = ']';
 				else
 					outObj += "]";
 			}
@@ -611,23 +638,37 @@ namespace bc
 			}
 			if (expotrBinaryMask)
 			{
-				// TODO
+				outObj += ",\"m\":[";
 
-				// matr
+				for (int i = 0, total = matr.size(); i < total; ++i)
+				{
+					outObj += "{\"x\":";
+					outObj += matr[i].getX();
+					outObj += ",\"y\":";
+					outObj += matr[i].getY();
+					outObj += ",\"v\":";
+					outObj += matr[i].value.text<TSTR, TO_STRING>(true);
+					outObj += "},";
+				}
+				auto lastChar = outObj.at(outObj.length() - 1);
+				if (lastChar == ',')
+					outObj[outObj.length() - 1] = ']';
+				else
+					outObj += "]";
 			}
 			outObj += "}";
 		}
 
-		void getChilredAsList(bc::barlinevector& lines, bool includeItself, bool clone)
+		void getChilredAsList(bc::barlinevector& lines, bool includeItself, bool clone, bool cloneMatrxi = true)
 		{
 			if (includeItself)
 			{
-				lines.push_back(clone ? this->clone() : this);
+				lines.push_back(clone ? this->clone(cloneMatrxi) : this);
 			}
 
 			for (size_t i = 0, total = children.size(); i < total; ++i)
 			{
-				children[i]->getChilredAsList(lines, true, clone);
+				children[i]->getChilredAsList(lines, true, clone, cloneMatrxi);
 			}
 		}
 
