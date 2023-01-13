@@ -512,7 +512,7 @@ public:
 	int MODE = 0;
 	TiffReader();
 
-	bool open(const char *path) override;
+	bool open(const std::string& path) override;
 	void close() override;
 	virtual ~TiffReader();
 

@@ -1,6 +1,7 @@
+#pragma once
 #include "base.h"
 
-enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rdb8, argb8 };
+enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rgb8, argb8 };
 
 static int getImgTypeSize(ImageType type)
 {
@@ -17,7 +18,7 @@ static int getImgTypeSize(ImageType type)
 	default:
 		throw std::exception("");
 	}
-	return 0;
+	//return 0;
 }
 
 
@@ -524,7 +525,7 @@ struct rowptr
 					r.rgba.samples[i].f = *(ptr.f + index + i);
 					break;
 				default:
-					std::exception();
+					throw;
 				}
 			}
 		}
@@ -1062,17 +1063,17 @@ using PointerCache = Cache<T, PointerDel<T>>;
 
 
 
-struct CoordProjection
-{
-	int wid = 1, hei = 1;
-	//GeographicTypeGeoKey
-	static std::unordered_map<int, CoordProjection> map;
-
-	static CoordProjection getCoors(int a)
-	{
-		return map.at(a);
-	}
-};
+//struct CoordProjection
+//{
+//	int wid = 1, hei = 1;
+//	//GeographicTypeGeoKey
+//	static std::unordered_map<int, CoordProjection> map;
+//
+//	static CoordProjection getCoors(int a)
+//	{
+//		return map.at(a);
+//	}
+//};
 
 struct bytebuffer
 {

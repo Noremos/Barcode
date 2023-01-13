@@ -901,13 +901,13 @@ void TiffReader::printBigIFD(size_t offset)
 		printBigIFD(oofset);
 }
 
-bool TiffReader::open(const char* path)
+bool TiffReader::open(const std::string& path)
 {
 	uchar buffer[8];
 	ready = false;
 	isTile = false;
 
-	fopen_s(&pFile, path, "rb");
+	fopen_s(&pFile, path.c_str(), "rb");
 	if (pFile == NULL)
 	{
 		perror("Error opening file");

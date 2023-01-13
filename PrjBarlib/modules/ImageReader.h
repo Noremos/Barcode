@@ -5,7 +5,7 @@ class ImageReader
 {
 public:
 	virtual rowptr getRowData(int ri) = 0;
-	virtual bool open(const char* path) = 0;
+	virtual bool open(const std::string& path) = 0;
 	virtual void close() = 0;
 	virtual ImageType getType() = 0;
 	virtual int getSamples() = 0;
