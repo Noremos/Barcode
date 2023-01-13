@@ -3,9 +3,7 @@
 
 #include <unordered_map>
 
-
 bc::Barbase::~Barbase() {}
-
 
 bc::Baritem::Baritem(int wid, BarType type)
 {
@@ -498,8 +496,6 @@ float bc::Barcontainer::compireFull(const bc::Barbase* bc, bc::CompireStrategy s
     return res;
 }
 
-
-
 float bc::Barcontainer::compireBest(const bc::Baritem* bc, bc::CompireStrategy strat) const
 {
 	float res = 0;
@@ -512,8 +508,6 @@ float bc::Barcontainer::compireBest(const bc::Baritem* bc, bc::CompireStrategy s
 	return res;
 }
 
-
-
 bc::Barcontainer::Barcontainer::~Barcontainer()
 {
 	clear();
@@ -521,7 +515,6 @@ bc::Barcontainer::Barcontainer::~Barcontainer()
 
 
 #ifdef USE_OPENCV
-
 
 //-------------BARIMG
 
