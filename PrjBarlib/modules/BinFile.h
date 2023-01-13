@@ -457,10 +457,10 @@ private:
 		stream.write(reinterpret_cast<char*>(&val), size);
 	}
 
-	uint readInt(std::iostream& stream)
+	uint readInt(std::iostream& localStream)
 	{
 		uint vale;
-		readRaw(vale);
+		localStream.read(reinterpret_cast<char*>(&vale), 4);
 		return vale;
 
 		uchar data[4]{ 0, 0, 0, 0 };
@@ -473,11 +473,10 @@ private:
 		case 0:
 			return static_cast<uint_6bit>(data[0]).v;
 		case 1:
-			readRaw(data[1]);
-			return static_cast<uint_6bit>(*data).v;
+			localStream.read((char*)data, 1);
+			return static_cast<uint_14bit>(*data).v;
 		case 2:
-			readRaw(data[1]);
-			readRaw(data[2]);
+			localStream.read((char*)data + 1, 2);
 			return static_cast<uint_22bit>(*data).get();
 		case 3:
 			stream.read((char*)data + 1, 3);
@@ -487,30 +486,30 @@ private:
 		}
 	}
 
-	void writeInt(std::fstream& stream, uint val)
+	void writeInt(std::fstream& localStream, uint val)
 	{
-		writeRaw(val);
+		localStream.write(reinterpret_cast<char*>(&val), 4);
 		return;
 
 		if (val < 64)
 		{
 			uint_6bit v(val);
-			stream.write(v.ptr(), 1);
+			localStream.write(v.ptr(), 1);
 		}
 		else if (val < 16384)
 		{
 			uint_14bit v(val);
-			stream.write(v.ptr(), 2);
+			localStream.write(v.ptr(), 2);
 		}
 		else if (val < 16777216)
 		{
 			uint_22bit v(val);
-			stream.write(v.ptr(), 3);
+			localStream.write(v.ptr(), 3);
 		}
 		else
 		{
 			uint_30bit v(val);
-			stream.write(v.ptr(), 4);
+			localStream.write(v.ptr(), 4);
 		}
 	}
 
@@ -664,7 +663,7 @@ public:
 			if (arrSize > 0)
 			{
 				std::vector<char> raw;
-				raw.resize(arrSize * (4 + ysize));
+				raw.resize(static_cast<size_t>(arrSize) * (4ull + ysize));
 				stream.read(raw.data(), raw.size());
 				std::stringstream linestream;
 				linestream.write(raw.data(), raw.size());
