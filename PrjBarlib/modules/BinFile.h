@@ -3,6 +3,8 @@
 #include <bitset>
 #include "barcodeCreator.h"
 #include <fstream>
+#include <functional>
+#include <sstream>
 
 struct uint_6bit
 {
@@ -349,7 +351,7 @@ public:
 
 //	bool writeMode;
 
-//	bool openRead(QString path)
+//	bool openRead(BackString path)
 //	{
 //		writeMode = false;
 //		binFile.setFileName(path);
@@ -372,7 +374,7 @@ public:
 //			return false;
 //	}
 
-//	bool openWrite(QString path, int maxBufferSize = 10000)
+//	bool openWrite(BackString path, int maxBufferSize = 10000)
 //	{
 //		writeMode = true;
 //		binFile.setFileName(path);
@@ -441,14 +443,28 @@ private:
 
 	bool writeMode;
 
+	template<typename RTY>
+	void readRaw(RTY& val)
+	{
+		const char size = sizeof(RTY);
+		stream.read(reinterpret_cast<char*>(&val), size);
+	}
+
+	template<typename RTY>
+	void writeRaw(RTY val)
+	{
+		const char size = sizeof(RTY);
+		stream.write(reinterpret_cast<char*>(&val), size);
+	}
+
 	uint readInt(std::iostream& stream)
 	{
 		uint vale;
-		stream >> vale;
+		readRaw(vale);
 		return vale;
 
 		uchar data[4]{ 0, 0, 0, 0 };
-		stream >> data[0];
+		readRaw(data[0]);
 
 		std::bitset<2> flag(data[0]);
 		int asf = flag.to_ulong();
@@ -457,24 +473,23 @@ private:
 		case 0:
 			return static_cast<uint_6bit>(data[0]).v;
 		case 1:
-			stream >> data[1];
+			readRaw(data[1]);
 			return static_cast<uint_6bit>(*data).v;
 		case 2:
-			stream >> data[1];
-			stream >> data[2];
+			readRaw(data[1]);
+			readRaw(data[2]);
 			return static_cast<uint_22bit>(*data).get();
 		case 3:
 			stream.read((char*)data + 1, 3);
 			return static_cast<uint_30bit>(*data).v;
 		default:
 			throw;
-			return 0;
 		}
 	}
 
 	void writeInt(std::fstream& stream, uint val)
 	{
-		stream << val;
+		writeRaw(val);
 		return;
 
 		if (val < 64)
@@ -504,16 +519,16 @@ public:
 	{
 		writeMode = false;
 		//binFile.setFileName(path);
-		stream.open(path, std::ios::in);
+		stream.open(path, std::ios::in | std::ios::binary);
 
 		if (stream.is_open())
 		{
 			uint size;
-			stream >> size;
+			readRaw(size);
 			for (uint i = 0; i < size; ++i)
 			{
 				size_t off;
-				stream >> off;
+				readRaw(off);
 				memoffs.push_back(off);
 			}
 			return true;
@@ -525,20 +540,20 @@ public:
 	bool openWrite(std::string path, int maxBufferSize = 10000)
 	{
 		writeMode = true;
-		stream.open(path, std::ios::out);
+		stream.open(path, std::ios::out | std::ios::binary);
 
 		return stream.is_open();
 	}
 
 
 	std::vector<size_t> memoffs;
-	void writeHeaderProto(int iteemsSize)
+	void writeHeaderProto(int itemsSize)
 	{
-		stream << (uint)iteemsSize;
-		for (int i = 0; i < iteemsSize; ++i)
+		writeRaw((uint)itemsSize);
+		for (int i = 0; i < itemsSize; ++i)
 		{
 			size_t memOff = 0;
-			stream << memOff;
+			writeRaw(memOff);
 		}
 	}
 
@@ -560,7 +575,7 @@ public:
 			stream.seekg(memoffs[var]);
 
 			int sindex;
-			stream >> sindex;
+			readRaw(sindex);
 			if (sindex == index)
 			{
 				stream.seekg(memoffs[var]);
@@ -578,12 +593,12 @@ public:
 	{
 		std::unordered_map<uint, bc::barline*> ids;
 
-		stream >> index;
+		readRaw(index);
 		//qDebug() << "ID:" << index;
 
 		BarType bt;
 		int btRaw;
-		stream >> btRaw;
+		readRaw(btRaw);
 		bt = (BarType)btRaw;
 
 		BarcodesHolder rsitem;
@@ -616,7 +631,7 @@ public:
 			parseBarscal = [](std::iostream& stream) {
 				Barscalar scal;
 				scal.type = BarType::FLOAT32_1;
-				stream >> scal.data.f;
+				stream.read(reinterpret_cast<char*>(&scal.data.f), 4);
 				return scal;
 			};
 			ysize = 4;
@@ -626,7 +641,7 @@ public:
 
 		auto& vec = rsitem.lines;
 		size_t vecSize;
-		stream >> vecSize;
+		readRaw(vecSize);
 
 		for (size_t i = 0; i < vecSize; ++i)
 		{
@@ -645,6 +660,7 @@ public:
 			//			qDebug() << "ID:" << id;
 
 			act arrSize = readInt(stream);				// Read 4 (N)
+			assert(arrSize < 3294967295);
 			if (arrSize > 0)
 			{
 				std::vector<char> raw;
@@ -664,6 +680,8 @@ public:
 			}
 
 			act arrSize2 = readInt(stream);			// Read 4 (N)
+			assert(arrSize2 < 3294967295);
+
 			//qDebug() << "arr:" << arrSize2;
 			for (size_t jk = 0; jk < arrSize2; ++jk)
 			{
@@ -704,9 +722,9 @@ public:
 
 		memoffs.push_back((size_t)stream.tellp());
 
-		stream << index;
+		writeRaw(index);
 		BarType bt = item->barlines[0]->matr[0].value.type;
-		stream << (int)bt;
+		writeRaw((int)bt);
 
 		std::function<void(std::fstream& stream, const Barscalar& scal)> valueFunction;
 
@@ -720,14 +738,14 @@ public:
 			break;
 		case BarType::FLOAT32_1:
 			break;
-			valueFunction = [](std::fstream& stream, const Barscalar& scal) { stream << scal.data.f; };
+			valueFunction = [](std::fstream& stream, const Barscalar& scal) { stream.write(reinterpret_cast<const char*>(&scal.data.f), 4); };
 		default:
 			break;
 		}
 
 		size_t afterPos = stream.tellp();
 		const bc::barlinevector& vec = item->barlines;
-		stream << vec.size();
+		writeRaw(vec.size());
 
 		size_t realIndex = 0;
 		for (size_t i = 0; i < vec.size(); ++i)
@@ -779,7 +797,7 @@ public:
 
 		size_t curPos = stream.tellp();
 		stream.seekp(afterPos);
-		stream << realIndex;
+		writeRaw(realIndex);
 		stream.seekp(curPos);
 
 		//		for (size_t i = 0; i < vec.size(); ++i)
@@ -802,10 +820,10 @@ public:
 		{
 			stream.seekp(0);
 
-			stream << (uint)memoffs.size();
+			writeRaw((uint)memoffs.size());
 			for (size_t i = 0; i < memoffs.size(); ++i)
 			{
-				stream << (size_t)memoffs[i];
+				writeRaw(memoffs[i]);
 			}
 			writeMode = false;
 		}
