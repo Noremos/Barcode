@@ -1,1 +1,0 @@
-D:\Install\Qt\5.14.1\msvc2017_64\bin\windeployqt.exe Barcode.exe
