@@ -365,5 +365,7 @@ include/MachineProcessor.h
 source/Neuro.cpp
 source/tests.h
 include/pytemplcalsses.h
-maps.ipynb
+PrjBarlib/maps.ipynb
 PrjBarlib/algorithmes
+PrjBarlib/build
+CMake
