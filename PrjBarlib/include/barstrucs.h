@@ -31,7 +31,7 @@ namespace bc
 		uchar getR() { return this->data.b3[2]; }
 	};
 
-	
+
 	struct EXPORT CachedValue
 	{
 		Barscalar val;
@@ -114,7 +114,7 @@ namespace bc
 	};
 
 
-	
+
 	struct BarConstructor
 	{
 		CachedValue stepPorog;
@@ -184,15 +184,11 @@ namespace bc
 	{
 		int x = -1;
 		int y = -1;
-		inline point()
-		{
-			x = -1; y = -1;
-		}
+		inline point() : x(-1), y(-1)
+		{ }
 
 		inline point(int x, int y) :x(x), y(y)
-		{
-
-		}
+		{ }
 
 		inline void init(int x, int y)
 		{
@@ -225,6 +221,12 @@ namespace bc
 		{
 			return point(x + xy[0], y + xy[1]);
 		}
+
+		point operator-(const point& other) const
+		{
+			return point(x - other.x, y - other.y);
+		}
+
 		point operator+(char* xy) const
 		{
 			return point(x + xy[0], y + xy[1]);
@@ -264,7 +266,7 @@ namespace bc
 	typedef std::unordered_map<point, bool, pointHash> pmap;
 	typedef std::pair<point, bool> ppair;
 
-	
+
 	struct bar3dvalue
 	{
 		size_t count;
@@ -282,7 +284,7 @@ namespace bc
 	};
 
 
-	
+
 	struct pybarvalue
 	{
 		Barscalar value;
@@ -306,7 +308,7 @@ namespace bc
 #define OPTTIF((A), (B)) (B)
 #endif
 
-	
+
 	struct barvalue
 	{
 #ifdef BARVALUE_RAM_OPTIMIZATION
@@ -426,11 +428,13 @@ namespace bc
 		}
 	};
 
-	
+
 	using barvector = std::vector<barvalue>;
 
-	
+
 	using barcounter = std::vector<bar3dvalue>;
+
+	BarRect getBarRect(const barvector& matrix);
 
 	//**********************************************
 }

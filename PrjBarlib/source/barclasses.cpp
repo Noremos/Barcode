@@ -5,6 +5,26 @@
 
 bc::Barbase::~Barbase() {}
 
+bc::BarRect bc::getBarRect(const bc::barvector& matrix)
+{
+	int l, r, t, d;
+	r = l = matrix[0].getX();
+	t = d = matrix[0].getY();
+	for (size_t j = 0; j < matrix.size(); ++j)
+	{
+		if (l > matrix[j].getX())
+			l = matrix[j].getX();
+		if (r < matrix[j].getX())
+			r = matrix[j].getX();
+
+		if (t > matrix[j].getY())
+			t = matrix[j].getY();
+		if (d < matrix[j].getY())
+			d = matrix[j].getY();
+	}
+	return bc::BarRect(l, t, r - l + 1, d - t + 1);
+}
+
 bc::Baritem::Baritem(int wid, BarType type)
 {
 	this->wid = wid;

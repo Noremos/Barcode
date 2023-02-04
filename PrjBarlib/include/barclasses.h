@@ -7,7 +7,6 @@
 
 namespace bc
 {
-	
 	class EXPORT Barbase
 	{
 	public:
@@ -21,7 +20,6 @@ namespace bc
 		virtual ~Barbase();
 	};
 
-	
 	class EXPORT Baritem : public Barbase
 	{
 	public:
@@ -43,7 +41,7 @@ namespace bc
 
 			for (auto* barval : obj.barlines)
 			{
-				this->barlines.push_back(barval->clone());
+				this->barlines.push_back(barval->clone(cloneMatrix));
 			}
 		}
 
@@ -53,6 +51,8 @@ namespace bc
 			this->rootNode = obj.rootNode;
 			this->wid = obj.wid;
 			this->type = obj.type;
+			this->deleteChildren = false;
+			this->shdowCopy = obj.shdowCopy;
 
 			for (auto* barval : obj.barlines)
 			{
@@ -65,6 +65,8 @@ namespace bc
 		{
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
+			this->deleteChildren = std::exchange(obj.deleteChildren, false);
+			this->shdowCopy = obj.shdowCopy;
 
 			this->barlines = obj.barlines;
 			obj.barlines.clear();
@@ -76,6 +78,8 @@ namespace bc
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
 			this->type = obj.type;
+			this->deleteChildren = std::exchange(obj.deleteChildren, false);
+			this->shdowCopy = obj.shdowCopy;
 
 			this->barlines = obj.barlines;
 			obj.barlines.clear();
@@ -258,7 +262,7 @@ namespace bc
 				it->calculateEntropy(hist);
 				s += it->acc * log(it->acc);
 			}
-			
+
 			return -s;
 		}
 
@@ -291,12 +295,12 @@ namespace bc
 			const barsplitvec::iterator begin = input.begin();
 			const barsplitvec::iterator end = input.end();
 			barsplitvec::iterator spkit = begin + 1;
-			
+
 			for (auto it = begin; it != end; ++it)
 			{
 				//it->caclHist();
 			}
-			
+
 			if (input.size() == 1)
 			{
 				left.insert(left.end(), begin, begin + 1);
@@ -363,7 +367,7 @@ namespace bc
 
 			std::cout << "Left len: " << leftInput.size() << std::endl;
 			std::cout << "Right len: " << rightInput.size() << std::endl;
-			
+
 			splitRes(leftInput, left, right);
 			splitRes(rightInput, left, right);
 		}
@@ -466,7 +470,7 @@ namespace bc
 			}
 			return lines;
 		}
-		
+
 		float cmp(const Baritem* bitem, bc::CompireStrategy strat) const
 		{
 			return compireFull((const Baritem*)bitem, strat);
@@ -481,7 +485,7 @@ namespace bc
 	};
 
 	//template<size_t N>
-	
+
 	class EXPORT Barcontainer : public Barbase
 	{
 		std::vector<Baritem*> items;
@@ -560,5 +564,4 @@ namespace bc
 
 		// Barbase interface
 	};
-
 }

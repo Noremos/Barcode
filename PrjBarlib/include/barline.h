@@ -9,6 +9,9 @@
 #include <unordered_map>
 #include <math.h>
 #include <string>
+#include <vector>
+#include <unordered_set>
+#include <stack>
 
 namespace bc
 {
@@ -659,7 +662,7 @@ namespace bc
 			outObj += "}";
 		}
 
-		void getChilredAsList(bc::barlinevector& lines, bool includeItself, bool clone, bool cloneMatrxi = true)
+		void getChilredAsList(barlinevector& lines, bool includeItself, bool clone, bool cloneMatrxi = true)
 		{
 			if (includeItself)
 			{
@@ -669,6 +672,49 @@ namespace bc
 			for (size_t i = 0, total = children.size(); i < total; ++i)
 			{
 				children[i]->getChilredAsList(lines, true, clone, cloneMatrxi);
+			}
+		}
+
+		void getAsListSafe(barlinevector& lines, bool clone, bool cloneMatrxi = true)
+		{
+			::std::unordered_set<barline*> setd;
+			::std::stack<barline*> stack;
+			::std::stack<int> stackIndex;
+
+			lines.push_back(clone ? this->clone(cloneMatrxi) : this);
+			stack.push(this);
+			stackIndex.push(0);
+			while (stack.size() > 0)
+			{
+				barline* cur = stack.top(); stack.pop();
+				size_t i = stackIndex.top(); stackIndex.pop();
+				size_t total = cur->children.size();
+				for (; i < total;)
+				{
+					barline* nchld = cur->children[i];
+					if (setd.count(nchld) > 0)
+					{
+						++i;
+						continue;
+					}
+
+					setd.insert(nchld);
+					lines.push_back(nchld ? nchld->clone(cloneMatrxi) : this);
+
+					if (nchld->children.size() > 0)
+					{
+						stack.push(nchld);
+						stackIndex.push(i);
+						cur = nchld;
+
+						i = 0;
+						total = cur->children.size();
+					}
+					else
+					{
+						++i;
+					}
+				}
 			}
 		}
 
