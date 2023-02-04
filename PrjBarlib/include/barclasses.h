@@ -33,7 +33,7 @@ namespace bc
 		Baritem(int wid = 0, BarType type = BarType::NONE);
 
 		//copy constr
-		Baritem(Baritem const& obj)
+		Baritem(Baritem const& obj, bool cloneMatrix = true)
 		{
 			this->rootNode = obj.rootNode;
 			this->wid = obj.wid;
@@ -51,8 +51,6 @@ namespace bc
 			this->rootNode = obj.rootNode;
 			this->wid = obj.wid;
 			this->type = obj.type;
-			this->deleteChildren = false;
-			this->shdowCopy = obj.shdowCopy;
 
 			for (auto* barval : obj.barlines)
 			{
@@ -65,8 +63,6 @@ namespace bc
 		{
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
-			this->deleteChildren = std::exchange(obj.deleteChildren, false);
-			this->shdowCopy = obj.shdowCopy;
 
 			this->barlines = obj.barlines;
 			obj.barlines.clear();
@@ -78,8 +74,6 @@ namespace bc
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
 			this->type = obj.type;
-			this->deleteChildren = std::exchange(obj.deleteChildren, false);
-			this->shdowCopy = obj.shdowCopy;
 
 			this->barlines = obj.barlines;
 			obj.barlines.clear();

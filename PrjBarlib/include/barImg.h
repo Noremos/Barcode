@@ -56,7 +56,7 @@ namespace bc {
 			return get((int)(pos % wid()), (int)(pos / wid()));
 		}
 
-		inline BarType getType() const
+		virtual BarType getType() const
 		{
 			return type;
 		}
