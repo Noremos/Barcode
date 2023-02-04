@@ -464,6 +464,13 @@ private:
 
 };
 
+
+struct SubImgInfo
+{
+	int width;
+	int height;
+};
+
 class TiffReader: public ImageReader
 {
 	friend class TiffIFD;
@@ -492,6 +499,17 @@ public:
 	int getSubImageSize()
 	{
 		return subImages.size();
+	}
+
+	std::vector<SubImgInfo> getSumImageInfos()
+	{
+		std::vector<SubImgInfo> info;
+		for(TiffIFD* tfd : subImages)
+		{
+			info.push_back({ (int)tfd->tags.ImageWidth, (int)tfd->tags.ImageLength });
+		}
+
+		return info;
 	}
 
 	template<class T>
