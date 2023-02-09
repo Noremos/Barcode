@@ -7,6 +7,7 @@
 #include "barclasses.h"
 
 #include <unordered_map>
+#include <functional>
 
 #define COMPP Component*
 #define HOLEP Hole*
@@ -58,10 +59,10 @@ namespace bc {
 		}
 	};
 
-	
+
 	using Include = Component*;
 
-	
+
 	class EXPORT BarcodeCreator
 	{
 		typedef bc::DatagridProvider bcBarImg;
@@ -135,7 +136,7 @@ namespace bc {
 			return wid * y + x;
 		}
 
-		bool GETDIFF(const Barscalar &a, const Barscalar& b) const
+		bool GETDIFF(const Barscalar& a, const Barscalar& b) const
 		{
 			return !this->settings.stepPorog.isCached || (a > b ? a - b : b - a) <= this->settings.getMaxStepPorog();
 		}
@@ -240,5 +241,106 @@ namespace bc {
 
 
 		std::unique_ptr<indexCov> geometrySortedArr;
+	};
+
+	using PloyPoints = std::vector<bc::point>;
+	class CloudPointsBarcode
+	{
+	public:
+		struct PointIndexCov
+		{
+			uint points[2];
+			float dist = 0;
+			PointIndexCov(uint ind0 = 0, uint ind1 = 0, float _dist = 0) : dist(_dist)
+			{
+				points[0] = ind0;
+				points[1] = ind1;
+			}
+		};
+
+		struct CloundPoint
+		{
+			CloundPoint(int x, int y, float z) : x(x), y(y), z(z)
+			{}
+			int x, y;
+			float z;
+			float distanse(const CloundPoint& R) const
+			{
+				float res = sp(x - R.x) + sp(y - R.y) + sp(z - R.z);
+				return sqrtf(res);
+			}
+
+			Barscalar getScalar()
+			{
+				Barscalar a;
+				//a.data.i3 = new int[3] { x, y, z };
+				//a.type = BarType::INT32_3;
+				a.data.f = z;
+				a.type = BarType::FLOAT32_1;
+				return a;
+			}
+
+		private:
+			float sp(float v) const
+			{
+				return v * v;
+			}
+		};
+
+		struct CloundPoints
+		{
+			std::vector<CloundPoint> points;
+		};
+
+	public:
+		CloudPointsBarcode()
+		{}
+
+		bc::Barcontainer* createBarcode(const CloundPoints* points);
+		//bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
+		bool useHolde = false;
+		static std::function<void(const point&, const point&, bool)> drawLine;
+		static std::function<void(PloyPoints&, bool)> drawPlygon;
+		using ComponentsVector = std::vector<barline*>;
+
+	private:
+		bool isContain(poidex ind) const
+		{
+			return included.find(ind) != included.end();
+		}
+
+		inline void setInclude(const poidex ind, barline* comp)
+		{
+			included[ind] = comp;
+		}
+
+		inline barline* getComp(poidex ind) const
+		{
+			auto itr = included.find(ind);
+			return itr != included.end() ? itr->second : nullptr;
+		}
+
+		void sortPixels();
+		void sortTriangulate();
+
+		void processTypeF(const CloundPoints* points, Barcontainer* item = nullptr);
+		void processFULL(const CloundPoints* points, bc::Barcontainer* item);
+
+		void process(Barcontainer *item);
+		void processComp(const CloudPointsBarcode::PointIndexCov& val);
+		void processHold();
+
+		void addItemToCont(Barcontainer* item);
+		void clearIncluded();
+
+	private:
+		friend class Baritem;
+
+		const CloundPoints* cloud = nullptr;
+		uint curIndexInSortedArr = 0;
+		size_t totalSize = 0;
+		std::unordered_map<poidex, barline*> included;
+		ComponentsVector components;
+		std::unique_ptr<PointIndexCov> sortedArr;
 	};
 }
