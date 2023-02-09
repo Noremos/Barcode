@@ -109,7 +109,7 @@ public:
 
 
 	template<class D>
-	void beginArray(D& array, const size_t& size, bool initWithNew = false)
+	void beginArray(D& array, const size_t& size)
 	{
 		if (isReading())
 		{
