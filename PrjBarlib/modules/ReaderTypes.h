@@ -727,13 +727,13 @@ struct DataRect
 	rowptr data;
 	int wid;
 	int hei;
-	DataRect(uchar* data = nullptr, int widgth = 0, int height = 0, ImageType type = ImageType::float32, int samples = 0) : wid(widgth), hei(height)
+	DataRect(uchar* data = nullptr, int width = 0, int height = 0, ImageType type = ImageType::float32, int samples = 0) : wid(width), hei(height)
 	{
 		minVal = -9999;
 		maxVal = -9999;
-		this->data.set(data, type, widgth * height, samples);
+		this->data.set(data, type, width * height, samples);
 	}
-	DataRect(int widgth, int height, ImageType type, int samples) : wid(widgth), hei(height)
+	DataRect(int width, int height, ImageType type, int samples) : wid(width), hei(height)
 	{
 		data.set(wid * hei, type, samples);
 	}
