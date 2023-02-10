@@ -553,7 +553,7 @@ public:
 	rowptr getRowData(int ri) override;
 	DataRect getRect(int stX, int stRow, int wid, int hei) override;
 
-	int widght() override;
+	int width() override;
 	int height() override;
 
 	ImageType getType() override;

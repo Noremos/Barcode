@@ -540,7 +540,7 @@ void TiffReader::setRowsCacheSize(size_t n)
 }
 
 
-int TiffReader::widght()
+int TiffReader::width()
 {
 	return curSubImage->tags.ImageWidth;
 }
@@ -828,7 +828,7 @@ rowptr TiffReader::getRowData(int y)// rowNum
 
 //		assert(r == 0);
 
-		return processData(ret.extract(), widght(), curSubImage->tags.SamplesPerPixel);
+		return processData(ret.extract(), width(), curSubImage->tags.SamplesPerPixel);
 	}
 }
 
@@ -1026,10 +1026,10 @@ enum GetForState { gfs_first = 0, gfs_middle = 1, gfs_last = 2, gfs_single = 3 }
 
 DataRect TiffReader::getRect(int stX, int stRow, int wid, int hei)
 {
-	if (stX < 0 || stX >= this->widght() || stRow < 0 || stRow >= height())
+	if (stX < 0 || stX >= this->width() || stRow < 0 || stRow >= height())
 		return nullptr;
 
-	ReadRange widPosRange(stX, wid, this->widght());
+	ReadRange widPosRange(stX, wid, this->width());
 	ReadRange rowPosRange(stRow, hei, this->height());
 
 	DataRect output(wid, hei, getType(), curSubImage->tags.SamplesPerPixel);

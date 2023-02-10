@@ -9,7 +9,7 @@ public:
 	virtual void close() = 0;
 	virtual ImageType getType() = 0;
 	virtual int getSamples() = 0;
-	virtual int widght() = 0;
+	virtual int width() = 0;
 	virtual int height() = 0;
 	RowptrCache cachedRows;
 	bool ready = false;
