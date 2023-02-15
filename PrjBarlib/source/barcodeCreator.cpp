@@ -1635,7 +1635,7 @@ void BarcodeCreator::processByValueRadius(Barcontainer* item)
 
 // Radius
 
-bc::Barcontainer* CloudPointsBarcode::createBarcode(const CloundPoints* points)
+bc::Barcontainer* CloudPointsBarcode::createBarcode(const CloudPoints* points)
 {
 	Barcontainer* cont = new Barcontainer();
 	if (points->points.size() > 0)
@@ -1643,12 +1643,12 @@ bc::Barcontainer* CloudPointsBarcode::createBarcode(const CloundPoints* points)
 	return cont;
 }
 
-void CloudPointsBarcode::processFULL(const CloundPoints* points, Barcontainer* item)
+void CloudPointsBarcode::processFULL(const CloudPoints* points, Barcontainer* item)
 {
 	processTypeF(points, item);
 }
 
-void CloudPointsBarcode::processTypeF(const CloundPoints* points, Barcontainer* item)
+void CloudPointsBarcode::processTypeF(const CloudPoints* points, Barcontainer* item)
 {
 	cloud = points;
 	sortPixels();
@@ -1656,7 +1656,7 @@ void CloudPointsBarcode::processTypeF(const CloundPoints* points, Barcontainer* 
 }
 
 //#include "../side/delaunator.hpp"
-using Point3D = CloudPointsBarcode::CloundPoint;
+using Point3D = CloudPointsBarcode::CloudPoint;
 
 Point3D operator+(const Point3D& p, const Point3D& v) {
 	return { p.x + v.x, p.y + v.y, p.z + v.z };
@@ -1832,12 +1832,12 @@ void CloudPointsBarcode::process(Barcontainer* item)
 void CloudPointsBarcode::processComp(const  CloudPointsBarcode::PointIndexCov& val)
 {
 	const int curIndex = val.points[0];
-	CloundPoint curCloudPoint = cloud->points[curIndex];
+	CloudPoint curCloudPoint = cloud->points[curIndex];
 	bc::point curPoint(curCloudPoint.x, curCloudPoint.y);
 	poidex curPoindex = curPoint.getLiner(MAX_WID);
 
 	int nextIndex = val.points[1];
-	CloundPoint nextCloudPoint = cloud->points[nextIndex];
+	CloudPoint nextCloudPoint = cloud->points[nextIndex];
 	bc::point nextPoint(nextCloudPoint.x, nextCloudPoint.y);
 	poidex nextPoindex = nextPoint.getLiner(MAX_WID);
 
@@ -2240,12 +2240,12 @@ void CloudPointsBarcode::processHold()
 		const PointIndexCov& val = sortedArr.get()[curIndexInSortedArr];
 
 		//const uint curIndex = val.points[0];
-		CloundPoint curCloudPoint = cloud->points[val.points[0]];
+		CloudPoint curCloudPoint = cloud->points[val.points[0]];
 		bc::point curPoint(curCloudPoint.x, curCloudPoint.y);
 		poidex curPoindex = curPoint.getLiner(MAX_WID);
 
 		//int unextIndex = val.points[1];
-		CloundPoint nextCloudPoint = cloud->points[val.points[1]];
+		CloudPoint nextCloudPoint = cloud->points[val.points[1]];
 		bc::point nextPoint(nextCloudPoint.x, nextCloudPoint.y);
 		poidex nextPoindex = nextPoint.getLiner(MAX_WID);
 
@@ -2294,7 +2294,33 @@ void CloudPointsBarcode::processHold()
 					using namespace std::chrono_literals;
 					//std::this_thread::sleep_for(1000ms);
 
+					barline* fLines[2];
+					fLines[0] = first->hole ? first->hole->line : nullptr;
+					fLines[1] = connected->hole ? connected->hole->line : nullptr;
 					bool h = grath.findHole(curPoindex, nextPoindex, val.dist, components, instakilled);
+					if (h)
+					{
+						barline* newHole = connected->hole->line;
+						assert(newHole);
+						assert(newHole != fLines[1]);
+
+						if (fLines[0] == fLines[1])
+							fLines[1] = nullptr;
+
+						for (auto* p : fLines)
+						{
+							if (p == nullptr)
+								continue;
+
+							while (p->parent)
+							{
+								p = p->parent;
+							}
+
+							if (p != newHole)
+								p->setparent(newHole);
+						}
+					}
 				}
 
 				grath.connect(curPoindex, nextPoindex, val.dist);

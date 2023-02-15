@@ -258,13 +258,13 @@ namespace bc {
 			}
 		};
 
-		struct CloundPoint
+		struct CloudPoint
 		{
-			CloundPoint(int x, int y, float z) : x(x), y(y), z(z)
+			CloudPoint(int x, int y, float z) : x(x), y(y), z(z)
 			{}
 			int x, y;
 			float z;
-			float distanse(const CloundPoint& R) const
+			float distanse(const CloudPoint& R) const
 			{
 				float res = sp(x - R.x) + sp(y - R.y) + sp(z - R.z);
 				return sqrtf(res);
@@ -287,16 +287,16 @@ namespace bc {
 			}
 		};
 
-		struct CloundPoints
+		struct CloudPoints
 		{
-			std::vector<CloundPoint> points;
+			std::vector<CloudPoint> points;
 		};
 
 	public:
 		CloudPointsBarcode()
 		{}
 
-		bc::Barcontainer* createBarcode(const CloundPoints* points);
+		bc::Barcontainer* createBarcode(const CloudPoints* points);
 		//bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 		bool useHolde = false;
 		static std::function<void(const point&, const point&, bool)> drawLine;
@@ -323,8 +323,8 @@ namespace bc {
 		void sortPixels();
 		void sortTriangulate();
 
-		void processTypeF(const CloundPoints* points, Barcontainer* item = nullptr);
-		void processFULL(const CloundPoints* points, bc::Barcontainer* item);
+		void processTypeF(const CloudPoints* points, Barcontainer* item = nullptr);
+		void processFULL(const CloudPoints* points, bc::Barcontainer* item);
 
 		void process(Barcontainer *item);
 		void processComp(const CloudPointsBarcode::PointIndexCov& val);
@@ -336,7 +336,7 @@ namespace bc {
 	private:
 		friend class Baritem;
 
-		const CloundPoints* cloud = nullptr;
+		const CloudPoints* cloud = nullptr;
 		uint curIndexInSortedArr = 0;
 		size_t totalSize = 0;
 		std::unordered_map<poidex, barline*> included;
