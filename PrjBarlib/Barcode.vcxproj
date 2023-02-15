@@ -83,17 +83,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="algorithmes\detection.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="algorithmes\ExportStats.h" />
-    <ClInclude Include="algorithmes\noise.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="algorithmes\prep.h" />
-    <ClInclude Include="algorithmes\roofs.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Python 38|x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="include\barline.h" />
     <ClInclude Include="include\barscalar.h" />
     <ClInclude Include="include\barstrucs.h" />

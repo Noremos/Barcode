@@ -61,26 +61,11 @@
     <ClInclude Include="include\Hole.h">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="algorithmes\detection.h">
-      <Filter>algorithmes</Filter>
-    </ClInclude>
-    <ClInclude Include="algorithmes\noise.h">
-      <Filter>algorithmes</Filter>
-    </ClInclude>
     <ClInclude Include="include\pytemplcalsses.h">
       <Filter>pylib</Filter>
     </ClInclude>
-    <ClInclude Include="algorithmes\prep.h">
-      <Filter>algorithmes</Filter>
-    </ClInclude>
-    <ClInclude Include="algorithmes\roofs.h">
-      <Filter>algorithmes</Filter>
-    </ClInclude>
     <ClInclude Include="include\barscalar.h">
       <Filter>classes</Filter>
-    </ClInclude>
-    <ClInclude Include="algorithmes\ExportStats.h">
-      <Filter>algorithmes</Filter>
     </ClInclude>
     <ClInclude Include="include\CellMachine.h">
       <Filter>Genetic</Filter>
