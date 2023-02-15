@@ -396,7 +396,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\PrjBarlib\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\PrjBarlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PreprocessorDefinitions>VDEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -551,7 +551,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\PrjBarlib\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\PrjBarlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -575,7 +575,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Install\Python\include;$(SolutionDir)\PrjBarlib\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Install\Python\include;$(SolutionDir)\PrjBarlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -623,7 +623,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Install\Python37\include;D:\MyA\Libraries\sources\boost_1_74_0;$(SolutionDir)\PrjBarlib\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Install\Python37\include;D:\MyA\Libraries\sources\boost_1_74_0;$(SolutionDir)\PrjBarlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_PYD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -648,7 +648,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Install\Python38\include;D:\MyA\Libraries\sources\boost_1_74_0;$(SolutionDir)\PrjBarlib\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Install\Python38\include;D:\MyA\Libraries\sources\boost_1_74_0;$(SolutionDir)\PrjBarlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_PYD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -672,7 +672,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Install\Python38\include;D:\MyA\Libraries\sources\boost_1_74_0;$(SolutionDir)\PrjBarlib\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Install\Python38\include;D:\MyA\Libraries\sources\boost_1_74_0;$(SolutionDir)\PrjBarlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_PYD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BrowseInformation>true</BrowseInformation>
@@ -697,7 +697,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\PrjBarlib\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\PrjBarlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PreprocessorDefinitions>_MBCS;_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -717,7 +717,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\PrjBarlib\include;D:\MyA\Libraries\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\PrjBarlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PreprocessorDefinitions>_DEBUG;_MBCS;_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
