@@ -11,7 +11,6 @@ namespace BarcodeTests
 	{
 		bc::BarConstructor defineConstr()
 		{
-
 			bc::BarConstructor bcont;
 			bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
 			bcont.createBinaryMasks = true;
@@ -25,7 +24,32 @@ namespace BarcodeTests
 		}
 
 
-		bc::BarImg restore255ToBarimg(bc::Barcontainer* cont, int wid, int hei, Barscalar maxval)
+		bc::BarImg restore255ToBarimg(bc::Barcontainer* cont, int wid, int hei, Barscalar minval)
+		{
+			auto* it = cont->getItem(0);
+			auto& lines = it->barlines;
+			bc::BarImg img(wid, hei);
+			for (size_t i = 0; i < wid * hei; i++)
+			{
+				img.setLiner(i, minval);
+			}
+
+			for (size_t i = 0; i < lines.size(); i++)
+			{
+				Barscalar start = lines[i]->start;
+				Barscalar end = start + lines[i]->len();
+				auto& matr = lines[i]->matr;
+				for (size_t k = 0; k < matr.size(); k++)
+				{
+					auto& p = matr[k];
+					//assert(start <= p.value && p.value <= end);
+					img.add(p.getPoint(), p.value);
+				}
+			}
+			return img;
+		}
+
+		bc::BarImg restoreToBarimg(bc::Barcontainer* cont, int wid, int hei, Barscalar maxval)
 		{
 			auto* it = cont->getItem(0);
 			auto& lines = it->barlines;
@@ -178,12 +202,11 @@ namespace BarcodeTests
 			};
 
 			img.setDataU8(2, 2, data2);
-			std::unique_ptr<bc::Barcontainer> bar;
-			bar.reset(test.createBarcode(&img, bcont));
+			auto bar = std::make_unique<bc::Barcontainer>(test.createBarcode(&img, bcont));
 			bc::Baritem* itm = bar->getItem(0);
 			Assert::AreEqual((size_t)2, itm->barlines.size());
-			Assert::AreEqual((float)1, itm->barlines[0]->len().getAvgFloat());
-			Assert::AreEqual((float)1, itm->barlines[1]->len().getAvgFloat());
+				Assert::AreEqual((float)1, itm->barlines[0]->len().getAvgFloat());
+				Assert::AreEqual((float)1, itm->barlines[1]->len().getAvgFloat());
 		}
 
 		TEST_METHOD(Testf255t0)
@@ -194,6 +217,7 @@ namespace BarcodeTests
 			bcont.structure[0].proctype = bc::ProcType::f255t0;
 			const int k = 5;
 			uchar maxv = 239;
+			uchar minv = 4;
 			uchar* data5 = new uchar[k * k]{
 			63,121,73,14,120,
 			237,90,194,136,4,
@@ -204,7 +228,7 @@ namespace BarcodeTests
 
 			img.setDataU8(k, k, data5);
 			bc::Barcontainer* ret = test.createBarcode(&img, bcont);
-			bc::BarImg out = restore255ToBarimg(ret, k, k, maxv);
+			bc::BarImg out = restore255ToBarimg(ret, k, k, minv);
 
 			compiteBarAndBar(img, out);
 		}
