@@ -202,7 +202,7 @@ namespace BarcodeTests
 			};
 
 			img.setDataU8(2, 2, data2);
-			auto bar = std::make_unique<bc::Barcontainer>(test.createBarcode(&img, bcont));
+			std::unique_ptr< bc::Barcontainer> bar(test.createBarcode(&img, bcont));
 			bc::Baritem* itm = bar->getItem(0);
 			Assert::AreEqual((size_t)2, itm->barlines.size());
 				Assert::AreEqual((float)1, itm->barlines[0]->len().getAvgFloat());

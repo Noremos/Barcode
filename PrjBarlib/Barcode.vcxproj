@@ -366,7 +366,7 @@
     <TargetExt>.pyd</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Python Debug|x64'">
-    <OutDir>D:\Programs\C++\Barcode\x64\PythonD\</OutDir>
+    <OutDir>..\x64\PythonD\</OutDir>
     <TargetName>barpy</TargetName>
     <TargetExt>.pyd</TargetExt>
   </PropertyGroup>
