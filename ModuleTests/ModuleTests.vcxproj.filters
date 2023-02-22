@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="..\PrjBarlib\modules\convertation.cpp">
+      <Filter>ModulesFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\PrjBarlib\modules\tiffreader.cpp">
+      <Filter>ModulesFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="test.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="..\PrjBarlib\modules\StateBinFile.h">
+      <Filter>ModulesFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PrjBarlib\modules\ReaderTypes.h">
+      <Filter>ModulesFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PrjBarlib\modules\convertion.h">
+      <Filter>ModulesFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PrjBarlib\modules\decoder.h">
+      <Filter>ModulesFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PrjBarlib\modules\ImageReader.h">
+      <Filter>ModulesFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PrjBarlib\modules\tiffreader.h">
+      <Filter>ModulesFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PrjBarlib\modules\base.h">
+      <Filter>ModulesFiles</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ModulesFiles">
+      <UniqueIdentifier>{fdfa9552-797b-432d-9a9c-a50e74e4f9aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tests">
+      <UniqueIdentifier>{3abb94b9-ccef-459a-8cb6-f74c462f2224}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

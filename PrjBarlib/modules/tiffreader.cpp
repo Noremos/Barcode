@@ -1,3 +1,4 @@
+#ifndef SKIP_M_INC
 #include "tiffreader.h"
 
 #ifndef QSLOT_CODE
@@ -12,18 +13,22 @@
 
 #include <algorithm>
 
+#include <string>
+#include <cassert>
+
+#else
+	#define OUT cout
+#endif // !SKIP_M_INC
+
+
 using std::cout;
 using std::string;
 using std::vector;
 
-#include <string>
-#include <cassert>
-
-
 //std::unordered_map<int, CoordProjection> CoordProjection::map{{4326, {1,-1}}};
 
 
-string dectodeTEST(uchar* buffer, int len);
+//string dectodeTEST(uchar* buffer, int len);
 
 size_t TiffIFD::getTagIntValue(size_t offOrValue, size_t count, char format, bool is64)
 {
@@ -734,7 +739,7 @@ rowptr TiffReader::processData(uchar* bytes, int len, int samplesInOne)
 
 	default:
 		//		data = reinterpret_cast<rowptr>(bytes);
-		std::exception();
+		throw;
 		break;
 	}
 	data.deletePtr = true;

@@ -431,7 +431,7 @@ public:
 //		default:
 //			std::exception();
 //		}
-		return 0;
+		//return 0;
 	}
 
 	float getNullValue() const
@@ -457,11 +457,10 @@ public:
 	GeoTiffTags geotags;
 	ImageType getType() const;
 private:
-	TiffReader *reader;
+	TiffReader *reader = nullptr;
 	// tile
 	uint tilesCount = 0;
 	bool isTiled = true;
-
 };
 
 
