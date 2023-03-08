@@ -1,10 +1,17 @@
 #include "barcodeCreator.h"
+
 #include <stack>
 #include <string>
 #include <assert.h>
 #include <algorithm>
 #include <thread>
 #include <chrono>
+#include <iostream>
+#include <map>
+
+#include <barImg.h>
+#include <cmath>
+
 
 #ifdef __linux
 #include <climits>
@@ -14,6 +21,100 @@ using namespace bc;
 
 #pragma warning(disable : 4996)
 
+
+
+static inline void split(const DatagridProvider& src, std::vector<BarImg*>& bgr)
+{
+	size_t step = static_cast<size_t>(src.channels()) * src.typeSize();
+	for (int k = 0; k < src.channels(); k++)
+	{
+		BarImg* ib = new BarImg(src.wid(), src.hei());
+		bgr.push_back(ib);
+
+		for (size_t i = 0; i < static_cast<unsigned long long>(src.length()) * src.typeSize(); i += step)
+		{
+			ib->setLiner(i, src.getLiner(i));
+		}
+	}
+}
+
+//template<class Barscalar, class U>
+//static inline void split(const DatagridProvider<BarVec3b>& src, std::vector<DatagridProvider<U>*>& bgr)
+//{
+//}
+
+enum class BarConvert
+{
+	BGR2GRAY,
+	GRAY2BGR,
+};
+
+
+inline void cvtColorU1C2V3B(const bc::DatagridProvider& source, bc::BarImg& dest)
+{
+	assert(source.channels() == 1);
+
+	dest.resize(source.wid(), source.hei());
+
+	for (size_t i = 0; i < source.length(); ++i)
+	{
+		Barscalar u = source.getLiner(i);
+		u.data.b3[0] = u.data.b1;
+		u.data.b3[1] = u.data.b1;
+		u.data.b3[2] = u.data.b1;
+		u.type = BarType::BYTE8_3;
+		dest.setLiner(i, u);
+	}
+}
+
+inline void cvtColorV3B2U1C(const bc::DatagridProvider& source, bc::BarImg& dest)
+{
+	assert(dest.channels() == 1);
+	dest.resize(source.wid(), source.hei());
+
+	for (size_t i = 0; i < source.length(); ++i)
+	{
+		float accum = source.getLiner(i).getAvgFloat();
+		dest.setLiner(i, (uchar)accum);
+	}
+}
+//template<class Barscalar, class U>
+//static inline void cvtColor(const bc::DatagridProvider& source, bc::DatagridProvider<U>& dest)
+//{
+
+//}
+
+//// note: this function is not a member function!
+
+//BarImg operator+(const Barscalar& c1, BarImg& c2);
+//BarImg operator-(const Barscalar& c1, const BarImg& c2);
+
+#ifdef USE_OPENCV
+
+cv::Mat convertProvider2Mat(DatagridProvider* img)
+{
+	cv::Mat m = cv::Mat::zeros(img->hei(), img->wid(), CV_8UC1);
+	for (size_t i = 0; i < img->length(); i++)
+	{
+		auto p = img->getPointAt(i);
+		m.at<uchar>(p.y, p.x) = img->get(p.x, p.y).data.b1;
+	}
+	return m;
+	}
+
+
+cv::Mat convertRGBProvider2Mat(const DatagridProvider* img)
+{
+	cv::Mat m = cv::Mat::zeros(img->hei(), img->wid(), CV_8UC3);
+	for (size_t i = 0; i < img->length(); i++)
+	{
+		auto p = img->getPointAt(i);
+		m.at<cv::Vec3b>(p.y, p.x) = img->get(p.x, p.y).toCvVec();
+	}
+	return m;
+}
+
+#endif // USE_OPENCV
 
 void BarcodeCreator::draw(std::string name)
 {
@@ -217,7 +318,6 @@ inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 	return main;
 }
 
-#include <iostream>
 //****************************************B0**************************************
 
 inline bool BarcodeCreator::checkCloserB0()
@@ -864,13 +964,12 @@ struct myclassFromMax {
 	}
 };
 
-#include<map>
 
 //
 //inline point* BarcodeCreator::sort()
 //{
 //	std::map<T, int> hist;
-//	std::unordered_map<T, int> offs;
+//	barmap<T, int> offs;
 
 //	for (int i = 0; i < workingImg->wid(); ++i)//wid
 //	{
@@ -1385,7 +1484,7 @@ uchar dif(uchar a, uchar b)
 
 #ifdef _PYD
 
-bc::Barcontainer* bc::BarcodeCreator::createBarcode(bn::ndarray& img, bc::BarConstructor& structure)
+bc::Barcontainer* bc::BarcodeCreator::createPysBarcode(bn::ndarray& img, bc::BarConstructor& structure)
 {
 	//auto shape = img.get_shape();
 
@@ -1668,9 +1767,6 @@ Point3D operator-(const Point3D& p, const Point3D& v) {
 bool operator==(const Point3D& p, const Point3D& v) {
 	return p.x == v.x && p.y == v.y;
 }
-
-#include <iostream>
-#include <cmath>
 
 struct LineSegment {
 	Point3D p1, p2;
@@ -1959,7 +2055,7 @@ std::function<void(bc::PloyPoints&, bool)> CloudPointsBarcode::drawPlygon;
 
 struct Graph
 {
-	std::unordered_map<poidex, GraphPoint> graphPoints;
+	barmap<poidex, GraphPoint> graphPoints;
 
 	GraphPoint* getGrath(poidex p)
 	{
@@ -2056,7 +2152,7 @@ struct Graph
 		float _dot = dot(directionA, directionB);
 		float _det = det(directionA, directionB);
 		const double pi = 3.14159265358979323846;
-		float ang = std::atan2f(_det, _dot);// atan2(y, x) or atan2(sin, cos)
+		float ang = std::atan2(_det, _dot);// atan2(y, x) or atan2(sin, cos)
 		if (ang < 0)
 		{
 			ang += 2 * pi;

@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
-#include<assert.h>
-#include<string.h>
+#include <assert.h>
+#include <string.h>
 #include <math.h>
 #include <string>
 #include "presets.h"
@@ -57,7 +57,10 @@ enum class BarType : char
 	NONE = 0,
 	BYTE8_1,
 	BYTE8_3,
-	FLOAT32_1
+	BYTE8_4,
+	FLOAT32_1,
+	FLOAT32_3,
+	INT32_3
 };
 
 class EXPORT Barscalar
@@ -65,8 +68,10 @@ class EXPORT Barscalar
 	union BarData
 	{
 		unsigned char b1;
-		unsigned char b3[3];
+		unsigned char b3[4];
 		float f;
+		float* f3;
+		int* i3;
 	};
 
 public:
@@ -90,17 +95,30 @@ public:
 			data.b1 = i;
 			break;
 		case BarType::BYTE8_3:
+		case BarType::BYTE8_4:
 			data.b3[0] = i;
 			data.b3[1] = i;
 			data.b3[2] = i;
+			data.b3[3] = i;
 			break;
 		case BarType::FLOAT32_1:
 			data.f = i;
-			assert(false);
+			break;
+//			assert(false);
 		default:
 			data.b1 = 0;
 			break;
 		}
+	}
+
+
+	Barscalar(uchar i0, uchar i1, uchar i2, uchar i3)
+	{
+		data.b3[0] = i0;
+		data.b3[1] = i1;
+		data.b3[2] = i2;
+		data.b3[3] = i3;
+		type = BarType::BYTE8_4;
 	}
 
 	Barscalar(uchar i0, uchar i1, uchar i2)
@@ -152,6 +170,32 @@ public:
 				out += ")";
 			}
 			break;
+		case BarType::BYTE8_4:
+			if (asArray)
+			{
+				out = "[";
+				out += TO_STRING::toStr(data.b3[0]);
+				out += ",";
+				out += TO_STRING::toStr(data.b3[1]);
+				out += ",";
+				out += TO_STRING::toStr(data.b3[2]);
+				out += ",";
+				out += TO_STRING::toStr(data.b3[3]);
+				out += "]";
+			}
+			else
+			{
+				out = "(";
+				out += TO_STRING::toStr(data.b3[0]);
+				out += ",";
+				out += TO_STRING::toStr(data.b3[1]);
+				out += ",";
+				out += TO_STRING::toStr(data.b3[2]);
+				out += ",";
+				out += TO_STRING::toStr(data.b3[3]);
+				out += ")";
+			}
+			break;
 		case BarType::FLOAT32_1:
 			return TO_STRING::toStr(data.f);
 		default:
@@ -178,18 +222,18 @@ public:
 
 #ifdef _PYD
 
-	bp::tuple value()
+	bp::tuple pyvalue()
 	{
 		switch (type)
 		{
 		case BarType::BYTE8_1:
-			return  bp::make_tuple(data.b1);
+			return  bp::tuple(data.b1);
 		case BarType::BYTE8_3:
-			return bp::make_tuple(data.b3[0], data.b3[1], data.b3[2]);
-		case BarType::FLOAT_32_1:
-			return bp::make_tuple(data.f);
+			return bp::tuple(data.b3);
+		case BarType::FLOAT32_1:
+			return bp::tuple(data.f);
 		default:
-			return bp::make_tuple(0);
+			return bp::tuple(0);
 		}
 	}
 #endif
@@ -201,6 +245,7 @@ private:
 		{
 		case BarType::BYTE8_1:
 		case BarType::BYTE8_3:
+		case BarType::BYTE8_4:
 		case BarType::FLOAT32_1:
 		{
 			float a = this->getAvgFloat();
@@ -225,6 +270,8 @@ private:
 				return this->data.b1 == X.data.b1;
 			case BarType::BYTE8_3:
 				return this->data.b1 == X.data.b3[0] && this->data.b1 == X.data.b3[1] && this->data.b1 == X.data.b3[2];
+			case BarType::BYTE8_4:
+				return this->data.b1 == X.data.b3[0] && this->data.b1 == X.data.b3[1] && this->data.b1 == X.data.b3[2] && this->data.b1 == X.data.b3[3];
 			case BarType::FLOAT32_1:
 				return this->data.f == static_cast<uchar>(X.data.f);
 			default:
@@ -233,6 +280,7 @@ private:
 			}
 		}
 		case BarType::BYTE8_3:
+		case BarType::BYTE8_4:
 		{
 			switch (X.type)
 			{
@@ -240,6 +288,8 @@ private:
 				return this->data.b3[0] == X.data.b1 && this->data.b3[1] == X.data.b1 && this->data.b3[2] == X.data.b1;
 			case BarType::BYTE8_3:
 				return this->data.b3[0] == X.data.b3[0] && this->data.b3[1] == X.data.b3[1] && this->data.b3[2] == X.data.b3[2];
+			case BarType::BYTE8_4:
+				return this->data.b3[0] == X.data.b3[0] && this->data.b3[1] == X.data.b3[1] && this->data.b3[2] == X.data.b3[2] && this->data.b3[3] == X.data.b3[3];
 			case BarType::FLOAT32_1:
 			{
 				uchar xf = static_cast<uchar>(X.data.f);
@@ -724,7 +774,7 @@ public:
 	}
 
 	template<typename T>
-	auto& operator+=(const T R)
+	Barscalar& operator+=(const T R)
 	{
 		switch (type)
 		{
@@ -745,7 +795,7 @@ public:
 		return *this;
 	}
 
-	auto& operator+=(const Barscalar& R)
+	Barscalar& operator+=(const Barscalar& R)
 	{
 		switch (type)
 		{
@@ -785,7 +835,7 @@ public:
 
 
 	template<typename T>
-	auto& operator-=(const T R)
+	Barscalar& operator-=(const T R)
 	{
 		switch (type)
 		{
@@ -822,7 +872,7 @@ public:
 		return *this;
 	}
 
-	auto& operator-=(const Barscalar& R)
+	Barscalar& operator-=(const Barscalar& R)
 	{
 		switch (type)
 		{
@@ -843,7 +893,7 @@ public:
 				break;
 			case BarType::FLOAT32_1:
 				for (char i = 0; i < 3; ++i)
-					data.b3[i] -= R.data.f;
+					data.b3[i] -= (uchar)R.data.f;
 				break;
 			default:
 				assert(false);
@@ -861,7 +911,7 @@ public:
 	}
 
 	template<typename T>
-	auto& operator*=(T R)
+	Barscalar& operator*=(T R)
 	{
 		switch (type)
 		{
@@ -879,7 +929,7 @@ public:
 		return *this;
 	}
 
-	auto& operator*=(const Barscalar& R)
+	Barscalar& operator*=(const Barscalar& R)
 	{
 		switch (type)
 		{
@@ -918,7 +968,7 @@ public:
 	}
 
 	template<typename T>
-	auto& operator/=(const T R)
+	Barscalar& operator/=(const T R)
 	{
 		switch (type)
 		{
@@ -955,7 +1005,7 @@ public:
 		return *this;
 	}
 
-	auto& operator/=(const Barscalar& R)
+	Barscalar& operator/=(const Barscalar& R)
 	{
 		switch (type)
 		{
@@ -996,7 +1046,7 @@ public:
 
 	// Operators
 
-	auto operator+(const Barscalar& R) const
+	Barscalar operator+(const Barscalar& R) const
 	{
 		Barscalar res = *this;
 		res += R;
@@ -1004,14 +1054,14 @@ public:
 	}
 
 	template<typename T>
-	auto operator+(const T R) const
+	Barscalar operator+(const T R) const
 	{
 		Barscalar res = *this;
 		res += R;
 		return res;
 	}
 
-	auto operator-(const Barscalar& R) const
+	Barscalar operator-(const Barscalar& R) const
 	{
 		Barscalar res = *this;
 		res -= R;
@@ -1019,7 +1069,7 @@ public:
 	}
 
 	template<typename T>
-	auto operator-(const T R) const
+	Barscalar operator-(const T R) const
 	{
 		Barscalar res = *this;
 		res -= R;
@@ -1065,6 +1115,8 @@ public:
 			return data.b3[index];
 		case BarType::BYTE8_1:
 		case BarType::FLOAT32_1:
+			assert(index == 0);
+			return data.b3[index];
 		default:
 			assert(false);
 		}
@@ -1079,6 +1131,8 @@ public:
 			return data.b3[index];
 		case BarType::BYTE8_1:
 		case BarType::FLOAT32_1:
+			assert(index == 0);
+			return data.b3[index];
 		default:
 			assert(false);
 		}

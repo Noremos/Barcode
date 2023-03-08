@@ -7,7 +7,7 @@ namespace BarSharp
         static string c = @"
 #include <stdio.h>
 
-int main(void) 
+int main(void)
 {
     printf(^Hello, World!\n^);
     return 0;
@@ -17,7 +17,7 @@ int main(void)
         static string cpp = @"
 #include <iostream>
 
-int main(int, char**) 
+int main(int, char**)
 {
     std::cout << ^Hello, World!\n^;
     return 0;
@@ -97,7 +97,7 @@ func main()
 
                 mwid = Math.Max(mwid, line.Length);
             }
-            mp.Save(@"D:\Programs\C++\Barcode\PrjCSharpLib\result.bmp");
+            mp.Save(@"..\PrjCSharpLib\result.bmp");
         }
     }
 }

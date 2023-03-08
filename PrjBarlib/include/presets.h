@@ -3,6 +3,7 @@
 //#define VDEBUG
 
 
+#include "../side/flat_hash_map/unordered_map.hpp"
 
 
 
@@ -10,6 +11,12 @@ typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
 
+
+template<class TKey, class TVal>
+using barmap = ska::unordered_map<TKey, TVal>;
+
+template<class TKey, class TVal, class THasher>
+using barmapHash = ska::unordered_map<TKey, TVal, THasher>;
 
 
 
@@ -46,10 +53,7 @@ namespace bc
 {
 	struct barRGB;
 	struct barBGR;
-};
 
-namespace bc
-{
 	enum class CompireStrategy { CommonToSum, CommonToLen, compire3dHist, compire3dBrightless, FromMethod, Complex, Temp1, Temp2 };
 
 	enum class ComponentType { Component = 0, Hole = 1, FullPrepair, PrepairComp };

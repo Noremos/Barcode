@@ -6,8 +6,8 @@
 #include "barstrucs.h"
 #include "barclasses.h"
 
-#include <unordered_map>
 #include <functional>
+#include <memory>
 
 #define COMPP Component*
 #define HOLEP Hole*
@@ -120,7 +120,7 @@ namespace bc {
 		size_t processCount = 0;
 		size_t totalSize = 0;
 		poidex* sortedArr = nullptr;
-		bc::BarImg drawimg;
+		// bc::BarImg drawimg;
 
 		//***************************************************
 		constexpr bool IS_OUT_OF_REG(int x, int y)
@@ -218,6 +218,12 @@ namespace bc {
 		//bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 
 
+		BarcodeCreator()
+		{ }
+
+		BarcodeCreator(const BarcodeCreator&)
+		{ }
+
 		virtual ~BarcodeCreator()
 		{
 			//			clearIncluded();
@@ -228,7 +234,7 @@ namespace bc {
 
 #ifdef _PYD
 
-		bc::Barcontainer* createBarcode(bn::ndarray& img, bc::BarConstructor& structure);
+		bc::Barcontainer* createPysBarcode(bn::ndarray& img, bc::BarConstructor& structure);
 #endif // _PYD
 
 		///////////GEOMETRY
@@ -246,7 +252,6 @@ namespace bc {
 	using PloyPoints = std::vector<bc::point>;
 	class CloudPointsBarcode
 	{
-	public:
 		struct PointIndexCov
 		{
 			uint points[2];
@@ -258,6 +263,7 @@ namespace bc {
 			}
 		};
 
+	public:
 		struct CloudPoint
 		{
 			CloudPoint(int x, int y, float z) : x(x), y(y), z(z)
@@ -284,6 +290,10 @@ namespace bc {
 			float sp(float v) const
 			{
 				return v * v;
+			}
+			float sp(int v) const
+			{
+				return (float)(v * v);
 			}
 		};
 
@@ -339,7 +349,7 @@ namespace bc {
 		const CloudPoints* cloud = nullptr;
 		uint curIndexInSortedArr = 0;
 		size_t totalSize = 0;
-		std::unordered_map<poidex, barline*> included;
+		barmap<poidex, barline*> included;
 		ComponentsVector components;
 		std::unique_ptr<PointIndexCov> sortedArr;
 	};

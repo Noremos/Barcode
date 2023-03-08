@@ -6,15 +6,15 @@
 #include <vector>
 #include <cassert>
 #include <cstring>
-#include <unordered_map>
 #include "include_cv.h"
+#include "include_py.h"
 #include "barscalar.h"
 
 #define BARVALUE_RAM_OPTIMIZATION
 
 namespace bc
 {
-	typedef uint poidex;
+	typedef unsigned int poidex;
 
 
 	struct barRGB : public Barscalar
@@ -217,7 +217,7 @@ namespace bc
 			return y * wid + x;
 		}
 
-		point operator+(int* xy) const
+		point operator+(const int* xy) const
 		{
 			return point(x + xy[0], y + xy[1]);
 		}
@@ -227,7 +227,7 @@ namespace bc
 			return point(x - other.x, y - other.y);
 		}
 
-		point operator+(char* xy) const
+		point operator+(const char* xy) const
 		{
 			return point(x + xy[0], y + xy[1]);
 		}
@@ -253,7 +253,6 @@ namespace bc
 		}
 	};
 
-
 	class EXPORT pointHash
 	{
 	public:
@@ -263,7 +262,7 @@ namespace bc
 		}
 	};
 
-	typedef std::unordered_map<point, bool, pointHash> pmap;
+	typedef barmapHash<point, bool, pointHash> pmap;
 	typedef std::pair<point, bool> ppair;
 
 
@@ -287,7 +286,11 @@ namespace bc
 
 	struct pybarvalue
 	{
-		Barscalar value;
+#ifdef INCLUDE_PY
+		bp::tuple value;
+#endif
+
+	public:
 		int x, y;
 
 		pybarvalue()
@@ -297,7 +300,9 @@ namespace bc
 		{
 			this->x = x;
 			this->y = y;
-			this->value = value;
+#ifdef INCLUDE_PY
+			this->value = value.pyvalue();
+#endif
 		}
 	};
 
@@ -397,9 +402,9 @@ namespace bc
 			return y * widr + x;
 		}
 
-		static bc::point getStatPoint(uint index)
+		static bc::point getStatPoint(uint index, int widr = MAX_WID)
 		{
-			return bc::point(index % MAX_WID, index / MAX_WID);
+			return bc::point(index % widr, index / widr);
 		}
 
 		int getX() const
@@ -434,7 +439,50 @@ namespace bc
 
 	using barcounter = std::vector<bar3dvalue>;
 
-	BarRect getBarRect(const barvector& matrix);
+
+	class EXPORT DatagridProvider
+	{
+	public:
+		virtual int wid() const = 0;
+		virtual int hei() const = 0;
+		virtual int channels() const = 0;
+
+		virtual void maxAndMin(Barscalar& min, Barscalar& max) const = 0;
+		virtual size_t typeSize() const = 0;
+
+		virtual Barscalar get(int x, int y) const = 0;
+
+		virtual Barscalar get(bc::point p) const
+		{
+			return get(p.x, p.y);
+		}
+
+		virtual size_t length() const
+		{
+			return static_cast<size_t>(wid()) * hei();
+		}
+
+		// wid * y + x;
+		virtual Barscalar getLiner(size_t pos) const
+		{
+			return get((int)(pos % wid()), (int)(pos / wid()));
+		}
+
+		virtual BarType getType() const
+		{
+			return type;
+		}
+
+		point getPointAt(size_t iter) const
+		{
+			return point((int)(iter % wid()), (int)(iter / wid()));
+		}
+		virtual ~DatagridProvider()
+		{ }
+
+	public:
+		BarType type = BarType::BYTE8_1;
+	};
 
 	//**********************************************
 }

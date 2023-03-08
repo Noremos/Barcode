@@ -2,7 +2,6 @@
 //#define USE_OPENCV
 #include "presets.h"
 
-#include <memory>
 #include <iterator>
 #include <cassert>
 #include <cstring>
@@ -26,53 +25,6 @@ namespace bc {
 	public:
 		int r, g, b;
 	};*/
-
-
-	class EXPORT DatagridProvider
-	{
-	public:
-		virtual int wid() const = 0;
-		virtual int hei() const = 0;
-		virtual int channels() const = 0;
-
-		virtual void maxAndMin(Barscalar& min, Barscalar& max) const = 0;
-		virtual size_t typeSize() const = 0;
-
-		virtual Barscalar get(int x, int y) const = 0;
-
-		virtual Barscalar get(bc::point p) const
-		{
-			return get(p.x, p.y);
-		}
-
-		virtual size_t length() const
-		{
-			return static_cast<size_t>(wid()) * hei();
-		}
-
-		// wid * y + x;
-		virtual Barscalar getLiner(size_t pos) const
-		{
-			return get((int)(pos % wid()), (int)(pos / wid()));
-		}
-
-		virtual BarType getType() const
-		{
-			return type;
-		}
-
-		point getPointAt(size_t iter) const
-		{
-			return point((int)(iter % wid()), (int)(iter / wid()));
-		}
-		virtual ~DatagridProvider()
-		{ }
-
-	public:
-		BarType type = BarType::BYTE8_1;
-	};
-
-
 
 	class EXPORT BarImg : public DatagridProvider
 	{
@@ -106,6 +58,8 @@ namespace bc {
 			this->_channels = chnls;
 			if (chnls == 3)
 				type = BarType::BYTE8_3;
+			else if (chnls == 4)
+				type = BarType::BYTE8_4;
 			else
 				type = BarType::BYTE8_1;
 			TSize = sizeof(Barscalar);
@@ -218,7 +172,7 @@ namespace bc {
 		}
 
 		//Перегрузка оператора присваивания
-		BarImg& operator= (BarImg&& drob)
+		BarImg& operator= (BarImg&& drob) noexcept
 		{
 			if (&drob != this)
 				assignCopyOf(drob);
@@ -342,9 +296,10 @@ namespace bc {
 		void setDataU8(int width, int height, uchar* valuesData)
 		{
 			setMetadata(width, height, 1);
-			Barscalar* raw = new Barscalar[width * height];
+			size_t total = static_cast<size_t>(width) * height;
+			Barscalar* raw = new Barscalar[total];
 
-			for (size_t i = 0; i < width * height; ++i)
+			for (size_t i = 0; i < total; ++i)
 			{
 				raw[i].type = BarType::BYTE8_1;
 				raw[i].data.b1 = valuesData[i];
@@ -635,8 +590,17 @@ namespace bc {
 		BarNdarray(bn::ndarray& _mat) : mat(_mat)
 		{
 			strides = _mat.get_strides();
-			type = mat.get_nd() == 1 ? BarType::BYTE8_1 : BarType::BYTE8_3;
+			if (mat.get_nd() == 1)
+			{
+				if (mat.get_dtype().get_itemsize() == 4)
+					type = BarType::FLOAT32_1;
+				else
+					type = BarType::BYTE8_1;
+			}
+			else
+				type = BarType::BYTE8_3;
 		}
+
 		int wid() const
 		{
 			return mat.shape(1);
@@ -705,99 +669,6 @@ namespace bc {
 
 #endif // USE_OPENCV
 
-
-	static inline void split(const DatagridProvider& src, std::vector<BarImg*>& bgr)
-	{
-		size_t step = static_cast<size_t>(src.channels()) * src.typeSize();
-		for (int k = 0; k < src.channels(); k++)
-		{
-			BarImg* ib = new BarImg(src.wid(), src.hei());
-			bgr.push_back(ib);
-
-			for (size_t i = 0; i < static_cast<unsigned long long>(src.length()) * src.typeSize(); i += step)
-			{
-				ib->setLiner(i, src.getLiner(i));
-			}
-		}
-	}
-
-	//template<class Barscalar, class U>
-	//static inline void split(const DatagridProvider<BarVec3b>& src, std::vector<DatagridProvider<U>*>& bgr)
-	//{
-	//}
-
-	enum class BarConvert
-	{
-		BGR2GRAY,
-		GRAY2BGR,
-	};
-
-
-	static inline void cvtColorU1C2V3B(const bc::DatagridProvider& source, bc::BarImg& dest)
-	{
-		assert(source.channels() == 1);
-
-		dest.resize(source.wid(), source.hei());
-
-		for (size_t i = 0; i < source.length(); ++i)
-		{
-			Barscalar u = source.getLiner(i);
-			u.data.b3[0] = u.data.b1;
-			u.data.b3[1] = u.data.b1;
-			u.data.b3[2] = u.data.b1;
-			u.type = BarType::BYTE8_3;
-			dest.setLiner(i, u);
-		}
-	}
-
-	static inline void cvtColorV3B2U1C(const bc::DatagridProvider& source, bc::BarImg& dest)
-	{
-		assert(dest.channels() == 1);
-		dest.resize(source.wid(), source.hei());
-
-		for (size_t i = 0; i < source.length(); ++i)
-		{
-			float accum = source.getLiner(i).getAvgFloat();
-			dest.setLiner(i, accum);
-		}
-	}
-	//template<class Barscalar, class U>
-	//static inline void cvtColor(const bc::DatagridProvider& source, bc::DatagridProvider<U>& dest)
-	//{
-
-	//}
-
-	//// note: this function is not a member function!
-
-	//BarImg operator+(const Barscalar& c1, BarImg& c2);
-	//BarImg operator-(const Barscalar& c1, const BarImg& c2);
-
-#ifdef USE_OPENCV
-
-	static cv::Mat convertProvider2Mat(DatagridProvider* img)
-	{
-		cv::Mat m = cv::Mat::zeros(img->hei(), img->wid(), CV_8UC1);
-		for (size_t i = 0; i < img->length(); i++)
-		{
-			auto p = img->getPointAt(i);
-			m.at<uchar>(p.y, p.x) = img->get(p.x, p.y).data.b1;
-		}
-		return m;
-	}
-
-
-	static cv::Mat convertRGBProvider2Mat(const DatagridProvider* img)
-	{
-		cv::Mat m = cv::Mat::zeros(img->hei(), img->wid(), CV_8UC3);
-		for (size_t i = 0; i < img->length(); i++)
-		{
-			auto p = img->getPointAt(i);
-			m.at<cv::Vec3b>(p.y, p.x) = img->get(p.x, p.y).toCvVec();
-		}
-		return m;
-	}
-
-#endif // USE_OPENCV
 }
 //split
 //convert

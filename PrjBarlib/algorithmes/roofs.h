@@ -517,7 +517,7 @@ void getResults23()
 	constr.returnType = bc::ReturnType::barcode2d;
 	constr.addStructure(bc::ProcType::f0t255, (bc::ColorType::gray), (bc::ComponentType::Component));
 
-	// Build gray? радар.
+	// Build gray? пїЅпїЅпїЅпїЅпїЅ.
 	// Channel = 2
 	string pathas = "D:/res-e.png";
 	//string path = "D:/Learning/papers/CO_compressing/base16t.png";

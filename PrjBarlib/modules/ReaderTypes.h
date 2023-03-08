@@ -1,9 +1,11 @@
 #pragma once
 #include "base.h"
+#include <queue>
+#include "sidesrc/flat_hash_map/unordered_map.hpp"
 
 enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rgb8, argb8 };
 
-static int getImgTypeSize(ImageType type)
+int getImgTypeSize(ImageType type)
 {
 	switch (type)
 	{
@@ -936,7 +938,7 @@ class Cache
 	DEL deallocator;
 protected:
 	std::queue<int> cacheIndexs;
-	std::unordered_map<int, T> cachedData;
+	ska::unordered_map<int, T> cachedData;
 	size_t maxElementsSize = 16;
 	size_t maxCacheSize = 10000000;
 	size_t elementSize;
@@ -1067,7 +1069,7 @@ using PointerCache = Cache<T, PointerDel<T>>;
 //{
 //	int wid = 1, hei = 1;
 //	//GeographicTypeGeoKey
-//	static std::unordered_map<int, CoordProjection> map;
+//	static barmap<int, CoordProjection> map;
 //
 //	static CoordProjection getCoors(int a)
 //	{

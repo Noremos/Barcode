@@ -78,51 +78,6 @@ static_assert(sizeof(uint_22bit) == 3, "not 3 byte");
 static_assert(sizeof(uint_30bit) == 4, "not 4 byte");
 
 
-class BarcodeHolder
-{
-public:
-	bc::barlinevector lines;
-	bc::barvector matrix;
-	int depth;
-	int getDeath()
-	{
-		return depth;
-	}
-	void cloneLines(bc::barlinevector& out) const
-	{
-		for (size_t var = 0; var < lines.size(); ++var)
-		{
-			out.push_back(lines[var]->clone(false));
-		}
-	}
-	~BarcodeHolder()
-	{
-		for (size_t var = 0; var < lines.size(); ++var)
-		{
-			delete lines[var];
-		}
-		lines.clear();
-	}
-};
-
-
-
-class BarcodesHolder
-{
-public:
-	std::vector<BarcodeHolder*> lines;
-
-	~BarcodesHolder()
-	{
-		for (size_t var = 0; var < lines.size(); ++var)
-		{
-			delete lines[var];
-		}
-		lines.clear();
-	}
-};
-
-
 struct BarBinFile
 {
 public:
@@ -281,7 +236,7 @@ public:
 
 	BarcodesHolder read(int& index)
 	{
-		std::unordered_map<uint, bc::barline*> ids;
+		barmap<uint, bc::barline*> ids;
 
 		readRaw(index);
 		//qDebug() << "ID:" << index;
@@ -407,7 +362,7 @@ public:
 
 	void write(const bc::Baritem* item, int index, sets& set)
 	{
-		std::unordered_map<bc::barline*, uint> ids;
+		barmap<bc::barline*, uint> ids;
 		//		uint counter = 0;
 
 		memoffs.push_back((size_t)stream.tellp());

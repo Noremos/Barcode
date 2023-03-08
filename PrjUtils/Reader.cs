@@ -6,30 +6,17 @@ using System.Text;
 
 namespace Parcsh
 {
-    class SourceCodeReader
+
+    public abstract class SourceCodeReader
     {
-        static string pathToSource;
-        static List<classInfo> classes = new List<classInfo>();
-        public static Dictionary<string, int> types = new Dictionary<string, int>();
+        abstract public void analysFile(string filepath);
+    };
 
-        public static int getTypeId(string type, string classTemplate = "", string funcTemplate = "")
-        {
-            type = type.Trim();
+    public class CppReader : SourceCodeReader
+    {
+        protected CppParser parser = new CppParser();
 
-            if (type == classTemplate)
-                return -1;
-
-            if (type == funcTemplate)
-                return -200;
-
-            int id;
-            if (!types.TryGetValue(type, out id))
-            {
-                id = types.Count;
-                types.Add(type, id);
-            }
-            return id;
-        }
+        public List<classInfo> classes = new List<classInfo>();
 
         static bool check(string a)
         {
@@ -50,7 +37,21 @@ namespace Parcsh
             return a != null;
         }
 
-        static void analysFile(string filepath)
+        protected string getArg(argInfo info)
+        {
+            string ret = parser.getTypeFromKey(info.type) + " " + info.name;
+            if (info.defaulValue.Length != 0)
+                ret += " = " + info.defaulValue;
+            return ret;
+        }
+
+        const int maxSize = 100;
+        string getDict(string type)
+        {
+            return type + "* dictFor" + type + "[" + maxSize.ToString() + "];int last" + type + "=0;";
+        }
+
+        public override void analysFile(string filepath) 
         {
             StreamReader sr = new StreamReader(filepath);
             string line;
@@ -59,7 +60,6 @@ namespace Parcsh
 
             classInfo classInfo = null;
 
-            parser parser = new parser();
             int skobs = 0;
             int funSkob = -1, skobsCountWhereClassStarts = -1;
             bool multiComm = false;
@@ -154,25 +154,25 @@ namespace Parcsh
                     line += sr.ReadLine().Trim();
                 }
 
-                if (line.Contains("delete[] hist;"))
+                if (line.Contains("clone("))
                     Console.WriteLine();
                 if (!parser.getSignature(line, out multiComm))
                     continue;
 
                 // TEMPLATE
-                string temp = parser.getTemplate();
-                if (check(temp))
-                {
-                    //Debug.Assert(templ.Length == 0);
-                    templ = temp;
-                    continue;
-                }
+                //string temp = parser.getTemplate();
+                //if (check(temp))
+                //{
+                //    //Debug.Assert(templ.Length == 0);
+                //    templ = temp;
+                //    continue;
+                //}
 
                 string clas = parser.getClassProto();
                 if (check(clas))
                 {
                     templ = "";
-                    getTypeId(clas);
+                    parser.getTypeId(clas);
                     checkSkobs();
                     continue;
                 }
@@ -184,7 +184,7 @@ namespace Parcsh
                     {
                         name = clas
                     };
-                    getTypeId(clas);
+                    parser.getTypeId(clas);
 
                     classes.Add(classInfo);
 
@@ -212,7 +212,6 @@ namespace Parcsh
 
                 if (check(classInfo))
                 {
-
                     if (avlZone && (funSkob == -1) && skobs == skobsCountWhereClassStarts)
                     {
                         var membr = parser.getMember();
@@ -279,37 +278,38 @@ namespace Parcsh
             }
         }
 
-        static void computePath()
-        {
-            pathToSource = Environment.CurrentDirectory;
-            string folder = "PrjBarlib";
-            while (!Directory.Exists(Path.Combine(pathToSource, folder)))
-            {
-                pathToSource = Path.GetFullPath(Path.Combine(pathToSource, @"..\"));
-                if (Path.GetPathRoot(pathToSource) == pathToSource)
-                {
-                    return;
-                }
-            }
-            pathToSource = Path.Combine(pathToSource, folder + "/include");
-        }
-
-
-        string[] fileblacklist = { "Component.h", "Hole.h", "include_cv.h", "include_py.h" };
-        string[] classesBlackList = { "BarMat", "BarNdarray" };
-
-
-        static readonly string[] classStatments = { "class EXPORT", "struct EXPORT" };
         static readonly string[] zoneStatments = { "public:", "private:", "protected:" };
 
+        bool checkZone(string line, ref bool curZone)
+        {
+            bool goodZone = true;
+            foreach (var stmt in zoneStatments)
+            {
+                int ind = line.IndexOf(stmt);
+                if (ind != -1)
+                {
+                    curZone = goodZone;
+                    return true;
+                }
+                goodZone = false;
+            }
+            return false;
+        }
 
-        static int findNextSymbol(string line, char symb, int start = 0)
+    }
+    public class CppPrinter : CppReader
+    {
+
+        static readonly string[] classStatments = { "class EXPORT", "struct EXPORT" };
+
+
+        int findNextSymbol(string line, char symb, int start = 0)
         {
             while (start < line.Length && line[start++] != symb) ;
             return start;
         }
 
-        static string getClassName(string line, ref bool startClass)
+        string getClassName(string line, ref bool startClass)
         {
             string curClass = "";
             foreach (var stmt in classStatments)
@@ -338,193 +338,8 @@ namespace Parcsh
             }
             return curClass.Trim();
         }
-        static bool checkZone(string line, ref bool curZone)
-        {
-            bool goodZone = true;
-            foreach (var stmt in zoneStatments)
-            {
-                int ind = line.IndexOf(stmt);
-                if (ind != -1)
-                {
-                    curZone = goodZone;
-                    return true;
-                }
-                goodZone = false;
-            }
-            return false;
-        }
 
-
-        static string getTypeFromKey(int key)
-        {
-            foreach (var l in types)
-            {
-                if (l.Value == key)
-                    return l.Key;
-            }
-            return "";
-        }
-
-        static string getArg(argInfo info)
-        {
-            string ret = getTypeFromKey(info.type) + " " + info.name;
-            if (info.defaulValue.Length != 0)
-                ret += " = " + info.defaulValue;
-            return ret;
-        }
-
-        const int maxSize = 100;
-        string getDict(string type)
-        {
-            return type + "* dictFor" + type + "[" + maxSize.ToString() + "];int last" + type + "=0;";
-        }
-
-        static void printCClasses()
-        {
-            string getFirstDict = @"
-
-void getFirstNotNull(void* dict, int maxSize)
-{
-    for(int i=0;i<maxSize;++i)
-        if (dict[i]==0)
-            return i;
-}
-
-void deleteFromDict(void* dict, int handler)
-{
-    dict[handler] = 0;
-}
-";
-
-            // TEPLATE
-            string[] templates = { "uchar", "float", "short" };
-            StringBuilder enumBuilder = new StringBuilder("enum bartype { ");
-            foreach (var t in templates)
-            {
-                enumBuilder.Append(t + ", ");
-            }
-            enumBuilder[enumBuilder.Length - 2] = '}';
-            enumBuilder[enumBuilder.Length - 1] = ';';
-
-
-            string argClassTmp = "bartype classType";
-            string argFuncTmp = "bartype funcType";
-
-            string dicts = "";
-            void addClassToDict(string name, string? temlate = "")
-            {
-                if (temlate.Length != 0)
-                {
-                    foreach (var t in templates)
-                    {
-                        dicts += name + "<" + t + "> * " + name + "_" + t + "_dict[100];\n";
-                    }
-                }
-                else
-                    dicts += name + "* " + name + "dict[100];\n";
-            }
-            string buildConstructorWrapper(string type, string fullArgs, string args, string? temlate = "")
-            {
-                string prefix = "bar_";
-                string impl = "\tint create_" + type + temlate  + fullArgs + "\n\t{\n";
-                addClassToDict(type, temlate);
-                if (temlate.Length != 0)
-                {
-                    foreach (var t in templates)
-                    {
-                        string dictName = type + "_" + t + "_dict";
-                        impl +=
-                            $"\n\t\tif (classType== bartype::{prefix + t})" +
-                             "\n\t\t{" +
-                            $"\n\t\t\tint handler = getFirstNotNull({dictName},100);" +
-                            $"\n\t\t\t{dictName}[handler] = new {type}<{t}>{args};" +
-                            $"\n\t\t\treturn handler;" +
-                             "\n\t\t}\n";
-                    }
-                    impl += "\t}\n";
-                    //        int handled = getFirstNotNull(CLASSdict,100);
-                }
-                else
-                {
-                    string dictName = type + "_dict";
-
-                    impl += "\t{" +
-                            $"\n\t\tint handler = getFirstNotNull({dictName},100);" +
-                            $"\n\t\t{dictName} = new {type}{args};" +
-                            $"\n\t\treturn handler;" +
-                             "\n\t}\n";
-                }
-
-                return impl;
-            }
-            //            @"
-            //if (type==bartype::bar_uchar)
-            //    {
-            //        int handled = getFirstNotNull(CLASSdict,100);
-            //        CLASSdict[handler] = new CLASS<uchar>(...);
-            //        return handler;
-            //}
-            //";
-            string[] voider = { "" };
-
-            Console.WriteLine("extern \"C\" \n{");
-
-            foreach (var cla in classes)
-            {
-                string[] inpls = null;
-
-                Console.WriteLine("// CLASS {0}", cla.name);
-
-
-                Console.WriteLine("\t// Constructors:");
-                foreach (var fun in cla.consrts)
-                {
-
-                    string ret = "";
-                    string realAgrs = "(";
-
-                    int added = 0;
-                    if (cla.tempType?.Length != 0)
-                    {
-                        ret += argClassTmp + ", ";
-                        ++added;
-                    }
-                    if (fun.tempType?.Length != 0)
-                    {
-                        ret += argFuncTmp + ", ";
-                        ++added;
-                    }
-
-                    foreach (var arg in fun.args)
-                    {
-                        ret += getArg(arg) + ", ";
-                        realAgrs += getArg(arg) + ", ";
-
-                        ++added;
-                    }
-                    if (added != 0)
-                        ret = ret[..(ret.Length - 2)];
-                    ret += ")";
-
-                    if (fun.args.Count != 0)
-                        realAgrs = realAgrs[..(realAgrs.Length - 2)];
-                    realAgrs += ")";
-
-
-                    Console.WriteLine(buildConstructorWrapper(cla.name, ret, realAgrs, cla.tempType));
-                    Console.WriteLine("");
-                }
-
-
-                Console.WriteLine("");
-                Console.WriteLine("");
-            }
-            Console.WriteLine(getFirstDict);
-            Console.WriteLine(dicts);
-            Console.WriteLine("}");
-
-        }
-        static void printCppClasses()
+        public void printCppClasses()
         {
             foreach (var cla in classes)
             {
@@ -534,16 +349,6 @@ void deleteFromDict(void* dict, int handler)
                 }
                 Console.WriteLine("class EXPORT {0}", cla.name);
                 Console.WriteLine("{");
-
-
-                string getArg(argInfo info)
-                {
-                    string ret = getTypeFromKey(info.type) + " " + info.name;
-                    if (info.defaulValue.Length != 0)
-                        ret += " = " + info.defaulValue;
-                    return ret;
-                }
-
 
                 Console.WriteLine("\t// Constructors:");
 
@@ -599,7 +404,7 @@ void deleteFromDict(void* dict, int handler)
                         ret += "virtual ";
                     }
 
-                    ret += getTypeFromKey(fun.retType);
+                    ret += parser.getTypeFromKey(fun.retType);
 
                     ret += " " + fun.name + "(";
                     foreach (var arg in fun.args)

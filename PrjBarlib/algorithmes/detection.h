@@ -3,7 +3,7 @@
 #include <opencv2/imgproc.hpp>
 
 
-#include "barcodeCreator.h" 
+#include "barcodeCreator.h"
 
 #include <iostream>
 #include <filesystem>
@@ -33,7 +33,7 @@ int pr = 10; bool normA = false;
 //done for  container - crane : 0 / 0
 //
 //Total : 1093 / 1756
-//Для продолжения нажмите любую клавишу . .
+//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ . .
 
 //
 //done for plane: 11 / 80

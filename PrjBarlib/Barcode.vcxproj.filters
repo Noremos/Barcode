@@ -23,10 +23,16 @@
     <ClCompile Include="include\GenCommand.h">
       <Filter>Genetic</Filter>
     </ClCompile>
-    <ClCompile Include="modules\convertation.cpp">
+    <ClCompile Include="modules\tiffreader.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="modules\tiffreader.cpp">
+    <ClCompile Include="modules\Barcode.ixx">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\TiffReader.ixx">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\Barline.ixx">
       <Filter>Modules</Filter>
     </ClCompile>
   </ItemGroup>
@@ -105,6 +111,15 @@
     <None Include="main.def">
       <Filter>pylib</Filter>
     </None>
+    <None Include="modules\TiffReader.ixx.pre">
+      <Filter>Modules\preproc</Filter>
+    </None>
+    <None Include="modules\Barcode.ixx.pre">
+      <Filter>Modules\preproc</Filter>
+    </None>
+    <None Include="modules\IReader.ixx.pre">
+      <Filter>Modules\preproc</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="classes">
@@ -127,6 +142,9 @@
     </Filter>
     <Filter Include="Modules">
       <UniqueIdentifier>{a41a5521-13b4-4b8e-83af-470762347d48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\preproc">
+      <UniqueIdentifier>{fcea023d-ff71-4299-819a-bf890f95e3ff}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

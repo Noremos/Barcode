@@ -2,6 +2,7 @@
 #define CONVERTION_H
 #include "base.h"
 #include <cstring>
+#include <bit>
 
 union toduble
 {
@@ -13,11 +14,14 @@ union tofloat
 	uchar data[4];
 	float value;
 };
+namespace
+{
+	constexpr uint8_t x = 0x0001;
+	constexpr uchar sysByteOredr = (std::endian::native == std::endian::little) ? 77 : 73;
+	uchar GLOBALloclByteOreder = (std::endian::native == std::endian::little) ? 77 : 73;
+}
 struct increnenter
 {
-	static uchar sysByteOredr;
-	static uchar GLOBALloclByteOreder;
-	static uint16_t x;
 	increnenter(int st, int ed)
 	{
 		rev = GLOBALloclByteOreder != sysByteOredr;
@@ -43,13 +47,13 @@ struct increnenterBytes
 	increnenterBytes(uchar *bytes, int st, int ed, uchar imgByteOrder)
 	{
 		this->bytes = bytes;
-		rev = imgByteOrder != increnenter::sysByteOredr;
+		rev = imgByteOrder != ::sysByteOredr;
 		i = rev ? ed : st;
 	}
 	increnenterBytes(uchar *bytes, int st, int ed)
 	{
 		this->bytes = bytes;
-		rev = increnenter::GLOBALloclByteOreder != increnenter::sysByteOredr;
+		rev = ::GLOBALloclByteOreder != ::sysByteOredr;
 		i = rev ? ed : st;
 	}
 	uchar *bytes;

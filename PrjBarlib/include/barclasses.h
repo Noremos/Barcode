@@ -69,7 +69,7 @@ namespace bc
 		}
 
 		// move assign
-		void operator=(Baritem&& obj)
+		void operator=(Baritem&& obj) noexcept
 		{
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
@@ -91,6 +91,19 @@ namespace bc
 		{
 			return type;
 		}
+
+		inline void setType(BarType bt)
+		{
+			type = bt;
+		}
+		inline void setType()
+		{
+			if (barlines.size() > 0 && barlines[0]->matr.size() > 0)
+				type = barlines[0]->matr[0].value.type;
+			else
+				type = BarType::BYTE8_1;
+		}
+
 		void getBettyNumbers(int* bs);
 
 		// remove lines than less then passed value
@@ -169,7 +182,7 @@ namespace bc
 		};
 
 
-		typedef std::unordered_map<Barscalar, int, BarscalHash> maphist;
+		typedef barmapHash<Barscalar, int, BarscalHash> maphist;
 
 
 		class Barlfd
@@ -209,15 +222,15 @@ namespace bc
 				}
 			}*/
 
-			void calculateEntropy(maphist& hist)
+			void calculateEntropy(maphist& histm)
 			{
 				float s = 0;
 				size_t total = line->matr.size();
 				for (size_t i = 0; i < total; i++)
 				{
 					Barscalar& scl = line->matr.at(i).value;
-					auto asd = hist.find(scl);
-					float lacc = asd->second / total;
+					auto asd = histm.find(scl);
+					float lacc = asd->second / static_cast<float>(total);
 					s += lacc * log(lacc);
 				}
 
@@ -245,10 +258,10 @@ namespace bc
 		{
 			maphist hist;
 
-			for(auto it = begin; it != end; it++)
-			{
-				//it->appendHist(hist);
-			}
+			//for(auto it = begin; it != end; it++)
+			//{
+			//	//it->appendHist(hist);
+			//}
 
 			float s = 0;
 			for (auto it = begin; it != end; it++)
@@ -285,7 +298,7 @@ namespace bc
 		// left - low entorpy; ritht - big
 		void splitRes(barsplitvec& input, barsplitvec& left, barsplitvec& right)
 		{
-			int bestI = 0; //  a = { <= I}; b = {>I}
+			//int bestI = 0; //  a = { <= I}; b = {>I}
 			const barsplitvec::iterator begin = input.begin();
 			const barsplitvec::iterator end = input.end();
 			barsplitvec::iterator spkit = begin + 1;
@@ -376,26 +389,26 @@ namespace bc
 			splitRes(input, low, high);
 		}
 
-		void splitByMask(barlinevector& left, barlinevector& right, DatagridProvider& mask)
-		{
+		//void splitByMask(barlinevector& left, barlinevector& right, DatagridProvider& mask)
+		//{
 
-			barsplitvec barvec;
-			for (size_t i = 0; i < barlines.size(); i++)
-			{
-				Barlfd as;
-				as.line = barlines.at(i);
-				auto& matr = as.line->matr;
-				for (size_t w = 0; w < matr.size(); ++w)
-				{
-					if (mask.get(matr[w].getPoint()) > 128)
-					{
-						as.acc += 1;
-					}
-				}
+		//	barsplitvec barvec;
+		//	for (size_t i = 0; i < barlines.size(); i++)
+		//	{
+		//		Barlfd as;
+		//		as.line = barlines.at(i);
+		//		auto& matr = as.line->matr;
+		//		for (size_t w = 0; w < matr.size(); ++w)
+		//		{
+		//			if (mask.get(matr[w].getPoint()) > 128)
+		//			{
+		//				as.acc += 1;
+		//			}
+		//		}
 
-				as.acc /= mask.length();
-			}
-		}
+		//		as.acc /= mask.length();
+		//	}
+		//}
 
 #ifdef _PYD
 		// only for uchar
@@ -517,7 +530,7 @@ namespace bc
 
 		void remoeLast()
 		{
-			int s = items.size();
+			size_t s = items.size();
 			if (s > 0)
 			{
 				delete items[s - 1];

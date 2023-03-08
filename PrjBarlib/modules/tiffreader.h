@@ -1,7 +1,6 @@
 #ifndef TIFFREADER_H
 #define TIFFREADER_H
 //
-#include <unordered_map>
 
 #include <exception>
 #include <stdio.h>
@@ -12,7 +11,7 @@
 #include "ImageReader.h"
 #include "convertion.h"
 #include "decoder.h"
-
+#include "sidesrc/flat_hash_map/unordered_map.hpp"
 
 enum class Tags : int {
 	//A general indication of the kind of data contained in this subfile.
@@ -397,7 +396,7 @@ struct TiffTags
 		}
 	};
 
-	std::unordered_map<ushort, ExtraData> extraTegs;
+	ska::unordered_map<ushort, ExtraData> extraTegs;
 };
 
 

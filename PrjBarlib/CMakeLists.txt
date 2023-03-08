@@ -203,11 +203,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # Output directory
 ################################################################################
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    OUTPUT_DIRECTORY_DLLCVLESS   "${CMAKE_SOURCE_DIR}/x64/dynamiclib"
-    OUTPUT_DIRECTORY_DLL         "${CMAKE_SOURCE_DIR}/x64/dynamiclib_cv/"
-    OUTPUT_DIRECTORY_PYTHON37    "${CMAKE_SOURCE_DIR}/x64/Python37/"
-    OUTPUT_DIRECTORY_PYTHON38    "${CMAKE_SOURCE_DIR}/x64/Python38/"
-    OUTPUT_DIRECTORY_PYTHONDEBUG "${CMAKE_SOURCE_DIR}/x64/PythonDebug/"
+    OUTPUT_DIRECTORY_DLLCVLESS   "${CMAKE_SOURCE_DIR}/build/dynamiclib"
+    OUTPUT_DIRECTORY_DLL         "${CMAKE_SOURCE_DIR}/buildx64/dynamiclib_cv/"
+    OUTPUT_DIRECTORY_PYTHON37    "${CMAKE_SOURCE_DIR}/build/Python37/"
+    OUTPUT_DIRECTORY_PYTHON38    "${CMAKE_SOURCE_DIR}/build/Python38/"
+    OUTPUT_DIRECTORY_PYTHONDEBUG "${CMAKE_SOURCE_DIR}/build/PythonDebug/"
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

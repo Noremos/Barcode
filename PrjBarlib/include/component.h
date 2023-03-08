@@ -6,13 +6,13 @@
 //#define POINTS_ARE_AVAILABLE
 namespace bc
 {
-	
+
 	class BarcodeCreator;
 
-	
+
 	struct barline;
 
-	
+
 	class Component
 	{
 	public:
@@ -115,5 +115,5 @@ namespace bc
 
 	};
 
-	//typedef std::unordered_map<point, Component*, pointHash> cmap;
+	//typedef barmap<point, Component*, pointHash> cmap;
 }

@@ -1,12 +1,10 @@
 #pragma once
 
 #include "barstrucs.h"
-#include "barImg.h"
 
 #include "include_py.h"
 #include "include_cv.h"
 
-#include <unordered_map>
 #include <math.h>
 #include <string>
 #include <vector>
@@ -43,11 +41,11 @@ namespace bc
 	public:
 //		int dep = 0;
 
-		barline(int wid = 0)
+		barline(int = 0)
 		{
 //			matWid = wid;
 		}
-		barline(Barscalar _start, Barscalar _end, int wid, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), m_end(_end)
+		barline(Barscalar _start, Barscalar _end, int, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), m_end(_end)
 //			  ,matWid(wid)
 		{
 			matr.reserve(coordsSize);
@@ -296,7 +294,8 @@ namespace bc
 
 		void setparent(barline* node)
 		{
-//			assert(parent == nullptr || parent == node);
+			//assert(parent == nullptr || parent == node);
+			assert(this != node);
 			if (this->parent == node)
 				return;
 
@@ -309,6 +308,22 @@ namespace bc
 		{
 			return m_end > start ? m_end - start : start - m_end;
 		}
+#ifdef INCLUDE_PY
+		bp::tuple pystart()
+		{
+			return start.pyvalue();
+		}
+		bp::tuple pyend()
+		{
+			return m_end.pyvalue();
+		}
+		bp::tuple pylen()
+		{
+			return len().pyvalue();
+		}
+
+#endif // INCLUDE_PY
+
 
 		float lenFloat() const
 		{
@@ -356,7 +371,7 @@ namespace bc
 			return matr[index].getPoint();
 		}
 
-		void getChildsMatr(std::unordered_map<bc::point, bool, bc::pointHash>& childs)
+		void getChildsMatr(barmapHash<bc::point, bool, bc::pointHash>& childs)
 		{
 			for (barline* chil : this->children)
 			{
@@ -469,7 +484,7 @@ namespace bc
 		bc::barvector getExclusivePoints()
 		{
 			bc::barvector out;
-			std::unordered_map<bc::point, bool, bc::pointHash> childs;
+			barmapHash<bc::point, bool, bc::pointHash> childs;
 			getChildsMatr(childs);
 
 			for (size_t i = 0; i < matr.size(); i++)
@@ -485,7 +500,7 @@ namespace bc
 
 		bp::list getPoints(bool skipChildPoints = false)
 		{
-			std::unordered_map<bc::point, bool, bc::pointHash> childs;
+			barmapHash<bc::point, bool, bc::pointHash> childs;
 			bp::list l;
 
 			if (skipChildPoints)
@@ -521,7 +536,7 @@ namespace bc
 
 		bp::dict getPointsInDict(bool skipChildPoints = false)
 		{
-			std::unordered_map<bc::point, bool, bc::pointHash> childs;
+			barmapHash<bc::point, bool, bc::pointHash> childs;
 			bp::dict pydict;
 
 			if (skipChildPoints)
@@ -675,6 +690,22 @@ namespace bc
 			}
 		}
 
+		void extractChilred(barlinevector& lines, bool includeItself, bool keepMatrix = false)
+		{
+			if (includeItself)
+			{
+				lines.push_back(this);
+				if (!keepMatrix)
+					this->matr.clear();
+			}
+
+			for (size_t i = 0, total = children.size(); i < total; ++i)
+			{
+				children[i]->getChilredAsList(lines, true, keepMatrix);
+				children[i] = nullptr;
+			}
+		}
+
 		void getAsListSafe(barlinevector& lines, bool clone, bool cloneMatrxi = true)
 		{
 			::std::unordered_set<barline*> setd;
@@ -692,19 +723,19 @@ namespace bc
 				for (; i < total;)
 				{
 					barline* nchld = cur->children[i];
-					if (setd.count(nchld) > 0)
+					if (nchld == nullptr || setd.count(nchld) > 0)
 					{
 						++i;
 						continue;
 					}
 
 					setd.insert(nchld);
-					lines.push_back(nchld ? nchld->clone(cloneMatrxi) : this);
+					lines.push_back(clone ? nchld->clone(cloneMatrxi) : nchld);
 
 					if (nchld->children.size() > 0)
 					{
 						stack.push(nchld);
-						stackIndex.push(i);
+						stackIndex.push(i + 1);
 						cur = nchld;
 
 						i = 0;

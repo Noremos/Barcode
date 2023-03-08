@@ -1,5 +1,6 @@
 #ifndef SKIP_M_INC
 #include "tiffreader.h"
+#endif // !SKIP_M_INC
 
 #ifndef QSLOT_CODE
 #include <iostream>
@@ -15,17 +16,15 @@
 
 #include <string>
 #include <cassert>
+#include "sidesrc/fast_float.h"
 
-#else
-	#define OUT cout
-#endif // !SKIP_M_INC
 
 
 using std::cout;
 using std::string;
 using std::vector;
 
-//std::unordered_map<int, CoordProjection> CoordProjection::map{{4326, {1,-1}}};
+//barmap<int, CoordProjection> CoordProjection::map{{4326, {1,-1}}};
 
 
 //string dectodeTEST(uchar* buffer, int len);
@@ -461,9 +460,6 @@ ImageType TiffIFD::getType() const
 	}
 	return ImageType::float32;
 }
-
-#include "sidesrc/fast_float.h"
-
 
 TiffReader::TiffReader()
 	:pFile(NULL)
@@ -921,7 +917,7 @@ bool TiffReader::open(const std::string& path)
 	else
 	{
 		read(buffer, 0, 8);
-		increnenter::GLOBALloclByteOreder = buffer[0];
+		::GLOBALloclByteOreder = buffer[0];
 		int verNum = printHeader(buffer);
 		if (verNum==42)
 		{

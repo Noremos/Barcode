@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.SymbolStore;
 using System.IO;
 using System.Text;
 
@@ -17,6 +18,13 @@ namespace Parcsh
         public List<func> funcs = new List<func>();
         public List<argInfo> members = new List<argInfo>();
     }
+
+    enum ConstPos
+    {
+        constNone = 0,
+        constBefore,
+        constAfter
+    }
     public class argInfo
     {
         public argInfo(int _typeId = 0, string _name = "", string _defValue = "")
@@ -29,6 +37,8 @@ namespace Parcsh
         public int type;
         public string name;
         public string defaulValue;
+        //ConstPos constPos = 0;
+        public bool returnPtr = false;
     }
 
 
@@ -51,6 +61,7 @@ namespace Parcsh
     public class func : baseFunc
     {
         public int retType;
+        public bool retPtr;
         public string name;
         public bool isConst;
         public bool isVirual;
@@ -62,6 +73,7 @@ namespace Parcsh
         public string line;
         public ps[] sign = null;
         public Range[] pozs = null;
+        internal int singLen;
 
         public Range? getRangeWhere(ps bc_ind, int start = 0)
         {
@@ -96,22 +108,36 @@ namespace Parcsh
             return sign[poz] == pc_ind;
         }
 
-        public string getFullType(ref int startnd)
+        public string getFullType(ref int startnd, ref bool hasPtr)
         {
-            // [const] void [< Barscalar >] [*]  name
-            int couMun = 0;
-            while (true)
+            // [const] [< Barscalar >] [const] [*] [const] name
+            if (isSign(startnd, ps._const))
+                ++startnd;
+
+            Debug.Assert(isSign(startnd, ps.word));
+
+            string stf = line[getPozSt(startnd)..getPozSt(startnd + 1)];
+            int posd = stf.IndexOf("::");
+            if (posd != -1)
             {
-                if (isSign(startnd, ps.word))
-                {
-                    couMun++;
-                    if (couMun == 2)
-                        break;
-                }
+                stf = stf[(posd + 2)..];
+            }
+            ++startnd;
+
+            if (isSign(startnd, ps._const))
+                ++startnd;
+            if (isSign(startnd, ps._ref))
+            {
+                hasPtr = true;
                 ++startnd;
             }
-            // skip [const]
-            return line[(isSign(0, ps._const) ? getPozSt(1) : 0)..(getPozSt(startnd) - 1)];
+
+            //stf += " ";
+            //stf += line[getPozSt(startnd)..getPozSt(startnd + 1)];
+
+            return stf;
+            // skip all [const] and refs
+            //return line[(isSign(0, ps._const) ? getPozSt(1) : 0)..(getPozSt(startnd) - 1)];
         }
 
         public int getLen()
@@ -140,7 +166,7 @@ namespace Parcsh
     public enum ps : sbyte
     {
         op = -1, // -n: next n symb is optional but only if there is actily this n symbols exsists
-                // for example for smt {-2, word, _class, word, je};
+                 // for example for smt {-2, word, _class, word, je};
 
         // "my class parser;"   = {word, _class, word, je}  =  {[word, _class,] word, je} = ok
         // "parser;"            = {word, je}                =  {[word, _class,] word, je} = ok
@@ -177,26 +203,13 @@ namespace Parcsh
         je, // ;
     }
 
-    public class parser
+    public class NParser
     {
         static public Dictionary<string, ps> wordparser;
 
         public parcInfo lineInfo;
-        public parser()
-        {
-            wordparser = new Dictionary<string, ps>();
-            wordparser.Add("virtual", ps.virt);
-            wordparser.Add("satatic", ps.pstatic);
-            wordparser.Add("const", ps._const);
-            wordparser.Add("EXPORT", ps.export);
-            wordparser.Add("class", ps.pclass);
-            wordparser.Add("using", ps._using);
-            wordparser.Add("typedef", ps.typedef);
-            wordparser.Add("template", ps.template);
-            wordparser.Add("override", ps._override);
-        }
 
-        public bool compireSigs(ps[] baseSig, ps[] inputSig)
+        public bool compireSigs(ps[] baseSig, ps[] inputSig, int inputLen)
         {
             //if (inputSig. > baseSig.Length)
             //    return false;
@@ -210,7 +223,7 @@ namespace Parcsh
                 if (baseInd >= baseSig.Length)
                     return false;
 
-                if (inpInd >= inputSig.Length)
+                if (inpInd >= inputLen)
                     return false;
 
                 if (baseSig[baseInd] == ps.op)
@@ -234,6 +247,7 @@ namespace Parcsh
 
                     baseInd++;
                     inpInd++;
+                    savePoint.Clear();
                 }
                 else
                 {
@@ -247,15 +261,19 @@ namespace Parcsh
                 }
             }
         }
-        class sigconstr
-        {
-            List<ps> sign = new List<ps>();
+    }
 
+    public class CppParser : NParser
+    {
+        class CppSigncounstr
+        {
+            protected List<ps> sign = new List<ps>();
             public void addOp(bool op)
             {
                 if (op)
                     sign.Add(ps.op);
             }
+
             public void addVirtual(bool op = false)
             {
                 addOp(op);
@@ -307,7 +325,7 @@ namespace Parcsh
             {
                 //[virual] [const] void [] [*]  v(...) [const] [override] [;] = 0;
 
-                sigconstr cont = new sigconstr();
+                CppSigncounstr cont = new CppSigncounstr();
                 cont.addVirtual(true);
                 cont.addType();
                 cont.add(ps.word);
@@ -322,7 +340,7 @@ namespace Parcsh
             {
                 // [virual] [const] void [] [*]  v(...) [const] [override] [;]
 
-                sigconstr cont = new sigconstr();
+                CppSigncounstr cont = new CppSigncounstr();
                 cont.addVirtual(true);
                 cont.addType();
                 cont.add(ps.word);
@@ -339,7 +357,7 @@ namespace Parcsh
             {
                 // v(...) [;] 
 
-                sigconstr cont = new sigconstr();
+                CppSigncounstr cont = new CppSigncounstr();
                 cont.add(ps.word);
                 cont.add(ps.skob_word);
                 cont.addje(true);
@@ -350,7 +368,7 @@ namespace Parcsh
             {
                 // [virtual] v(...) [=] [0] [;] 
 
-                sigconstr cont = new sigconstr();
+                CppSigncounstr cont = new CppSigncounstr();
                 cont.addVirtual(true);
                 cont.add(ps.word);
                 cont.add(ps.skob_word);
@@ -365,7 +383,7 @@ namespace Parcsh
             public static ps[] getMemberpc()
             {
                 // [const] void  * mem [=] [4];
-                sigconstr cont = new sigconstr();
+                CppSigncounstr cont = new CppSigncounstr();
                 cont.addType();
                 cont.add(ps.word);
                 cont.addInit(true);
@@ -376,7 +394,7 @@ namespace Parcsh
             public static ps[] getArgpc()
             {
                 //type mem [=] [4]
-                sigconstr cont = new sigconstr();
+                CppSigncounstr cont = new CppSigncounstr();
                 cont.addType();
                 cont.add(ps.word);
                 cont.addInit(true);
@@ -385,18 +403,34 @@ namespace Parcsh
             }
         }
 
+        public CppParser()
+        {
+            wordparser = new Dictionary<string, ps>();
+            wordparser.Add("virtual", ps.virt);
+            wordparser.Add("satatic", ps.pstatic);
+            wordparser.Add("const", ps._const);
+            wordparser.Add("EXPORT", ps.export);
+            wordparser.Add("class", ps.pclass);
+            wordparser.Add("struct", ps.pclass);
+            wordparser.Add("using", ps._using);
+            wordparser.Add("typedef", ps.typedef);
+            wordparser.Add("template", ps.template);
+            wordparser.Add("override", ps._override);
+        }
+
+
         public bool isConstr()
         {
             // v(...) [;]
-            ps[] funcFig = sigconstr.getConstrpc();
-            return compireSigs(funcFig, lineInfo.sign);
+            ps[] funcFig = CppSigncounstr.getConstrpc();
+            return compireSigs(funcFig, lineInfo.sign, lineInfo.singLen);
         }
 
         public bool isDestructor()
         {
             // [virual] v(...) [=][0][;]
-            ps[] funcFig = sigconstr.getDestructor();
-            return compireSigs(funcFig, lineInfo.sign);
+            ps[] funcFig = CppSigncounstr.getDestructor();
+            return compireSigs(funcFig, lineInfo.sign, lineInfo.singLen);
         }
         public Constr getConstr(string className)
         {
@@ -429,7 +463,6 @@ namespace Parcsh
             if (!isDestructor()) return null;
             Destruct funcInfo = new Destruct();
 
-
             int curInd = 0;
             if (lineInfo.isSign(curInd, ps.virt))
             {
@@ -451,8 +484,38 @@ namespace Parcsh
         public bool isFunc()
         {
             // [virual] [const] void [] [*]  v(...) [const] [override] [;]
-            ps[] funcFig = sigconstr.getFuncpc();
-            return compireSigs(funcFig, lineInfo.sign);
+            ps[] funcFig = CppSigncounstr.getFuncpc();
+            return compireSigs(funcFig, lineInfo.sign, lineInfo.singLen);
+        }
+
+        public Dictionary<string, int> types = new Dictionary<string, int>();
+
+        public int getTypeId(string type, string classTemplate = "", string funcTemplate = "")
+        {
+            type = type.Trim();
+
+            if (type == classTemplate)
+                return -1;
+
+            if (type == funcTemplate)
+                return -200;
+
+            int id;
+            if (!types.TryGetValue(type, out id))
+            {
+                id = types.Count;
+                types.Add(type, id);
+            }
+            return id;
+        }
+        public string getTypeFromKey(int key)
+        {
+            foreach (var l in types)
+            {
+                if (l.Value == key)
+                    return l.Key;
+            }
+            return "";
         }
 
         public func getFunc()
@@ -467,8 +530,8 @@ namespace Parcsh
                 ++curInd;
             }
 
-            string type = lineInfo.getFullType(ref curInd);
-            funcInfo.retType = Program.getTypeId(type);
+            string type = lineInfo.getFullType(ref curInd, ref funcInfo.retPtr);
+            funcInfo.retType = getTypeId(type);
 
             Debug.Assert(lineInfo.isSign(curInd, ps.word));
             funcInfo.name = lineInfo.getSub(curInd++);
@@ -477,7 +540,7 @@ namespace Parcsh
 
             string temp = lineInfo.getSub(curInd)[1..];
             temp = temp[..(temp.Length - 1)];
-            string[] typeargs = temp.Split(',');
+            //string[] typeargs = temp.Split(',');
 
             if (processArgs(temp, funcInfo))
             {
@@ -491,9 +554,27 @@ namespace Parcsh
 
         bool processArgs(string temp, baseFunc funcInfo)
         {
-            string[] typeargs = temp.Split(',');
+            int st = 0;
+            List<string> typeargs = new();// = temp.Split(',');
+            for (int i = 0; i < temp.Length; i++)
+            {
+                if (temp[i] == ',')
+                {
+                    typeargs.Add(temp[st..i]);
+                    st = i + 1;
+                }
+                else if (temp[i] == '<')
+                {
+                    ++i;
+                    while (temp[i] != '>')
+                        ++i;
+                }
+            }
+            typeargs.Add(temp[st..temp.Length]);
 
-            parser argparc = new parser();
+            CppParser argparc = new CppParser();
+            argparc.types = types;
+
             bool tem = false;
             foreach (var _tyarg in typeargs)
             {
@@ -518,18 +599,20 @@ namespace Parcsh
                 Debug.Assert(inf != null);
                 funcInfo.args.Add(inf);
             }
+            types = argparc.types;
+
             return true;
         }
 
         public bool isAbstructFunc()
         {
-            ps[] abstFuncFig = sigconstr.getAbstructFuncpc();
-            return compireSigs(abstFuncFig, lineInfo.sign);
+            ps[] abstFuncFig = CppSigncounstr.getAbstructFuncpc();
+            return compireSigs(abstFuncFig, lineInfo.sign, lineInfo.singLen);
         }
         public bool isArg()
         {
-            ps[] argFig = sigconstr.getArgpc();
-            return compireSigs(argFig, lineInfo.sign);
+            ps[] argFig = CppSigncounstr.getArgpc();
+            return compireSigs(argFig, lineInfo.sign, lineInfo.singLen);
         }
 
         public argInfo getArg()
@@ -541,18 +624,18 @@ namespace Parcsh
 
         public bool isMember()
         {
-            ps[] memberFig = sigconstr.getMemberpc();
-            return compireSigs(memberFig, lineInfo.sign);
+            ps[] memberFig = CppSigncounstr.getMemberpc();
+            return compireSigs(memberFig, lineInfo.sign, lineInfo.singLen);
 
         }
-        static argInfo getMemberOrArg(parcInfo parcInfo)
+        argInfo getMemberOrArg(parcInfo parcInfo)
         {
             argInfo info = new argInfo();
 
             int curInd = 0;
-            string type = parcInfo.getFullType(ref curInd);
+            string type = parcInfo.getFullType(ref curInd, ref info.returnPtr);
 
-            info.type = Program.getTypeId(type);
+            info.type = getTypeId(type);
             info.name = parcInfo.getSub(curInd++);
 
             if (parcInfo.isSign(curInd, ps.ravn))
@@ -574,7 +657,7 @@ namespace Parcsh
         {
             // class Exopr cl1 *: public class*
             ps[] classSig = new ps[] { ps.pclass, ps.export, ps.word, ps.skip };
-            return compireSigs(classSig, lineInfo.sign);
+            return compireSigs(classSig, lineInfo.sign, lineInfo.singLen);
 
         }
         public string getClass()
@@ -587,7 +670,7 @@ namespace Parcsh
         {
             // class [Exopr] cl1;
             ps[] classProtoSig = new ps[] { ps.pclass, ps.op, ps.export, ps.word, ps.je, ps.end };
-            return compireSigs(classProtoSig, lineInfo.sign);
+            return compireSigs(classProtoSig, lineInfo.sign, lineInfo.singLen);
         }
         public string getClassProto()
         {
@@ -599,7 +682,7 @@ namespace Parcsh
         {
             // template <class t>
             ps[] tempateSig = new ps[] { ps.template, ps.tr_skob_word, ps.end };
-            return compireSigs(tempateSig, lineInfo.sign);
+            return compireSigs(tempateSig, lineInfo.sign, lineInfo.singLen);
         }
 
         public string getTemplate()
@@ -619,7 +702,7 @@ namespace Parcsh
         {
             // using a = b*;
             ps[] usingSig = new ps[] { ps._using, ps.word, ps.ravn, ps.word, ps.op, ps.tr_skob_word, ps.op, ps._ref, ps.je, ps.end };
-            return compireSigs(usingSig, lineInfo.sign);
+            return compireSigs(usingSig, lineInfo.sign, lineInfo.singLen);
         }
 
         public (string alias, string realType) getUsing()
@@ -644,7 +727,7 @@ namespace Parcsh
         {
             // typedef bc::DatagridProvider < Barscalar >* bcBarImg;
             ps[] typedefSig = new ps[] { ps.typedef, ps.word, ps.op, ps.template, ps.op, ps._ref, ps.word, ps.je, ps.end };
-            return compireSigs(typedefSig, lineInfo.sign);
+            return compireSigs(typedefSig, lineInfo.sign, lineInfo.singLen);
         }
 
         static parcInfo getInnerSign(string line, out bool multiComment)
@@ -681,151 +764,146 @@ namespace Parcsh
             {
                 Debug.Assert(curl < 30);
 
+                bool breakFor = false;
                 char c = line[i];
-
-                if (c == '/' && i < line.Length && line[i + 1] == '/')
-                    break;
-
-                if (c == '/' && i < line.Length && line[i + 1] == '*')
+                switch (c)
                 {
-                    multiComment = true;
-                    break;
-                }
+                    case '/':
+                        if (i < line.Length && line[i + 1] == '/')
+                        {
+                            breakFor = true;
+                        }
 
-                // "dssdds "
-                if (c == '\"')
-                {
-                    while (i < line.Length && line[i] != '\"')
-                    {
-                        ++i;
+                        if (i < line.Length && line[i + 1] == '*')
+                        {
+                            breakFor = true;
+                            multiComment = true;
+                        }
+                        break;
+                    case '\"':
+                        while (i < line.Length && line[i] != '\"')
+                        {
+                            ++i;
+                            continue;
+                        }
+                        break;
+
+                    // '3' or '\n'
+                    case '\'':
+                        if (line[i + 1] == '\\')
+                        {
+                            i += 2;
+                        }
+                        else
+                            i += 1;
                         continue;
-                    }
-                }
 
-                // '3' or '\n'
-                if (c == '\'')
-                {
-                    if (line[i + 1] == '\\')
-                    {
-                        i += 2;
-                    }
-                    else
-                        i += 1;
-                    continue;
-                }
+                    case '\t':
+                    case '\n':
+                    case '\r':
+                    case ' ':
+                        closeWord(i);
+                        continue;
 
-                if (c == '\t' || c == ' ' || c == '\n' || c == '\r' || c == '\n')
-                {
-                    closeWord(i);
-                    continue;
-                }
+                    case ':':
+                        if ((line.Length > i + 1 && line[i + 1] != ':') && (i > 0 && line[i - 1] != ':'))
+                        {
+                            inLineInf.pozs[curl] = new Range(i, i + 1);
+                            inLineInf.sign[curl++] = ps.clsepr;
+                            i++;
+                            continue;
+                        }
+                        break;
 
-                if (c == ':' && line.Length > i + 1 && line[i + 1] != ':')
-                {
-                    if (i > 0 && line[i - 1] != ':')
-                    {
+                    case '(':
+                        {
+                            closeWord(i);
+                            int st = i;
+                            while (i < line.Length && line[i] != ')')
+                            {
+                                ++i;
+                                continue;
+                            }
+
+                            Debug.Assert(i != line.Length);
+                            inLineInf.pozs[curl] = new Range(st, i + 1);
+                            inLineInf.sign[curl++] = ps.skob_word;
+                            continue;
+                        }
+                    case '=':
+                        closeWord(i);
                         inLineInf.pozs[curl] = new Range(i, i + 1);
-                        inLineInf.sign[curl++] = ps.clsepr;
-                        i++;
+                        inLineInf.sign[curl++] = ps.ravn;
                         continue;
-                    }
-                }
 
-                if (c == '(')
-                {
-                    closeWord(i);
-                    int st = i;
-                    while (i < line.Length && line[i] != ')')
-                    {
-                        ++i;
+                    case ';':
+                        closeWord(i);
+                        inLineInf.pozs[curl] = new Range(i, i + 1);
+                        inLineInf.sign[curl++] = ps.je;
                         continue;
-                    }
 
-                    Debug.Assert(i != line.Length);
-                    inLineInf.pozs[curl] = new Range(st, i + 1);
-                    inLineInf.sign[curl++] = ps.skob_word;
-                    continue;
-                }
-
-                if (c == '=')
-                {
-                    closeWord(i);
-                    inLineInf.pozs[curl] = new Range(i, i + 1);
-                    inLineInf.sign[curl++] = ps.ravn;
-                    continue;
-                }
-
-                if (c == ';')
-                {
-                    closeWord(i);
-                    inLineInf.pozs[curl] = new Range(i, i + 1);
-                    inLineInf.sign[curl++] = ps.je;
-                    continue;
-                }
-
-
-                if (c == '<')
-                {
-                    if (line[i + 1] == '=')
-                        return null;
-                    closeWord(i);
-                    int coitr = 1;
-                    ++i;
-                    int st = i;
-                    while (i < line.Length)
-                    {
-                        if (line[i] == '>')
+                    case '<':
                         {
-                            coitr--;
-                            if (coitr == 0)
-                                break;
+                            if (line[i + 1] == '=')
+                                return null;
+                            closeWord(i);
+                            int coitr = 1;
+                            ++i;
+                            int st = i;
+                            while (i < line.Length)
+                            {
+                                if (line[i] == '>')
+                                {
+                                    coitr--;
+                                    if (coitr == 0)
+                                    {
+                                        breakFor = true;
+                                        break;
+                                    }
+                                }
+                                else if (line[i] == '<')
+                                {
+                                    coitr++;
+                                }
+                                ++i;
+                            }
+                            // 5 <=33 or 4 < 6
+                            if (i == line.Length)
+                                return null;
+                            //Debug.Assert(i != line.Length);
+                            inLineInf.pozs[curl] = new Range(st, i);
+                            inLineInf.sign[curl++] = ps.tr_skob_word;
+                            continue;
                         }
-                        else if (line[i] == '<')
-                        {
-                            coitr++;
-                        }
-                        ++i;
-                    }
-                    // 5 <=33 or 4 < 6
-                    if (i == line.Length)
-                        return null;
-                    //Debug.Assert(i != line.Length);
-                    inLineInf.pozs[curl] = new Range(st, i);
-                    inLineInf.sign[curl++] = ps.tr_skob_word;
-                    continue;
+
+                    case '{':
+                        closeWord(i);
+                        inLineInf.pozs[curl] = new Range(i, i + 1);
+                        inLineInf.sign[curl++] = ps.fig_skob_op;
+                        continue;
+
+                    case '}':
+                        closeWord(i);
+                        inLineInf.pozs[curl] = new Range(i, i + 1);
+                        inLineInf.sign[curl++] = ps.fig_skob_cl;
+                        continue;
+
+                    case '*':
+                    case '&':
+                        closeWord(i);
+                        inLineInf.pozs[curl] = new Range(i, i + 1);
+                        inLineInf.sign[curl++] = ps._ref;
+                        continue;
+
+                    case '0':
+                        closeWord(i);
+                        inLineInf.pozs[curl] = new Range(i, i + 1);
+                        inLineInf.sign[curl++] = ps.zero;
+                        continue;
                 }
 
-                if (c == '{')
-                {
-                    closeWord(i);
-                    inLineInf.pozs[curl] = new Range(i, i + 1);
-                    inLineInf.sign[curl++] = ps.fig_skob_op;
-                    continue;
-                }
-
-                if (c == '}')
-                {
-                    closeWord(i);
-                    inLineInf.pozs[curl] = new Range(i, i + 1);
-                    inLineInf.sign[curl++] = ps.fig_skob_cl;
-                    continue;
-                }
-
-                if (c == '*' || c == '&')
-                {
-                    closeWord(i);
-                    inLineInf.pozs[curl] = new Range(i, i + 1);
-                    inLineInf.sign[curl++] = ps._ref;
-                    continue;
-                }
-
-                if (c == '0')
-                {
-                    closeWord(i);
-                    inLineInf.pozs[curl] = new Range(i, i + 1);
-                    inLineInf.sign[curl++] = ps.zero;
-                    continue;
-                }
+                if (breakFor)
+                    break;
 
                 if (workSt == -1)
                     workSt = i;
@@ -833,6 +911,7 @@ namespace Parcsh
             closeWord(line.Length);
             inLineInf.pozs[curl] = new Range(line.Length, line.Length);
             inLineInf.sign[curl++] = ps.end;
+            inLineInf.singLen = curl;
             return inLineInf;
         }
         string pLine;
