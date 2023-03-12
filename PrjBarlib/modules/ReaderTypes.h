@@ -907,6 +907,16 @@ struct DataRect
 				minVal = v;
 		}
 	}
+
+	int samples()
+	{
+		return data.samples;
+	}
+
+	uchar* getData()
+	{
+		return data.ptr.b;
+	}
 };
 
 

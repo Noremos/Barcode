@@ -199,7 +199,7 @@ namespace StateBinFile
 		{ }
 
 		BinStateReader(std::istream& text) : stream(text), inside(false)
-		{ 
+		{
 			intiOnOpen();
 		}
 
