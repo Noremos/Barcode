@@ -383,6 +383,16 @@ void TiffIFD::printTag(uchar* buffer, bool is64)
 		//		OUT << "ModelTransformationTag" << tags.ModelTransformationTag;
 		break;
 	}
+
+	case Tags::GeoPorjection:
+	{
+		uchar buffer[16];
+		reader->read(buffer, value, count);
+		tags.GeoProjection = (const char*)buffer;
+		//		OUT << "ModelTransformationTag" << tags.ModelTransformationTag;
+		break;
+	}
+
 	case Tags::NoData:
 		tags.NoDataValue = reader->getFloatFromAscii(value, count, type, is64);
 		//		OUT << "Nodata";
@@ -797,13 +807,13 @@ rowptr TiffReader::getRowData(int y)// rowNum
 	{
 		uchar bbuffer[4];
 
-		char sie = getTypeSize(curSubImage->tags.StripOffsetsType);
+		offu64 sie = getTypeSize(curSubImage->tags.StripOffsetsType);
 		read(bbuffer, curSubImage->tags.StripOffsets + y * sie, sie);
 		uint off =  sie == 2 ? toShort(bbuffer) : toInt(bbuffer);
 
 		sie = getTypeSize(curSubImage->tags.StripByteCountsType);
 		read(bbuffer, curSubImage->tags.StripByteCounts + y * sie, sie);
-		uint count =  sie == 2 ? toShort(bbuffer) : toInt(bbuffer);
+		uint count = sie == 2 ? toShort(bbuffer) : toInt(bbuffer);
 
 
 		tempbuffer.allocate(count + 3);

@@ -139,6 +139,8 @@ enum class Tags : int {
 
 	ModelTransformationTag = 34264,
 
+	GeoPorjection = 34736, // unnemed| WGS 84|
+
 	NoData = 42113
 };
 
@@ -171,12 +173,11 @@ struct ModelTiepoint
 
 struct ModelTiepoints
 {
-	ModelTiepoint *points = nullptr;
+	std::unique_ptr<ModelTiepoint[]> points;
 	int c = 0;
 
 
-	void resize(int n) { points = new ModelTiepoint[n]; }
-	~ModelTiepoints() { delete[] points; }
+	void resize(int n) { points.reset(new ModelTiepoint[n]); }
 
 	void add(uchar* buffer)
 	{
@@ -228,7 +229,7 @@ enum class tifftype : short
 struct GeoTiffTags
 {
 	short GTModelTypeGeoKey = 0;
-	std::string GTCitationGeoKey; //ASCII
+	std::string GTCitationGeoKey; //ASCII Projection  text|3253
 	short GeographicTypeGeoKey = 0; //SHORT
 	std::string GeogCitationGeoKey;
 	short ProjectedCSTypeGeoKey = 0; //SHORT
@@ -369,6 +370,26 @@ struct TiffTags
 
 	tifftype SampleFormat = tifftype::tiff_void;
 
+	std::string GeoProjection;
+
+	std::string getFirstNormProj()
+	{
+		int eped = 0;
+		for (size_t i = 1; i < GeoProjection.length(); i++)
+		{
+			if (GeoProjection[i] == '|')
+			{
+				std::string prt = GeoProjection.substr(eped, i);
+				if (prt != "unnamed" && prt.length() > 0)
+					return prt;
+				eped = i + 1;
+				i++;
+			}
+		}
+
+		return "";
+	}
+
 	short ExtraSamples[16];
 
 	struct ExtraData
@@ -480,6 +501,7 @@ class TiffReader: public ImageReader
 	std::vector<TiffIFD*> subImages;
 	unsigned int currentSubImageIndex = 0;
 
+
 public:
 	const TiffIFD* curSubImage = nullptr;
 
@@ -497,6 +519,11 @@ public:
 	int getSubImageSize()
 	{
 		return subImages.size();
+	}
+
+	const TiffTags& getTags()
+	{
+		return curSubImage->tags;
 	}
 
 	std::vector<SubImgInfo> getSumImageInfos()
