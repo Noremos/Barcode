@@ -33,24 +33,24 @@ namespace bc
 		Barscalar start;
 		//Barscalar len;
 		Barscalar m_end;
-//		int matWid;
+		//		int matWid;
 	private:
 		// System member
 		bool isCopy = false;
 
 	public:
-//		int dep = 0;
+		//		int dep = 0;
 
 		barline(int = 0)
 		{
-//			matWid = wid;
+			//			matWid = wid;
 		}
 		barline(Barscalar _start, Barscalar _end, int, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), m_end(_end)
-//			  ,matWid(wid)
+			//			  ,matWid(wid)
 		{
 			matr.reserve(coordsSize);
 			bar3d = _barc;
-//			assert(matWid != 0);
+			//			assert(matWid != 0);
 		}
 
 		//copy const
@@ -58,7 +58,7 @@ namespace bc
 		{
 			this->start = obj.start;
 			this->m_end = obj.m_end;
-//			this->matWid = obj.matWid;
+			//			this->matWid = obj.matWid;
 			this->numberInParent = obj.numberInParent;
 			this->parent = obj.parent;
 			this->children = obj.children;
@@ -81,7 +81,7 @@ namespace bc
 		{
 			this->start = obj.start;
 			this->m_end = obj.m_end;
-//			this->matWid = obj.matWid;
+			//			this->matWid = obj.matWid;
 
 			this->numberInParent = obj.numberInParent;
 			this->parent = obj.parent;
@@ -101,12 +101,12 @@ namespace bc
 
 		bool operator==(barline const& obj)
 		{
-//			assert(this->start == obj.start);
-//			assert(this->m_end ==  obj.m_end);
-//			assert(matr.size() == obj.matr.size());
+			//			assert(this->start == obj.start);
+			//			assert(this->m_end ==  obj.m_end);
+			//			assert(matr.size() == obj.matr.size());
 
-			return this->start == obj.start && this->m_end ==  obj.m_end && matr.size() == obj.matr.size();
-//			return this->numberInParent = obj.numberInParent;
+			return this->start == obj.start && this->m_end == obj.m_end && matr.size() == obj.matr.size();
+			//			return this->numberInParent = obj.numberInParent;
 		}
 
 		// move costr
@@ -114,7 +114,7 @@ namespace bc
 		{
 			this->start = obj.start;
 			this->m_end = obj.m_end;
-//			this->matWid = obj.matWid;
+			//			this->matWid = obj.matWid;
 
 			this->numberInParent = obj.numberInParent;
 			this->parent = std::exchange(obj.parent, nullptr);
@@ -137,7 +137,7 @@ namespace bc
 		{
 			this->start = obj.start;
 			this->m_end = obj.m_end;
-//			this->matWid = obj.matWid;
+			//			this->matWid = obj.matWid;
 			this->isCopy = false;
 
 			this->numberInParent = obj.numberInParent;
@@ -178,16 +178,16 @@ namespace bc
 			matr.clear();
 		}
 
-//		int getWid()
-//		{
-//			return matWid;
-//		}
+		//		int getWid()
+		//		{
+		//			return matWid;
+		//		}
 
-		const barvector &getMatrix() const
+		const barvector& getMatrix() const
 		{
 			return matr;
 		}
-		barvector &getMatrix() {
+		barvector& getMatrix() {
 			return matr;
 		}
 
@@ -256,10 +256,10 @@ namespace bc
 		void addCoord(const point& first, Barscalar bright)
 		{
 			matr.push_back(barvalue(first, bright));
-//			if (bright < start)
-//				start = bright;
-//			if (bright > m_end)
-//				m_end = bright;
+			//			if (bright < start)
+			//				start = bright;
+			//			if (bright > m_end)
+			//				m_end = bright;
 		}
 
 		void addCoord(barvalue val)
@@ -328,8 +328,8 @@ namespace bc
 		float lenFloat() const
 		{
 			return m_end > start ?
-					m_end.getAvgFloat() - start.getAvgFloat() :
-					start.getAvgFloat() - m_end.getAvgFloat();
+				m_end.getAvgFloat() - start.getAvgFloat() :
+				start.getAvgFloat() - m_end.getAvgFloat();
 		}
 
 		int getDeath()
@@ -341,7 +341,7 @@ namespace bc
 				++r;
 				temp = temp->parent;
 			}
-//			dep = sr;
+			//			dep = sr;
 			return r;
 		}
 
@@ -387,7 +387,7 @@ namespace bc
 		{
 			for (barline* chil : this->children)
 			{
-//				getChildsMatr(vect);
+				//				getChildsMatr(vect);
 				for (barvalue& val : chil->matr)
 				{
 					vect.push_back(val);
@@ -494,6 +494,19 @@ namespace bc
 			}
 
 			return out;
+		}
+
+		bc::barline* getChild(int id)
+		{
+			if (id < 0 || id >= children.size())
+				return children[id];
+			else
+				return nullptr;
+		}
+
+		size_t getChildrenCount()
+		{
+			return children.size();
 		}
 
 #ifdef _PYD
