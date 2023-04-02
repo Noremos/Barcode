@@ -70,8 +70,8 @@ class EXPORT Barscalar
 		unsigned char b1;
 		unsigned char b3[4];
 		float f;
-		float* f3;
-		int* i3;
+		//float* f3;
+		//int* i3;
 	};
 
 public:
@@ -138,6 +138,16 @@ public:
 	unsigned char getByte8() const
 	{
 		return data.b1;
+	}
+
+	float getFloat() const
+	{
+		return data.f;
+	}
+
+	unsigned char getRGB(int id) const
+	{
+		return data.b3[id];
 	}
 
 	template<class TSTR, typename TO_STRING>
