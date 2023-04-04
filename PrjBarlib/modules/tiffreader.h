@@ -372,24 +372,6 @@ struct TiffTags
 
 	std::string GeoProjection;
 
-	std::string getFirstNormProj()
-	{
-		int eped = 0;
-		for (size_t i = 1; i < GeoProjection.length(); i++)
-		{
-			if (GeoProjection[i] == '|')
-			{
-				std::string prt = GeoProjection.substr(eped, i);
-				if (prt != "unnamed" && prt.length() > 0)
-					return prt;
-				eped = i + 1;
-				i++;
-			}
-		}
-
-		return "";
-	}
-
 	short ExtraSamples[16];
 
 	struct ExtraData
@@ -476,6 +458,56 @@ public:
 	TiffTags tags;
 	GeoTiffTags geotags;
 	ImageType getType() const;
+
+	int getFirstNormProj() const
+	{
+		const std::string* st;
+		if (geotags.GTCitationGeoKey.length() > 0)
+		{
+			st = &geotags.GTCitationGeoKey;
+		}
+		else
+		{
+			st = &tags.GeoProjection;
+		}
+
+		const std::string& ref = *st;
+		if (ref.length() == 0)
+			return -1;
+
+
+		std::string prt;
+		int eped = 0;
+		for (size_t i = 0; i < ref.length(); i++)
+		{
+			if (ref[i] == '|' && i > 0)
+			{
+				prt = ref.substr(eped, i);
+				if (prt != "unnamed" && prt.length() > 0)
+					break;;
+				eped = i + 1;
+				i++;
+			}
+		}
+
+		if (prt.length() == 0)
+			return -1;
+
+		std::string num_str = "";
+		for (int i = 0; i < prt.length(); i++)
+		{
+			if (isdigit(prt[i]))
+			{
+				num_str += prt[i];
+			}
+			else if (num_str.length() > 0)
+			{
+				break;
+			}
+		}
+
+		return stoi(num_str);
+	}
 private:
 	TiffReader *reader = nullptr;
 	// tile
@@ -524,6 +556,11 @@ public:
 	const TiffTags& getTags()
 	{
 		return curSubImage->tags;
+	}
+
+	int getProjection() const
+	{
+		return curSubImage->getFirstNormProj();
 	}
 
 	std::vector<SubImgInfo> getSumImageInfos()
