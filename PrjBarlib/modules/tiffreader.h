@@ -537,6 +537,11 @@ class TiffReader: public ImageReader
 public:
 	const TiffIFD* curSubImage = nullptr;
 
+	TiffIFD* getSubImg(int id)
+	{
+		return subImages[id];
+	}
+
 	void setCurrentSubImage(uint index)
 	{
 		if (currentSubImageIndex != index)
