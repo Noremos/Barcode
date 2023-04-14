@@ -537,7 +537,12 @@ class TiffReader: public ImageReader
 public:
 	const TiffIFD* curSubImage = nullptr;
 
-	TiffIFD* getSubImg(int id)
+	inline void setMaxTilesCacheSize(size_t size)
+	{
+		cachedTiles.setMaxSize(size);
+	}
+
+	TiffIFD* getSubImg(int id) const
 	{
 		return subImages[id];
 	}
@@ -629,10 +634,13 @@ public:
 	cachedRow getTiffTile(int x, int y, bool asConst = false);
 	cachedRow getTiffTile(int ind, bool asConst = false);
 	void removeTileFromCache(int ind);
-	rowptr processData(uchar *bytes, int len, int samplesInOne = 1);
+
 
 	int getTileWid(int rowNum);
 	float getFloatFromAscii(size_t offOrValue, size_t count, char format, bool is64);
+
+private:
+	rowptr processData(uchar *bytes, int len, int samplesInOne = 1);
 protected:
 	size_t getTagValue(size_t offOrValue, size_t count, char format, bool is64, ushort tag);
 	void readAsciiFromBuffer(std::string &output, int offset, int Count);
