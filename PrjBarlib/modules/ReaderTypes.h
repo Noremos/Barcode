@@ -3,6 +3,11 @@
 #include <queue>
 #include "sidesrc/flat_hash_map/unordered_map.hpp"
 
+#include <string>
+#include <sstream>
+#include <iomanip>
+
+
 enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rgb8, argb8 };
 
 int getImgTypeSize(ImageType type)
@@ -445,6 +450,11 @@ struct rowptr
 		return nullptr;
 	}
 
+	size_t getByteSize() const
+	{
+		return count * samples * getImgTypeSize(type);
+	}
+
 	void setValue(size_t index, int sample, valtype val)
 	{
 		index *= samples + sample;
@@ -714,6 +724,11 @@ public:
 	{
 		row.setNull();
 	}
+
+	size_t byteSize() const
+	{
+		return row.getByteSize();
+	}
 	//s	operator rowptr() const { return row; }
 };
 
@@ -942,6 +957,39 @@ public:
 	}
 };
 
+
+
+std::string formatBytes(size_t size)
+{
+	static const char* units[] = {"B", "KB", "MB", "GB", "TB"};
+	static const int numUnits = sizeof(units) / sizeof(units[0]);
+	int unitIndex = 0;
+	double sizeF = size;
+
+	while (sizeF >= 1024.0 && unitIndex < numUnits - 1) {
+		sizeF /= 1024.0;
+		++unitIndex;
+	}
+
+	std::ostringstream ss;
+	ss << std::fixed << std::setprecision(2) << sizeF << " " << units[unitIndex];
+	return ss.str();
+}
+
+
+void printAdd(size_t t)
+{
+	auto s = formatBytes(t);
+	printf("Added %s to cache\n", s.c_str());
+}
+
+void printRemove(size_t t)
+{
+	auto s = formatBytes(t);
+	printf("Removed %s from cache\n", s.c_str());
+}
+
+
 template<class T, class DEL>
 class Cache
 {
@@ -951,9 +999,9 @@ protected:
 	ska::unordered_map<int, T> cachedData;
 	size_t maxElementsSize = 16;
 	size_t maxCacheSize = 10000000;
-	size_t elementSize;
+	size_t storedSize = 0;
 public:
-	Cache(size_t maxElemCount = 16, size_t maxCachSize = 10000000, size_t sizeOfElement = sizeof(T)) : maxElementsSize(maxElemCount), maxCacheSize(maxCachSize), elementSize(sizeOfElement) {}
+	Cache(size_t maxElemCount = 16, size_t maxCachSize = 10000000) : maxElementsSize(maxElemCount), maxCacheSize(maxCachSize) {}
 
 	~Cache()
 	{
@@ -969,6 +1017,7 @@ public:
 			remove();
 		}
 	}
+
 	void remove()
 	{
 		int ol = cacheIndexs.front();
@@ -981,6 +1030,9 @@ public:
 		auto iter = cachedData.find(ol);
 		T& val = iter->second;
 		//std::exchange(iter->second, nullptr);
+		size_t t = val->byteSize();
+		// ::printRemove(t);
+		storedSize -= t;
 
 		deallocator.free(val);
 		cachedData.erase(iter);
@@ -988,8 +1040,19 @@ public:
 	void setMaxSize(size_t size)
 	{
 		maxCacheSize = size;
-		while (cachedData.size() * elementSize > size)
+		while (storedSize > size)
 			remove();
+	}
+
+	void checkBeforeAdd(const T& data)
+	{
+		size_t s = cachedData.size();
+		if (s > maxElementsSize || storedSize > maxCacheSize)
+			remove();
+
+		size_t t = data->byteSize();
+		storedSize += t;
+		// ::printAdd(t);
 	}
 
 	void storeData(int i, const T& data)
@@ -998,19 +1061,17 @@ public:
 		if (i % 5 == 0)
 			qDebug() << "get:" << i;
 #endif
-		size_t s = cachedData.size();
-		if (s > maxElementsSize || s * elementSize > maxCacheSize)
-			remove();
+
+		checkBeforeAdd(data);
 
 		cachedData.insert(std::pair<int, T>(i, data));
 		cacheIndexs.push(i);
+
 	}
 
 	void storeMoveData(int i, const T& data)
 	{
-		size_t s = cachedData.size();
-		if (s > maxElementsSize || s * elementSize > maxCacheSize)
-			remove();
+		checkBeforeAdd(data);
 
 		cachedData.insert(std::pair<int, T>(i, std::move(data)));
 		cacheIndexs.push(i);
@@ -1048,11 +1109,14 @@ public:
 	{
 		for (auto& it : cachedData)
 		{
+			size_t t = it.second->byteSize();
+			// printRemove(t);
 			deallocator.free(it.second);
 		}
 		cachedData.clear();
 		std::queue<int> empty;
 		std::swap(cacheIndexs, empty);
+		storedSize = 0;
 	}
 };
 
