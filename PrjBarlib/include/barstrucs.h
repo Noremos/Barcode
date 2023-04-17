@@ -402,6 +402,18 @@ namespace bc
 			return y * widr + x;
 		}
 
+		static size_t getStatIndBig(int x, int y)
+		{
+			return ((size_t)x << 32) + (size_t)y;
+		}
+
+		static bc::point getStatPointBig(size_t index)
+		{
+			int y = index >> 32;
+			int x = (index << 32) >> 32;
+			return bc::point(x, y);
+		}
+
 		static bc::point getStatPoint(uint index, int widr = MAX_WID)
 		{
 			return bc::point(index % widr, index / widr);
