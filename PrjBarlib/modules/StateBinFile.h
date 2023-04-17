@@ -267,6 +267,11 @@ namespace StateBinFile
 			stream.seekg(memoffs[index]);
 		}
 
+		size_t getIndexSize()
+		{
+			return memoffs.size();
+		}
+
 		virtual bool ended()
 		{
 			return stream.eof() || stream.tellg() >= itemsEndPos;
