@@ -789,6 +789,36 @@ namespace bc
 
 			return true;
 		}
+
+		void getBettyNumbers(int* bs) const
+		{
+			memset(bs, 0, 256 * sizeof(int));
+
+			short st = start.getAvgUchar();
+			short ed = end().getAvgUchar();
+			if (st > ed)
+				std::swap(st, ed);
+
+			addBettyNumbers(bs, st);
+		}
+
+		void addBettyNumbers(int* bs, short offset) const
+		{
+			auto st = start.getAvgUchar();
+			auto ed = end().getAvgUchar();
+			if (st > ed)
+				std::swap(st, ed);
+
+			for (short i = st; i <= ed; ++i)
+			{
+				++bs[i];
+			}
+
+			for (const barline* l : children)
+			{
+				l->addBettyNumbers(bs, offset);
+			}
+		}
 	};
 
 	// comparable
