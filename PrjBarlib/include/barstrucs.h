@@ -434,6 +434,11 @@ namespace bc
 			return OPTTIF(index / MAX_WID, y);
 		}
 
+		void setXY(int x, int y)
+		{
+			OPTTIF(index = y * MAX_WID + x, this->x = x; this->y = y);
+		}
+
 		void setY(int y)
 		{
 			OPTTIF(index = y * MAX_WID + getX(), this->y = y);
