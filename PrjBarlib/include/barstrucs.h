@@ -306,29 +306,29 @@ namespace bc
 		}
 	};
 
+const uint MAX_WID = 65535;
 #ifdef BARVALUE_RAM_OPTIMIZATION
-	const uint MAX_WID = 65535;
-#define OPTTIF(A, B) (A)
+	using BType = unsigned short;
+	using BIndex = uint;
 #else
-#define OPTTIF((A), (B)) (B)
+	using BType = uint;
+	using BIndex = size_t;
 #endif
 
 
 	struct barvalue
 	{
-#ifdef BARVALUE_RAM_OPTIMIZATION
-		uint index;
-#else
-		uint x;
-		uint y;
-#endif
+		BType x;
+		BType y;
+
 		Barscalar value;
 
-		barvalue(int x, int y, Barscalar value)
+		barvalue(BType x, BType y, Barscalar value)
 		{
 			assert(x >= 0);
 			assert(y >= 0);
-			OPTTIF(index = y * MAX_WID + x, this->x = x; this->y = y);
+			this->x = x;
+			this->y = y;
 			this->value = value;
 		}
 
@@ -337,27 +337,25 @@ namespace bc
 			assert(p.x >= 0);
 			assert(p.y >= 0);
 
-			OPTTIF(index = p.y * MAX_WID + p.x,
-				x = p.x; y = p.y);
+			x = p.x;
+			y = p.y;
 			this->value = value;
 		}
 
 
-		barvalue()
+		barvalue() : x(0), y(0)
 		{
-			index = 0;
-			value.type = BarType::NONE;
+			 value.type = BarType::NONE;
 		}
 
-		barvalue(const barvalue& other) /*: s(other.s)*/
-		{
-			OPTTIF(index = this->index = other.index, this->x = other.x; this->y = other.y);
-			this->value = other.value;
-		}
+		barvalue(const barvalue& other)
+			: x(other.x), y(other.y), value(other.value)
+		{ }
 
 		barvalue(barvalue&& other) /*: s(std::move(o.s))*/
 		{
-			OPTTIF(this->index = other.index, this->x = other.x; this->y = other.y);
+			this->x = other.x;
+			this->y = other.y;
 			this->value = other.value;
 		}
 
@@ -368,7 +366,8 @@ namespace bc
 			if (this == &other)
 				return *this;
 
-			OPTTIF(this->index = other.index, this->x = other.x; this->y = other.y);
+			this->x = other.x;
+			this->y = other.y;
 			this->value = other.value;
 
 			return *this;
@@ -381,7 +380,8 @@ namespace bc
 			if (this == &other)
 				return *this; // delete[]/size=0 would also be ok
 
-			OPTTIF(this->index = other.index, this->x = other.x; this->y = other.y);
+			this->x = other.x;
+			this->y = other.y;
 			this->value = other.value;
 
 			return *this;
@@ -392,9 +392,13 @@ namespace bc
 			return bc::point(getX(), getY());
 		}
 
-		uint getIndex(int widr = MAX_WID) const
+		BIndex getIndex() const
 		{
-			return OPTTIF(index, y * widr + x);
+#ifdef BARVALUE_RAM_OPTIMIZATION
+			return getStatInd(x, y);
+#else
+			return getStatIndBig(x, y);
+#endif
 		}
 
 		static uint getStatInd(int x, int y, int widr = MAX_WID)
@@ -421,27 +425,28 @@ namespace bc
 
 		int getX() const
 		{
-			return OPTTIF(index % MAX_WID, x);
-		}
-
-		void setX(int x)
-		{
-			OPTTIF(index = getY() * MAX_WID + x, this->x = x);
+			return x;
 		}
 
 		int getY() const
 		{
-			return OPTTIF(index / MAX_WID, y);
+			return y;
 		}
 
-		void setXY(int x, int y)
+		void setX(int x)
 		{
-			OPTTIF(index = y * MAX_WID + x, this->x = x; this->y = y);
+			this->x = x;
 		}
 
 		void setY(int y)
 		{
-			OPTTIF(index = y * MAX_WID + getX(), this->y = y);
+			this->y = y;
+		}
+
+		void setXY(int x, int y)
+		{
+			this->x = x;
+			this->y = y;
 		}
 
 		pybarvalue getPyValue() const

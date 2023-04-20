@@ -67,6 +67,8 @@ export namespace bc
 	const unsigned int BAR_MAX_WID = 65535;
 
 	poidex;
+	BType;
+	BIndex;
 
 	point;
 	pointHash;

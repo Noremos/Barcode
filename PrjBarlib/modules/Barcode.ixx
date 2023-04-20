@@ -4530,7 +4530,8 @@ export namespace StateBinFile
 export namespace bc
 {
 	const unsigned int BAR_MAX_WID = 65535;
-
+	BType;
+	BIndex;
 	poidex;
 
 	point;
