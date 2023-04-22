@@ -10,7 +10,7 @@
 
 enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rgb8, argb8 };
 
-int getImgTypeSize(ImageType type)
+static int getImgTypeSize(ImageType type)
 {
 	switch (type)
 	{
@@ -959,35 +959,35 @@ public:
 
 
 
-std::string formatBytes(size_t size)
-{
-	static const char* units[] = {"B", "KB", "MB", "GB", "TB"};
-	static const int numUnits = sizeof(units) / sizeof(units[0]);
-	int unitIndex = 0;
-	double sizeF = size;
+//std::string formatBytes(size_t size)
+//{
+//	static const char* units[] = {"B", "KB", "MB", "GB", "TB"};
+//	static const int numUnits = sizeof(units) / sizeof(units[0]);
+//	int unitIndex = 0;
+//	double sizeF = size;
+//
+//	while (sizeF >= 1024.0 && unitIndex < numUnits - 1) {
+//		sizeF /= 1024.0;
+//		++unitIndex;
+//	}
+//
+//	std::ostringstream ss;
+//	ss << std::fixed << std::setprecision(2) << sizeF << " " << units[unitIndex];
+//	return ss.str();
+//}
 
-	while (sizeF >= 1024.0 && unitIndex < numUnits - 1) {
-		sizeF /= 1024.0;
-		++unitIndex;
-	}
-
-	std::ostringstream ss;
-	ss << std::fixed << std::setprecision(2) << sizeF << " " << units[unitIndex];
-	return ss.str();
-}
-
-
-void printAdd(size_t t)
-{
-	auto s = formatBytes(t);
-	printf("Added %s to cache\n", s.c_str());
-}
-
-void printRemove(size_t t)
-{
-	auto s = formatBytes(t);
-	printf("Removed %s from cache\n", s.c_str());
-}
+//
+//void printAdd(size_t t)
+//{
+//	auto s = formatBytes(t);
+//	printf("Added %s to cache\n", s.c_str());
+//}
+//
+//void printRemove(size_t t)
+//{
+//	auto s = formatBytes(t);
+//	printf("Removed %s from cache\n", s.c_str());
+//}
 
 
 template<class T, class DEL>
