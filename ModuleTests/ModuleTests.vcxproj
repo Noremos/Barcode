@@ -41,7 +41,6 @@
     <ClInclude Include="..\PrjBarlib\modules\StateBinFile.h" />
     <ClInclude Include="..\PrjBarlib\modules\tiffreader.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\PrjBarlib\modules\tiffreader.cpp">
