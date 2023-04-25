@@ -32,6 +32,7 @@
     <ClInclude Include="..\PrjBarlib\modules\base.h">
       <Filter>ModulesFiles</Filter>
     </ClInclude>
+    <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ModulesFiles">
