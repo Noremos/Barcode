@@ -16,6 +16,21 @@ namespace bc
 	struct barline;
 	using barlinevector = std::vector<bc::barline*>;
 
+	struct ShortPoint
+	{
+		short x, y;
+
+		short diff(int a)
+		{
+			if (a > 0)
+				return 1;
+			else if (a < 0)
+				return -1;
+			else
+				return 0;
+		}
+	};
+
 	struct EXPORT barline
 	{
 		// Graph
@@ -383,16 +398,30 @@ namespace bc
 		}
 
 
-		void getChildsMatr(barvector& vect)
+		void getChildsMatr(barvector& vect, bool recursive = false) const
 		{
 			for (barline* chil : this->children)
 			{
-				//				getChildsMatr(vect);
+				if (recursive)
+					getChildsMatr(vect);
 				for (barvalue& val : chil->matr)
 				{
 					vect.push_back(val);
 				}
 			}
+		}
+
+
+		size_t getMatrSize() const
+		{
+			size_t msize = matr.size();
+
+			for (barline* chil : this->children)
+			{
+				msize += chil->getMatrSize();
+			}
+
+			return msize;
 		}
 
 		size_t getBarcode3dSize()
@@ -818,6 +847,24 @@ namespace bc
 			{
 				l->addBettyNumbers(bs, offset);
 			}
+		}
+
+		std::vector<ShortPoint> createSperal()
+		{
+			std::vector<ShortPoint> speral;
+
+			barvalue prev = matr[0];
+			speral.push_back(ShortPoint(matr[1].x - prev.x,0));
+			for (auto &p : matr)
+			{
+				if (p.value != prev.value)
+				{
+					speral.push_back(ShortPoint(p.x - prev.x, p.y - prev.y));
+					prev = p;
+				}
+			}
+
+			return speral;
 		}
 	};
 
