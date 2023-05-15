@@ -2,9 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="..\PrjBarlib\modules\convertation.cpp">
-      <Filter>ModulesFiles</Filter>
-    </ClCompile>
     <ClCompile Include="..\PrjBarlib\modules\tiffreader.cpp">
       <Filter>ModulesFiles</Filter>
     </ClCompile>
@@ -35,6 +32,7 @@
     <ClInclude Include="..\PrjBarlib\modules\base.h">
       <Filter>ModulesFiles</Filter>
     </ClInclude>
+    <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ModulesFiles">
