@@ -199,9 +199,9 @@ void BarcodeCreator::draw(std::string name)
 
 inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 {
-	bool mJC = main->justCreated();
-	bool sJC = second->justCreated();
-	if ((mJC || sJC) && !(sJC && sJC)) // Строго или
+	const bool mJC = main->justCreated();
+	const bool sJC = second->justCreated();
+	if (allowEvOAttach && (mJC && !sJC) || (!mJC && sJC)) // Строго или
 	{
 #ifdef POINTS_ARE_AVAILABLE
 		for (const auto& val : second->resline->matr)
@@ -232,6 +232,20 @@ inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 		delete second->resline;
 		second->resline = nullptr;
 
+		return main;
+	}
+	else if (mJC && sJC)
+	{
+		for (size_t rind = 0, totalm = second->resline->matr.size(); rind < totalm; ++rind)
+		{
+			const barvalue& val = second->resline->matr[rind];
+			const bc::point p = val.getPoint();
+			main->add(p.getLiner(wid), p, val.value, true);
+		}
+		main->startIndex = MIN(second->startIndex, main->startIndex);
+
+		delete second->resline;
+		second->resline = nullptr;
 		return main;
 	}
 
@@ -1287,13 +1301,15 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 {
 	init(src, str.proctype, str.comtype);
 
+	allowEvOAttach = true;
 	switch (str.comtype)
 	{
-	case  ComponentType::Component:
+	case ComponentType::Component:
 	{
 		switch (str.proctype)
 		{
 		case ProcType::Radius:
+			allowEvOAttach = false;
 			processCompByRadius(item);
 			break;
 		case ProcType::experiment:
@@ -1619,6 +1635,7 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 {
 	curpoindex = val.offset;
 	curpix = getPoint(curpoindex);
+	curbright = workingImg->get(curpix.x, curpix.y); // Check in attach
 
 	bc::point NextPoint = val.getNextPoint(curpix);
 	poidex NextPindex = NextPoint.getLiner(workingImg->wid());
@@ -1628,7 +1645,6 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 
 	if (first != nullptr)
 	{
-		Barscalar Nscalar = workingImg->get(NextPoint.x, NextPoint.y);
 		//curpoindex = NextPindex;
 		//curpix = NextPoint;
 
@@ -1641,6 +1657,7 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 		}
 		else if (connected == nullptr)
 		{
+			Barscalar Nscalar = workingImg->get(NextPoint.x, NextPoint.y);
 			if (!first->add(NextPindex, NextPoint, Nscalar))
 			{
 				connected = new Component(NextPindex, Nscalar, this);
@@ -1649,7 +1666,6 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 	}
 	else
 	{
-		curbright = workingImg->get(curpix.x, curpix.y);
 		// Ребро не создано или не получилось присоединить
 		if (connected == nullptr)
 		{

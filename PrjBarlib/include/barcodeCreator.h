@@ -67,6 +67,7 @@ namespace bc {
 	{
 		typedef bc::DatagridProvider bcBarImg;
 
+		bool allowEvOAttach;
 		bool originalImg = true;
 		std::vector<COMPP> components;
 	private:
