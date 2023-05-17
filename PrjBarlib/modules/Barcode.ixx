@@ -38,13 +38,6 @@ export module BarcodeModule;
 #include "../source/component.cpp"
 #include "../source/hole.cpp"
 
-export
-{
-	BarType;
-	Barscalar;
-	//using ::uchar;
-	//using ::uint;
-}
 
 export namespace StateBinFile
 {
