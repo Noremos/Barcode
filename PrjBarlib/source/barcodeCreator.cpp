@@ -196,12 +196,39 @@ void BarcodeCreator::draw(std::string name)
 #endif // USE_OPENCV
 }
 
+struct Connect
+{
+	std::unordered_map<size_t, size_t> conters;
+};
+
+std::unordered_map<size_t, Connect> connections;
 
 inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 {
-	const bool mJC = main->justCreated();
-	const bool sJC = second->justCreated();
-	if (allowEvOAttach && (mJC && !sJC) || (!mJC && sJC)) // Строго или
+	// size_t mc = reinterpret_cast<size_t>(main);
+	// size_t sc = reinterpret_cast<size_t>(second);
+	// auto f = connections.find(mc);
+	// if (f == connections.end())
+	// {
+	// 	connections.insert(std::pair<size_t, Connect>(mc, Connect()));
+	// 	f = connections.find(mc);
+	// }
+	// ++f->second.conters[mc];
+
+	// f = connections.find(sc);
+	// if (f == connections.end())
+	// {
+	// 	connections.insert(std::pair<size_t, Connect>(sc, Connect()));
+	// 	f = connections.find(sc);
+	// }
+	// else
+	// 	++f->second.conters[sc];
+
+	// return main;
+
+	bool mJC = main->justCreated();
+	bool sJC = second->justCreated();
+	if (!(sJC && sJC) && (mJC || sJC)) // Строго или
 	{
 #ifdef POINTS_ARE_AVAILABLE
 		for (const auto& val : second->resline->matr)
@@ -232,20 +259,6 @@ inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 		delete second->resline;
 		second->resline = nullptr;
 
-		return main;
-	}
-	else if (mJC && sJC)
-	{
-		for (size_t rind = 0, totalm = second->resline->matr.size(); rind < totalm; ++rind)
-		{
-			const barvalue& val = second->resline->matr[rind];
-			const bc::point p = val.getPoint();
-			main->add(p.getLiner(wid), p, val.value, true);
-		}
-		main->startIndex = MIN(second->startIndex, main->startIndex);
-
-		delete second->resline;
-		second->resline = nullptr;
 		return main;
 	}
 
@@ -340,6 +353,22 @@ inline bool BarcodeCreator::checkCloserB0()
 	COMPP connected;// = new rebro(x, y); //included[{(int)i, (int)j}];
 	//TODO выделять паять заранее
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
+
+	float avgv = 0;short r = 0;
+	for (int i = 0; i < 8; ++i)
+	{
+		point p(curpix + poss[i]);
+		if (IS_OUT_OF_REG(p.x, p.y))
+			continue;
+
+		++r;
+		avgv += workingImg->get(p.x, p.y).getAvgFloat();
+	}
+
+	float m = workingImg->get(curpix.x, curpix.y).getAvgFloat();
+
+	if (avgv / r < m)
+		return false;
 
 	//first = getComp(curpix);
 	// FIXME first always will be nill
@@ -1284,6 +1313,22 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 		if (c == nullptr || c->resline == nullptr)
 			continue;
 
+		// {
+		// 	auto& cs = connections[reinterpret_cast<size_t>(c)].conters;
+		// 	size_t m = 0;
+		// 	Component* mcs = nullptr;
+		// 	for(auto& c : cs)
+		// 	{
+		// 		if (c.second > 0)
+		// 			mcs = reinterpret_cast<Component*>(c.first);
+		// 	}
+		// 	if (mcs == nullptr)
+		// 	{
+		// 		mcs = reinterpret_cast<Component*>(cs.begin()->first);
+		// 	}
+		// 	attach(c, mcs);
+		// }
+
 		if (c->parent == nullptr)
 		{
 			//assert(c->isAlive() || settings.killOnMaxLen);
@@ -1301,7 +1346,6 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 {
 	init(src, str.proctype, str.comtype);
 
-	allowEvOAttach = true;
 	switch (str.comtype)
 	{
 	case ComponentType::Component:
@@ -1309,7 +1353,6 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 		switch (str.proctype)
 		{
 		case ProcType::Radius:
-			allowEvOAttach = false;
 			processCompByRadius(item);
 			break;
 		case ProcType::experiment:
@@ -1500,7 +1543,7 @@ uchar dif(uchar a, uchar b)
 
 #ifdef _PYD
 
-bc::Barcontainer* bc::BarcodeCreator::createPysBarcode(bn::ndarray& img, bc::BarConstructor& structure)
+bc::Barcontainer* bc::BarcodeCreator::createPysBarcode(bn::array& img, bc::BarConstructor& structure)
 {
 	//auto shape = img.get_shape();
 
@@ -1635,7 +1678,6 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 {
 	curpoindex = val.offset;
 	curpix = getPoint(curpoindex);
-	curbright = workingImg->get(curpix.x, curpix.y); // Check in attach
 
 	bc::point NextPoint = val.getNextPoint(curpix);
 	poidex NextPindex = NextPoint.getLiner(workingImg->wid());
@@ -1645,6 +1687,7 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 
 	if (first != nullptr)
 	{
+		Barscalar Nscalar = workingImg->get(NextPoint.x, NextPoint.y);
 		//curpoindex = NextPindex;
 		//curpix = NextPoint;
 
@@ -1657,7 +1700,6 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 		}
 		else if (connected == nullptr)
 		{
-			Barscalar Nscalar = workingImg->get(NextPoint.x, NextPoint.y);
 			if (!first->add(NextPindex, NextPoint, Nscalar))
 			{
 				connected = new Component(NextPindex, Nscalar, this);
@@ -1666,6 +1708,7 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 	}
 	else
 	{
+		curbright = workingImg->get(curpix.x, curpix.y);
 		// Ребро не создано или не получилось присоединить
 		if (connected == nullptr)
 		{
