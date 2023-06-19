@@ -721,7 +721,7 @@ rowptr TiffReader::processData(uchar* bytes, int len, int samplesInOne)
 	data.count = len;
 	data.type = getType();
 
-	int fullLen = len * samplesInOne;
+	const int fullLen = len * samplesInOne;
 	switch (data.type)
 	{
 	case ImageType::int8:
@@ -736,6 +736,22 @@ rowptr TiffReader::processData(uchar* bytes, int len, int samplesInOne)
 	case ImageType::float32:
 		data.ptr.f = setData<float>(bytes, fullLen);
 		break;
+	case ImageType::float64:
+	{
+		data.ptr.d = setData<double>(bytes, fullLen);
+
+		//uchar* raw = new uchar[fullLen / 2];
+		//for (size_t i = 0, k = 0; i < fullLen; i += 8)
+		//{
+		//	raw[k++] = bytes[i];
+		//	raw[k++] = bytes[i + 1];
+		//	raw[k++] = bytes[i + 2];
+		//	raw[k++] = bytes[i + 3];
+		//}
+		//data.type = ImageType::float32;
+		//data.ptr.f = setData<float>(raw, fullLen / 2);
+		break;
+	}
 		//	case ImageType::float64:
 		//		data = setData<double>(bytes, len);
 		//		break;
@@ -823,16 +839,7 @@ rowptr TiffReader::getRowData(int y)// rowNum
 		string st = ""; // dectode(buff, count);
 		vbuffer ret;
 		decorder decod(curSubImage->tags.Compression);
-
-//		if (MODE==0)
-		{
-			decod.decompress(tempbuffer.buffer, count, ret, curSubImage->getBytesInRowToTile());
-		}
-//		else
-//		{
-//			decod.decompressLZW(tempbuffer.tempbuffer, count, ret, getBytesInRowToTile());
-//		}
-
+		decod.decompress(tempbuffer.buffer, count, ret, curSubImage->getBytesInRowToTile());
 //		vbuffer ret2;
 //		decompressLZW(tempbuffer.tempbuffer, count, ret2, getBytesInRowToTile());
 //		int r = memcmp(ret.data(), ret2.data(), getBytesInRowToTile());
