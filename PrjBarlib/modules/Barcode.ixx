@@ -52,6 +52,7 @@ export namespace bc
 	BType;
 	BIndex;
 	poidex;
+	Barscalar;
 
 	point;
 	pointHash;

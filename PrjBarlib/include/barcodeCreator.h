@@ -166,6 +166,12 @@ namespace bc {
 			return itr ? itr->getMaxparent() : nullptr;
 		}
 
+		inline COMPP getRealComp(poidex ind)
+		{
+			auto itr = included[ind];
+			return itr ? itr : nullptr;
+		}
+
 
 		COMPP getPorogComp(const point& p, poidex index);
 
