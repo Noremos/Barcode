@@ -347,14 +347,11 @@ inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 
 //****************************************B0**************************************
 
-inline bool BarcodeCreator::checkCloserB0()
+bool BarcodeCreator::checkAvg(const point curpix) const
 {
-	COMPP first = nullptr;
-	COMPP connected;// = new rebro(x, y); //included[{(int)i, (int)j}];
-	//TODO выделять паять заранее
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
 
-	float avgv = 0;short r = 0;
+	float avgv = 0; short r = 0;
 	for (int i = 0; i < 8; ++i)
 	{
 		point p(curpix + poss[i]);
@@ -367,52 +364,78 @@ inline bool BarcodeCreator::checkCloserB0()
 
 	float m = workingImg->get(curpix.x, curpix.y).getAvgFloat();
 
-	if (avgv / r < m)
-		return false;
+	return avgv / r >= m;
+}
+
+inline bool BarcodeCreator::checkCloserB0()
+{
+	COMPP first = nullptr;
+	COMPP connected;// = new rebro(x, y); //included[{(int)i, (int)j}];
+	//TODO выделять паять заранее
+	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
 
 	//first = getComp(curpix);
 	// FIXME first always will be nill
-	for (int i = 0; i < 8; ++i)
+	int i = 0;
+	for (; i < 8; ++i)
 	{
 		point IcurPoint(curpix + poss[i]);
 
 		if (IS_OUT_OF_REG(IcurPoint.x, IcurPoint.y))
 			continue;
 
+		//if (!checkAvg(IcurPoint))
+		//	continue;
+
+		poidex IcurPindex = IcurPoint.getLiner(wid);
+
+		first = getPorogComp(IcurPoint, IcurPindex);
+		if (first != nullptr)//существует ли ребро вокруг
+		{
+			// if len more then maxlen, kill the component
+			bool more = settings.maxLen.isCached && curbright.absDiff(first->getStart()) > settings.maxLen.getOrDefault(0);
+			if (more)
+			{
+				//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
+				if (settings.killOnMaxLen)
+				{
+					first->kill(curbright); //Интересный результат
+				}
+				first = nullptr;
+			}
+			else if (!first->add(curpoindex, curpix, curbright))
+				first = nullptr;
+
+			break;
+		}
+		//else if (first)
+		//	first->add(IcurPindex, IcurPoint, workingImg->get(curpix.x, curpix.y));
+	}
+
+	for (; i < 8; ++i)
+	{
+		point IcurPoint(curpix + poss[i]);
+
+		if (IS_OUT_OF_REG(IcurPoint.x, IcurPoint.y))
+			continue;
+
+		//if (!checkAvg(IcurPoint))
+		//	continue;
 
 		poidex IcurPindex = IcurPoint.getLiner(wid);
 
 		connected = getPorogComp(IcurPoint, IcurPindex);
 		if (connected != nullptr)//существует ли ребро вокруг
 		{
-			if (first == nullptr)
-			{
-				first = connected;
-				// if len more then maxlen, kill the component
-				bool more = settings.maxLen.isCached && curbright.absDiff(first->getStart()) > settings.maxLen.getOrDefault(0);
-				if (more)
-				{
-					//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
-					if (settings.killOnMaxLen)
-					{
-						first->kill(curbright); //Интересный результат
-					}
-					first = nullptr;
-				}
-				else if (!first->add(curpoindex, curpix, curbright))
-					first = nullptr;
-				//setInclude(midP, first);//n--nt обяз нужно
-			}
-			else
-			{
-				if (first->isContain(IcurPindex))//если в найденном уже есть этот элемент
-					continue;
+			if (first->isContain(IcurPindex))//если в найденном уже есть этот элемент
+				continue;
 
-				//lastB -= 1;
-				if (first != connected && first->canBeConnected(IcurPoint))
-					first = attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
-			}
+			//lastB -= 1;
+			if (first != connected && first->canBeConnected(IcurPoint))
+				first = attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
 		}
+		//else if (first)
+		//	first->add(IcurPindex, IcurPoint, workingImg->get(curpix.x, curpix.y));
 	}
 
 	if (first == nullptr)
@@ -640,8 +663,13 @@ inline bool BarcodeCreator::checkCloserB1()
 //********************************************************************************
 
 
+struct RadiusOffs
+{
+	uint x, y;
+	nextPoz pos;
+};
 
-bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::ProcType type, float maxRadius, size_t& toProcess)
+bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::ProcType type, float maxRadius, size_t& toProcess, const bc::DatagridProvider* mask, int maskId)
 {
 	int wid = workingImg->wid();
 	int hei = workingImg->hei();
@@ -649,74 +677,139 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::Pro
 	int totalSize = 4 * static_cast<size_t>(wid) * hei + wid + hei;
 	float dist;
 	bc::indexCov* data = new bc::indexCov[totalSize];
+
+	static const RadiusOffs offs[] = {
+		// rigth
+		// c n
+		// 0 0
+		{1, 0, middleRight},
+
+		// bottom
+		// c 0
+		// n 0
+		{0,1, bottomCenter},
+
+
+		// bottom rigth
+		// c 0
+		// 0 n
+		{1,1, bottomRight},
+	};
+
 	// Сичтаем расстояние между всеми соседними пикселями для каждого пикселя.
 	// Чтобы не считать повтороно, от текущего проверяем только уникальные - в форме отражённой по вертикали буквы "L"
-
 	int k = 0;
-	for (int h = 0; h < hei - 1; ++h)
+	if (mask)
 	{
+		for (int h = 0; h < hei - 1; ++h)
+		{
+			for (int w = 0; w < wid - 1; ++w)
+			{
+				int offset = wid * h + w;
+				const Barscalar cur = workingImg->get(w, h);
+
+				if (mask->get(w, h) != maskId)
+				{
+					continue;
+				}
+
+				std::optional<Barscalar> nextd[3];
+				for (size_t l = 0; l < 3; l++)
+				{
+					const auto& off = offs[l];
+					if (mask->get(w + off.x, h + off.y) != maskId)
+					{
+						nextd[l] = workingImg->get(w + off.x, h + off.y);
+						dist = cur.val_distance(nextd[l].value());
+						data[k++] = indexCov(offset, dist, off.pos);
+					}
+				}
+
+				// 0 c
+				// n 0
+				if (nextd[0].has_value() && nextd[1].has_value())
+				{
+					dist = nextd[0].value().val_distance(nextd[1].value());
+					offset = wid * h + w + 1;
+					data[k++] = indexCov(offset, dist, bottomLeft);
+				}
+			}
+		}
+
+		const int wd = wid - 1;
+		for (int h = 0; h < hei - 1; ++h)
+		{
+			if (mask->get(wd, h) != maskId || mask->get(wd, h + 1) != maskId)
+				continue;
+
+			int offset = wid * h + wd;
+			Barscalar cur = workingImg->get(wd, h);
+			Barscalar next = workingImg->get(wd, h + 1);
+			dist = cur.val_distance(next);
+			data[k++] = indexCov(offset, dist, bottomCenter);
+		}
+
+		int hd = hei - 1;
 		for (int w = 0; w < wid - 1; ++w)
 		{
-			int offset = wid * h + w;
-			Barscalar cur = workingImg->get(w, h);
-			Barscalar next;
+			if (mask->get(w, hd) != maskId || mask->get(w + 1, hd) != maskId)
+				continue;
 
-			// rigth
-			// c n
-			// 0 0
-			next = workingImg->get(w + 1, h);
+			int offset = wid * hd + w;
+			const Barscalar cur = workingImg->get(w, hd);
+			const Barscalar next = workingImg->get(w + 1, hd);
 			dist = cur.val_distance(next);
-
 			data[k++] = indexCov(offset, dist, middleRight);
-
-			// bottom
-			// c 0
-			// n 0
-			next = workingImg->get(w, h + 1);
-			dist = cur.val_distance(next);
-
-			data[k++] = indexCov(offset, dist, bottomCenter);
-
-			// bottom rigth
-			// c 0
-			// 0 n
-			next = workingImg->get(w + 1, h + 1);
-			dist = cur.val_distance(next);
-
-			data[k++] = indexCov(offset, dist, bottomRight);
-
-
-			// 0 c
-			// n 0
-			cur = workingImg->get(w + 1, h);
-			next = workingImg->get(w, h + 1);
-			dist = cur.val_distance(next);
-			offset = wid * h + w + 1;
-
-			data[k++] = indexCov(offset, dist, bottomLeft);
 		}
 	}
-
-	int wd = wid - 1;
-	for (int h = 0; h < hei - 1; ++h)
+	else
 	{
-		int offset = wid * h + wd;
-		Barscalar cur = workingImg->get(wd, h);
-		Barscalar next;
-		next = workingImg->get(wd, h + 1);
-		dist = cur.val_distance(next);
-		data[k++] = indexCov(offset, dist, bottomCenter);
-	}
+		for (int h = 0; h < hei - 1; ++h)
+		{
+			for (int w = 0; w < wid - 1; ++w)
+			{
+				int offset = wid * h + w;
+				const Barscalar cur = workingImg->get(w, h);
 
-	int hd = hei - 1;
-	for (int w = 0; w < wid - 1; ++w)
-	{
-		int offset = wid * hd + w;
-		Barscalar cur = workingImg->get(w, hd);
-		Barscalar next;
-		next = workingImg->get(w + 1, hd);
-		dist = cur.val_distance(next);
-		data[k++] = indexCov(offset, dist, middleRight);
+				Barscalar nextd[3];
+				for (size_t l = 0; l < 3; l++)
+				{
+					const auto& off = offs[l];
+
+					nextd[l] = workingImg->get(w + off.x, h + off.y);
+					dist = cur.val_distance(nextd[l]);
+					data[k++] = indexCov(offset, dist, off.pos);
+				}
+
+				// 0 c
+				// n 0
+
+				dist = nextd[0].val_distance(nextd[1]);
+				offset = wid * h + w + 1;
+
+				data[k++] = indexCov(offset, dist, bottomLeft);
+			}
+		}
+
+		int wd = wid - 1;
+		for (int h = 0; h < hei - 1; ++h)
+		{
+			int offset = wid * h + wd;
+			const Barscalar cur = workingImg->get(wd, h);
+			const Barscalar next = workingImg->get(wd, h + 1);
+			dist = cur.val_distance(next);
+			data[k++] = indexCov(offset, dist, bottomCenter);
+		}
+
+		int hd = hei - 1;
+		for (int w = 0; w < wid - 1; ++w)
+		{
+			int offset = wid * hd + w;
+			const Barscalar cur = workingImg->get(w, hd);
+			const Barscalar next = workingImg->get(w + 1, hd);
+			dist = cur.val_distance(next);
+			data[k++] = indexCov(offset, dist, middleRight);
+		}
 	}
 
 	assert(k < totalSize);
@@ -907,87 +1000,8 @@ int BarcodeCreator::sortOrtoPixels(bc::ProcType type, int rtoe, int off, int off
 		break;
 	}
 
-	this->sortedArr = data;
+	this->sortedArr.reset(data);
 	return ret;
-}
-
-inline void BarcodeCreator::sortPixels(bc::ProcType type)
-{
-	switch (workingImg->getType())
-	{
-	case BarType::BYTE8_1:
-	case BarType::BYTE8_3:
-	{
-		uint hist[256];//256
-		uint offs[256];//256
-		std::fill_n(hist, 256, 0);
-		std::fill_n(offs, 256, 0);
-
-		for (int j = 0; j < workingImg->hei(); ++j)//hei
-		{
-			for (int i = 0; i < workingImg->wid(); ++i)//wid
-			{
-				auto p = (int)workingImg->get(i, j);
-				++hist[p];//можно vector, но хз
-			}
-		}
-
-		for (size_t i = 1; i < 256; ++i)
-		{
-			hist[i] += hist[i - 1];
-			offs[i] = hist[i - 1];
-		}
-
-
-		poidex* data = new poidex[totalSize + 1];//256
-		for (size_t i = 0; i < totalSize; i++)
-		{
-			uchar p = workingImg->getLiner(i).getAvgUchar();
-			data[offs[p]++] = i;
-		}
-
-		if (type == ProcType::f255t0)
-		{
-			std::reverse(data, data + totalSize);
-		}
-		this->sortedArr = data;
-		break;
-	}
-	//	{
-	//		assert(false);
-	//		break;
-	//	}
-		//case BarType::FLOAT:
-		//{
-			//// do this hack to skip constructor calling for every point
-	//poidex* data = new poidex[totalSize + 1];//256
-
-	////point * data = new point[total];
-
-	//for (size_t i = 0; i < totalSize; ++i)//wid
-	//	data[i] = i;
-
-	//myclassFromMin cmp;
-	//cmp.workingImg = workingImg;
-	//std::sort(data, &data[totalSize], cmp);
-	//if (type == ProcType::f255t0)
-	//{
-	//	for (size_t i = 1; i < totalSize - 1; ++i)//wid
-	//	{
-	//		float v0 = static_cast<float>(workingImg->getLiner(data[i - 1]));
-	//		float v2 = static_cast<float>(workingImg->getLiner(data[i]));
-	//		assert(v0 >= v2);
-	//	}
-	//}
-
-	//this->sortedArr = data;
-		//	break;
-		//}
-
-	default:
-		assert(false);
-		break;
-	}
 }
 
 struct myclassFromMin {
@@ -1006,6 +1020,131 @@ struct myclassFromMax {
 		return workingImg->getLiner(a) > workingImg->getLiner(b);
 	}
 };
+
+
+inline void BarcodeCreator::sortPixels(bc::ProcType type, const bc::DatagridProvider* mask, int maskId)
+{
+	switch (workingImg->getType())
+	{
+	case BarType::BYTE8_1:
+	case BarType::BYTE8_3:
+	{
+		uint hist[256];//256
+		uint offs[256];//256
+		std::fill_n(hist, 256, 0);
+		std::fill_n(offs, 256, 0);
+
+		if (mask)
+		{
+			processCount = 0;
+			for (int j = 0; j < workingImg->hei(); ++j)//hei
+			{
+				for (int i = 0; i < workingImg->wid(); ++i)//wid
+				{
+					if (mask->get(i, j) != maskId)
+						continue;
+
+					auto p = (int)workingImg->get(i, j);
+					++hist[p];//можно vector, но хз
+					++processCount;
+				}
+			}
+		}
+		else
+		{
+			for (int j = 0; j < workingImg->hei(); ++j)//hei
+			{
+				for (int i = 0; i < workingImg->wid(); ++i)//wid
+				{
+					auto p = (int)workingImg->get(i, j);
+					++hist[p];//можно vector, но хз
+				}
+			}
+			processCount = totalSize;
+		}
+
+		for (size_t i = 1; i < 256; ++i)
+		{
+			hist[i] += hist[i - 1];
+			offs[i] = hist[i - 1];
+		}
+
+
+		poidex* data = new poidex[processCount + 1];
+		memset(data, 0, (processCount + 1) * sizeof(poidex));
+
+		if (mask)
+		{
+			for (size_t i = 0; i < totalSize; i++)
+			{
+				if (mask->getLiner(i) != maskId)
+					continue;
+
+				uchar p = workingImg->getLiner(i).getAvgUchar();
+				assert(offs[p] < processCount);
+				data[offs[p]++] = i;
+			}
+		}
+		else
+		{
+			for (size_t i = 0; i < totalSize; i++)
+			{
+				uchar p = workingImg->getLiner(i).getAvgUchar();
+				data[offs[p]++] = i;
+			}
+		}
+
+		if (type == ProcType::f255t0)
+		{
+			std::reverse(data, data + processCount);
+		}
+		this->sortedArr.reset(data);
+		break;
+	}
+	case BarType::FLOAT32_1:
+	{
+		poidex* data = new poidex[totalSize + 1];//256
+
+		for (size_t i = 0; i < totalSize; ++i)//wid
+			data[i] = i;
+
+		switch (type)
+		{
+		case bc::ProcType::f0t255:
+		{
+			myclassFromMin cmp;
+			cmp.workingImg = workingImg;
+			std::sort(data, &data[totalSize], cmp);
+		}
+		case bc::ProcType::f255t0:
+		{
+			myclassFromMax cmp;
+			cmp.workingImg = workingImg;
+			std::sort(data, &data[totalSize], cmp);
+		}
+		default:
+			assert(false);
+			break;
+		}
+
+		for (size_t i = 1; i < totalSize - 1; ++i)//wid
+		{
+			float v0 = static_cast<float>(workingImg->getLiner(data[i - 1]));
+			float v2 = static_cast<float>(workingImg->getLiner(data[i]));
+			assert(v0 >= v2);
+		}
+
+		processCount = totalSize;
+		this->sortedArr.reset(data);
+		break;
+	}
+
+	default:
+		assert(false);
+		break;
+	}
+}
+
 
 
 //
@@ -1062,7 +1201,7 @@ struct myclassFromMax {
 
 
 
-void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, ComponentType& comp)
+void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, const barstruct& struc)
 {
 	wid = src->wid();
 	hei = src->hei();
@@ -1098,7 +1237,7 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, Compo
 	switch (type)
 	{
 	case ProcType::Radius:
-		geometrySortedArr.reset(sortPixelsByRadius(workingImg, type, settings.maxRadius, this->processCount));
+		geometrySortedArr.reset(sortPixelsByRadius(workingImg, type, settings.maxRadius, this->processCount, struc.mask, struc.maskId));
 		sortedArr = nullptr;
 		break;
 	case ProcType::StepRadius:
@@ -1111,7 +1250,7 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, Compo
 	case ProcType::f255t0:
 	case ProcType::invertf0:
 	case ProcType::experiment:
-		sortPixels(type);
+		sortPixels(type, struc.mask, struc.maskId);
 		break;
 	default:
 		assert(false);
@@ -1136,9 +1275,10 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, Compo
 
 void BarcodeCreator::processHole(Barcontainer* item)
 {
-	for (curIndexInSortedArr = 0; curIndexInSortedArr < totalSize; ++curIndexInSortedArr)
+	poidex* indexarr = sortedArr.get();
+	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
 	{
-		curpix = getPoint(sortedArr[curIndexInSortedArr]);
+		curpix = getPoint(indexarr[curIndexInSortedArr]);
 		curbright = workingImg->get(curpix);
 
 		/*	if (i == 25)
@@ -1159,9 +1299,10 @@ void BarcodeCreator::processHole(Barcontainer* item)
 
 void BarcodeCreator::processComp(Barcontainer* item)
 {
-	for (curIndexInSortedArr = 0; curIndexInSortedArr < totalSize; ++curIndexInSortedArr)
+	poidex* indexarr = sortedArr.get();
+	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
 	{
-		curpoindex = sortedArr[curIndexInSortedArr];
+		curpoindex = indexarr[curIndexInSortedArr];
 		//if (curpoindex == UINT_MAX)
 		//	continue;
 
@@ -1277,11 +1418,7 @@ void BarcodeCreator::clearIncluded()
 	workingImg = nullptr;
 
 	geometrySortedArr.reset(nullptr);
-	if (sortedArr != nullptr)
-	{
-		delete[] sortedArr;
-		sortedArr = nullptr;
-	}
+	sortedArr.reset();
 }
 
 
@@ -1344,7 +1481,7 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 
 void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* src, Barcontainer* item)
 {
-	init(src, str.proctype, str.comtype);
+	init(src, str.proctype, str);
 
 	switch (str.comtype)
 	{
@@ -1362,8 +1499,7 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 			//			drawimg = BarImg(workingImg->wid(), workingImg->hei(), 1);
 			totalSize = sortOrtoPixels(str.proctype, 2, 0); // go down-right
 			processComp();
-			delete[] sortedArr;
-			sortedArr = nullptr;
+			sortedArr.reset();
 
 			int swid = workingImg->wid();
 			int hwid = swid / 2 + swid % 2;
@@ -1371,15 +1507,13 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 			{
 				totalSize = sortOrtoPixels(str.proctype, 0, i); // go down
 				processComp();
-				delete[] sortedArr;
-				sortedArr = nullptr;
+				sortedArr.reset();
 
 				if (i < workingImg->hei())
 				{
 					totalSize = sortOrtoPixels(str.proctype, 1, i); // go rigth
 					processComp();
-					delete[] sortedArr;
-					sortedArr = nullptr;
+					sortedArr.reset();
 				}
 
 				//sortOrtoPixels(str.proctype, 2, i); // go down-right
@@ -1388,28 +1522,24 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 				{
 					totalSize = sortOrtoPixels(str.proctype, 3, i * 2);// go down-left
 					processComp();
-					delete[] sortedArr;
-					sortedArr = nullptr;
+					sortedArr.reset();
 				}
 				else
 				{
 					totalSize = sortOrtoPixels(str.proctype, 3, swid - 1, i - hwid);// go down-left
 					processComp();
-					delete[] sortedArr;
-					sortedArr = nullptr;
+					sortedArr.reset();
 				}
 
 				// Нинии паралелные остновной, ихсодят в разыне стороны (одна по ширине, другая по высоте)
 
 				totalSize = sortOrtoPixels(str.proctype, 2, i);// go down-right
 				processComp();
-				delete[] sortedArr;
-				sortedArr = nullptr;
+				sortedArr.reset();
 
 				totalSize = sortOrtoPixels(str.proctype, 2, 0, i);// go down-right
 				processComp();
-				delete[] sortedArr;
-				sortedArr = nullptr;
+				sortedArr.reset();
 
 				//				cv::imshow("drawimg", bc::convertProvider2Mat(&drawimg));
 				//				cv::waitKey(0);
@@ -1433,7 +1563,7 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 		}
 		break;
 	}
-	case  ComponentType::Hole:
+	case ComponentType::Hole:
 		if (str.proctype == ProcType::Radius)
 			processCompByRadius(item);
 		else
@@ -1680,7 +1810,7 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 	curpix = getPoint(curpoindex);
 
 	bc::point NextPoint = val.getNextPoint(curpix);
-	poidex NextPindex = NextPoint.getLiner(workingImg->wid());
+	poidex NextPindex = NextPoint.getLiner(wid);
 
 	Component* first = getComp(curpoindex);
 	Component* connected = getComp(NextPindex);
@@ -1889,7 +2019,7 @@ bool intersectLineLine(LineSegment a, LineSegment b)
 
 void bc::CloudPointsBarcode::sortPixels()
 {
-	size_t wid = cloud->points.size();
+	const size_t wid = cloud->points.size();
 
 	// n(n+1)/2
 	totalSize = wid * (wid + 1) / 2 - wid;

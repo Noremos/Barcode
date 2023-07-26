@@ -84,7 +84,6 @@ namespace bc {
 		{
 			if (workingImg != nullptr && needDelImg)
 				delete workingImg;
-
 			workingImg = newWI;
 
 			if (!settings.stepPorog.isCached || !settings.maxLen.isCached)
@@ -120,11 +119,11 @@ namespace bc {
 
 		size_t processCount = 0;
 		size_t totalSize = 0;
-		poidex* sortedArr = nullptr;
+		std::unique_ptr<poidex[]> sortedArr = nullptr;
 		// bc::BarImg drawimg;
 
 		//***************************************************
-		constexpr bool IS_OUT_OF_REG(int x, int y)
+		constexpr bool IS_OUT_OF_REG(const int x, const int y) const
 		{
 			return x < 0 || y < 0 || x >= wid || y >= hei;
 		}
@@ -197,8 +196,8 @@ namespace bc {
 
 
 		int sortOrtoPixels(bc::ProcType type, int rtoe = 0, int off = 0, int offDop = 0);
-		void sortPixels(bc::ProcType type);
-
+		void sortPixels(bc::ProcType type, const bc::DatagridProvider* mask, int maskId);
+		
 		void clearIncluded();
 
 		void draw(std::string name = "test");
@@ -206,7 +205,7 @@ namespace bc {
 		void VISUAL_DEBUG_COMP();
 
 
-		void init(const bc::DatagridProvider* src, ProcType& type, ComponentType& comp);
+		void init(const bc::DatagridProvider* src, ProcType& type, const barstruct& struc);
 
 		void processComp(Barcontainer* item = nullptr);
 		void processHole(Barcontainer* item = nullptr);
@@ -251,6 +250,7 @@ namespace bc {
 		void processByValueRadius(Barcontainer* item);
 
 		void processRadar(const indexCov& val, bool allowAttach);
+		bool checkAvg(const point curpix) const;
 
 
 		std::unique_ptr<indexCov> geometrySortedArr;
@@ -349,6 +349,7 @@ namespace bc {
 
 		void addItemToCont(Barcontainer* item);
 		void clearIncluded();
+
 
 	private:
 		friend class Baritem;

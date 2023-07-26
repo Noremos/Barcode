@@ -14,7 +14,7 @@ void bc::Component::init(BarcodeCreator* factory, const Barscalar& val)
 	//	index = factory->components.size();
 	factory->components.push_back(this);
 
-	resline = new barline(factory->workingImg->wid());
+	resline = new barline();
 	resline->start = val;
 	resline->m_end = val;
 	lastVal = val;
@@ -32,6 +32,8 @@ bc::Component::Component(poidex pix, const Barscalar& val, bc::BarcodeCreator* f
 	// factory->lastB++;
 
 	add(pix, factory->getPoint(pix), val);
+	maxe = 50;
+	energy[pix] = maxe;
 }
 
 
@@ -81,6 +83,30 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 
 	factory->setInclude(index, this);
 
+	int dds = 0;
+	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 } };
+	for (size_t i = 0; i < 8; i++)
+	{
+		point po = p + poss[i];
+		if (po.x < 0 || po.y < 0)
+			break;
+
+		poidex d = po.getLiner(factory->wid);
+		auto t = energy.find(d);
+		if (t != energy.end())
+		{
+			if (t->second > 0)
+			{
+				auto half = t->second / 2;
+				t->second -= half;
+				dds += half;
+				if (dds > maxe)
+					maxe = dds;
+			}
+		}
+	}
+	energy.insert(std::pair(index, dds));
+
 	if (factory->settings.createBinaryMasks)
 	{
 		resline->addCoord(p, col);
@@ -92,13 +118,27 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 	{
 		if (factory->settings.returnType == ReturnType::barcode3d)
 		{
-			resline->bar3d->push_back(bar3dvalue(lastVal, cashedSize)); //всего
+			resline->bar3d->push_back(bar3dvalue(static_cast<float>(x - xMin) / (cashedSize * (1 + xMax - xMin)), static_cast<float>(y - yMin) / (cashedSize * (1 + yMax - yMin)), static_cast<float>(cashedSize) / factory->workingImg->length())); //всего
 		}
 		else if (factory->settings.returnType == ReturnType::barcode3dold)
 		{
 			resline->bar3d->push_back(bar3dvalue(lastVal, cashedSize)); // сколкьо было доабвлено
-			cashedSize = 0;
 		}
+		cashedSize = 0;
+	}
+	else
+	{
+		x += p.x;
+		y += p.y;
+		if (x > xMax)
+			xMax = x;
+		if (x < xMin)
+			xMin = x;
+
+		if (y > yMax)
+			yMax = y;
+		if (y < yMin)
+			yMin = y;
 	}
 
 	++cashedSize;
@@ -152,7 +192,9 @@ void bc::Component::kill(const Barscalar& endScalar)
 		{
 			//assert(bot <= a.value);
 			//assert(a.value <= top);
-			a.value = resline->m_end.absDiff(a.value);
+			//a.value = resline->m_end.absDiff(a.value);
+			const uint id = barvalue::getStatInd(a.getX(), a.getY(), factory->wid);
+			a.value = Barscalar(static_cast<float>(energy[id]) / maxe, BarType::FLOAT32_1);
 		}
 	}
 
@@ -183,18 +225,28 @@ void bc::Component::setParent(bc::Component* parnt)
 
 		for (barvalue& val : resline->matr)
 		{
+			val.value = Barscalar(static_cast<float>(energy[val.getIndex()]) / maxe, BarType::FLOAT32_1);
+			parnt->resline->addCoord(val);
+
 			// Записываем длину сущщетвования точки
-			val.value = endScalar.absDiff(val.value);
+			//val.value = endScalar.absDiff(val.value);
 			//val.value = col - val.value;
 
 			//avgSr += val.value;
 			// Эти точки сичтаются как только что присоединившиеся
-			parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
+			//parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
 		}
 		parnt->same = false;
 		// Мы объединяем, потому что одинаковый добавился, т.е. считаем, что lasVal одинаковыйы
 		//parnt->lastVal = lastVal;
 	}
+
+	parent->energy.insert(energy.begin(), energy.end());
+	energy.clear();
+
+	if (maxe > parent->maxe)
+		parent->maxe = maxe;
+
 
 	kill(endScalar);
 
@@ -222,4 +274,3 @@ bc::Component::~Component()
 {
 	//	factory->components[index] = nullptr;
 }
-

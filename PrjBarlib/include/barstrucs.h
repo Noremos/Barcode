@@ -93,6 +93,7 @@ namespace bc
 	//	{
 	//		return c1.sum() < c2.sum();
 	//	}
+	class DatagridProvider;
 
 	struct barstruct
 	{
@@ -111,6 +112,9 @@ namespace bc
 			this->proctype = pt;
 			this->coltype = colT;
 		}
+
+		bc::DatagridProvider* mask = nullptr;
+		int maskId = 0;
 	};
 
 
@@ -268,8 +272,9 @@ namespace bc
 
 	struct bar3dvalue
 	{
-		size_t count;
 		Barscalar value;
+		size_t count = 0;
+		float rat = 0.f, cx = 0, cy = 0;
 
 		bar3dvalue(Barscalar value, size_t count)
 		{
@@ -278,7 +283,10 @@ namespace bc
 		}
 		bar3dvalue()
 		{
-			this->count = 0;
+		}
+
+		bar3dvalue(float x, float y, float r) : cx(x), cy(y), rat(r), count(0), value()
+		{
 		}
 	};
 
@@ -392,7 +400,7 @@ const uint MAX_WID = 65535;
 			return bc::point(getX(), getY());
 		}
 
-		BIndex getIndex() const
+		constexpr BIndex getIndex() const
 		{
 #ifdef BARVALUE_RAM_OPTIMIZATION
 			return getStatInd(x, y);
@@ -401,12 +409,12 @@ const uint MAX_WID = 65535;
 #endif
 		}
 
-		static uint getStatInd(int x, int y, int widr = MAX_WID)
+		constexpr static uint getStatInd(int x, int y, int widr = MAX_WID)
 		{
 			return y * widr + x;
 		}
 
-		static size_t getStatIndBig(int x, int y)
+		constexpr static size_t getStatIndBig(int x, int y)
 		{
 			return ((size_t)x << 32) + (size_t)y;
 		}
