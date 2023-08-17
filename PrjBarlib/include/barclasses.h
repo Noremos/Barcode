@@ -473,7 +473,7 @@ namespace bc
 			for (auto* line : barlines)
 			{
 				// on deliting list will call ~destr for every line
-				lines.append(line->clone());
+				lines.append(line);
 			}
 			return lines;
 		}

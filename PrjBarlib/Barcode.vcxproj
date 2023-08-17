@@ -53,14 +53,6 @@
       <Configuration>Python 37</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Python39|Win32">
-      <Configuration>Python39</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Python39|x64">
-      <Configuration>Python39</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -220,6 +212,7 @@
     <None Include="main.def" />
     <None Include="modules\Barcode.ixx.pre" />
     <None Include="modules\IReader.ixx.pre" />
+    <None Include="modules\python\setup.py" />
     <None Include="modules\TiffReader.ixx.pre" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -387,12 +380,6 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Python39|Win32'">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Python39|x64'">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -484,7 +471,7 @@
     <TargetExt>.pyd</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Python 39|x64'">
-    <OutDir>$(SolutionDir)x64\Python39\</OutDir>
+    <OutDir>$(SolutionDir)PrjBarlib\modules\python\module</OutDir>
     <TargetName>barpy</TargetName>
     <TargetExt>.pyd</TargetExt>
   </PropertyGroup>
@@ -836,7 +823,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Install\Python39\include;D:\MyA\Libraries\sources\boost_1_78_0;$(SolutionDir)\PrjBarlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Install\Python\10\Include;D:\Install\Python\10\Lib\site-packages\pybind11\include;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PreprocessorDefinitions>_PYD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -845,8 +832,8 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>D:\Install\Python39\libs;D:\MyA\Libraries\sources\boost_1_78_0\stage\lib;D:\MyA\Libraries\sources\boost_1_78_0\libs;D:\MyA\Libraries\Libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>python39.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\MyA\Libraries\Libs;D:\Install\Python\10\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>python310.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>

@@ -1484,7 +1484,7 @@ uchar dif(uchar a, uchar b)
 
 #ifdef _PYD
 
-bc::Barcontainer* bc::BarcodeCreator::createPysBarcode(bn::ndarray& img, bc::BarConstructor& structure)
+bc::Barcontainer* bc::BarcodeCreator::createPysBarcode(bn::array& img, bc::BarConstructor& structure)
 {
 	//auto shape = img.get_shape();
 

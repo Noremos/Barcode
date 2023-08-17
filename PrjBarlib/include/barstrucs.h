@@ -282,30 +282,6 @@ namespace bc
 		}
 	};
 
-
-
-	struct pybarvalue
-	{
-#ifdef INCLUDE_PY
-		bp::tuple value;
-#endif
-
-	public:
-		int x, y;
-
-		pybarvalue()
-		{}
-
-		pybarvalue(int x, int y, Barscalar value)
-		{
-			this->x = x;
-			this->y = y;
-#ifdef INCLUDE_PY
-			this->value = value.pyvalue();
-#endif
-		}
-	};
-
 const uint MAX_WID = 65535;
 #ifdef BARVALUE_RAM_OPTIMIZATION
 	using BType = unsigned short;
@@ -447,11 +423,6 @@ const uint MAX_WID = 65535;
 		{
 			this->x = x;
 			this->y = y;
-		}
-
-		pybarvalue getPyValue() const
-		{
-			return pybarvalue(getX(), getY(), value);
 		}
 	};
 

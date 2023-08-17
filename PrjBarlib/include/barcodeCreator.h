@@ -234,7 +234,7 @@ namespace bc {
 
 #ifdef _PYD
 
-		bc::Barcontainer* createPysBarcode(bn::ndarray& img, bc::BarConstructor& structure);
+		bc::Barcontainer* createPysBarcode(bn::array& img, bc::BarConstructor& structure);
 #endif // _PYD
 
 		///////////GEOMETRY

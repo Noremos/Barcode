@@ -369,3 +369,4 @@ include/pytemplcalsses.h
 PrjBarlib/algorithmes
 PrjBarlib/build
 CMake
+out

@@ -585,14 +585,14 @@ namespace bc {
 	public:
 		Py_intptr_t const* strides;
 
-		bn::ndarray& mat;
+		bn::array& mat;
 
-		BarNdarray(bn::ndarray& _mat) : mat(_mat)
+		BarNdarray(bn::array& _mat) : mat(_mat)
 		{
-			strides = _mat.get_strides();
-			if (mat.get_nd() == 1)
+			strides = _mat.strides();
+			if (mat.ndim() == 1)
 			{
-				if (mat.get_dtype().get_itemsize() == 4)
+				if (typeSize() == 4)
 					type = BarType::FLOAT32_1;
 				else
 					type = BarType::BYTE8_1;
@@ -613,18 +613,18 @@ namespace bc {
 
 		int channels() const
 		{
-			return mat.get_nd() <= 2 ? 1 : mat.shape(2);
+			return mat.ndim() <= 2 ? 1 : mat.shape(2);
 		}
 
 		Barscalar get(int x, int y) const
 		{
 			if (type == BarType::BYTE8_1)
 			{
-				return Barscalar(*(mat.get_data() + y * strides[0] + x * strides[1]));
+				return Barscalar(*((char*)mat.data() + y * strides[0] + x * strides[1]));
 			}
 			else
 			{
-				char* off = mat.get_data() + y * strides[0] + x * strides[1];
+				char* off = (char*)mat.data() + y * strides[0] + x * strides[1];
 				return Barscalar(off[0], off[1], off[2]);
 			}
 		}
@@ -663,7 +663,7 @@ namespace bc {
 
 		size_t typeSize() const
 		{
-			return mat.get_dtype().get_itemsize();
+			return mat.dtype().itemsize();
 		}
 	};
 

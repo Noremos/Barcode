@@ -523,13 +523,13 @@ namespace bc
 				for (size_t i = 0; i < matr.size(); i++)
 				{
 					if (childs.find(matr[i].getPoint()) == childs.end())
-						l.append(matr[i].getPyValue());
+						l.append(matr[i]);
 				}
 			}
 			else
 			{
 				for (size_t i = 0; i < matr.size(); i++)
-					l.append(matr[i].getPyValue());
+					l.append(matr[i]);
 			}
 
 			return l;
@@ -547,31 +547,31 @@ namespace bc
 			return l;
 		}
 
-		bp::dict getPointsInDict(bool skipChildPoints = false)
-		{
-			barmapHash<bc::point, bool, bc::pointHash> childs;
-			bp::dict pydict;
+		//bp::dict getPointsInDict(bool skipChildPoints = false)
+		//{
+		//	barmapHash<bc::point, bool, bc::pointHash> childs;
+		//	bp::dict pydict;
 
-			if (skipChildPoints)
-			{
-				getChildsMatr(childs);
+		//	if (skipChildPoints)
+		//	{
+		//		getChildsMatr(childs);
 
-				for (auto iter = matr.begin(); iter != matr.end(); ++iter)
-				{
-					if (childs.find(iter->getPoint()) == childs.end())
-						pydict[iter->getPoint()] = iter->value;
-				}
-			}
-			else
-			{
-				for (auto iter = matr.begin(); iter != matr.end(); ++iter)
-				{
-					if (childs.find(iter->getPoint()) == childs.end())
-						pydict[iter->getPoint()] = iter->value;
-				}
-			}
-			return pydict;
-		}
+		//		for (auto iter = matr.begin(); iter != matr.end(); ++iter)
+		//		{
+		//			if (childs.find(iter->getPoint()) == childs.end())
+		//				pydict[iter->getPoint()] = iter->value;
+		//		}
+		//	}
+		//	else
+		//	{
+		//		for (auto iter = matr.begin(); iter != matr.end(); ++iter)
+		//		{
+		//			if (childs.find(iter->getPoint()) == childs.end())
+		//				pydict[iter->getPoint()] = iter->value;
+		//		}
+		//	}
+		//	return pydict;
+		//}
 
 		bp::list getRect()
 		{

@@ -120,6 +120,9 @@
     <None Include="modules\IReader.ixx.pre">
       <Filter>Modules\preproc</Filter>
     </None>
+    <None Include="modules\python\setup.py">
+      <Filter>pylib</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="classes">

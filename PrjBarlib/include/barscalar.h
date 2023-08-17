@@ -231,17 +231,57 @@ public:
 #endif
 
 #ifdef _PYD
+	// This function is used to cast Python objects to C++ Barscalar
+	static py::handle cast(const Barscalar& bs, py::return_value_policy, py::handle)
+	{
+		return py::cast((int)bs.getAvgFloat());
+	}
+
+	// This function is used to cast C++ Barscalar to Python objects
+	static py::handle cast(const char& value, py::return_value_policy, py::handle) {
+		return py::cast(Barscalar(value, BarType::BYTE8_1));
+	}
+
+	// This function is used to cast C++ Barscalar to Python objects
+	static py::handle cast(const uchar& value, py::return_value_policy, py::handle) {
+		return py::cast(Barscalar(value, BarType::BYTE8_1));
+	}
+
+	// This function is used to cast C++ Barscalar to Python objects
+	static py::handle cast(const int& value, py::return_value_policy, py::handle) {
+		return py::cast(Barscalar(value, BarType::BYTE8_1));
+	}
+
+	// This function is used to cast C++ Barscalar to Python objects
+	static py::handle cast(const float& value, py::return_value_policy, py::handle) {
+		return py::cast(Barscalar(value, BarType::FLOAT32_1));
+	}
+
 
 	bp::tuple pyvalue()
 	{
 		switch (type)
 		{
 		case BarType::BYTE8_1:
-			return  bp::tuple(data.b1);
+			{
+				auto t = bp::tuple(1);
+				t[0] = data.b1;
+				return t;
+			}
 		case BarType::BYTE8_3:
-			return bp::tuple(data.b3);
+		{
+			auto t = bp::tuple(3);
+			t[0] = data.b3[0];
+			t[1] = data.b3[1];
+			t[2] = data.b3[2];
+			return t;
+		}
 		case BarType::FLOAT32_1:
-			return bp::tuple(data.f);
+		{
+			auto t = bp::tuple(1);
+			t[0] = data.f;
+			return t;
+		}
 		default:
 			return bp::tuple(0);
 		}
