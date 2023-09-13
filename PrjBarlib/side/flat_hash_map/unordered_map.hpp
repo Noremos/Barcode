@@ -410,7 +410,7 @@ namespace ska
 
             void rehash(size_t num_buckets)
             {
-                num_buckets = std::max(num_buckets, static_cast<size_t>(std::ceil(num_elements / static_cast<double>(_max_load_factor))));
+                num_buckets = (std::max)(num_buckets, static_cast<size_t>(std::ceil(num_elements / static_cast<double>(_max_load_factor))));
                 if (num_buckets == 0)
                 {
                     reset_to_empty_state();
@@ -638,7 +638,7 @@ namespace ska
 
             void grow()
             {
-                rehash(std::max(size_t(4), 2 * bucket_count()));
+                rehash((std::max)(size_t(4), 2 * bucket_count()));
             }
 
             void deallocate_data()
