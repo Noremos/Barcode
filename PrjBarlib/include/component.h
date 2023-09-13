@@ -107,6 +107,10 @@ namespace bc
 		void kill();
 		virtual void kill(const Barscalar& endScalar);
 		virtual void setParent(Component* parnt);
+		inline void addChild(Component* child)
+		{
+			child->setParent(this);
+		}
 
 
 		bool canBeConnected(const bc::point& p, bool incrSum = false);

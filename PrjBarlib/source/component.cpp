@@ -14,7 +14,7 @@ void bc::Component::init(BarcodeCreator* factory, const Barscalar& val)
 	//	index = factory->components.size();
 	factory->components.push_back(this);
 
-	resline = new barline(factory->workingImg->wid());
+	resline = new barline();
 	resline->start = val;
 	resline->m_end = val;
 	lastVal = val;
@@ -222,4 +222,3 @@ bc::Component::~Component()
 {
 	//	factory->components[index] = nullptr;
 }
-

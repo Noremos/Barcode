@@ -119,11 +119,11 @@ namespace bc {
 
 		size_t processCount = 0;
 		size_t totalSize = 0;
-		poidex* sortedArr = nullptr;
+		std::unique_ptr<poidex[]> sortedArr = nullptr;
 		// bc::BarImg drawimg;
 
 		//***************************************************
-		constexpr bool IS_OUT_OF_REG(int x, int y)
+		constexpr bool IS_OUT_OF_REG(const int x, const int y) const
 		{
 			return x < 0 || y < 0 || x >= wid || y >= hei;
 		}
@@ -163,6 +163,12 @@ namespace bc {
 		{
 			auto itr = included[ind];
 			return itr ? itr->getMaxparent() : nullptr;
+		}
+
+		inline COMPP getRealComp(poidex ind)
+		{
+			auto itr = included[ind];
+			return itr ? itr : nullptr;
 		}
 
 
