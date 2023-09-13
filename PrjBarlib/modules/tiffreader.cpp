@@ -985,7 +985,7 @@ struct ReadRange
 		start = st;
 		end = st + wid;
 		if (end > maxEnd)
-			maxEnd = end;
+			end = maxEnd;
 	}
 	ReadRange(int st, int ed)
 	{
@@ -1166,7 +1166,7 @@ DataRect TiffReader::getRect(int stX, int stRow, int wid, int hei)
 	else
 	{
 		size_t rowInDest = 0;
-		for (; stRow <= rowPosRange.end; ++stRow)
+		for (; stRow < rowPosRange.end; ++stRow)
 		{
 			cachedRow data = getRow(stRow, true);
 			output.setInRow(rowInDest++, 0, data->row.getOffset(stX), wid);
