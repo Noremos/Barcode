@@ -1115,12 +1115,14 @@ inline void BarcodeCreator::sortPixels(bc::ProcType type, const bc::DatagridProv
 			myclassFromMin cmp;
 			cmp.workingImg = workingImg;
 			std::sort(data, &data[totalSize], cmp);
+			break;
 		}
 		case bc::ProcType::f255t0:
 		{
 			myclassFromMax cmp;
 			cmp.workingImg = workingImg;
 			std::sort(data, &data[totalSize], cmp);
+			break;
 		}
 		default:
 			assert(false);

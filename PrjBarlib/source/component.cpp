@@ -32,8 +32,8 @@ bc::Component::Component(poidex pix, const Barscalar& val, bc::BarcodeCreator* f
 	// factory->lastB++;
 
 	add(pix, factory->getPoint(pix), val);
-	maxe = 50;
-	energy[pix] = maxe;
+	//maxe = 1;
+	//energy[pix] = maxe;
 }
 
 
@@ -83,29 +83,34 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 
 	factory->setInclude(index, this);
 
-	int dds = 0;
-	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 } };
-	for (size_t i = 0; i < 8; i++)
-	{
-		point po = p + poss[i];
-		if (po.x < 0 || po.y < 0)
-			break;
+	//int dds = 0; 
+	//static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 } };
+	//for (size_t i = 0; i < 8; i++)
+	//{
+	//	point po = p + poss[i];
+	//	if (po.x < 0 || po.y < 0)
+	//		break;
 
-		poidex d = po.getLiner(factory->wid);
-		auto t = energy.find(d);
-		if (t != energy.end())
-		{
-			if (t->second > 0)
-			{
-				auto half = t->second / 2;
-				t->second -= half;
-				dds += half;
-				if (dds > maxe)
-					maxe = dds;
-			}
-		}
-	}
-	energy.insert(std::pair(index, dds));
+	//	poidex d = po.getLiner(factory->wid);
+	//	auto t = energy.find(d);
+	//	if (t != energy.end())
+	//	{
+	//		if (t->second > dds)
+	//			dds = t->second;
+
+	//		//if (t->second > 0)
+	//		//{
+	//		//	auto half = t->second / 2;
+	//		//	t->second -= half;
+	//		//	dds += half;
+
+	//		//}
+	//	}
+	//}
+	//++dds;
+	//energy.insert(std::pair(index, dds));
+	//if (dds > maxe)
+	//	maxe = dds;
 
 	if (factory->settings.createBinaryMasks)
 	{
@@ -192,9 +197,9 @@ void bc::Component::kill(const Barscalar& endScalar)
 		{
 			//assert(bot <= a.value);
 			//assert(a.value <= top);
-			//a.value = resline->m_end.absDiff(a.value);
-			const uint id = barvalue::getStatInd(a.getX(), a.getY(), factory->wid);
-			a.value = Barscalar(static_cast<float>(energy[id]) / maxe, BarType::FLOAT32_1);
+			a.value = resline->m_end.absDiff(a.value);
+			//const uint id = barvalue::getStatInd(a.getX(), a.getY(), factory->wid);
+			//a.value = Barscalar(static_cast<float>(energy[id]) / maxe, BarType::FLOAT32_1);
 		}
 	}
 
