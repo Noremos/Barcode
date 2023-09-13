@@ -22,6 +22,8 @@ static int getImgTypeSize(ImageType type)
 		//	case ImageType::argb8:
 	case ImageType::float32:
 		return 4;
+	case ImageType::float64:
+		return 8;
 	default:
 		throw std::exception("");
 	}
@@ -55,6 +57,9 @@ struct RT_rgb
 			case ImageType::float32:
 				r += samples[i].f;
 				break;
+			case ImageType::float64:
+				r += samples[i].f;
+				break;
 			case ImageType::int32:
 				r += samples[i].i;
 				break;
@@ -77,6 +82,7 @@ struct RT_rgb
 				r = r && (samples[i].s == o.samples[i].s);
 				break;
 			case ImageType::float32:
+			case ImageType::float64:
 				r = r && (samples[i].f == o.samples[i].f);
 				break;
 			case ImageType::int32:
@@ -152,6 +158,7 @@ struct roweltype
 			val.rgba.sampl = 4;
 			break;
 		case ImageType::float32:
+		case ImageType::float64:
 			val.rgba.samples[0].f = r;
 			val.rgba.samples[1].f = g;
 			val.rgba.samples[2].f = b;
@@ -183,6 +190,8 @@ struct roweltype
 			//			return memcmp(val.rgba.rgba, o.val.rgba.rgba, 4) == 0;
 		case ImageType::float32:
 			return val.f == o.val.f;
+		case ImageType::float64:
+			return val.f == o.val.f;
 		default:
 			std::exception();
 		}
@@ -208,6 +217,8 @@ struct roweltype
 			return val.i > o.val.i;
 		case ImageType::float32:
 			return val.f > o.val.f;
+		case ImageType::float64:
+			return val.f > o.val.f;
 		default:
 			std::exception();
 		}
@@ -230,6 +241,8 @@ struct roweltype
 		case ImageType::int32:
 			return val.i;
 		case ImageType::float32:
+			return val.f;
+		case ImageType::float64:
 			return val.f;
 		default:
 			std::exception();
@@ -268,6 +281,7 @@ union rowtype
 {
 	short* s;
 	float* f;
+	double* d;
 	int* i;
 	uchar* b;
 	//	RT_rgb* rgba;
@@ -366,6 +380,9 @@ struct rowptr
 		case ImageType::float32:
 			ptr.f = reinterpret_cast<float*>(buffer);
 			break;
+		case ImageType::float64:
+			ptr.d = reinterpret_cast<double*>(buffer);
+			break;
 		default:
 			std::exception();
 		}
@@ -396,6 +413,9 @@ struct rowptr
 			//			break;
 		case ImageType::float32:
 			ptr.f = new float[rcount];
+			break;
+		case ImageType::float64:
+			ptr.d = new double[rcount];
 			break;
 		default:
 			std::exception();
@@ -443,6 +463,8 @@ struct rowptr
 			//			return reinterpret_cast<uchar*>(ptr.rgba + off);
 		case ImageType::float32:
 			return reinterpret_cast<uchar*>(ptr.f + off);
+		case ImageType::float64:
+			return reinterpret_cast<uchar*>(ptr.d + off);
 		default:
 			std::exception();
 		}
@@ -475,6 +497,9 @@ struct rowptr
 		case ImageType::float32:
 			ptr.f[index] = val.f;
 			break;
+		case ImageType::float64:
+			ptr.d[index] = val.f;
+			break;
 		default:
 			std::exception();
 		}
@@ -501,6 +526,9 @@ struct rowptr
 				break;
 			case ImageType::float32:
 				ptr.f[index] = val.f;
+				break;
+			case ImageType::float64:
+				ptr.d[index] = val.f;
 				break;
 			default:
 				std::exception();
@@ -536,6 +564,9 @@ struct rowptr
 				case ImageType::float32:
 					r.rgba.samples[i].f = *(ptr.f + index + i);
 					break;
+				case ImageType::float64:
+					r.rgba.samples[i].f = *(ptr.d + index + i);
+					break;
 				default:
 					throw;
 				}
@@ -559,6 +590,9 @@ struct rowptr
 				break;
 			case ImageType::float32:
 				r.f = *(ptr.f + index);
+				break;
+			case ImageType::float64:
+				r.f = *(ptr.d + index);
 				break;
 			default:
 				std::exception();
@@ -614,9 +648,13 @@ struct rowptr
 			size = 4;
 			out = reinterpret_cast<uchar*>(ptr.f);
 			break;
+		case ImageType::float64:
+			size = 8;
+			out = reinterpret_cast<uchar*>(ptr.d);
+			break;
 		default:
 			out = nullptr;
-			std::exception();
+			throw std::exception();
 		}
 
 		//		assert()
@@ -637,6 +675,8 @@ struct rowptr
 			//			return ptr.rgba == nullptr;
 		case ImageType::float32:
 			return ptr.f == nullptr;
+		case ImageType::float64:
+			return ptr.d == nullptr;
 		default:
 			std::exception();
 		}
@@ -663,6 +703,9 @@ struct rowptr
 			//			break;
 		case ImageType::float32:
 			ptr.f = nullptr;
+			break;
+		case ImageType::float64:
+			ptr.d = nullptr;
 			break;
 		default:
 			std::exception();
@@ -697,6 +740,10 @@ struct rowptr
 			case ImageType::float32:
 				delete[] ptr.f;
 				ptr.f = nullptr;
+				break;
+			case ImageType::float64:
+				delete[] ptr.d;
+				ptr.d = nullptr;
 				break;
 			default:
 				std::exception();
