@@ -16,6 +16,7 @@ PYBIND11_MODULE(barpy, m)
 		.value("secondEatFirst", bc::AttachMode::secondEatFirst)
 		.value("createNew", bc::AttachMode::createNew)
 		.value("dontTouch", bc::AttachMode::dontTouch)
+		.value("morePointsEatLow", bc::AttachMode::morePointsEatLow)
 		;
 
 	enum_<bc::CompireStrategy>(m, "CompireStrategy")
