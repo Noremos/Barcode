@@ -60,7 +60,8 @@ enum class BarType : char
 	BYTE8_4,
 	FLOAT32_1,
 	FLOAT32_3,
-	INT32_3
+	INT32_1
+	//INT32_3
 };
 
 class EXPORT Barscalar
@@ -70,6 +71,7 @@ class EXPORT Barscalar
 		unsigned char b1;
 		unsigned char b3[4];
 		float f;
+		int i;
 		//float* f3;
 		//int* i3;
 	};
@@ -103,6 +105,9 @@ public:
 			break;
 		case BarType::FLOAT32_1:
 			data.f = i;
+			break;
+		case BarType::INT32_1:
+			data.i = i;
 			break;
 //			assert(false);
 		default:
@@ -138,6 +143,12 @@ public:
 	unsigned char getByte8() const
 	{
 		return data.b1;
+	}
+
+
+	unsigned char getInt() const
+	{
+		return data.i;
 	}
 
 	float getFloat() const
@@ -384,6 +395,8 @@ private:
 			float b = X.getAvgFloat();
 			return (a >= b);
 		}
+		case BarType::INT32_1:
+			return data.i >= X.getAvgFloat();
 		default:
 			assert(false);
 			return false;
@@ -403,6 +416,8 @@ private:
 			float a = this->getAvgFloat();
 			return a > X;
 		}
+		case BarType::INT32_1:
+			return data.i > X;
 		default:
 			assert(false);
 			return false;
@@ -422,6 +437,8 @@ private:
 			float a = this->getAvgFloat();
 			return a == X;
 		}
+		case BarType::INT32_1:
+			return data.i == X;
 		default:
 			assert(false);
 			return false;
@@ -441,6 +458,8 @@ private:
 			float a = this->getAvgFloat();
 			return (a >= X);
 		}
+		case BarType::INT32_1:
+			return data.i >= X;
 		default:
 			assert(false);
 			return false;
@@ -746,6 +765,8 @@ public:
 			return ((float)data.b3[0] + (float)data.b3[1] + (float)data.b3[2]) / 3.f;
 		case BarType::FLOAT32_1:
 			return data.f;
+		case BarType::INT32_1:
+			return data.i;
 		default:
 			assert(false);
 			return 0;
@@ -1169,6 +1190,7 @@ public:
 			return data.b3[index];
 		default:
 			assert(false);
+			return data.b1;
 		}
 	}
 
