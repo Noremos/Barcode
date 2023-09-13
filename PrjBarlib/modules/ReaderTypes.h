@@ -10,7 +10,7 @@
 
 enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rgb8, argb8 };
 
-static int getImgTypeSize(ImageType type)
+constexpr int getImgTypeSize(ImageType type)
 {
 	switch (type)
 	{
