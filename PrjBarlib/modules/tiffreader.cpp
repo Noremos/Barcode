@@ -1037,7 +1037,7 @@ enum GetForState { gfs_first = 0, gfs_middle = 1, gfs_last = 2, gfs_single = 3 }
 
 DataRect TiffReader::getRect(int stX, int stRow, int wid, int hei)
 {
-	if (stX < 0 || stX >= this->width() || stRow < 0 || stRow >= height())
+	if (stX < 0 || stX >= this->width() || stRow < 0 || stRow >= height() || wid <= 0 || hei <=0)
 		return nullptr;
 
 	ReadRange widPosRange(stX, wid, this->width());
