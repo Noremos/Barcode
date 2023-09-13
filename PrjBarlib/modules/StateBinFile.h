@@ -100,6 +100,7 @@ namespace StateBinFile
 		virtual int pType(BarType type) = 0;
 		virtual short pShort(short) = 0;
 		virtual act pInt(act value) = 0;
+		virtual float pFloat(float value) = 0;
 		virtual size_t pInt64(size_t value) = 0;
 		virtual Barscalar pBarscalar(const Barscalar& value) = 0;
 
@@ -340,6 +341,13 @@ namespace StateBinFile
 			return vale;
 		}
 
+		float pFloat(float)
+		{
+			float val;
+			readRaw(val);
+			return val;
+		}
+
 		size_t pInt64(size_t)
 		{
 			size_t vale;
@@ -472,6 +480,13 @@ namespace StateBinFile
 			writeRaw(value);
 			return value;
 		}
+
+		float pFloat(float value)
+		{
+			writeRaw(value);
+			return value;
+		}
+
 		size_t pInt64(size_t value)
 		{
 			writeRaw(value);
