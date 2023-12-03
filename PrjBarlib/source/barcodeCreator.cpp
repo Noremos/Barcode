@@ -1023,7 +1023,8 @@ struct myclassFromMax {
 	}
 };
 
-void BarcodeCreator::sortPixels(bc::ProcType type)
+
+void BarcodeCreator::sortPixels(bc::ProcType type, const bc::DatagridProvider* mask, int maskId)
 {
 	switch (workingImg->getType())
 	{
@@ -1035,13 +1036,33 @@ void BarcodeCreator::sortPixels(bc::ProcType type)
 		std::fill_n(hist, 256, 0);
 		std::fill_n(offs, 256, 0);
 
-		for (int j = 0; j < workingImg->hei(); ++j)//hei
+		if (mask)
 		{
-			for (int i = 0; i < workingImg->wid(); ++i)//wid
+			processCount = 0;
+			for (int j = 0; j < workingImg->hei(); ++j)//hei
 			{
-				auto p = (int)workingImg->get(i, j);
-				++hist[p];//можно vector, но хз
+				for (int i = 0; i < workingImg->wid(); ++i)//wid
+				{
+					if (mask->get(i, j) != maskId)
+						continue;
+
+					auto p = (int)workingImg->get(i, j);
+					++hist[p];//можно vector, но хз
+					++processCount;
+				}
 			}
+		}
+		else
+		{
+			for (int j = 0; j < workingImg->hei(); ++j)//hei
+			{
+				for (int i = 0; i < workingImg->wid(); ++i)//wid
+				{
+					auto p = (int)workingImg->get(i, j);
+					++hist[p];//можно vector, но хз
+				}
+			}
+			processCount = totalSize;
 		}
 
 		for (size_t i = 1; i < 256; ++i)
@@ -1051,16 +1072,33 @@ void BarcodeCreator::sortPixels(bc::ProcType type)
 		}
 
 
-		poidex* data = new poidex[totalSize + 1];//256
-		for (size_t i = 0; i < totalSize; i++)
+		poidex* data = new poidex[processCount + 1];
+		memset(data, 0, (processCount + 1) * sizeof(poidex));
+
+		if (mask)
 		{
-			uchar p = workingImg->getLiner(i).getAvgUchar();
-			data[offs[p]++] = i;
+			for (size_t i = 0; i < totalSize; i++)
+			{
+				if (mask->getLiner(i) != maskId)
+					continue;
+
+				uchar p = workingImg->getLiner(i).getAvgUchar();
+				assert(offs[p] < processCount);
+				data[offs[p]++] = i;
+			}
+		}
+		else
+		{
+			for (size_t i = 0; i < totalSize; i++)
+			{
+				uchar p = workingImg->getLiner(i).getAvgUchar();
+				data[offs[p]++] = i;
+			}
 		}
 
 		if (type == ProcType::f255t0)
 		{
-			std::reverse(data, data + totalSize);
+			std::reverse(data, data + processCount);
 		}
 		this->sortedArr.reset(data);
 		break;
@@ -1110,8 +1148,6 @@ void BarcodeCreator::sortPixels(bc::ProcType type)
 		break;
 	}
 }
-
-
 
 //
 //inline point* BarcodeCreator::sort()
