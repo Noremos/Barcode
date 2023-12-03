@@ -203,79 +203,6 @@ struct Connect
 
 std::unordered_map<size_t, Connect> connections;
 
-inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
-{
-	if (settings.maxLen.isCached)
-	{
-		Barscalar fs = main->getStart();
-		Barscalar sc = second->getStart();
-		Barscalar diff = (fs > sc) ? (fs - sc) : (sc - fs);
-		if (diff > settings.getMaxLen())
-		{
-			return main;
-		}
-	}
-
-	/*if (!((bottom <= bottm2 && bottm2 <= top) || (bottom <= top2 && top2 <= top)))
-		return main;*/
-
-	switch (settings.attachMode)
-	{
-	case AttachMode::dontTouch:
-		return main;
-
-	case AttachMode::secondEatFirst:
-		if (main->startIndex < second->startIndex)
-		{
-			COMPP temp = main;
-			main = second;
-			second = temp;
-		}
-		second->setParent(main);
-		break;
-
-	case AttachMode::createNew:
-		//if ((double)MIN(main->getTotalSize(), second->getTotalSize()) / totalSize > 0.05)
-	{
-		COMPP newOne = new Component(this, true);
-		main->setParent(newOne);
-		second->setParent(newOne);
-		//main->kill();
-		//second->kill();
-		return newOne;
-	}
-	case AttachMode::morePointsEatLow:
-		if (main->getTotalSize() < second->getTotalSize())
-		{
-			COMPP temp = main;
-			main = second;
-			second = temp;
-		}
-		second->setParent(main);
-		return main;
-		// else pass down
-
-	case AttachMode::firstEatSecond:
-	default:
-		if (main->startIndex > second->startIndex)
-		{
-			COMPP temp = main;
-			main = second;
-			second = temp;
-		}
-		second->setParent(main);
-
-		if (main->getLastRowSize() >= settings.colorRange)
-		{
-			main->kill();
-			return new Component(this, true);
-		}
-
-		break;
-	}
-	//возращаем единую компоненту.
-	return main;
-}
 
 //****************************************B0**************************************
 
@@ -299,83 +226,7 @@ bool BarcodeCreator::checkAvg(const point curpix) const
 	return avgv / r >= m;
 }
 
-inline bool BarcodeCreator::checkCloserB0()
-{
-	COMPP first = nullptr;
-	//TODO выделять паять заранее
-	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
-
-	Component* justCreated = nullptr;
-	std::vector<Component*> attachCondidates;
-	int i = 0;
-	for (; i < 8; ++i)
-	{
-		point IcurPoint(curpix + poss[i]);
-
-		if (IS_OUT_OF_REG(IcurPoint.x, IcurPoint.y))
-			continue;
-
-		//if (!checkAvg(IcurPoint))
-		//	continue;
-
-		poidex IcurPindex = IcurPoint.getLiner(wid);
-
-		Component* first = getPorogComp(IcurPoint, IcurPindex);
-		if (first != nullptr)//существует ли ребро вокруг
-		{
-			if (first->justCreated())
-			{
-				if (justCreated)
-				{
-					justCreated->merge(first);
-				}
-				else
-					justCreated = first;
-			}
-			else
-			{
-				// if len more then maxlen, kill the component
-				bool more = settings.maxLen.isCached && curbright.absDiff(first->getStart()) > settings.maxLen.getOrDefault(0);
-				if (more)
-				{
-					//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
-					if (settings.killOnMaxLen)
-					{
-						first->kill(curbright); //Интересный результат
-					}
-					first = nullptr;
-				}
-				else
-				{
-					attachCondidates.push_back(first);
-				}
-			}
-		}
-		//else if (first)
-		//	first->add(IcurPindex, IcurPoint, workingImg->get(curpix.x, curpix.y));
-	}
-
-
-	if (attachCondidates.size() == 0)
-	{
-		//lastB += 1;
-
-		new Component(curpoindex, curbright, this);
-		return true;
-	}
-	else
-	{
-		if (justCreated)
-			attachCondidates.push_back(justCreated);
-
-		Component::attach(settings, curpix, curpoindex, curbright, attachCondidates);
-	}
-
-	return false;
-}
 //********************************************************************************
-
-
 
 
 COMPP BarcodeCreator::getPorogComp(const point& p, poidex index)
@@ -430,7 +281,7 @@ HOLEP BarcodeCreator::tryAttach(HOLEP main, HOLEP add, point p)
 		//main->setShadowOutside(main->getIsOutside() || add->getIsOutside());
 		//add->setShadowOutside(main->getIsOutside());
 
-		HOLEP ret = dynamic_cast<HOLEP>(attach(main, add));
+		HOLEP ret = nullptr;// dynamic_cast<HOLEP>(attach(main, add));
 		//if (ret->getIsOutside() && curbright != ret->end)
 		//	ret->end = curbright;
 
@@ -1240,7 +1091,7 @@ void BarcodeCreator::processComp(Barcontainer* item)
 #ifdef VDEBUG
 		VISUAL_DEBUG_COMP();
 #else
-		checkCloserB0();
+		Component::process(this);
 
 #endif
 		assert(included[wid * curpix.y + curpix.x]);
@@ -1308,7 +1159,7 @@ void BarcodeCreator::VISUAL_DEBUG()
 
 void BarcodeCreator::VISUAL_DEBUG_COMP()
 {
-	checkCloserB0();
+	Component::process(this);
 #ifdef USE_OPENCV
 	if (settings.visualize)
 	{
@@ -1751,8 +1602,9 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 		//существует ли ребро вокруг
 		if (connected != nullptr && first != connected)
 		{
+			std::vector<Component*> comps{ first, connected };
 			if (allowAttach)
-				attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
+				Component::attach(settings, curpix, curpoindex, curbright, comps);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
 		}
 		else if (connected == nullptr)
 		{

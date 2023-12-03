@@ -289,6 +289,80 @@ bc::Component::~Component()
 	//	factory->components[index] = nullptr;
 }
 
+
+void bc::Component::process(BarcodeCreator* factory)
+{
+	Component* first = nullptr;
+	//TODO выделять паять заранее
+	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
+
+	Component* justCreated = nullptr;
+	std::vector<Component*> attachCondidates;
+	int i = 0;
+	for (; i < 8; ++i)
+	{
+		point IcurPoint(factory->curpix + poss[i]);
+
+		if (factory->IS_OUT_OF_REG(IcurPoint.x, IcurPoint.y))
+			continue;
+
+		//if (!checkAvg(IcurPoint))
+		//	continue;
+
+		poidex IcurPindex = IcurPoint.getLiner(factory->wid);
+
+		Component* first = factory->getPorogComp(IcurPoint, IcurPindex);
+		if (first != nullptr)//существует ли ребро вокруг
+		{
+			if (first->justCreated())
+			{
+				if (justCreated)
+				{
+					justCreated->merge(first);
+				}
+				else
+					justCreated = first;
+			}
+			else
+			{
+				// if len more then maxlen, kill the component
+				bool more = factory->settings.maxLen.isCached && factory->curbright.absDiff(first->getStart()) > factory->settings.maxLen.getOrDefault(0);
+				if (more)
+				{
+					//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
+					if (factory->settings.killOnMaxLen)
+					{
+						first->kill(factory->curbright); //Интересный результат
+					}
+					first = nullptr;
+				}
+				else
+				{
+					attachCondidates.push_back(first);
+				}
+			}
+		}
+		//else if (first)
+		//	first->add(IcurPindex, IcurPoint, workingImg->get(curpix.x, curpix.y));
+	}
+
+
+	if (attachCondidates.size() == 0)
+	{
+		//lastB += 1;
+
+		new Component(factory->curpoindex, factory->curbright, factory);
+		return ;
+	}
+	else
+	{
+		if (justCreated)
+			attachCondidates.push_back(justCreated);
+
+		Component::attach(factory->settings, factory->curpix, factory->curpoindex, factory->curbright, attachCondidates);
+	}
+}
+
 void bc::Component::merge(bc::Component* dummy)
 {
 #ifdef POINTS_ARE_AVAILABLE

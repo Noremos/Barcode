@@ -124,6 +124,7 @@ namespace bc
 
 		virtual ~Component();
 
+		static void process(BarcodeCreator* factory);
 		void merge(bc::Component* dummy);
 		static void attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& bars, std::vector<bc::Component*>& attachList);
 	};
