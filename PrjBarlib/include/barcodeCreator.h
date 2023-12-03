@@ -67,6 +67,7 @@ namespace bc {
 	{
 		typedef bc::DatagridProvider bcBarImg;
 
+		bool allowEvOAttach;
 		bool originalImg = true;
 		std::vector<COMPP> components;
 	private:
@@ -83,7 +84,6 @@ namespace bc {
 		{
 			if (workingImg != nullptr && needDelImg)
 				delete workingImg;
-
 			workingImg = newWI;
 
 			if (!settings.stepPorog.isCached || !settings.maxLen.isCached)
@@ -196,7 +196,7 @@ namespace bc {
 
 
 		int sortOrtoPixels(bc::ProcType type, int rtoe = 0, int off = 0, int offDop = 0);
-		void sortPixels(bc::ProcType type);
+		void sortPixels(bc::ProcType type, const bc::DatagridProvider* mask, int maskId);
 
 		void clearIncluded();
 
@@ -205,7 +205,7 @@ namespace bc {
 		void VISUAL_DEBUG_COMP();
 
 
-		void init(const bc::DatagridProvider* src, ProcType& type, ComponentType& comp);
+		void init(const bc::DatagridProvider* src, ProcType& type, const barstruct& struc);
 
 		void processComp(Barcontainer* item = nullptr);
 		void processHole(Barcontainer* item = nullptr);
@@ -250,6 +250,7 @@ namespace bc {
 		void processByValueRadius(Barcontainer* item);
 
 		void processRadar(const indexCov& val, bool allowAttach);
+		bool checkAvg(const point curpix) const;
 
 
 		std::unique_ptr<indexCov> geometrySortedArr;
@@ -315,8 +316,8 @@ namespace bc {
 		bc::Barcontainer* createBarcode(const CloudPoints* points);
 		//bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 		bool useHolde = false;
-		static std::function<void(const point&, const point&, bool)> drawLine;
-		static std::function<void(PloyPoints&, bool)> drawPlygon;
+		// static std::function<void(const point&, const point&, bool)> drawLine;
+		// static std::function<void(PloyPoints&, bool)> drawPlygon;
 		using ComponentsVector = std::vector<barline*>;
 
 	private:
@@ -348,6 +349,7 @@ namespace bc {
 
 		void addItemToCont(Barcontainer* item);
 		void clearIncluded();
+
 
 	private:
 		friend class Baritem;

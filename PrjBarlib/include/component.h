@@ -34,6 +34,11 @@ namespace bc
 		BarcodeCreator* factory;
 		Component* cachedMaxParent = nullptr;
 
+#ifdef ENABLE_ENERGY
+		barmap<poidex, float> energy;
+		float maxe = 0;
+#endif
+
 	public:
 		Component* parent = nullptr;
 		barline* resline = nullptr;
@@ -50,6 +55,9 @@ namespace bc
 
 	private:
 		//0 - nan
+
+		//exp
+		size_t x = 0, y = 0, xMin = 9999999, yMin = 9999999, xMax = 0, yMax = 0;
 
 		void init(BarcodeCreator* factory, const Barscalar& val);
 	public:
