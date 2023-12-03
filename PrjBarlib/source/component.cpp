@@ -232,6 +232,9 @@ void bc::Component::setParent(bc::Component* parnt)
 
 		for (barvalue& val : resline->matr)
 		{
+#ifdef ENERGY
+
+
 			val.value = Barscalar(static_cast<float>(energy[val.getIndex()]) / maxe, BarType::FLOAT32_1);
 			parnt->resline->addCoord(val);
 
@@ -241,18 +244,22 @@ void bc::Component::setParent(bc::Component* parnt)
 
 			//avgSr += val.value;
 			// Эти точки сичтаются как только что присоединившиеся
-			//parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
+#else
+			parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
+#endif // ENERGY
 		}
 		parnt->same = false;
 		// Мы объединяем, потому что одинаковый добавился, т.е. считаем, что lasVal одинаковыйы
 		//parnt->lastVal = lastVal;
 	}
 
+#ifdef ENERGY
 	parent->energy.insert(energy.begin(), energy.end());
 	energy.clear();
 
 	if (maxe > parent->maxe)
 		parent->maxe = maxe;
+#endif // ENERGY
 
 
 	kill(endScalar);
