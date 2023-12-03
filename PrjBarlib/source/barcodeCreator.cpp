@@ -205,74 +205,6 @@ std::unordered_map<size_t, Connect> connections;
 
 inline COMPP BarcodeCreator::attach(COMPP main, COMPP second)
 {
-	// size_t mc = reinterpret_cast<size_t>(main);
-	// size_t sc = reinterpret_cast<size_t>(second);
-	// auto f = connections.find(mc);
-	// if (f == connections.end())
-	// {
-	// 	connections.insert(std::pair<size_t, Connect>(mc, Connect()));
-	// 	f = connections.find(mc);
-	// }
-	// ++f->second.conters[mc];
-
-	// f = connections.find(sc);
-	// if (f == connections.end())
-	// {
-	// 	connections.insert(std::pair<size_t, Connect>(sc, Connect()));
-	// 	f = connections.find(sc);
-	// }
-	// else
-	// 	++f->second.conters[sc];
-
-	// return main;
-
-	bool mJC = main->justCreated();
-	bool sJC = second->justCreated();
-	if (!(sJC && sJC) && (mJC || sJC)) // Строго или
-	{
-#ifdef POINTS_ARE_AVAILABLE
-		for (const auto& val : second->resline->matr)
-		{
-			assert(workingImg->get(val.getX(wid), val.getY(wid)) == curbright);
-			assert(included[val.getIndex()] == second);
-
-			main->add(val.getIndex());
-		}
-#else
-		// Если главный толко создан - меням местами
-		if (mJC)
-		{
-			COMPP temp = main;
-			main = second;
-			second = temp;
-		}
-
-		for (size_t rind = 0, totalm = second->resline->matr.size(); rind < totalm; ++rind)
-		{
-			const barvalue& val = second->resline->matr[rind];
-			const bc::point p = val.getPoint();
-			main->add(p.getLiner(wid), p, val.value, true);
-		}
-
-		main->startIndex = MIN(second->startIndex, main->startIndex);
-#endif // POINTS_ARE_AVAILABLE
-		delete second->resline;
-		second->resline = nullptr;
-
-		return main;
-	}
-
-	//float bottom = (float)main->getStart();
-	//float top = (float)main->getLast();
-	//if (bottom > top)
-	//	std::swap(bottom, top);
-
-	//float bottm2 = (float)second->getStart();
-	//float top2 = (float)second->getLast();
-	//if (bottm2 > top2)
-	//	std::swap(bottm2, top2);
-
-
 	if (settings.maxLen.isCached)
 	{
 		Barscalar fs = main->getStart();
@@ -370,12 +302,11 @@ bool BarcodeCreator::checkAvg(const point curpix) const
 inline bool BarcodeCreator::checkCloserB0()
 {
 	COMPP first = nullptr;
-	COMPP connected;// = new rebro(x, y); //included[{(int)i, (int)j}];
 	//TODO выделять паять заранее
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
 
-	//first = getComp(curpix);
-	// FIXME first always will be nill
+	Component* justCreated = nullptr;
+	std::vector<Component*> attachCondidates;
 	int i = 0;
 	for (; i < 8; ++i)
 	{
@@ -389,62 +320,55 @@ inline bool BarcodeCreator::checkCloserB0()
 
 		poidex IcurPindex = IcurPoint.getLiner(wid);
 
-		first = getPorogComp(IcurPoint, IcurPindex);
+		Component* first = getPorogComp(IcurPoint, IcurPindex);
 		if (first != nullptr)//существует ли ребро вокруг
 		{
-			// if len more then maxlen, kill the component
-			bool more = settings.maxLen.isCached && curbright.absDiff(first->getStart()) > settings.maxLen.getOrDefault(0);
-			if (more)
+			if (first->justCreated())
 			{
-				//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
-				if (settings.killOnMaxLen)
+				if (justCreated)
 				{
-					first->kill(curbright); //Интересный результат
+					justCreated->merge(first);
 				}
-				first = nullptr;
+				else
+					justCreated = first;
 			}
-			else if (!first->add(curpoindex, curpix, curbright))
-				first = nullptr;
-
-			break;
+			else
+			{
+				// if len more then maxlen, kill the component
+				bool more = settings.maxLen.isCached && curbright.absDiff(first->getStart()) > settings.maxLen.getOrDefault(0);
+				if (more)
+				{
+					//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
+					if (settings.killOnMaxLen)
+					{
+						first->kill(curbright); //Интересный результат
+					}
+					first = nullptr;
+				}
+				else
+				{
+					attachCondidates.push_back(first);
+				}
+			}
 		}
 		//else if (first)
 		//	first->add(IcurPindex, IcurPoint, workingImg->get(curpix.x, curpix.y));
 	}
 
 
-	if (first == nullptr)
+	if (attachCondidates.size() == 0)
 	{
 		//lastB += 1;
 
 		new Component(curpoindex, curbright, this);
 		return true;
 	}
-
-	for (; i < 8; ++i)
+	else
 	{
-		point IcurPoint(curpix + poss[i]);
+		if (justCreated)
+			attachCondidates.push_back(justCreated);
 
-		if (IS_OUT_OF_REG(IcurPoint.x, IcurPoint.y))
-			continue;
-
-		//if (!checkAvg(IcurPoint))
-		//	continue;
-
-		poidex IcurPindex = IcurPoint.getLiner(wid);
-
-		connected = getPorogComp(IcurPoint, IcurPindex);
-		if (connected != nullptr)//существует ли ребро вокруг
-		{
-			if (first->isContain(IcurPindex))//если в найденном уже есть этот элемент
-				continue;
-
-			//lastB -= 1;
-			if (first != connected && first->canBeConnected(IcurPoint))
-				first = attach(first, connected);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
-		}
-		//else if (first)
-		//	first->add(IcurPindex, IcurPoint, workingImg->get(curpix.x, curpix.y));
+		Component::attach(settings, curpix, curpoindex, curbright, attachCondidates);
 	}
 
 	return false;

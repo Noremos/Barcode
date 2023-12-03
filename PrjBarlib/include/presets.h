@@ -2,6 +2,7 @@
 // #undef USE_OPENCV
 //#define VDEBUG
 // #define ENABLE_ENERGY
+//#define POINTS_ARE_AVAILABLE
 
 
 #include "../side/flat_hash_map/unordered_map.hpp"

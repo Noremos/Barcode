@@ -288,3 +288,86 @@ bc::Component::~Component()
 {
 	//	factory->components[index] = nullptr;
 }
+
+void bc::Component::merge(bc::Component* dummy)
+{
+#ifdef POINTS_ARE_AVAILABLE
+	for (const auto& val : dummy->resline->matr)
+	{
+		assert(workingImg->get(val.getX(wid), val.getY(wid)) == curbright);
+		assert(included[val.getIndex()] == dummy);
+
+		main->add(val.getIndex());
+	}
+#else
+
+	for (auto& val : dummy->resline->matr)
+	{
+		const bc::point p = val.getPoint();
+		add(p.getLiner(factory->wid), p, val.value, true);
+	}
+
+	startIndex = MIN(dummy->startIndex, startIndex);
+#endif // POINTS_ARE_AVAILABLE
+	delete dummy->resline;
+	dummy->resline = nullptr;
+}
+
+void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& curb, std::vector<bc::Component*>& attachList)
+{
+	switch (settings.attachMode)
+	{
+	case AttachMode::dontTouch:
+		return;
+
+	case AttachMode::firstEatSecond:
+		std::sort(attachList.begin(), attachList.end(), [](const Component* c1, const Component* c2) {
+			return c1->startIndex < c2->startIndex;
+			});
+		break;
+	case AttachMode::secondEatFirst:
+		// <  makes i as a parent of the i + 1
+		// >= makes i + 1 as a parent of the i
+		std::sort(attachList.begin(), attachList.end(), [](const Component* c1, const Component* c2) {
+			return c1->startIndex >= c2->startIndex;
+			});
+
+		break;
+	case AttachMode::morePointsEatLow:
+		std::sort(attachList.begin(), attachList.end(), [](const Component* c1, const Component* c2) {
+			return c1->getTotalSize() >= c2->getTotalSize();
+			});
+
+		break;
+
+		//case AttachMode::createNew:
+		//	//if ((double)MIN(main->getTotalSize(), second->getTotalSize()) / totalSize > 0.05)
+		//{
+		//	COMPP newOne = new Component(this, true);
+		//	main->setParent(newOne);
+		//	second->setParent(newOne);
+		//	//main->kill();
+		//	//second->kill();
+		//	return newOne;
+		//}
+	default: throw;
+	}
+	// The last one is the parent
+	for (size_t i = 0; i < attachList.size() - 1; i++)
+	{
+		auto* left = attachList[0];
+		auto* right = attachList[0];
+		const Barscalar fs = left->getStart();
+		const Barscalar sc = right->getStart();
+		const Barscalar diff = (fs > sc) ? (fs - sc) : (sc - fs);
+		if (diff > settings.getMaxLen())
+		{
+			continue;
+		}
+
+		attachList[i + 1]->addChild(attachList[0]);
+	}
+	attachList.back()->add(index, p, curb);
+
+}
+

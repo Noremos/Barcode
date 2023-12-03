@@ -75,7 +75,7 @@ public:
 	}
 };
 
-bc::BarConstructor defineConstr()
+bc::BarConstructor defineConstr(bc::ProcType proc = bc::ProcType::f0t255)
 {
 	bc::BarConstructor bcont;
 	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
@@ -89,6 +89,14 @@ bc::BarConstructor defineConstr()
 	return bcont;
 }
 
+std::unique_ptr<bc::Baritem> mkBarcode(TestImg& img, bc::ProcType proc = bc::ProcType::f0t255)
+{
+	auto bcont = defineConstr(proc);
+	bc::BarcodeCreator test;
+	std::unique_ptr<bc::Barcontainer> bar;
+	bar.reset(test.createBarcode(&img, bcont));
+	return std::unique_ptr<bc::Baritem>(bar->exractItem(0));
+}
 
 TestImg restore255ToBarimg(bc::Barcontainer* cont, int wid, int hei, Barscalar minval)
 {
@@ -223,47 +231,57 @@ TEST(BarcodeTests, TestMethod3)
 	test.createBarcode(&img, bcont);
 }
 
-TEST(BarcodeTests, TestSkipZeros)
+void testZeros(TestImg& img)
 {
 	bc::BarcodeCreator test;
 	auto bcont = defineConstr();
+	bcont.addStructure(bc::ProcType::Radius, bc::ColorType::gray, bc::ComponentType::Component);
 
-	TestImg img(3, 3, 1, new uchar[9]{
-		0,1,0,
-		0,1,0,
-		1,0,1
-	});
 
 	std::unique_ptr<bc::Barcontainer> bar;
 	bar.reset(test.createBarcode(&img, bcont));
 	bc::Baritem* itm = bar->getItem(0);
 	ASSERT_TRUE(itm->barlines.size() == (size_t)1);
 	ASSERT_TRUE(itm->barlines[0]->len().getByte8() == (uchar)1);
+
+	itm = bar->getItem(1);
+	ASSERT_TRUE(itm->barlines.size() == (size_t)1);
+	ASSERT_TRUE(itm->barlines[0]->len().getByte8() == (uchar)1);
 }
 
-
-TEST(BarcodeTests, TestSkipZerosRadius)
+TEST(BarcodeTests, TestSkipZeros2by2)
 {
-	bc::BarcodeCreator test;
-	auto bcont = defineConstr();
-	bcont.structure[0].proctype = bc::ProcType::Radius;
+	TestImg img2(2, 2, 1, new uchar[4]{
+		0,1,
+		1,0
+	});
 
-	TestImg img3(3,3,1, new uchar[9]{
+	testZeros(img2);
+}
+
+TEST(BarcodeTests, TestSkipZeros3by3)
+{
+	TestImg img(3, 3, 1, new uchar[9]{
 		0,1,0,
 		0,1,0,
 		1,0,1
 	});
 
-	TestImg img2(2,2,1, new uchar[4]{
-		0,1,
-		1,0
+	testZeros(img);
+}
+
+
+TEST(BarcodeTests, TestMoreSkips)
+{
+	TestImg img(3, 3, 1, new uchar[9]{
+		0,1,0,
+		0,1,0,
+		1,1,0
 	});
 
-	std::unique_ptr< bc::Barcontainer> bar(test.createBarcode(&img3, bcont));
-	bc::Baritem* itm = bar->getItem(0);
-	ASSERT_TRUE((size_t)2 == itm->barlines.size());
-	ASSERT_TRUE((float)1 == itm->barlines[0]->len().getAvgFloat());
-	ASSERT_TRUE((float)1 == itm->barlines[1]->len().getAvgFloat());
+	auto itm = mkBarcode(img, bc::ProcType::Radius);
+	ASSERT_TRUE(itm->barlines.size() == (size_t)1);
+	ASSERT_TRUE(itm->barlines[0]->len().getByte8() == (uchar)1);
 }
 
 TEST(BarcodeTests, Testf255t0)

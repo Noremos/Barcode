@@ -177,7 +177,7 @@ namespace bc
 			stepPorog.set(val);
 		}
 
-		Barscalar getMaxLen()
+		Barscalar getMaxLen() const
 		{
 			return maxLen.getOrDefault(0);
 		}

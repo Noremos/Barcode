@@ -3,7 +3,6 @@
 #include "barstrucs.h"
 
 
-//#define POINTS_ARE_AVAILABLE
 namespace bc
 {
 
@@ -17,13 +16,13 @@ namespace bc
 	{
 	public:
 #ifdef POINTS_ARE_AVAILABLE
-		size_t getTotalSize()
+		size_t getTotalSize() const
 		{
 			return resline->matr.size();
 		}
 #else
 		size_t startIndex = 0;
-		size_t getTotalSize()
+		size_t getTotalSize() const
 		{
 			return totalCount;
 		}
@@ -125,6 +124,8 @@ namespace bc
 
 		virtual ~Component();
 
+		void merge(bc::Component* dummy);
+		static void attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& bars, std::vector<bc::Component*>& attachList);
 	};
 
 	//typedef barmap<point, Component*, pointHash> cmap;
