@@ -33,8 +33,11 @@ namespace bc
 	protected:
 		BarcodeCreator* factory;
 		Component* cachedMaxParent = nullptr;
-		barmap<poidex, int> energy;
-		int maxe = 0;
+
+#ifdef ENABLE_ENERGY
+		barmap<poidex, float> energy;
+		float maxe = 0;
+#endif
 
 	public:
 		Component* parent = nullptr;
