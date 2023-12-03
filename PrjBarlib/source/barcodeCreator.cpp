@@ -412,6 +412,15 @@ inline bool BarcodeCreator::checkCloserB0()
 		//	first->add(IcurPindex, IcurPoint, workingImg->get(curpix.x, curpix.y));
 	}
 
+
+	if (first == nullptr)
+	{
+		//lastB += 1;
+
+		new Component(curpoindex, curbright, this);
+		return true;
+	}
+
 	for (; i < 8; ++i)
 	{
 		point IcurPoint(curpix + poss[i]);
@@ -438,13 +447,6 @@ inline bool BarcodeCreator::checkCloserB0()
 		//	first->add(IcurPindex, IcurPoint, workingImg->get(curpix.x, curpix.y));
 	}
 
-	if (first == nullptr)
-	{
-		//lastB += 1;
-
-		new Component(curpoindex, curbright, this);
-		return true;
-	}
 	return false;
 }
 //********************************************************************************
@@ -2241,8 +2243,8 @@ struct GraphPoint
 };
 
 
-std::function<void(const point&, const point&, bool)> CloudPointsBarcode::drawLine;
-std::function<void(bc::PloyPoints&, bool)> CloudPointsBarcode::drawPlygon;
+// std::function<void(const point&, const point&, bool)> CloudPointsBarcode::drawLine;
+// std::function<void(bc::PloyPoints&, bool)> CloudPointsBarcode::drawPlygon;
 
 struct Graph
 {
@@ -2479,8 +2481,8 @@ struct Graph
 		else
 			vect.push_back(main->line);
 
-		if (CloudPointsBarcode::drawPlygon)
-			CloudPointsBarcode::drawPlygon(pew, true);
+		//if (CloudPointsBarcode::drawPlygon)
+		//	CloudPointsBarcode::drawPlygon(pew, true);
 
 		return true;
 		/*double dist2 = attachRecurs(h1->p, &cong2);
@@ -2539,9 +2541,9 @@ void CloudPointsBarcode::processHold()
 		GraphPoint* first = grath.getGrath(curPoindex);
 		GraphPoint* connected = grath.getGrath(nextPoindex);
 
-		if (drawLine)
+		//if (drawLine)
 		{
-			drawLine(nextPoint, curPoint, false);
+			//drawLine(nextPoint, curPoint, false);
 			//using namespace std::chrono_literals;
 			//std::this_thread::sleep_for(200ms);
 		}
@@ -2564,8 +2566,8 @@ void CloudPointsBarcode::processHold()
 					{
 						// Дыры нет, созадём
 						assert(connected->hole == nullptr);
-						if (drawLine)
-							drawLine(curPoint, nextPoint, true);
+						//if (drawLine)
+						//	drawLine(curPoint, nextPoint, true);
 						using namespace std::chrono_literals;
 						//std::this_thread::sleep_for(1000ms);
 						bool h = grath.findHole(curPoindex, nextPoindex, val.dist, components, instakilled);
@@ -2576,8 +2578,8 @@ void CloudPointsBarcode::processHold()
 				else
 				{
 					//assert(connected->hole == nullptr);
-					if (drawLine)
-						drawLine(curPoint, nextPoint, true);
+					//if (drawLine)
+					//	drawLine(curPoint, nextPoint, true);
 					using namespace std::chrono_literals;
 					//std::this_thread::sleep_for(1000ms);
 

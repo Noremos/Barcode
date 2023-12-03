@@ -32,12 +32,12 @@ typedef unsigned int uint;
 #include "StateBinFile.h"
 #include "barcodeCreator.h"
 
-export module BarcodeModule;
 #include "../source/barcodeCreator.cpp"
 #include "../source/barclasses.cpp"
 #include "../source/component.cpp"
 #include "../source/hole.cpp"
 
+export module BarcodeModule;
 
 export namespace StateBinFile
 {

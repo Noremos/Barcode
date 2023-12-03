@@ -197,7 +197,7 @@ namespace bc {
 
 		int sortOrtoPixels(bc::ProcType type, int rtoe = 0, int off = 0, int offDop = 0);
 		void sortPixels(bc::ProcType type, const bc::DatagridProvider* mask, int maskId);
-		
+
 		void clearIncluded();
 
 		void draw(std::string name = "test");
@@ -316,8 +316,8 @@ namespace bc {
 		bc::Barcontainer* createBarcode(const CloudPoints* points);
 		//bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 		bool useHolde = false;
-		static std::function<void(const point&, const point&, bool)> drawLine;
-		static std::function<void(PloyPoints&, bool)> drawPlygon;
+		// static std::function<void(const point&, const point&, bool)> drawLine;
+		// static std::function<void(PloyPoints&, bool)> drawPlygon;
 		using ComponentsVector = std::vector<barline*>;
 
 	private:
