@@ -137,8 +137,8 @@ void removeNoise(Mat img, const string& prefix, bool simple)
 
 void testAll()
 {
-	string base = "D:/Learning/papers/compression/src/";
-	string pathToSave = "D:/Learning/papers/compression/research/bar/";
+	string base = "D:/papers/compression/src/";
+	string pathToSave = "D:/papers/compression/research/bar/";
 	for (int i = 0; i < 6; ++i)
 	//int i = 7;
 	{

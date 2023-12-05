@@ -130,4 +130,19 @@ namespace bc
 	};
 
 	//typedef barmap<point, Component*, pointHash> cmap;
+
+	class RadiusComponent : public Component
+	{
+	public:
+		RadiusComponent(BarcodeCreator* factory) : Component(factory)
+		{ }
+
+		RadiusComponent(poidex pix, const Barscalar& val, bc::BarcodeCreator* factory) : Component(pix, val, factory)
+		{ }
+
+		virtual void kill(const Barscalar& distance)
+		{
+			Component::kill(Component::getStart() + distance);
+		}
+	};
 }

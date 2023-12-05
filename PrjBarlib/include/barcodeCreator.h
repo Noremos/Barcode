@@ -188,10 +188,8 @@ namespace bc {
 		HOLEP getHole(uint x, uint y);
 		HOLEP getHole(const point& p);
 
-		COMPP attach(COMPP first, COMPP second);
 		HOLEP tryAttach(HOLEP h1, HOLEP h2, point p);
 
-		bool checkCloserB0();
 		bool checkCloserB1();
 
 

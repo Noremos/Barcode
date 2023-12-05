@@ -292,7 +292,6 @@ HOLEP BarcodeCreator::tryAttach(HOLEP main, HOLEP add, point p)
 
 //****************************************B1**************************************
 
-
 inline bool BarcodeCreator::checkCloserB1()
 {
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };//эти сочетания могу образовывать дубли, поэтому перед добавление СЛЕДУЕТ ПРОВЕРЯТЬ, был ли уже добавлен такой треугольник
@@ -1483,9 +1482,10 @@ bc::Barcontainer* bc::BarcodeCreator::createPysBarcode(bn::array& img, bc::BarCo
 
 void BarcodeCreator::processCompByRadius(Barcontainer* item)
 {
+	auto* get = geometrySortedArr.get();
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
 	{
-		const indexCov& val = geometrySortedArr.get()[curIndexInSortedArr];
+		const indexCov& val = get[curIndexInSortedArr];
 		if (val.dist > settings.maxRadius)
 		{
 			break;
@@ -1538,6 +1538,8 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 		}
 #endif // USE_OPENCV
 	}
+	curbright = get[curIndexInSortedArr - 1].dist;
+
 
 
 	//totalSize = workingImg->length();
@@ -1602,15 +1604,51 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 		//существует ли ребро вокруг
 		if (connected != nullptr && first != connected)
 		{
-			std::vector<Component*> comps{ first, connected };
-			if (allowAttach)
-				Component::attach(settings, curpix, curpoindex, curbright, comps);//проверить, чему равен included[point(x, y)] Не должно, ибо first заменяется на connect
+			std::vector<Component*> comps { first, connected };
+			if (!allowAttach)
+				return;
+			switch (settings.attachMode)
+			{
+			case AttachMode::dontTouch:
+				return;
+
+			case AttachMode::firstEatSecond:
+				if (first->startIndex > connected->startIndex)
+				{
+					std::swap(first, connected);
+				}
+				break;
+			case AttachMode::secondEatFirst:
+				if (first->startIndex < connected->startIndex)
+				{
+					std::swap(first, connected);
+				}
+				break;
+			case AttachMode::morePointsEatLow:
+				if (first->getTotalSize() > connected->getTotalSize())
+				{
+					std::swap(first, connected);
+				}
+				break;
+			case AttachMode::createNew:
+			{
+				COMPP newOne = new Component(this, true);
+				first->setParent(newOne);
+				connected->setParent(newOne);
+				return;
+			}
+			default: throw;
+			}
+
+			// By default: kill connected with curpoindex
+			curbright = val.dist;
+			first->addChild(connected);
 		}
 		else if (connected == nullptr)
 		{
 			if (!first->add(NextPindex, NextPoint, Nscalar))
 			{
-				connected = new Component(NextPindex, Nscalar, this);
+				connected = new RadiusComponent(NextPindex, Nscalar, this);
 			}
 		}
 	}
@@ -1620,7 +1658,7 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 		// Ребро не создано или не получилось присоединить
 		if (connected == nullptr)
 		{
-			first = new Component(curpoindex, curbright, this);
+			first = new RadiusComponent(curpoindex, curbright, this);
 
 			Barscalar Nscalar = workingImg->get(NextPoint.x, NextPoint.y);
 			//curpoindex = NextPindex;
@@ -1628,12 +1666,12 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 
 			if (!first->add(NextPindex, NextPoint, Nscalar))
 			{
-				connected = new Component(NextPindex, Nscalar, this);
+				connected = new RadiusComponent(NextPindex, Nscalar, this);
 			}
 		}
 		else if (!connected->add(curpoindex, curpix, curbright))
 		{
-			first = new Component(curpoindex, curbright, this);
+			first = new RadiusComponent(curpoindex, curbright, this);
 		}
 	}
 }

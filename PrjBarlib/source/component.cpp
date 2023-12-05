@@ -318,7 +318,8 @@ void bc::Component::process(BarcodeCreator* factory)
 			{
 				if (justCreated)
 				{
-					justCreated->merge(first);
+					if (justCreated != first)
+						justCreated->merge(first);
 				}
 				else
 					justCreated = first;
@@ -336,8 +337,9 @@ void bc::Component::process(BarcodeCreator* factory)
 					}
 					first = nullptr;
 				}
-				else
+				else if (attachCondidates.empty() || attachCondidates.back() != first)
 				{
+					// Skip some duplicates
 					attachCondidates.push_back(first);
 				}
 			}
@@ -346,6 +348,8 @@ void bc::Component::process(BarcodeCreator* factory)
 		//	first->add(IcurPindex, IcurPoint, workingImg->get(curpix.x, curpix.y));
 	}
 
+	if (justCreated)
+		attachCondidates.push_back(justCreated);
 
 	if (attachCondidates.size() == 0)
 	{
@@ -354,17 +358,20 @@ void bc::Component::process(BarcodeCreator* factory)
 		new Component(factory->curpoindex, factory->curbright, factory);
 		return ;
 	}
+	else if (attachCondidates.size() == 1)
+	{
+		attachCondidates[0]->add(factory->curpoindex, factory->curpix, factory->curbright);
+	}
 	else
 	{
-		if (justCreated)
-			attachCondidates.push_back(justCreated);
-
 		Component::attach(factory->settings, factory->curpix, factory->curpoindex, factory->curbright, attachCondidates);
 	}
 }
 
 void bc::Component::merge(bc::Component* dummy)
 {
+	assert(this != dummy);
+
 #ifdef POINTS_ARE_AVAILABLE
 	for (const auto& val : dummy->resline->matr)
 	{
@@ -429,8 +436,11 @@ void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poid
 	// The last one is the parent
 	for (size_t i = 0; i < attachList.size() - 1; i++)
 	{
-		auto* left = attachList[0];
-		auto* right = attachList[0];
+		auto* left = attachList[i];
+		auto* right = attachList[i + 1];
+		if (left == right)
+			continue;
+
 		const Barscalar fs = left->getStart();
 		const Barscalar sc = right->getStart();
 		const Barscalar diff = (fs > sc) ? (fs - sc) : (sc - fs);
@@ -439,9 +449,9 @@ void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poid
 			continue;
 		}
 
-		attachList[i + 1]->addChild(attachList[0]);
+		right->addChild(left);
 	}
-	attachList.back()->add(index, p, curb);
 
+	attachList.back()->add(index, p, curb);
 }
 

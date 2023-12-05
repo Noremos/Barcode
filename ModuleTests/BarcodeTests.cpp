@@ -78,7 +78,7 @@ public:
 bc::BarConstructor defineConstr(bc::ProcType proc = bc::ProcType::f0t255)
 {
 	bc::BarConstructor bcont;
-	bcont.addStructure(bc::ProcType::f0t255, bc::ColorType::gray, bc::ComponentType::Component);
+	bcont.addStructure(proc, bc::ColorType::gray, bc::ComponentType::Component);
 	bcont.createBinaryMasks = true;
 	bcont.createGraph = false;
 	bcont.createBinaryMasks = false;
@@ -245,7 +245,7 @@ void testZeros(TestImg& img)
 	ASSERT_TRUE(itm->barlines[0]->len().getByte8() == (uchar)1);
 
 	itm = bar->getItem(1);
-	ASSERT_TRUE(itm->barlines.size() == (size_t)1);
+	ASSERT_TRUE(itm->barlines.size() == (size_t)2);
 	ASSERT_TRUE(itm->barlines[0]->len().getByte8() == (uchar)1);
 }
 
@@ -280,7 +280,7 @@ TEST(BarcodeTests, TestMoreSkips)
 	});
 
 	auto itm = mkBarcode(img, bc::ProcType::Radius);
-	ASSERT_TRUE(itm->barlines.size() == (size_t)1);
+	ASSERT_TRUE(itm->barlines.size() == (size_t)3);
 	ASSERT_TRUE(itm->barlines[0]->len().getByte8() == (uchar)1);
 }
 
