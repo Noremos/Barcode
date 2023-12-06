@@ -368,7 +368,7 @@ private:
 				return this->data.b1 == static_cast<float>(X.data.b1);
 			case BarType::BYTE8_3:
 			{
-				uchar xf = X.data.f;
+				uchar xf = static_cast<uchar>(X.data.f);
 				return xf == static_cast<float>(X.data.b3[0]) && xf == static_cast<float>(X.data.b3[1]) && xf == static_cast<float>(X.data.b3[2]);
 			}
 			case BarType::FLOAT32_1:
@@ -766,7 +766,7 @@ public:
 		case BarType::FLOAT32_1:
 			return data.f;
 		case BarType::INT32_1:
-			return data.i;
+			return static_cast<float>(data.i);
 		default:
 			assert(false);
 			return 0;

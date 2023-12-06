@@ -63,6 +63,7 @@ namespace bc
 		{
 			this->rootNode = std::exchange(obj.rootNode, nullptr);
 			this->wid = obj.wid;
+			this->type = obj.type;
 
 			this->barlines = obj.barlines;
 			obj.barlines.clear();

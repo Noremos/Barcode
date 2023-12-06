@@ -1,8 +1,11 @@
+#ifndef SKIP_M_INC
+
 #include "component.h"
 
 #include "barcodeCreator.h"
 #include <assert.h>
 
+#endif
 
 void bc::Component::init(BarcodeCreator* factory, const Barscalar& val)
 {
@@ -232,8 +235,6 @@ void bc::Component::setParent(bc::Component* parnt)
 
 		for (barvalue& val : resline->matr)
 		{
-			val.value = Barscalar(static_cast<float>(energy[val.getIndex()]) / maxe, BarType::FLOAT32_1);
-			parnt->resline->addCoord(val);
 
 			// Записываем длину сущщетвования точки
 			//val.value = endScalar.absDiff(val.value);
@@ -241,18 +242,12 @@ void bc::Component::setParent(bc::Component* parnt)
 
 			//avgSr += val.value;
 			// Эти точки сичтаются как только что присоединившиеся
-			//parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
+			parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
 		}
 		parnt->same = false;
 		// Мы объединяем, потому что одинаковый добавился, т.е. считаем, что lasVal одинаковыйы
 		//parnt->lastVal = lastVal;
 	}
-
-	parent->energy.insert(energy.begin(), energy.end());
-	energy.clear();
-
-	if (maxe > parent->maxe)
-		parent->maxe = maxe;
 
 
 	kill(endScalar);
