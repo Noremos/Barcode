@@ -1,19 +1,5 @@
 module;
 
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
-
-#define BAREXPORT
-
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
-
 
 //EXCLUDE_FILES
 //include/presets.h
@@ -32,11 +18,44 @@ typedef unsigned int uint;
 #include "StateBinFile.h"
 #include "barcodeCreator.h"
 
+#include <math.h>
+#include <stack>
+#include <string>
+#include <assert.h>
+#include <algorithm>
+#include <thread>
+#include <chrono>
+#include <iostream>
+#include <map>
+
+
+#ifdef __linux
+#include <climits>
+#endif // __linux
+
+
 export module BarcodeModule;
+#define SKIP_M_INC
+
 #include "../source/barcodeCreator.cpp"
 #include "../source/barclasses.cpp"
 #include "../source/component.cpp"
 #include "../source/hole.cpp"
+
+
+typedef unsigned char uchar;
+typedef unsigned short ushort;
+typedef unsigned int uint;
+
+#define BAREXPORT
+
+#ifndef MIN
+#define MIN(a,b) ((a)<(b)?(a):(b))
+#endif
+
+#ifndef MAX
+#define MAX(a,b) ((a)>(b)?(a):(b))
+#endif
 
 
 export namespace StateBinFile

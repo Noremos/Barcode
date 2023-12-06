@@ -838,7 +838,7 @@ rowptr TiffReader::getRowData(int y)// rowNum
 
 		string st = ""; // dectode(buff, count);
 		vbuffer ret;
-		decorder decod(curSubImage->tags.Compression);
+		decorder decod(static_cast<int>(curSubImage->tags.Compression));
 		decod.decompress(tempbuffer.buffer, count, ret, curSubImage->getBytesInRowToTile());
 //		vbuffer ret2;
 //		decompressLZW(tempbuffer.tempbuffer, count, ret2, getBytesInRowToTile());
@@ -846,7 +846,7 @@ rowptr TiffReader::getRowData(int y)// rowNum
 
 //		assert(r == 0);
 
-		return processData(ret.extract(), width(), curSubImage->tags.SamplesPerPixel);
+		return processData(ret.extract(), width(), static_cast<int>(curSubImage->tags.SamplesPerPixel));
 	}
 }
 

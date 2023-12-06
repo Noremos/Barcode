@@ -1,8 +1,11 @@
+#ifndef SKIP_M_INC
+
 #include "component.h"
 
 #include "barcodeCreator.h"
 #include <assert.h>
 
+#endif
 
 void bc::Component::init(BarcodeCreator* factory, const Barscalar& val)
 {
