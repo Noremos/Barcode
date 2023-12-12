@@ -98,6 +98,7 @@ namespace StateBinFile
 
 
 		virtual int pType(BarType type) = 0;
+		virtual bool pBool(bool value) = 0;
 		virtual short pShort(short) = 0;
 		virtual act pInt(act value) = 0;
 		virtual float pFloat(float value) = 0;
@@ -327,6 +328,13 @@ namespace StateBinFile
 			return ysize;
 		}
 
+		bool pBool(bool)
+		{
+			uchar value;
+			readRaw(value);
+			return value > 0;
+		}
+
 		short pShort(short)
 		{
 			short vale;
@@ -467,6 +475,12 @@ namespace StateBinFile
 			}
 
 			return (int)bt;
+		}
+
+		bool pBool(bool value)
+		{
+			writeRaw(value ? 1 : 0);
+			return value;
 		}
 
 		short pShort(short value)
