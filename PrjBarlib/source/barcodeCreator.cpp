@@ -1,3 +1,6 @@
+#ifndef SKIP_M_INC
+
+
 #include "barcodeCreator.h"
 
 #include <stack>
@@ -16,6 +19,8 @@
 #ifdef __linux
 #include <climits>
 #endif // __linux
+
+#endif
 
 using namespace bc;
 

@@ -1,5 +1,9 @@
+#ifndef SKIP_M_INC
+
 #include "hole.h"
 #include "barcodeCreator.h"
+
+#endif // !SKIP_M_INC
 
 
 bc::Hole::Hole(point p1, BarcodeCreator* factory) : Component(factory)

@@ -592,10 +592,10 @@ struct rowptr
 				r.f = *(ptr.f + index);
 				break;
 			case ImageType::float64:
-				r.f = *(ptr.d + index);
+				r.f = static_cast<float>(*(ptr.d + index));
 				break;
 			default:
-				std::exception();
+				throw;
 			}
 		}
 
@@ -623,7 +623,7 @@ struct rowptr
 	void copyDataFrom(uchar* buffer, int selfOffsetCount = 0, int fromCount = 0)
 	{
 		if (fromCount == 0)
-			fromCount = count;
+			fromCount = static_cast<int>(count);
 		uchar* out;
 		size_t size = 0;
 		switch (type)
