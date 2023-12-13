@@ -138,9 +138,7 @@ namespace bc
 		bool killOnMaxLen = false;
 		bool extracheckOnPixelConnect = false;
 		int colorRange = INT32_MAX;
-#ifdef ENABLE_ENERGY
 		float energyStart = 100;
-#endif // ENABLE_ENERGY
 
 #ifdef USE_OPENCV
 		bool visualize = false;
