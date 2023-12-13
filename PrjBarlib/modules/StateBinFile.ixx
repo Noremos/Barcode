@@ -1,16 +1,13 @@
-// module;
+module;
 
-// #include "StateBinFile.h"
+#include "StateBinFile.h"
 // #include "BinFile.h"
 
-// export module BinSateFileModule;
+export module StateBinIO;
 
-// export namespace StateBinFile
-// {
-// 	BinState;
-// 	BinStateReader;
-// 	BinStateWriter;
-// }
-
-// export BarcodeHolder;
-// export BarcodesHolder;
+export namespace StateBinFile
+{
+	BinState;
+	BinStateReader;
+	BinStateWriter;
+}

@@ -15,7 +15,6 @@ module;
 
 #include "barline.h"
 #include "barImg.h"
-#include "StateBinFile.h"
 #include "barcodeCreator.h"
 
 #include <math.h>
@@ -57,13 +56,6 @@ typedef unsigned int uint;
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
-
-export namespace StateBinFile
-{
-	BinState;
-	BinStateReader;
-	BinStateWriter;
-}
 
 export namespace bc
 {
