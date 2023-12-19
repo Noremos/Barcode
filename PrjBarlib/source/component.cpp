@@ -25,6 +25,10 @@ void bc::Component::init(BarcodeCreator* factory, const Barscalar& val)
 	if (factory->settings.returnType == bc::ReturnType::barcode3d ||
 		factory->settings.returnType == bc::ReturnType::barcode3dold)
 		resline->bar3d = new barcounter();
+
+#ifdef ENABLE_ENERGY
+	maxe = factory->settings.energyStart;
+#endif
 }
 
 
@@ -35,10 +39,6 @@ bc::Component::Component(poidex pix, const Barscalar& val, bc::BarcodeCreator* f
 	// factory->lastB++;
 
 	add(pix, factory->getPoint(pix), val);
-#ifdef ENABLE_ENERGY
-	maxe = factory->settings.energyStart;
-	energy[pix] = maxe;
-#endif
 }
 
 
@@ -111,6 +111,9 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 			}
 		}
 	}
+	if (energy.empty())
+		dds = maxe;
+
 	energy.insert(std::pair(index, dds));
 #endif
 
