@@ -928,57 +928,6 @@ void BarcodeCreator::sortPixels(bc::ProcType type, const bc::DatagridProvider* m
 	}
 }
 
-//
-//inline point* BarcodeCreator::sort()
-//{
-//	std::map<T, int> hist;
-//	barmap<T, int> offs;
-
-//	for (int i = 0; i < workingImg->wid(); ++i)//wid
-//	{
-//		for (int j = 0; j < workingImg->hei(); ++j)//hei
-//		{
-//			T& p = workingImg->get(i, j);
-//			if (hist.find(p) != hist.end())
-//			{
-//				++hist[p];
-//			}
-//			else
-//				hist.insert(std::pair<T, int>(p, 1));
-//		}
-//	}
-
-//	Barscalar prev;
-//	bool f = false;
-//	//auto const& [key, val]
-//	for (auto const& iter : hist)
-//	{
-//		auto key = iter.first;
-//		if (!f)
-//		{
-//			prev = key;
-//			f = true;
-//			continue;
-//		}
-//		hist[key] += hist[prev];
-//		offs[key] = hist[prev];
-//		prev = key;
-//	}
-//	hist.clear();
-
-//	size_t total = workingImg->length();
-
-//	point* data = new point[total];//256
-//	for (int i = 0; i < workingImg->wid(); ++i)//wid
-//	{
-//		for (int j = 0; j < workingImg->hei(); ++j)//hei
-//		{
-//            Barscalar p = workingImg->get(i, j);
-//			data[offs[p]++] = point(i, j);
-//		}
-//	}
-//	return data;
-//}
 
 
 
@@ -1081,6 +1030,9 @@ void BarcodeCreator::processHole(Barcontainer* item)
 void BarcodeCreator::processComp(Barcontainer* item)
 {
 	poidex* indexarr = sortedArr.get();
+	Barscalar prev = workingImg->get(getPoint(indexarr[0]));
+	int stPass0 = 0;
+	int state = 0;
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
 	{
 		curpoindex = indexarr[curIndexInSortedArr];
@@ -1091,13 +1043,41 @@ void BarcodeCreator::processComp(Barcontainer* item)
 		assert(curpoindex == wid * curpix.y + curpix.x);
 
 		curbright = workingImg->get(curpix.x, curpix.y);
+		if (prev != curbright)
+		{
+			prev = curbright;
+			switch (state)
+			{
+			case 0:
+				state = 1;
+				curIndexInSortedArr = stPass0 - 1;
+				continue;
+			case 1:
+				state = 2; // Skip first after stage 1 start
+				break;
+			case 2:
+				stPass0 = curIndexInSortedArr;
+				state = 0;
+				break;
+			default:
+				assert(false);
+			}
+		}
+			
 
-#ifdef VDEBUG
-		VISUAL_DEBUG_COMP();
-#else
-		Component::process(this);
+		switch (state)
+		{
+		case 0:
+			Component::passSame(this);
+			break;
+		case 2:
+			Component::passConnections(this);
+			break;
+		default:
+			assert(false);
+		}
+		//Component::process(this);
 
-#endif
 		assert(included[wid * curpix.y + curpix.x]);
 	}
 
@@ -1630,7 +1610,7 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 				}
 				break;
 			case AttachMode::morePointsEatLow:
-				if (first->getTotalSize() > connected->getTotalSize())
+				if (first->getTotalSize() < connected->getTotalSize())
 				{
 					std::swap(first, connected);
 				}

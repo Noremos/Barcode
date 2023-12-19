@@ -124,9 +124,18 @@ namespace bc
 
 		virtual ~Component();
 
+		static void passSame(BarcodeCreator* factory);
+		static void passConnections(BarcodeCreator* factory);
 		static void process(BarcodeCreator* factory);
 		void merge(bc::Component* dummy);
-		static void attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& bars, std::vector<bc::Component*>& attachList);
+
+		struct AttachInfo
+		{
+			bc::Component* comp;
+			Barscalar diff;
+		};
+		using AttachList = std::vector<AttachInfo>;
+		static void attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& bars, AttachList& attachList);
 	};
 
 	//typedef barmap<point, Component*, pointHash> cmap;

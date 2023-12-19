@@ -63,6 +63,6 @@ namespace bc
 	enum class ColorType { native = 0, gray = 1, rgb = 2 };
 
 	enum class ReturnType { barcode2d, barcode3d, barcode3dold };
-	enum class AttachMode { firstEatSecond, secondEatFirst, createNew, dontTouch, morePointsEatLow };
+	enum class AttachMode { firstEatSecond, secondEatFirst, createNew, dontTouch, morePointsEatLow, closer };
 	enum class ProcessStrategy { brightness, radius };// classic or geometry
 }

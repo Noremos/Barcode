@@ -215,38 +215,36 @@ void bc::Component::kill(const Barscalar& endScalar)
 
 void bc::Component::setParent(bc::Component* parnt)
 {
+	assert(lived);
 	assert(parent == nullptr);
+	assert(this != parnt);
+
+	if (justCreated())
+	{
+		parnt->merge(this);
+		return;
+	}
+
 	this->parent = parnt;
 
 #ifndef POINTS_ARE_AVAILABLE
 	this->parent->totalCount += totalCount;
-	parnt->startIndex = MIN(parnt->startIndex, startIndex);
+	//parnt->startIndex = MIN(parnt->startIndex, startIndex);
 	//parnt->sums += this->sums;
 #endif // ! POINTS_ARE_AVAILABLE
 
-	// at moment when this must be dead
-	assert(lived);
 
 	// Мы объединяем, потому что одинаковый добавился (но для оптимизации не добавлятся в конце)
 	const Barscalar& endScalar = factory->curbright;
 	if (factory->settings.createBinaryMasks && resline->matr.size() > 0)
 	{
+		// Эти точки считаются как только что присоединившиеся
 		parnt->resline->matr.reserve(parnt->resline->matr.size() + resline->matr.size() + 1);
-
 		for (barvalue& val : resline->matr)
 		{
 #ifdef ENERGY
-
-
 			val.value = Barscalar(static_cast<float>(energy[val.getIndex()]) / maxe, BarType::FLOAT32_1);
 			parnt->resline->addCoord(val);
-
-			// Записываем длину сущщетвования точки
-			//val.value = endScalar.absDiff(val.value);
-			//val.value = col - val.value;
-
-			//avgSr += val.value;
-			// Эти точки сичтаются как только что присоединившиеся
 #else
 			parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
 #endif // ENERGY
@@ -292,6 +290,93 @@ bc::Component::~Component()
 	//	factory->components[index] = nullptr;
 }
 
+void bc::Component::passSame(BarcodeCreator* factory)
+{
+	//TODO выделять паять заранее
+	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
+
+	Component* justCreated = nullptr;
+	for (uchar i = 0; i < 8; ++i)
+	{
+		const point IcurPoint(factory->curpix + poss[i]);
+
+		if (factory->IS_OUT_OF_REG(IcurPoint.x, IcurPoint.y))
+			continue;
+
+		const poidex IcurPindex = IcurPoint.getLiner(factory->wid);
+
+		Component* first = factory->getComp(IcurPindex);
+		if (first == nullptr)//существует ли ребро вокруг
+			continue;
+
+		if (first->justCreated())
+		{
+			if (justCreated)
+			{
+				if (justCreated != first)
+					justCreated->merge(first);
+			}
+			else
+				justCreated = first;
+		}
+	}
+
+	if (justCreated)
+	{
+		justCreated->add(factory->curpoindex, factory->curpix, factory->curbright);
+	}
+	else
+	{
+		new Component(factory->curpoindex, factory->curbright, factory);
+	}
+}
+
+
+void bc::Component::passConnections(BarcodeCreator* factory)
+{
+	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
+
+	AttachList attachCondidates;
+	attachCondidates.push_back({ factory->getComp(factory->curpoindex), 0 });
+	Barscalar minDiff;
+	for (uchar i = 0; i < 8; ++i)
+	{
+		const point IcurPoint(factory->curpix + poss[i]);
+
+		if (factory->IS_OUT_OF_REG(IcurPoint.x, IcurPoint.y))
+			continue;
+
+		poidex IcurPindex = IcurPoint.getLiner(factory->wid);
+
+		Component* first = factory->getPorogComp(IcurPoint, IcurPindex);
+		if (first == nullptr)//существует ли ребро вокруг
+			continue;
+
+		// if len more then maxlen, kill the component
+		const bool more = factory->settings.maxLen.isCached && factory->curbright.absDiff(first->getStart()) > factory->settings.maxLen.getOrDefault(0);
+		if (more)
+		{
+			//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
+			if (factory->settings.killOnMaxLen)
+			{
+				first->kill(factory->curbright); //Интересный результат
+			}
+		}
+		else if (attachCondidates.back().comp != first)
+		{
+			// Skip some duplicates
+			Barscalar temp = factory->curbright.absDiff(factory->workingImg->get(IcurPoint.x, IcurPoint.y));
+
+			attachCondidates.push_back({ first, temp});
+		}
+	}
+
+	if (attachCondidates.size() > 1)
+	{
+		Component::attach(factory->settings, factory->curpix, factory->curpoindex, factory->curbright, attachCondidates);
+	}
+}
+
 
 void bc::Component::process(BarcodeCreator* factory)
 {
@@ -300,8 +385,10 @@ void bc::Component::process(BarcodeCreator* factory)
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
 
 	Component* justCreated = nullptr;
-	std::vector<Component*> attachCondidates;
+	AttachList attachCondidates;
 	int i = 0;
+	Component* minComp = nullptr;
+	Barscalar minDiff;
 	for (; i < 8; ++i)
 	{
 		point IcurPoint(factory->curpix + poss[i]);
@@ -314,59 +401,63 @@ void bc::Component::process(BarcodeCreator* factory)
 
 		poidex IcurPindex = IcurPoint.getLiner(factory->wid);
 
-		Component* first = factory->getPorogComp(IcurPoint, IcurPindex);
-		if (first != nullptr)//существует ли ребро вокруг
+		Component* first = factory->getComp(IcurPindex);
+		if (first == nullptr)//существует ли ребро вокруг
+			continue;
+
+		Barscalar temp = factory->curbright.absDiff(factory->workingImg->get(IcurPoint.x, IcurPoint.y));
+		if (minComp == nullptr || temp < minDiff)
 		{
-			if (first->justCreated())
+			minComp = first;
+		}
+
+		if (first->justCreated())
+		{
+			if (justCreated)
 			{
-				if (justCreated)
-				{
-					if (justCreated != first)
-						justCreated->merge(first);
-				}
-				else
-					justCreated = first;
+				if (justCreated != first)
+					justCreated->merge(first);
 			}
 			else
+				justCreated = first;
+		}
+		else
+		{
+			// if len more then maxlen, kill the component
+			bool more = factory->settings.maxLen.isCached && factory->curbright.absDiff(first->getStart()) > factory->settings.maxLen.getOrDefault(0);
+			if (more)
 			{
-				// if len more then maxlen, kill the component
-				bool more = factory->settings.maxLen.isCached && factory->curbright.absDiff(first->getStart()) > factory->settings.maxLen.getOrDefault(0);
-				if (more)
+				//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
+				if (factory->settings.killOnMaxLen)
 				{
-					//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
-					if (factory->settings.killOnMaxLen)
-					{
-						first->kill(factory->curbright); //Интересный результат
-					}
-					first = nullptr;
+					first->kill(factory->curbright); //Интересный результат
 				}
-				else if (attachCondidates.empty() || attachCondidates.back() != first)
-				{
-					// Skip some duplicates
-					attachCondidates.push_back(first);
-				}
+				first = nullptr;
+			}
+			else if (attachCondidates.empty() || attachCondidates.back().comp != first)
+			{
+				// Skip some duplicates
+				attachCondidates.push_back({ first, temp });
 			}
 		}
+
 		//else if (first)
 		//	first->add(IcurPindex, IcurPoint, workingImg->get(curpix.x, curpix.y));
 	}
 
 	if (justCreated)
-		attachCondidates.push_back(justCreated);
+		attachCondidates.push_back({ justCreated, 0 });
 
 	if (attachCondidates.size() == 0)
 	{
 		//lastB += 1;
 
 		new Component(factory->curpoindex, factory->curbright, factory);
-		return ;
-	}
-	else if (attachCondidates.size() == 1)
-	{
-		attachCondidates[0]->add(factory->curpoindex, factory->curpix, factory->curbright);
+		return;
 	}
 	else
 	{
+		minComp->add(factory->curpoindex, factory->curpix, factory->curbright);
 		Component::attach(factory->settings, factory->curpix, factory->curpoindex, factory->curbright, attachCondidates);
 	}
 }
@@ -397,30 +488,45 @@ void bc::Component::merge(bc::Component* dummy)
 	dummy->resline = nullptr;
 }
 
-void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& curb, std::vector<bc::Component*>& attachList)
+void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& curb, AttachList& attachList)
 {
 	switch (settings.attachMode)
 	{
+	case AttachMode::closer:
+		std::sort(attachList.begin(), attachList.end(), [](const AttachInfo& c1, const AttachInfo& c2) {
+			if (c1.diff == c2.diff) // We need the same to be in a row
+				return c1.comp->startIndex < c2.comp->startIndex;
+
+			return c1.diff < c2.diff;
+			});// lower is first
+		break;
+
 	case AttachMode::dontTouch:
 		return;
 
 	case AttachMode::firstEatSecond:
-		std::sort(attachList.begin(), attachList.end(), [](const Component* c1, const Component* c2) {
-			return c1->startIndex < c2->startIndex;
-			});
+		std::sort(attachList.begin(), attachList.end(), [](const AttachInfo& c1, const AttachInfo& c2) {
+			return c1.comp->startIndex < c2.comp->startIndex;
+			});// lower is first
 		break;
 	case AttachMode::secondEatFirst:
 		// <  makes i as a parent of the i + 1
 		// >= makes i + 1 as a parent of the i
-		std::sort(attachList.begin(), attachList.end(), [](const Component* c1, const Component* c2) {
-			return c1->startIndex >= c2->startIndex;
+		std::sort(attachList.begin(), attachList.end(), [](const AttachInfo& c1, const AttachInfo& c2) {
+			return c1.comp->startIndex > c2.comp->startIndex;
 			});
 
 		break;
 	case AttachMode::morePointsEatLow:
-		std::sort(attachList.begin(), attachList.end(), [](const Component* c1, const Component* c2) {
-			return c1->getTotalSize() >= c2->getTotalSize();
-			});
+		std::sort(attachList.begin(), attachList.end(), [](const AttachInfo& c1, const AttachInfo& c2)
+			{
+				const size_t a = c1.comp->getTotalSize();
+				const size_t b = c2.comp->getTotalSize();
+				if (a == b) // We need the same to be in a row
+					return c1.comp->startIndex < c2.comp->startIndex;
+
+				return a > b;
+			});// Bigger is first
 
 		break;
 
@@ -436,25 +542,25 @@ void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poid
 		//}
 	default: throw;
 	}
-	// The last one is the parent
-	for (size_t i = 0; i < attachList.size() - 1; i++)
+
+	// The first one is the parent
+	for (size_t i = attachList.size() - 1; i > 0 ; --i)
 	{
-		auto* left = attachList[i];
-		auto* right = attachList[i + 1];
+		auto* left = attachList[i - 1].comp;
+		auto* right = attachList[i].comp;
 		if (left == right)
 			continue;
 
-		const Barscalar fs = left->getStart();
-		const Barscalar sc = right->getStart();
-		const Barscalar diff = (fs > sc) ? (fs - sc) : (sc - fs);
-		if (diff > settings.getMaxLen())
-		{
-			continue;
-		}
+		//const Barscalar fs = left->getStart();
+		//const Barscalar sc = right->getStart();
+		//const Barscalar diff = (fs > sc) ? (fs - sc) : (sc - fs);
+		//if (diff > settings.getMaxLen())
+		//{
+		//	continue;
+		//}
 
-		right->addChild(left);
+		left->addChild(right);
 	}
 
-	attachList.back()->add(index, p, curb);
+	//attachList.back()->add(index, p, curb);
 }
-
