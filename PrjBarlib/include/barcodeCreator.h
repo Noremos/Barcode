@@ -70,7 +70,7 @@ namespace bc {
 		bool allowEvOAttach = false;
 		bool originalImg = true;
 		std::vector<COMPP> components;
-	private:
+
 #ifdef USE_OPENCV
 		std::vector<cv::Vec3b> colors;
 #endif
@@ -79,7 +79,10 @@ namespace bc {
 		bool skipAddPointsToParent = false;
 
 		Include* included = nullptr;
+
+	protected:
 		const DatagridProvider* workingImg = nullptr;
+	private:
 		void setWorkingImg(const bcBarImg* newWI)
 		{
 			if (workingImg != nullptr && needDelImg)
@@ -104,7 +107,6 @@ namespace bc {
 		bool needDelImg = false;
 		Barscalar curbright;
 		poidex curpoindex;
-		uint curIndexInSortedArr;
 		//uint compIndex = 0;
 		point curpix;
 		int wid;
@@ -117,6 +119,8 @@ namespace bc {
 		//		friend struct BarRoot;
 		friend class Baritem;
 
+	protected:
+		uint curIndexInSortedArr;
 		size_t processCount = 0;
 		size_t totalSize = 0;
 		std::unique_ptr<poidex[]> sortedArr = nullptr;
@@ -127,6 +131,7 @@ namespace bc {
 		{
 			return x < 0 || y < 0 || x >= wid || y >= hei;
 		}
+
 		poidex GETPOFF(const point& p) const
 		{
 			return wid * p.y + p.x;
@@ -146,6 +151,7 @@ namespace bc {
 			return point(i % wid, i / wid);
 		}
 
+	private:
 		//#define GETPOFF(P) (this->wid*P.y+P.x)
 		//#define GETOFF(X, Y) (this->wid*y+x)
 
@@ -202,9 +208,10 @@ namespace bc {
 		void VISUAL_DEBUG();
 		void VISUAL_DEBUG_COMP();
 
-
+	public:
 		void init(const bc::DatagridProvider* src, ProcType& type, const barstruct& struc);
 
+	private:
 		void processComp(Barcontainer* item = nullptr);
 		void processHole(Barcontainer* item = nullptr);
 		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
@@ -250,7 +257,7 @@ namespace bc {
 		void processRadar(const indexCov& val, bool allowAttach);
 		bool checkAvg(const point curpix) const;
 
-
+	protected:
 		std::unique_ptr<indexCov> geometrySortedArr;
 	};
 
