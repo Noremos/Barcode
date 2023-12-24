@@ -1075,13 +1075,20 @@ void BarcodeCreator::processComp(Barcontainer* item)
 		{
 		case 0:
 			Component::passSame(this);
+			if (curIndexInSortedArr == processCount - 1)
+			{
+				curIndexInSortedArr = stPass0 - 1;
+				state = 1;
+			}
 			break;
+		case 1:
 		case 2:
 			Component::passConnections(this);
 			break;
 		default:
 			assert(false);
 		}
+
 		//Component::process(this);
 
 		assert(included[wid * curpix.y + curpix.x]);
