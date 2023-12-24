@@ -33,11 +33,6 @@ namespace bc
 		BarcodeCreator* factory;
 		Component* cachedMaxParent = nullptr;
 
-#ifdef ENABLE_ENERGY
-		barmap<poidex, float> energy;
-		float maxe = 0;
-#endif
-
 	public:
 		Component* parent = nullptr;
 		barline* resline = nullptr;

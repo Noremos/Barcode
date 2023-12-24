@@ -26,9 +26,6 @@ void bc::Component::init(BarcodeCreator* factory, const Barscalar& val)
 		factory->settings.returnType == bc::ReturnType::barcode3dold)
 		resline->bar3d = new barcounter();
 
-#ifdef ENABLE_ENERGY
-	maxe = factory->settings.energyStart;
-#endif
 }
 
 
@@ -87,41 +84,12 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 
 
 	factory->setInclude(index, this);
-
-#ifdef ENABLE_ENERGY
-	int dds = 0;
-	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 } };
-	for (size_t i = 0; i < 8; i++)
-	{
-		point po = p + poss[i];
-		if (po.x < 0 || po.y < 0)
-			break;
-
-		poidex d = po.getLiner(factory->wid);
-		auto t = energy.find(d);
-		if (t != energy.end())
-		{
-			if (t->second > 0)
-			{
-				auto half = t->second / 2;
-				t->second -= half;
-				dds += half;
-				if (dds > maxe)
-					maxe = dds;
-			}
-		}
-	}
-	if (energy.empty())
-		dds = maxe;
-
-	energy.insert(std::pair(index, dds));
-#endif
-
 	if (factory->settings.createBinaryMasks)
 	{
 		resline->addCoord(p, col);
 	}
 	bool eq = col == lastVal;
+	bool wasSame = same;
 	same = same && eq;
 	// 3d barcode/ —читаем кол-во добавленных значений
 	if (!eq)
@@ -151,6 +119,56 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 			yMin = y;
 	}
 
+
+#ifdef ENABLE_ENERGY
+	if (!same && wasSame)
+	{
+
+		int dd = resline->matr.size();
+		for (barvalue& val : resline->matr)
+		{
+			factory->energy[barvalue::getStatInd(val.getX(), val.getY(), factory->wid)] = dd;
+		}
+		if (dd > factory->maxe)
+			factory->maxe = dd;
+	}
+	else
+	{
+		int dds = 1;
+		static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 } };
+		for (size_t i = 0; i < 8; i++)
+		{
+			point po = p + poss[i];
+			if (factory->IS_OUT_OF_REG(po.x, po.y))
+				continue;
+
+			poidex d = po.getLiner(factory->wid);
+			assert(d < factory->totalSize);
+			auto& t = factory->energy[d];
+			if (t != 0)
+			{
+				//t /= 2;
+				//dds += t;
+
+				//t--;
+				dds++;
+			}
+		}
+		if (dds > factory->maxe)
+			factory->maxe = dds;
+
+
+		poidex dd = p.getLiner(factory->wid);
+		assert(dd < factory->totalSize);
+
+		//if (dds == 0)
+			//factory->energy[dd] = factory->maxe;
+		//else
+			factory->energy[dd] = dds;
+	}
+
+#endif
+
 	++cashedSize;
 	lastVal = col;
 
@@ -166,6 +184,7 @@ void bc::Component::kill(const Barscalar& endScalar)
 {
 	if (!lived)
 		return;
+
 	lived = false;
 
 	resline->m_end = endScalar;
@@ -202,12 +221,7 @@ void bc::Component::kill(const Barscalar& endScalar)
 		{
 			//assert(bot <= a.value);
 			//assert(a.value <= top);
-#ifdef ENABLE_ENERGY
-			const uint id = barvalue::getStatInd(a.getX(), a.getY(), factory->wid);
-			a.value = Barscalar(static_cast<float>(energy[id]) / maxe, BarType::FLOAT32_1);
-#else
 			a.value = resline->m_end.absDiff(a.value);
-#endif
 		}
 	}
 
@@ -245,25 +259,12 @@ void bc::Component::setParent(bc::Component* parnt)
 		parnt->resline->matr.reserve(parnt->resline->matr.size() + resline->matr.size() + 1);
 		for (barvalue& val : resline->matr)
 		{
-#ifdef ENERGY
-			val.value = Barscalar(static_cast<float>(energy[val.getIndex()]) / maxe, BarType::FLOAT32_1);
-			parnt->resline->addCoord(val);
-#else
 			parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
-#endif // ENERGY
 		}
 		parnt->same = false;
 		// Мы объединяем, потому что одинаковый добавился, т.е. считаем, что lasVal одинаковыйы
 		//parnt->lastVal = lastVal;
 	}
-
-#ifdef ENERGY
-	parent->energy.insert(energy.begin(), energy.end());
-	energy.clear();
-
-	if (maxe > parent->maxe)
-		parent->maxe = maxe;
-#endif // ENERGY
 
 
 	kill(endScalar);
@@ -479,14 +480,29 @@ void bc::Component::merge(bc::Component* dummy)
 	}
 #else
 
+
+#ifdef ENABLE_ENERGY
+	int s = dummy->resline->matr.size();
+	if (s> factory->maxe)
+		factory->maxe = s;
+#endif // ENABLE_ENERGY
+
+
 	for (auto& val : dummy->resline->matr)
 	{
 		const bc::point p = val.getPoint();
 		add(p.getLiner(factory->wid), p, val.value, true);
+
+#ifdef ENABLE_ENERGY
+		factory->energy[p.getLiner(factory->wid)] = s;
+#endif // ENABLE_ENERGY
 	}
 
 	startIndex = MIN(dummy->startIndex, startIndex);
 #endif // POINTS_ARE_AVAILABLE
+
+
+
 	delete dummy->resline;
 	dummy->resline = nullptr;
 }

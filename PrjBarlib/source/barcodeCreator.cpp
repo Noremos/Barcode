@@ -987,6 +987,12 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, const
 	}
 	// lastB = 0;
 
+
+#ifdef ENABLE_ENERGY
+	energy.reset(new int[totalSize]);
+	memset(energy.get(), 0, totalSize * sizeof(int));
+
+#endif
 	included = new Include[totalSize];
 	memset(included, NULL, totalSize * sizeof(Include));
 
@@ -1063,7 +1069,7 @@ void BarcodeCreator::processComp(Barcontainer* item)
 				assert(false);
 			}
 		}
-			
+
 
 		switch (state)
 		{

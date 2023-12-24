@@ -225,6 +225,11 @@ namespace bc {
 
 	public:
 
+//#ifdef ENABLE_ENERGY
+		std::unique_ptr<int[]> energy;
+		float maxe = 0;
+//#endif
+
 		bc::Barcontainer* createBarcode(const bc::DatagridProvider* img, const BarConstructor& structure);
 		//bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 
@@ -365,5 +370,6 @@ namespace bc {
 		barmap<poidex, barline*> included;
 		ComponentsVector components;
 		std::unique_ptr<PointIndexCov> sortedArr;
+
 	};
 }
