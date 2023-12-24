@@ -637,7 +637,7 @@ public:
 
 
 	int getTileWid(int rowNum);
-	float getFloatFromAscii(size_t offOrValue, size_t count, char format, bool is64);
+	float getFloatFromAscii(uchar* sourceBuffer, size_t offOrValue, size_t count, char format, bool is64);
 
 private:
 	rowptr processData(uchar *bytes, int len, int samplesInOne = 1);

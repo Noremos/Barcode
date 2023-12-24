@@ -394,7 +394,7 @@ void TiffIFD::printTag(uchar* buffer, bool is64)
 	}
 
 	case Tags::NoData:
-		tags.NoDataValue = reader->getFloatFromAscii(value, count, type, is64);
+		tags.NoDataValue = reader->getFloatFromAscii(buffer, value, count, type, is64);
 		//		OUT << "Nodata";
 		break;
 
@@ -509,22 +509,25 @@ void TiffReader::readAsciiFromBuffer(std::string &output, int offset, int Count)
 	read(buff, offset, Count);
 }
 
-float TiffReader::getFloatFromAscii(size_t offOrValue, size_t count, char /*format*/, bool /*is64*/)
+float TiffReader::getFloatFromAscii(uchar* sourceBuffer, size_t offOrValue, size_t count, char format, bool is64)
 {
-	uchar *buffer = new uchar[count];
-	memset(buffer, 0, count);
-
-	read(buffer, offOrValue, count);
-
-	std::string s;
-	s.append((char *) buffer, count);
-	for (size_t i = 0; i < s.length(); ++i)
+	assert(format == 2);
+	std::string buffer;
+	const size_t ptrSize = is64 ? 8 : 4;
+	if (count > ptrSize)
 	{
-		if (s[i] == ',')
-			s[i] = '.';
+		readAsciiFromBuffer(buffer, offOrValue, count);
+	}
+	else
+		buffer = offOrValue;
+
+	for (size_t i = 0; i < buffer.length(); ++i)
+	{
+		if (buffer[i] == ',')
+			buffer[i] = '.';
 	}
 //	fast_float::from_chars((const char*)buffer, (const char*)(buffer + count), val);
-	return std::stof(s);
+	return std::stof(buffer);
 }
 
 void TiffReader::read(uchar* buffer, offu64 offset, offu64 len)
