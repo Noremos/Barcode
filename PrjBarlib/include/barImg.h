@@ -1,3 +1,4 @@
+#ifndef SKIP_M_INC
 #pragma once
 //#define USE_OPENCV
 #include "presets.h"
@@ -9,7 +10,7 @@
 #include "include_cv.h"
 #include "include_py.h"
 #include "barstrucs.h"
-
+#endif
 
 namespace bc {
 
@@ -447,12 +448,51 @@ namespace bc {
 			valAssignInstanceOf(new Barscalar[this->length()], true);
 		}
 
+		inline bc::BarImg& operator+(const Barscalar& v)
+		{
+			BarImg* box = this->getCopy();
 
-		//Overload + operator to add two Box objects.
-		BarImg& operator+(const Barscalar& v);
+			//box->addToMat(v);
+			assert(false);
+
+			return *box;
+		}
 
 		//// Overload + operator to add two Box objects.
-		BarImg& operator-(const Barscalar& v);
+		inline bc::BarImg& operator-(const Barscalar& v)
+		{
+			bc::BarImg* box = this->getCopy();
+
+			assert(false);
+			for (size_t i = 0; i < box->length(); ++i)
+			{
+				Barscalar val = box->getLiner(i);
+				val -= v;
+				assert(box->getLiner(i) == val);
+			}
+			return *box;
+		}
+		//
+		//bc::BarImg bc::BarImg::operator+(const Barscalar& c1, BarImg& c2)
+		//{
+		//	// use the Cents constructor and operator+(int, int)
+		//	// we can access m_cents directly because this is a friend function
+		//	BarImg nimg = c2;
+		//	nimg.addToMat(c1);
+		//	return nimg;
+		//}
+		//
+		//
+		//bc::BarImg bc::BarImg::operator-(const Barscalar& c1, const BarImg& c2)
+		//{
+		//	// use the Cents constructor and operator+(int, int)
+		//	// we can access m_cents directly because this is a friend function
+		//	BarImg ret(1, 1);
+		//	ret.assignCopyOf(c2);
+		//	ret.minusFrom(c1);
+		//	return ret;
+		//}
+
 
 		void assignCopyOf(const BarImg& copy)
 		{

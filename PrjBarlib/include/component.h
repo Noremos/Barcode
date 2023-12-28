@@ -1,15 +1,13 @@
+#ifndef SKIP_M_INC
 #pragma once
 #include <vector>
-#include "barstrucs.h"
-
+#include "barline.h"
+#endif
 
 namespace bc
 {
 
 	class BarcodeCreator;
-
-
-	struct barline;
 
 
 	class Component
@@ -37,6 +35,7 @@ namespace bc
 		Component* parent = nullptr;
 		barline* resline = nullptr;
 
+		float energy = 0;
 	protected:
 		int cashedSize = 0;
 		Barscalar lastVal = 0;

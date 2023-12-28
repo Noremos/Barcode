@@ -1,10 +1,20 @@
-// module;
+module;
+#define SKIP_M_INC
 
-// #include "../include/barscalar.h"
+#include <vector>
+#include <assert.h>
+#include <string.h>
+#include <math.h>
+#include <string>
+#include "../include/presets.h"
+#include "../include/include_py.h"
 
-// export module BarScalar;
+export module BarScalarModule;
 
-// export
-// {
-//     // Barscalar
-// }
+#include "../include/barscalar.h"
+
+export
+{
+    BarType;
+    Barscalar;
+}

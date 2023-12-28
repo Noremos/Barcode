@@ -809,6 +809,7 @@ void BarcodeCreator::sortPixels(bc::ProcType type, const bc::DatagridProvider* m
 	{
 	case BarType::BYTE8_1:
 	case BarType::BYTE8_3:
+	case BarType::BYTE8_4:
 	{
 		uint hist[256];//256
 		uint offs[256];//256
@@ -1933,12 +1934,12 @@ void CloudPointsBarcode::processComp(const  CloudPointsBarcode::PointIndexCov& v
 	const int curIndex = val.points[0];
 	CloudPoint curCloudPoint = cloud->points[curIndex];
 	bc::point curPoint(curCloudPoint.x, curCloudPoint.y);
-	poidex curPoindex = curPoint.getLiner(MAX_WID);
+	poidex curPoindex = curPoint.getLiner(BAR_MAX_WID);
 
 	int nextIndex = val.points[1];
 	CloudPoint nextCloudPoint = cloud->points[nextIndex];
 	bc::point nextPoint(nextCloudPoint.x, nextCloudPoint.y);
-	poidex nextPoindex = nextPoint.getLiner(MAX_WID);
+	poidex nextPoindex = nextPoint.getLiner(BAR_MAX_WID);
 
 	barline* first = getComp(curPoindex);
 	barline* connected = getComp(nextPoindex);
@@ -1966,7 +1967,7 @@ void CloudPointsBarcode::processComp(const  CloudPointsBarcode::PointIndexCov& v
 				auto& pas = sub->matr[i];
 				bc::point p = pas.getPoint();
 				main->addCoord(p, pas.value);
-				setInclude(p.getLiner(MAX_WID), main);
+				setInclude(p.getLiner(BAR_MAX_WID), main);
 			}
 
 			sub->setparent(main);
@@ -2181,7 +2182,7 @@ struct Graph
 		double run(GpathConnect* startPoint)
 		{
 			passedPoints.clear();
-			passedPoints.insert(startPoint->point->p.getLiner(MAX_WID));
+			passedPoints.insert(startPoint->point->p.getLiner(BAR_MAX_WID));
 			return findHoleRecurs(dest, startPoint); // p2 >-
 		}
 
@@ -2214,7 +2215,7 @@ struct Graph
 				if (curVec == prev)
 					continue;
 
-				const poidex pind = curVec.getLiner(MAX_WID);
+				const poidex pind = curVec.getLiner(BAR_MAX_WID);
 				if (passedPoints.count(pind) > 0)
 					return 0;
 
@@ -2341,12 +2342,12 @@ void CloudPointsBarcode::processHold()
 		//const uint curIndex = val.points[0];
 		CloudPoint curCloudPoint = cloud->points[val.points[0]];
 		bc::point curPoint(curCloudPoint.x, curCloudPoint.y);
-		poidex curPoindex = curPoint.getLiner(MAX_WID);
+		poidex curPoindex = curPoint.getLiner(BAR_MAX_WID);
 
 		//int unextIndex = val.points[1];
 		CloudPoint nextCloudPoint = cloud->points[val.points[1]];
 		bc::point nextPoint(nextCloudPoint.x, nextCloudPoint.y);
-		poidex nextPoindex = nextPoint.getLiner(MAX_WID);
+		poidex nextPoindex = nextPoint.getLiner(BAR_MAX_WID);
 
 		GraphPoint* first = grath.getGrath(curPoindex);
 		GraphPoint* connected = grath.getGrath(nextPoindex);

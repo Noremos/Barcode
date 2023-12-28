@@ -1,3 +1,4 @@
+#ifndef SKIP_M_INC
 #pragma once
 
 #include "presets.h"
@@ -9,11 +10,13 @@
 #include <functional>
 #include <memory>
 
-#define COMPP Component*
-#define HOLEP Hole*
 
 #include "include_py.h"
 #include "include_cv.h"
+#endif
+
+#define COMPP Component*
+#define HOLEP Hole*
 
 namespace bc {
 
@@ -102,8 +105,10 @@ namespace bc {
 			}
 		}
 
+	protected:
 		BarType type;
 
+	private:
 		bool needDelImg = false;
 		Barscalar curbright;
 		poidex curpoindex;

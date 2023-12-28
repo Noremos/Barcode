@@ -1,3 +1,4 @@
+#ifndef SKIP_M_INC
 #pragma once
 
 #include "barstrucs.h"
@@ -10,11 +11,11 @@
 #include <vector>
 #include <unordered_set>
 #include <stack>
-
+#endif
 namespace bc
 {
 	struct barline;
-	using barlinevector = std::vector<bc::barline*>;
+	using barlinevector = std::vector<barline*>;
 
 	struct ShortPoint
 	{
@@ -60,7 +61,7 @@ namespace bc
 		{
 			//			matWid = wid;
 		}
-		barline(Barscalar _start, Barscalar _end, int, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), m_end(_end)
+		barline(Barscalar _start, Barscalar _end, int = 0, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), m_end(_end)
 			//			  ,matWid(wid)
 		{
 			matr.reserve(coordsSize);

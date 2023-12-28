@@ -1,8 +1,10 @@
+#ifndef SKIP_M_INC
 #pragma once
 #include "component.h"
+#endif
+
 namespace bc
 {
-
 
 class Hole : public Component
 {

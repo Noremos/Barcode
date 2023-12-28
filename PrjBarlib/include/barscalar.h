@@ -1,4 +1,6 @@
 #pragma once
+#ifndef SKIP_M_INC
+
 #include <vector>
 #include <assert.h>
 #include <string.h>
@@ -6,6 +8,7 @@
 #include <string>
 #include "presets.h"
 #include "include_py.h"
+#endif
 
 //#include <compare>
 

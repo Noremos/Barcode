@@ -1,9 +1,11 @@
+#ifndef SKIP_M_INC
 #pragma once
 #include <vector>
 #include <string>
 #include "presets.h"
 #include "barline.h"
 #include <iostream>
+#endif
 
 namespace bc
 {
