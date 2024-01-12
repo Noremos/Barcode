@@ -302,6 +302,7 @@ namespace StateBinFile
 				ysize = 1;
 				break;
 			case BarType::BYTE8_3:
+			case BarType::BYTE8_4:
 				parseBarscal = [](std::istream& stream) {
 					Barscalar scal;
 					scal.type = BarType::BYTE8_3;
@@ -465,6 +466,7 @@ namespace StateBinFile
 				valueFunction = [](std::ostream& stream, const Barscalar& scal) { stream.write((const char*)&scal.data.b1, 1); };
 				break;
 			case BarType::BYTE8_3:
+			case BarType::BYTE8_4:
 				valueFunction = [](std::ostream& stream, const Barscalar& scal) { stream.write((const char*)scal.data.b3, 3); };
 				break;
 			case BarType::FLOAT32_1:
