@@ -33,8 +33,6 @@ module;
 #endif // __linux
 
 
-export module BarcodeModule;
-
 import BarScalarModule;
 import BarTypes;
 import BarImgModule;
@@ -49,6 +47,8 @@ import BarImgModule;
 #include "../source/barclasses.cpp"
 #include "../source/component.cpp"
 #include "../source/hole.cpp"
+
+export module BarcodeModule;
 
 
 export namespace bc
