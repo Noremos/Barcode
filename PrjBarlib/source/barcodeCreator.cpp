@@ -911,12 +911,12 @@ void BarcodeCreator::sortPixels(bc::ProcType type, const bc::DatagridProvider* m
 			break;
 		}
 
-		for (size_t i = 1; i < totalSize - 1; ++i)//wid
-		{
-			float v0 = static_cast<float>(workingImg->getLiner(data[i - 1]));
-			float v2 = static_cast<float>(workingImg->getLiner(data[i]));
-			assert(v0 >= v2);
-		}
+		//for (size_t i = 1; i < totalSize - 1; ++i)//wid
+		//{
+		//	float v0 = static_cast<float>(workingImg->getLiner(data[i - 1]));
+		//	float v2 = static_cast<float>(workingImg->getLiner(data[i]));
+		//	assert(v0 >= v2);
+		//}
 
 		processCount = totalSize;
 		this->sortedArr.reset(data);

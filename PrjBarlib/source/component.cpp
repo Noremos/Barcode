@@ -241,6 +241,11 @@ void bc::Component::setParent(bc::Component* parnt)
 		parnt->merge(this);
 		return;
 	}
+	if (parnt->justCreated())
+	{
+		merge(parnt);
+		return;
+	}
 
 	this->parent = parnt;
 
@@ -341,8 +346,9 @@ void bc::Component::passConnections(BarcodeCreator* factory)
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
 
 	AttachList attachCondidates;
-	attachCondidates.push_back({ factory->getComp(factory->curpoindex), 0 });
-	Barscalar minDiff;
+	attachCondidates.reserve(8);
+	attachCondidates.push_back({ factory->getPorogComp(factory->curpix, factory->curpoindex), 0});
+
 	for (uchar i = 0; i < 8; ++i)
 	{
 		const point IcurPoint(factory->curpix + poss[i]);
@@ -366,12 +372,30 @@ void bc::Component::passConnections(BarcodeCreator* factory)
 				first->kill(factory->curbright); //Интересный результат
 			}
 		}
-		else if (attachCondidates.back().comp != first)
+		else
 		{
-			// Skip some duplicates
-			Barscalar temp = factory->curbright.absDiff(factory->workingImg->get(IcurPoint.x, IcurPoint.y));
+			Barscalar temp = factory->curbright.absDiff(factory->workingImg->get(IcurPoint));
+			//auto asd = attachCondidates.find(first->startIndex);
 
-			attachCondidates.push_back({ first, temp});
+			bool found = false;
+			for (short i = 0; i < attachCondidates.size(); i++)
+			{
+				auto& inf = attachCondidates[i];
+				if (inf.comp != first)
+					continue;
+
+				found = true;
+				if (inf.diff > temp)
+				{
+					inf.diff = temp;
+				}
+				break;
+			}
+
+			if (!found)
+			{
+				attachCondidates.push_back({first, temp});
+			}
 		}
 	}
 
@@ -412,6 +436,7 @@ void bc::Component::process(BarcodeCreator* factory)
 		Barscalar temp = factory->curbright.absDiff(factory->workingImg->get(IcurPoint.x, IcurPoint.y));
 		if (minComp == nullptr || temp < minDiff)
 		{
+			minDiff = temp;
 			minComp = first;
 		}
 
@@ -562,12 +587,15 @@ void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poid
 	default: throw;
 	}
 
+
 	// The first one is the parent
+
+	// keep this right beacuse a right can be merged
+	auto* right = attachList.back().comp;
 	for (size_t i = attachList.size() - 1; i > 0 ; --i)
 	{
 		auto* left = attachList[i - 1].comp;
-		auto* right = attachList[i].comp;
-		if (left == right)
+		if (left == attachList[i].comp)
 			continue;
 
 		//const Barscalar fs = left->getStart();
@@ -579,6 +607,9 @@ void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poid
 		//}
 
 		left->addChild(right);
+		// left can be merged so check it
+		if (left->resline)
+			right = left;
 	}
 
 	//attachList.back()->add(index, p, curb);
