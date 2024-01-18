@@ -17,11 +17,16 @@ bc::Baritem::Baritem(int wid, BarType type)
 void bc::Baritem::add(Barscalar st, Barscalar len)
 {
 	barlines.push_back(new barline(st, len, wid));
+	barlines.back()->initRoot(this);
 }
 
 void bc::Baritem::add(bc::barline* line)
 {
 	barlines.push_back(line);
+	if (line->id == -1)
+	{
+		line->initRoot(this);
+	}
 }
 
 Barscalar bc::Baritem::sum() const
@@ -58,32 +63,15 @@ void bc::Baritem::getBettyNumbers(int* bs)
 
 bc::Baritem* bc::Baritem::clone() const
 {
-	barmap<barline*, barline*> oldNew;
 	Baritem* nb = new Baritem(wid);
-	nb->barlines.insert(nb->barlines.begin(), barlines.begin(), barlines.end());
-	bool createGraph = false;
-	if ((barlines.size() > 0 && barlines[0]->parent != nullptr) || barlines[0]->children.size() > 0)
-		createGraph = true;
+	nb->barlines.resize(barlines.size());
+
 
 	for (size_t i = 0, total = nb->barlines.size(); i < total; ++i)
 	{
-		auto* nnew = nb->barlines[i]->clone();
-		if (createGraph)
-			oldNew.insert(std::pair<barline*, barline*>(nb->barlines[i], nnew));
-
-		nb->barlines[i] = nnew;
+		nb->barlines[i] = barlines[i]->clone();
 	}
-	if (createGraph)
-	{
-		for (size_t i = 0, total = nb->barlines.size(); i < total; ++i)
-		{
-			auto* nline = nb->barlines[i];
-			nline->parent = oldNew[nline->parent];
 
-			for (size_t i = 0; i < nline->children.size(); i++)
-				nline->children[i] = oldNew[nline->children[i]];
-		}
-	}
 	return nb;
 }
 
@@ -356,8 +344,8 @@ bc::Baritem::~Baritem()
 	}
 	barlines.clear();
 
-	if (rootNode != nullptr)
-		delete rootNode;
+	//if (rootNode != nullptr)
+	//	delete rootNode;
 }
 
 //=======================barcontainer=====================

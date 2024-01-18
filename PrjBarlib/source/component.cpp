@@ -90,7 +90,15 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 	}
 	bool eq = col == lastVal;
 	bool wasSame = same;
+
+	if (!eq && same)
+	{
+		// Not just created
+		resline->initRoot(factory->root);
+	}
+
 	same = same && eq;
+
 	// 3d barcode/ —читаем кол-во добавленных значений
 	if (!eq)
 	{
@@ -104,26 +112,26 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 		}
 		cashedSize = 0;
 	}
-	else
-	{
-		x += p.x;
-		y += p.y;
-		if (x > xMax)
-			xMax = x;
-		if (x < xMin)
-			xMin = x;
+	// else
+	// {
+	// 	x += p.x;
+	// 	y += p.y;
+	// 	if (x > xMax)
+	// 		xMax = x;
+	// 	if (x < xMin)
+	// 		xMin = x;
 
-		if (y > yMax)
-			yMax = y;
-		if (y < yMin)
-			yMin = y;
-	}
+	// 	if (y > yMax)
+	// 		yMax = y;
+	// 	if (y < yMin)
+	// 		yMin = y;
+	// }
 
 
 #ifdef ENABLE_ENERGY
+
 	if (!same && wasSame)
 	{
-
 		int dd = resline->matr.size();
 		for (barvalue& val : resline->matr)
 		{
@@ -164,9 +172,8 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 		//if (dds == 0)
 			//factory->energy[dd] = factory->maxe;
 		//else
-			factory->energy[dd] = dds;
+		factory->energy[dd] = dds;
 	}
-
 #endif
 
 	++cashedSize;
@@ -225,6 +232,12 @@ void bc::Component::kill(const Barscalar& endScalar)
 		}
 	}
 
+	if (same)
+	{
+		// Not just created
+		resline->initRoot(factory->root);
+	}
+
 	lastVal = endScalar;
 	cashedSize = 0;
 }
@@ -266,7 +279,13 @@ void bc::Component::setParent(bc::Component* parnt)
 		{
 			parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
 		}
-		parnt->same = false;
+
+		if (parent->same)
+		{
+			parnt->same = false;
+			parent->resline->initRoot(factory->root);
+		}
+
 		// Мы объединяем, потому что одинаковый добавился, т.е. считаем, что lasVal одинаковыйы
 		//parnt->lastVal = lastVal;
 	}
@@ -527,10 +546,11 @@ void bc::Component::merge(bc::Component* dummy)
 #endif // POINTS_ARE_AVAILABLE
 
 
-
+	assert(dummy->resline->id == -1);
 	delete dummy->resline;
 	dummy->resline = nullptr;
 }
+
 
 void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& curb, AttachList& attachList)
 {
@@ -562,6 +582,8 @@ void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poid
 
 		break;
 	case AttachMode::morePointsEatLow:
+	{
+
 		std::sort(attachList.begin(), attachList.end(), [](const AttachInfo& c1, const AttachInfo& c2)
 			{
 				const size_t a = c1.comp->getTotalSize();
@@ -573,17 +595,22 @@ void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poid
 			});// Bigger is first
 
 		break;
+	}
+	case AttachMode::createNew:
+	{
+		COMPP newOne = new Component(attachList.front().comp->factory, true);
+		newOne->markNotSame();
+		for (size_t i = 0; i < attachList.size() - 1; i++)
+		{
+			if (attachList[i].comp == attachList[i + 1].comp)
+				continue;
 
-		//case AttachMode::createNew:
-		//	//if ((double)MIN(main->getTotalSize(), second->getTotalSize()) / totalSize > 0.05)
-		//{
-		//	COMPP newOne = new Component(this, true);
-		//	main->setParent(newOne);
-		//	second->setParent(newOne);
-		//	//main->kill();
-		//	//second->kill();
-		//	return newOne;
-		//}
+			newOne->addChild(attachList[i].comp);
+		}
+
+		newOne->addChild(attachList.back().comp);
+		return;
+	}
 	default: throw;
 	}
 

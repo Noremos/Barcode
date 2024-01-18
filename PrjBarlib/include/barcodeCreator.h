@@ -116,6 +116,7 @@ namespace bc {
 		point curpix;
 		int wid;
 		int hei;
+		Baritem* root;
 		//Barscalar sourceMax;
 		//Barscalar sourceMin;
 		// int lastB;

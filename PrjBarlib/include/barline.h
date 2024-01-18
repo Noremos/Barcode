@@ -17,6 +17,13 @@ namespace bc
 	struct barline;
 	using barlinevector = std::vector<barline*>;
 
+	class BarclinesHolder
+	{
+	public:
+		barlinevector barlines;
+	};
+
+
 	struct ShortPoint
 	{
 		short x, y;
@@ -34,10 +41,11 @@ namespace bc
 
 	struct EXPORT barline
 	{
+		BarclinesHolder* root = nullptr;
 		// Graph
-		barlinevector children;
-		barline* parent = nullptr;
-		size_t numberInParent = 0;
+		std::vector<uint> childrenId;
+		uint id = -1;
+		uint parentId = -1;
 
 		// Binary mask
 		bc::barvector matr;
@@ -57,11 +65,12 @@ namespace bc
 	public:
 		//		int dep = 0;
 
-		barline(int = 0)
+		barline() : root(nullptr)
 		{
-			//			matWid = wid;
 		}
-		barline(Barscalar _start, Barscalar _end, int = 0, barcounter* _barc = nullptr, size_t coordsSize = 0) : start(_start), m_end(_end)
+
+		barline(Barscalar _start, Barscalar _end, int = 0, barcounter* _barc = nullptr, size_t coordsSize = 0) :
+			start(_start), m_end(_end), id(-1), parentId(-1)
 			//			  ,matWid(wid)
 		{
 			matr.reserve(coordsSize);
@@ -69,51 +78,52 @@ namespace bc
 			//			assert(matWid != 0);
 		}
 
-		//copy const
-		barline(barline const& obj)
+		void initRoot(BarclinesHolder* root)
 		{
-			this->start = obj.start;
-			this->m_end = obj.m_end;
-			//			this->matWid = obj.matWid;
-			this->numberInParent = obj.numberInParent;
-			this->parent = obj.parent;
-			this->children = obj.children;
+			assert(this->root == nullptr);
 
-			if (obj.matr.size() != 0)
-			{
-				this->matr.insert(this->matr.begin(), obj.matr.begin(), obj.matr.end());
-			}
-			this->isCopy = true;
-
-			if (obj.bar3d != nullptr)
-			{
-				this->bar3d = new barcounter();
-				this->bar3d->insert(this->bar3d->begin(), obj.bar3d->begin(), obj.bar3d->end());
-			}
+			this->root = root;
+			id = root->barlines.size();
+			root->barlines.push_back(this);
 		}
 
-		// copy
-		void operator=(barline const& obj)
-		{
-			this->start = obj.start;
-			this->m_end = obj.m_end;
-			//			this->matWid = obj.matWid;
+		////copy const
+		//barline(barline const& obj)
+		//{
+		//	this->start = obj.start;
+		//	this->m_end = obj.m_end;
+		//	//			this->matWid = obj.matWid;
+		//	this->parentId = obj.parentId;
+		//	this->childrenId = obj.childrenId;
+		//	this->matr = obj.matr;
+		//	this->isCopy = true;
 
-			this->numberInParent = obj.numberInParent;
-			this->parent = obj.parent;
-			this->children = obj.children;
+		//	if (obj.bar3d != nullptr)
+		//	{
+		//		this->bar3d = new barcounter();
+		//		this->bar3d->insert(this->bar3d->begin(), obj.bar3d->begin(), obj.bar3d->end());
+		//	}
+		//}
 
-			if (obj.matr.size() != 0)
-				this->matr.insert(this->matr.begin(), obj.matr.begin(), obj.matr.end());
+		//// copy
+		//void operator=(barline const& obj)
+		//{
+		//	this->start = obj.start;
+		//	this->m_end = obj.m_end;
+		//	//			this->matWid = obj.matWid;
 
-			this->isCopy = true;
+		//	this->parentId = obj.parentId;
+		//	this->childrenId = obj.childrenId;
+		//	this->matr = obj.matr;
 
-			if (obj.bar3d != nullptr)
-			{
-				this->bar3d = new barcounter();
-				this->bar3d->insert(this->bar3d->begin(), obj.bar3d->begin(), obj.bar3d->end());
-			}
-		}
+		//	this->isCopy = true;
+
+		//	if (obj.bar3d != nullptr)
+		//	{
+		//		this->bar3d = new barcounter();
+		//		this->bar3d->insert(this->bar3d->begin(), obj.bar3d->begin(), obj.bar3d->end());
+		//	}
+		//}
 
 		bool operator==(barline const& obj)
 		{
@@ -132,17 +142,11 @@ namespace bc
 			this->m_end = obj.m_end;
 			//			this->matWid = obj.matWid;
 
-			this->numberInParent = obj.numberInParent;
-			this->parent = std::exchange(obj.parent, nullptr);
-			this->children = obj.children;
-			obj.children.clear();
+			this->id = std::exchange(obj.id, -1);
+			this->parentId = std::exchange(obj.parentId, -1);
+			this->childrenId = std::move(obj.childrenId);
 			this->isCopy = false;
-
-			if (obj.matr.size() != 0)
-			{
-				this->matr = obj.matr;
-				obj.matr.clear();
-			}
+			matr = std::move(obj.matr);
 
 			this->bar3d = obj.bar3d;
 			obj.bar3d = nullptr;
@@ -155,17 +159,11 @@ namespace bc
 			this->m_end = obj.m_end;
 			//			this->matWid = obj.matWid;
 			this->isCopy = false;
-
-			this->numberInParent = obj.numberInParent;
-			this->parent = std::exchange(obj.parent, nullptr);
-			this->children = obj.children;
-			obj.children.clear();
-
-			if (obj.matr.size() != 0)
-			{
-				this->matr = obj.matr;
-				obj.matr.clear();
-			}
+			this->id = std::exchange(obj.id, -1);
+			this->parentId = std::exchange(obj.parentId, -1);
+			this->childrenId = std::move(obj.childrenId);
+			this->isCopy = false;
+			matr = std::move(obj.matr);
 
 			this->bar3d = obj.bar3d;
 		}
@@ -173,25 +171,7 @@ namespace bc
 		~barline()
 		{
 			// canBeDeleted - у копии, копия не может удалять детей. ј оригинал может
-			if (!isCopy)
-			{
-				if (parent && parent->children.size() > numberInParent && parent->children[numberInParent] == this)
-				{
-					parent->children[numberInParent] = nullptr;
-				}
-				for (size_t i = 0; i < children.size(); ++i)
-				{
-					// not null, not parent on any child
-					if (children[i])
-						children[i]->parent = nullptr;
-					//delete children[i];
-				}
-			}
-			if (bar3d != nullptr)
-			{
-				delete bar3d;
-			}
-			matr.clear();
+			delete bar3d;
 		}
 
 		//		int getWid()
@@ -203,7 +183,8 @@ namespace bc
 		{
 			return matr;
 		}
-		barvector& getMatrix() {
+		barvector& getMatrix()
+		{
 			return matr;
 		}
 
@@ -290,9 +271,9 @@ namespace bc
 		{
 			barline* temp = new barline(start, m_end, /*matWid*/0, nullptr);
 
-			temp->numberInParent = this->numberInParent;
-			temp->parent = this->parent;
-			temp->children = this->children;
+			temp->root = root;
+			temp->parentId = this->parentId;
+			temp->childrenId = this->childrenId;
 
 			if (matr.size() != 0 && cloneMatrix)
 			{
@@ -308,16 +289,15 @@ namespace bc
 			return temp;
 		}
 
-		void setparent(barline* node)
+		void setparent(barline* nparent)
 		{
-			//assert(parent == nullptr || parent == node);
-			assert(this != node);
-			if (this->parent == node)
-				return;
+			assert(parentId == -1);
+			assert(nparent != nullptr);
+			assert(this != nparent);
+			assert(this->parentId != id);
 
-			this->parent = node;
-			numberInParent = parent->children.size();
-			parent->children.push_back(this);
+			this->parentId = nparent->id;
+			nparent->childrenId.push_back(id);
 		}
 
 		Barscalar len() const
@@ -351,11 +331,11 @@ namespace bc
 		int getDeath()
 		{
 			int r = 0;
-			barline* temp = parent;
+			barline* temp = getParent();
 			while (temp)
 			{
 				++r;
-				temp = temp->parent;
+				temp = temp->getParent();
 			}
 			//			dep = sr;
 			return r;
@@ -389,9 +369,10 @@ namespace bc
 
 		void getChildsMatr(barmapHash<bc::point, bool, bc::pointHash>& childs)
 		{
-			for (barline* chil : this->children)
+			for (uint chilId : this->childrenId)
 			{
-				for (barvalue& val : chil->matr)
+				barline* child = getChild(chilId);
+				for (barvalue& val : child->matr)
 				{
 					childs.insert(std::pair< bc::point, bool>(val.getPoint(), true));
 				}
@@ -401,11 +382,12 @@ namespace bc
 
 		void getChildsMatr(barvector& vect, bool recursive = false) const
 		{
-			for (barline* chil : this->children)
+			for (uint chilId : this->childrenId)
 			{
+				barline* child = getChild(chilId);
 				if (recursive)
 					getChildsMatr(vect);
-				for (barvalue& val : chil->matr)
+				for (barvalue& val : child->matr)
 				{
 					vect.push_back(val);
 				}
@@ -417,9 +399,10 @@ namespace bc
 		{
 			size_t msize = matr.size();
 
-			for (barline* chil : this->children)
+			for (uint chilId : this->childrenId)
 			{
-				msize += chil->getMatrSize();
+				const barline* child = getChild(chilId);
+				msize += child->getMatrSize();
 			}
 
 			return msize;
@@ -526,17 +509,25 @@ namespace bc
 			return out;
 		}
 
-		bc::barline* getChild(int id)
+		bc::barline* getParent() const
 		{
-			if (id < 0 || id >= children.size())
-				return children[id];
+			if (parentId == -1)
+				return nullptr;
+
+			return root->barlines[parentId];
+		}
+
+		bc::barline* getChild(uint id) const
+		{
+			if (id < 0 || id >= childrenId.size())
+				return root->barlines[childrenId[id]];
 			else
 				return nullptr;
 		}
 
-		size_t getChildrenCount()
+		size_t getChildrenCount() const
 		{
-			return children.size();
+			return childrenId.size();
 		}
 
 #ifdef _PYD
@@ -656,7 +647,7 @@ namespace bc
 			if (exportGraph != ExportGraphType::noExport)
 			{
 				outObj += ",\"c\":[";
-				int total = children.size();
+				int total = childrenId.size();
 				if (total > 0)
 				{
 					assert(total < 16410954);
@@ -665,10 +656,10 @@ namespace bc
 					{
 						for (int i = 0; i < total; ++i)
 						{
-							if (children[i] == NULL)
+							if (childrenId[i] == -1)
 								continue;
 
-							outObj += TO_STRING::toStr(reinterpret_cast<size_t>(children[i]));
+							outObj += TO_STRING::toStr(childrenId[i]);
 							outObj += ",";
 						}
 					}
@@ -676,10 +667,10 @@ namespace bc
 					{
 						for (int i = 0; i < total; ++i)
 						{
-							if (children[i] == NULL)
+							if (childrenId[i] == -1)
 								continue;
 
-							children[i]->getJsonObject<TSTR, TO_STRING>(outObj, exportGraph, export3dbar, expotrBinaryMask);
+							getChild(i)->getJsonObject<TSTR, TO_STRING>(outObj, exportGraph, export3dbar, expotrBinaryMask);
 							outObj += ",";
 						}
 					}
@@ -727,9 +718,9 @@ namespace bc
 				lines.push_back(clone ? this->clone(cloneMatrxi) : this);
 			}
 
-			for (size_t i = 0, total = children.size(); i < total; ++i)
+			for (size_t i = 0, total = childrenId.size(); i < total; ++i)
 			{
-				children[i]->getChilredAsList(lines, true, clone, cloneMatrxi);
+				getChild(i)->getChilredAsList(lines, true, clone, cloneMatrxi);
 			}
 		}
 
@@ -742,10 +733,11 @@ namespace bc
 					this->matr.clear();
 			}
 
-			for (size_t i = 0, total = children.size(); i < total; ++i)
+			for (size_t i = 0, total = childrenId.size(); i < total; ++i)
 			{
-				children[i]->getChilredAsList(lines, true, keepMatrix);
-				children[i] = nullptr;
+				auto child = getChild(i);
+				child->getChilredAsList(lines, true, keepMatrix);
+				childrenId[i] = -1;
 			}
 		}
 
@@ -762,10 +754,10 @@ namespace bc
 			{
 				barline* cur = stack.top(); stack.pop();
 				size_t i = stackIndex.top(); stackIndex.pop();
-				size_t total = cur->children.size();
+				size_t total = cur->childrenId.size();
 				for (; i < total;)
 				{
-					barline* nchld = cur->children[i];
+					barline* nchld = cur->getChild(i);
 					if (nchld == nullptr || setd.count(nchld) > 0)
 					{
 						++i;
@@ -775,14 +767,14 @@ namespace bc
 					setd.insert(nchld);
 					lines.push_back(clone ? nchld->clone(cloneMatrxi) : nchld);
 
-					if (nchld->children.size() > 0)
+					if (nchld->childrenId.size() > 0)
 					{
 						stack.push(nchld);
 						stackIndex.push(i + 1);
 						cur = nchld;
 
 						i = 0;
-						total = cur->children.size();
+						total = cur->childrenId.size();
 					}
 					else
 					{
@@ -844,9 +836,9 @@ namespace bc
 				++bs[i];
 			}
 
-			for (const barline* l : children)
+			for (const uint l : childrenId)
 			{
-				l->addBettyNumbers(bs, offset);
+				getChild(l)->addBettyNumbers(bs, offset);
 			}
 		}
 

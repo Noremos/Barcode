@@ -38,6 +38,7 @@ export namespace bc
 
 	BarRect;
 	barline;
+	BarclinesHolder;
 	using bc::BarRoot;
 
 	using bc::barlinevector;

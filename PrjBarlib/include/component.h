@@ -75,8 +75,12 @@ namespace bc
 		{
 			return lived;
 		}
+		void markNotSame()
+		{
+			same = false;
+		}
 
-		bool justCreated();
+		virtual bool justCreated();
 
 		//Barscalar len()
 		//{
@@ -147,5 +151,12 @@ namespace bc
 		{
 			Component::kill(Component::getStart() + distance);
 		}
+
+		bool justCreated()
+		{
+			return same;
+		}
+
+
 	};
 }

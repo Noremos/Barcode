@@ -22,10 +22,9 @@ namespace bc
 		virtual ~Barbase();
 	};
 
-	class EXPORT Baritem : public Barbase
+	class EXPORT Baritem : public Barbase, public BarclinesHolder
 	{
 	public:
-		barlinevector barlines;
 
 	private:
 		bc::BarRoot* rootNode = nullptr;

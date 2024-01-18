@@ -1123,22 +1123,21 @@ void BarcodeCreator::addItemToCont(Barcontainer* container)
 {
 	if (container != nullptr)
 	{
-		Baritem* lines = new Baritem(workingImg->wid(), type);
-
 		switch (settings.returnType)
 		{
 		case ReturnType::barcode2d:
-			computeNdBarcode(lines, 2);
+			computeNdBarcode(root, 2);
 			break;
 		case ReturnType::barcode3d:
 		case ReturnType::barcode3dold:
-			computeNdBarcode(lines, 3);
+			computeNdBarcode(root, 3);
 			break;
 		default:
 			assert(false);
 		}
-		container->addItem(lines);
 	}
+
+	root = nullptr;
 }
 
 
@@ -1217,13 +1216,14 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 	if (settings.createGraph)
 	{
 		rootNode = new BarRoot(0, 0, workingImg->wid(), nullptr, 0);
-		lines->setRootNode(rootNode);
+		rootNode->initRoot(lines);
 	}
 
 	for (COMPP c : components)
 	{
 		if (c == nullptr || c->resline == nullptr)
 			continue;
+
 
 		// {
 		// 	auto& cs = connections[reinterpret_cast<size_t>(c)].conters;
@@ -1248,8 +1248,8 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 			if (settings.createGraph)
 				c->resline->setparent(rootNode);
 		}
+
 		assert(!c->isAlive());
-		lines->add(c->resline);
 	}
 }
 
@@ -1257,7 +1257,8 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* src, Barcontainer* item)
 {
 	init(src, str.proctype, str);
-
+	root = new Baritem(workingImg->wid(), type);
+	item->addItem(root);
 	switch (str.comtype)
 	{
 	case ComponentType::Component:
@@ -1603,9 +1604,15 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 		//существует ли ребро вокруг
 		if (connected != nullptr && first != connected)
 		{
-			std::vector<Component*> comps { first, connected };
 			if (!allowAttach)
 				return;
+
+			if (val.dist > 0)
+			{
+				first->markNotSame();
+				connected->markNotSame();
+			}
+
 			switch (settings.attachMode)
 			{
 			case AttachMode::dontTouch:
@@ -1631,9 +1638,36 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 				break;
 			case AttachMode::createNew:
 			{
-				COMPP newOne = new Component(this, true);
-				first->setParent(newOne);
-				connected->setParent(newOne);
+				if (first->justCreated())
+				{
+					connected->merge(first);
+				}
+				else if (connected->justCreated())
+				{
+					first->merge(connected);
+				}
+				else
+				{
+					if (val.dist < settings.maxRadius)
+					{
+						if (first->resline->getMatrSize() > connected->resline->getMatrSize())
+						{
+							first->merge(connected);
+						}
+						else
+							connected->merge(first);
+					}
+					else
+					{
+						curbright = workingImg->get(curpix.x, curpix.y);
+						COMPP newOne = new RadiusComponent(this);
+						newOne->resline->start = MIN(curbright, Nscalar);
+						newOne->markNotSame();
+
+						first->setParent(newOne);
+						connected->setParent(newOne);
+					}
+				}
 				return;
 			}
 			default: throw;
@@ -1641,6 +1675,7 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 
 			// By default: kill connected with curpoindex
 			curbright = val.dist;
+
 			first->addChild(connected);
 		}
 		else if (connected == nullptr)
@@ -2412,9 +2447,10 @@ void CloudPointsBarcode::processHold()
 							if (p == nullptr)
 								continue;
 
-							while (p->parent)
+							auto* parent = p->getParent();
+							while (parent)
 							{
-								p = p->parent;
+								p = parent;
 							}
 
 							if (p != newHole)
