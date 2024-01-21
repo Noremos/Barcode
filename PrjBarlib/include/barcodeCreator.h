@@ -60,6 +60,36 @@ namespace bc {
 				return bc::point(p.x - 1, p.y + 1);
 			}
 		}
+
+		constexpr std::vector<poidex> getOffsets(const bc::point& p, int wid) const
+		{
+			std::vector<poidex> out;
+			switch (poz)
+			{
+			case middleRight:
+				out.push_back(barvalue::getStatInd(p.x, p.y - 1, wid)); // top
+				out.push_back(barvalue::getStatInd(p.x, p.y + 1, wid)); // bottom
+				out.push_back(barvalue::getStatInd(p.x + 1, p.y - 1, wid)); // top from right
+				out.push_back(barvalue::getStatInd(p.x + 1, p.y + 1, wid)); // bottom from right
+				break;
+			case bottomRight:
+				out.push_back(barvalue::getStatInd(p.x + 1, p.y, wid)); // right
+				out.push_back(barvalue::getStatInd(p.x, p.y + 1, wid)); // bottom
+				break;
+			case bottomCenter:
+				out.push_back(barvalue::getStatInd(p.x - 1, p.y, wid)); // left
+				out.push_back(barvalue::getStatInd(p.x + 1, p.y, wid)); // right
+				out.push_back(barvalue::getStatInd(p.x - 1, p.y + 1, wid)); // left from down
+				out.push_back(barvalue::getStatInd(p.x + 1, p.y + 1, wid)); // right from down
+				break;
+			case bottomLeft:
+				out.push_back(barvalue::getStatInd(p.x - 1, p.y, wid)); // left
+				out.push_back(barvalue::getStatInd(p.x, p.y + 1, wid)); // bottom
+				break;
+			}
+
+			return out;
+		}
 	};
 
 
@@ -82,6 +112,41 @@ namespace bc {
 		bool skipAddPointsToParent = false;
 
 		Include* included = nullptr;
+		struct RebInfo
+		{
+			std::vector<Component*> cons;
+			void add(Component* comp)
+			{
+				for (auto* c : cons)
+				{
+					if (c == comp)
+						return;
+				}
+
+				cons.push_back(comp);
+			}
+
+			void clearDeleted()
+			{
+				for (int i = cons.size() - 1; i >= 0; i--)
+				{
+					if (cons[i]->resline == nullptr)
+						cons.erase(cons.begin() + i);
+				}
+			}
+
+			bool exists(Component* comp)
+			{
+				for (auto* c : cons)
+				{
+					if (c == comp)
+						return true;
+				}
+				return false;
+			}
+
+		};
+		barmap<size_t, RebInfo> connections;
 
 	protected:
 		const DatagridProvider* workingImg = nullptr;
@@ -151,10 +216,15 @@ namespace bc {
 		{
 			return !this->settings.stepPorog.isCached || (a > b ? a - b : b - a) <= this->settings.getMaxStepPorog();
 		}
-
+	public:
 		point getPoint(poidex i) const
 		{
 			return point(i % wid, i / wid);
+		}
+
+		Barscalar getValue(poidex i) const
+		{
+			return workingImg->getLiner(i);
 		}
 
 	private:
@@ -265,7 +335,11 @@ namespace bc {
 		void processCompByStepRadius(Barcontainer* item);
 		void processByValueRadius(Barcontainer* item);
 
-		void processRadar(const indexCov& val, bool allowAttach);
+		void processRadius(const indexCov& val, bool allowAttach);
+
+		void processHoleByRadius(Barcontainer* item);
+		void processHoleRadius(const indexCov& val);
+
 		bool checkAvg(const point curpix) const;
 
 	protected:

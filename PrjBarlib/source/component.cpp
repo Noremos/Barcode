@@ -20,28 +20,27 @@ void bc::Component::init(BarcodeCreator* factory, const Barscalar& val)
 	resline = new barline();
 	resline->start = val;
 	resline->m_end = val;
-	lastVal = val;
+	lastDistance = val;
 
 	if (factory->settings.returnType == bc::ReturnType::barcode3d ||
 		factory->settings.returnType == bc::ReturnType::barcode3dold)
 		resline->bar3d = new barcounter();
-
 }
 
 
-bc::Component::Component(poidex pix, const Barscalar& val, bc::BarcodeCreator* factory)
+bc::Component::Component(poidex pix, const Barscalar& val, const Barscalar& distance, bc::BarcodeCreator* factory)
 {
 	init(factory, val);
 
 	// factory->lastB++;
 
-	add(pix, factory->getPoint(pix), val);
+	add(pix, factory->getPoint(pix), val, distance);
 }
 
 
-bc::Component::Component(bc::BarcodeCreator* factory, bool /*create*/)
+bc::Component::Component(bc::BarcodeCreator* factory, Barscalar start)
 {
-	init(factory, factory->curbright);
+	init(factory, start);
 }
 
 Barscalar bc::Component::getStart()
@@ -50,11 +49,19 @@ Barscalar bc::Component::getStart()
 	return resline->start;
 }
 
-bool bc::Component::justCreated()
+void bc::Component::markNotSame()
 {
-	return lastVal == factory->curbright && same;
+	if (same)
+	{
+		same = false;
+		resline->initRoot(factory->root);
+	}
 }
 
+bool bc::Component::justCreated(const Barscalar& currentDistance)
+{
+	return lastDistance == currentDistance && same;
+}
 
 bool bc::Component::isContain(poidex index)
 {
@@ -62,7 +69,7 @@ bool bc::Component::isContain(poidex index)
 }
 
 
-bool bc::Component::add(const poidex index, const point p, const Barscalar& col, bool forsed)
+bool bc::Component::add(const poidex index, const point p, const Barscalar& value, const Barscalar& distance, bool forsed)
 {
 	assert(lived);
 
@@ -86,9 +93,9 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 	factory->setInclude(index, this);
 	if (factory->settings.createBinaryMasks)
 	{
-		resline->addCoord(p, col);
+		resline->addCoord(p, value);
 	}
-	bool eq = col == lastVal;
+	bool eq = distance == lastDistance;
 	bool wasSame = same;
 
 	if (!eq && same)
@@ -108,7 +115,8 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 		}
 		else if (factory->settings.returnType == ReturnType::barcode3dold)
 		{
-			resline->bar3d->push_back(bar3dvalue(lastVal, cashedSize)); // сколкьо было доабвлено
+
+			resline->bar3d->push_back(bar3dvalue(resline->matr.at(resline->matr.size() - 2).value, cashedSize)); // сколкьо было доабвлено
 		}
 		cashedSize = 0;
 	}
@@ -177,24 +185,24 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& col,
 #endif
 
 	++cashedSize;
-	lastVal = col;
+	lastDistance = distance;
 
 	return true;
 }
 
 void bc::Component::kill()
 {
-	kill(lastVal);
+	kill(lastDistance);
 }
 
-void bc::Component::kill(const Barscalar& endScalar)
+void bc::Component::kill(const Barscalar& endDistance)
 {
 	if (!lived)
 		return;
 
 	lived = false;
 
-	resline->m_end = endScalar;
+	resline->m_end = endDistance;
 
 	//if (col < resline->start)
 	//	resline->start = col;
@@ -205,11 +213,11 @@ void bc::Component::kill(const Barscalar& endScalar)
 
 	if (factory->settings.returnType == ReturnType::barcode3dold)
 	{
-		resline->bar3d->push_back(bar3dvalue(lastVal, cashedSize));
+		resline->bar3d->push_back(bar3dvalue(resline->matr.back().value, cashedSize));
 	}
 	else if (factory->settings.returnType == ReturnType::barcode3d)
 	{
-		resline->bar3d->push_back(bar3dvalue(lastVal, cashedSize));
+		resline->bar3d->push_back(bar3dvalue(resline->matr.back().value, cashedSize));
 	}
 
 	if (parent == nullptr && factory->settings.createBinaryMasks)
@@ -238,65 +246,61 @@ void bc::Component::kill(const Barscalar& endScalar)
 		resline->initRoot(factory->root);
 	}
 
-	lastVal = endScalar;
+	lastDistance = endDistance;
 	cashedSize = 0;
 }
 
 
-void bc::Component::setParent(bc::Component* parnt)
+void bc::Component::addChild(bc::Component* child, const Barscalar& endValue, const Barscalar& distance)
 {
+	assert(child->lived);
 	assert(lived);
-	assert(parent == nullptr);
-	assert(this != parnt);
+	assert(child->parent == nullptr);
+	assert(this != child);
 
-	if (justCreated())
+	if (child->justCreated(distance))
 	{
-		parnt->merge(this);
+		merge(child);
 		return;
 	}
-	if (parnt->justCreated())
+	if (justCreated(distance))
 	{
-		merge(parnt);
+		child->merge(this);
 		return;
 	}
 
-	this->parent = parnt;
+	child->parent = this;
+
+	if (same)
+		markNotSame();
+
 
 #ifndef POINTS_ARE_AVAILABLE
-	this->parent->totalCount += totalCount;
+	totalCount += child->totalCount;
 	//parnt->startIndex = MIN(parnt->startIndex, startIndex);
 	//parnt->sums += this->sums;
 #endif // ! POINTS_ARE_AVAILABLE
 
 
 	// Мы объединяем, потому что одинаковый добавился (но для оптимизации не добавлятся в конце)
-	const Barscalar& endScalar = factory->curbright;
 	if (factory->settings.createBinaryMasks && resline->matr.size() > 0)
 	{
 		// Эти точки считаются как только что присоединившиеся
-		parnt->resline->matr.reserve(parnt->resline->matr.size() + resline->matr.size() + 1);
-		for (barvalue& val : resline->matr)
+		resline->matr.reserve(resline->matr.size() + child->resline->matr.size() + 1);
+		for (barvalue& val : child->resline->matr)
 		{
-			parnt->resline->addCoord(barvalue(val.getPoint(), endScalar));
+			resline->addCoord(barvalue(val.getPoint(), endValue));
 		}
-
-		if (parent->same)
-		{
-			parnt->same = false;
-			parent->resline->initRoot(factory->root);
-		}
-
 		// Мы объединяем, потому что одинаковый добавился, т.е. считаем, что lasVal одинаковыйы
 		//parnt->lastVal = lastVal;
 	}
 
 
-	kill(endScalar);
+	child->kill(distance);
 
 	if (factory->settings.createGraph)
-		resline->setparent(parnt->resline);
+		resline->addChild(child->resline);
 }
-
 
 bool bc::Component::canBeConnected(const bc::point& p, bool incrSum)
 {
@@ -337,7 +341,7 @@ void bc::Component::passSame(BarcodeCreator* factory)
 		if (first == nullptr)//существует ли ребро вокруг
 			continue;
 
-		if (first->justCreated())
+		if (first->justCreated(factory->curbright))
 		{
 			if (justCreated)
 			{
@@ -351,11 +355,11 @@ void bc::Component::passSame(BarcodeCreator* factory)
 
 	if (justCreated)
 	{
-		justCreated->add(factory->curpoindex, factory->curpix, factory->curbright);
+		justCreated->add(factory->curpoindex, factory->curpix, factory->curbright, factory->curbright);
 	}
 	else
 	{
-		new Component(factory->curpoindex, factory->curbright, factory);
+		new Component(factory->curpoindex, factory->curbright, factory->curbright, factory);
 	}
 }
 
@@ -459,7 +463,7 @@ void bc::Component::process(BarcodeCreator* factory)
 			minComp = first;
 		}
 
-		if (first->justCreated())
+		if (first->justCreated(factory->curbright))
 		{
 			if (justCreated)
 			{
@@ -500,12 +504,12 @@ void bc::Component::process(BarcodeCreator* factory)
 	{
 		//lastB += 1;
 
-		new Component(factory->curpoindex, factory->curbright, factory);
+		new Component(factory->curpoindex, factory->curbright, factory->curbright, factory);
 		return;
 	}
 	else
 	{
-		minComp->add(factory->curpoindex, factory->curpix, factory->curbright);
+		minComp->add(factory->curpoindex, factory->curpix, factory->curbright, factory->curbright);
 		Component::attach(factory->settings, factory->curpix, factory->curpoindex, factory->curbright, attachCondidates);
 	}
 }
@@ -527,7 +531,7 @@ void bc::Component::merge(bc::Component* dummy)
 
 #ifdef ENABLE_ENERGY
 	int s = dummy->resline->matr.size();
-	if (s> factory->maxe)
+	if (s > factory->maxe)
 		factory->maxe = s;
 #endif // ENABLE_ENERGY
 
@@ -535,7 +539,7 @@ void bc::Component::merge(bc::Component* dummy)
 	for (auto& val : dummy->resline->matr)
 	{
 		const bc::point p = val.getPoint();
-		add(p.getLiner(factory->wid), p, val.value, true);
+		add(p.getLiner(factory->wid), p, val.value, lastDistance, true);
 
 #ifdef ENABLE_ENERGY
 		factory->energy[p.getLiner(factory->wid)] = s;
@@ -552,7 +556,7 @@ void bc::Component::merge(bc::Component* dummy)
 }
 
 
-void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& curb, AttachList& attachList)
+void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& distance, AttachList& attachList)
 {
 	switch (settings.attachMode)
 	{
@@ -598,22 +602,21 @@ void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poid
 	}
 	case AttachMode::createNew:
 	{
-		COMPP newOne = new Component(attachList.front().comp->factory, true);
+		COMPP newOne = new Component(attachList.front().comp->factory, distance);
 		newOne->markNotSame();
 		for (size_t i = 0; i < attachList.size() - 1; i++)
 		{
 			if (attachList[i].comp == attachList[i + 1].comp)
 				continue;
 
-			newOne->addChild(attachList[i].comp);
+			newOne->addChild(attachList[i].comp, distance, distance);
 		}
 
-		newOne->addChild(attachList.back().comp);
+		newOne->addChild(attachList.back().comp, distance, distance);
 		return;
 	}
 	default: throw;
 	}
-
 
 	// The first one is the parent
 
@@ -633,7 +636,7 @@ void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poid
 		//	continue;
 		//}
 
-		left->addChild(right);
+		left->addChild(right, distance, distance);
 		// left can be merged so check it
 		if (left->resline)
 			right = left;
@@ -641,3 +644,172 @@ void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poid
 
 	//attachList.back()->add(index, p, curb);
 }
+
+
+
+//
+//struct HoleFined
+//{
+//	std::vector<poidex>& path;
+//
+//};
+//
+//void RadiusRoot::findPath(const poidex p1, const poidex p2, bool frist, std::vector<poidex>& out)
+//{
+//	std::unordered_set<poidex> pathset;
+//	std::unordered_set<poidex> extraTernimate;
+//	const auto* curConnectons = &rebs[p1];
+//
+//	bool first = true;
+//	int firs = first ? 0 : 8;
+//	int last = first ? 8 : 0;
+//	int iter = first ? 1 : -1;
+//
+//	for (int i = firs; i != last; i += iter)
+//	{
+//		poidex c = rebs[p1][i];
+//		if (c != -1)
+//		{
+//			if (first)
+//			{
+//				first = false;
+//			}
+//			else
+//			{
+//				extraTernimate.insert(c);
+//			}
+//		}
+//	}
+//	extraTernimate.insert(p1);
+//	poidex cur;
+//
+//	while (true)
+//	{
+//		int i;
+//		for (int i = firs; i != last; i += iter)
+//		{
+//			cur = (*curConnectons)[i];
+//			if (cur == p2)
+//			{
+//				return;
+//			}
+//			else if (cur != -1 && pathset.count(cur) == 0)
+//			{
+//				break;
+//			}
+//		}
+//
+//		if (i == 8)
+//		{
+//			if (out.size() == 0)
+//				return;
+//			out.pop_back();
+//		}
+//		else
+//		{
+//			if (extraTernimate.count(cur) != 0)
+//			{
+//				out.clear();
+//				return;
+//			}
+//
+//			pathset.insert(cur);
+//
+//			curConnectons = &rebs[cur];
+//		}
+//	}
+//}
+//
+//
+//
+//void RadiusRoot::addConnection(const poidex p1, const poidex p2)
+//{
+//
+//	auto& r1 = rebs[p1];
+//	auto& r2 = rebs[p2];
+//
+//	for (short i = 0; i < 2; i++)
+//	{
+//		auto* phole = r1.holes[i];
+//		if (!phole && phole->isAlive())
+//			continue;
+//
+//		for (short j = 0; j < 2; j++)
+//		{
+//			if (phole == r2.holes[j])
+//			{
+//				phole->addConnection();
+//				return;
+//			}
+//
+//		}
+//	}
+//	if (r1.size > 0 && r2.size > 0)
+//	{
+//		std::vector<poidex> path1;
+//		findPath(p1, p2, true, path1);
+//
+//		std::vector<poidex> path2;
+//		findPath(p1, p2, false, path2);
+//
+//		if (path1.size() > 0 && path1.size() > path2.size())
+//		{
+//			RadiusHole* prev = nullptr;
+//			RadiusHole* nd = new RadiusHole(path1);
+//			nd->initRoot(this);
+//
+//			poidex prevP = -1;
+//			for (auto& p : path1)
+//			{
+//				nd->add(barvalue(barvalue::getStatPoint(p, wid), img->getLiner(p)));
+//				bool add = false;
+//
+//				if (prevP)
+//				{
+//					for (auto& lp1 : rebs[p].holes)
+//					{
+//						for (auto& lp2 : rebs[prevP].holes)
+//						{
+//							if (lp1 == lp2)
+//							{
+//								nd.tryAddChild(lp1);
+//							}
+//						}
+//					}
+//
+//					p = prevP;
+//				}
+//
+//				rebs[p].holes.push_back(nd);
+//			}
+//		}
+//
+//	}
+//	else
+//	{
+//		rebs[p1].cons.push_back(p2);
+//		rebs[p2].cons.push_back(p1);
+//	}
+//}
+//
+//RadiusHole::RadiusHole(const std::vector<poidex>& path)
+//{
+//	resline = new barline();
+//}
+//
+//void RadiusHole::addConnection()
+//{
+//	if (--leftToCollapse == 0)
+//	{
+//		resline->
+//	}
+//}
+//
+//void RadiusHole::add(const barvalue& value)
+//{
+//	resline->matr.push_back(value);
+//}
+//void RadiusHole::tryAddChild()
+//{
+//	resline->childrenId.push_back()
+//}

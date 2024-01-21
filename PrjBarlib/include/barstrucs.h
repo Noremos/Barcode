@@ -142,6 +142,7 @@ namespace bc
 		CachedValue stepPorog;
 		CachedValue maxLen;
 		float maxRadius = 999999;
+		float minAttachRadius = 0;
 	public:
 		//Barscalar foneStart;
 		//Barscalar foneEnd;
@@ -185,7 +186,7 @@ namespace bc
 		// разница соединяемых значений должна быть меньше этого значения
 		Barscalar getMaxStepPorog() const
 		{
-			return stepPorog.getOrDefault(0);
+			return stepPorog.getOrDefault(Barscalar(0));
 		}
 
 		void setStep(Barscalar val)
@@ -195,7 +196,7 @@ namespace bc
 
 		Barscalar getMaxLen() const
 		{
-			return maxLen.getOrDefault(0);
+			return maxLen.getOrDefault(Barscalar(0));
 		}
 
 		void setMaxLen(Barscalar val)

@@ -351,9 +351,9 @@ private:
 			case BarType::BYTE8_1:
 				return this->data.b3[0] == X.data.b1 && this->data.b3[1] == X.data.b1 && this->data.b3[2] == X.data.b1;
 			case BarType::BYTE8_3:
-				return this->data.b3[0] == X.data.b3[0] && this->data.b3[1] == X.data.b3[1] && this->data.b3[2] == X.data.b3[2];
+				return memcmp(data.b3, X.data.b3, 3) == 0;
 			case BarType::BYTE8_4:
-				return this->data.b3[0] == X.data.b3[0] && this->data.b3[1] == X.data.b3[1] && this->data.b3[2] == X.data.b3[2] && this->data.b3[3] == X.data.b3[3];
+				return memcmp(data.b3, X.data.b3, 4) == 0;
 			case BarType::FLOAT32_1:
 			{
 				uchar xf = static_cast<uchar>(X.data.f);

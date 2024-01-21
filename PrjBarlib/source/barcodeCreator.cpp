@@ -105,7 +105,7 @@ cv::Mat convertProvider2Mat(DatagridProvider* img)
 		m.at<uchar>(p.y, p.x) = img->get(p.x, p.y).data.b1;
 	}
 	return m;
-	}
+}
 
 
 cv::Mat convertRGBProvider2Mat(const DatagridProvider* img)
@@ -329,7 +329,7 @@ inline bool BarcodeCreator::checkCloserB1()
 			//вариант 1 - они принадлежат одному объекту. Не валидные могут содержать только одну компоненту, значит, этот объект валидный
 			if (h1 == h2 && h1->isValid)
 			{
-				h1->add(curpix.getLiner(wid), curpix, curbright);
+				h1->add(curpix.getLiner(wid), curpix, curbright, curbright);
 				hr = h1;
 			}
 			//вариант 2 - h1 - валид, h2- не валид. Мы уже проверили, что треугольник p-p1-p2 есть
@@ -1246,7 +1246,7 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 			//assert(c->isAlive() || settings.killOnMaxLen);
 			c->kill(curbright);
 			if (settings.createGraph)
-				c->resline->setparent(rootNode);
+				rootNode->addChild(c->resline);
 		}
 
 		assert(!c->isAlive());
@@ -1341,7 +1341,7 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 	}
 	case ComponentType::Hole:
 		if (str.proctype == ProcType::Radius)
-			processCompByRadius(item);
+			processHoleByRadius(item);
 		else
 			processHole(item);
 		break;
@@ -1491,7 +1491,7 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 			break;
 		}
 
-		processRadar(val, true);
+		processRadius(val, true);
 
 #ifdef USE_OPENCV
 		if (settings.visualize)
@@ -1555,6 +1555,113 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 
 //template bc::Barcontainer<ushort>* BarcodeCreator<ushort>::createBarcode(const bc::DatagridProvider<ushort>*, const BarConstructor<ushort>&)
 
+template<class CP>
+static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barscalar valueToSecond, BarcodeCreator* factory, const BarConstructor& settings, float distance)
+{
+	if (distance > 0)
+	{
+		first->markNotSame();
+		connected->markNotSame();
+	}
+
+	switch (settings.attachMode)
+	{
+	case AttachMode::dontTouch:
+		return nullptr;
+
+	case AttachMode::firstEatSecond:
+		if (first->startIndex > connected->startIndex)
+		{
+			std::swap(first, connected);
+			std::swap(valueToFirst, valueToSecond);
+		}
+		break;
+	case AttachMode::secondEatFirst:
+		if (first->startIndex < connected->startIndex)
+		{
+			std::swap(first, connected);
+			std::swap(valueToFirst, valueToSecond);
+		}
+		break;
+	case AttachMode::morePointsEatLow:
+		if (first->getTotalSize() < connected->getTotalSize())
+		{
+			std::swap(first, connected);
+			std::swap(valueToFirst, valueToSecond);
+		}
+		break;
+	case AttachMode::createNew:
+	{
+		if (first->justCreated(distance))
+		{
+			connected->merge(first);
+			return connected;
+		}
+		else if (connected->justCreated(distance))
+		{
+			first->merge(connected);
+			return first;
+		}
+		else
+		{
+			if (distance < settings.minAttachRadius)
+			{
+				if (first->resline->getMatrSize() > connected->resline->getMatrSize())
+				{
+					first->merge(connected);
+				}
+				else
+					connected->merge(first);
+			}
+			else
+			{
+				CP* newOne = new CP(factory, distance);
+				newOne->markNotSame();
+				newOne->addChild(first, valueToFirst, distance);
+				newOne->addChild(connected, valueToSecond, distance);
+				return newOne;
+			}
+		}
+	}
+	default: throw;
+	}
+
+	first->addChild(connected, valueToSecond, distance);
+	if (first->resline)
+	{
+		return first;
+	}
+	else
+		return connected;
+}
+
+struct conhash
+{
+	poidex p1;
+	poidex p2;
+	uint holeId;
+};
+
+class HoleRadius : public Component
+{
+public:
+	HoleRadius(BarcodeCreator* root, const Barscalar& distance) : Component(root, distance)
+	{ }
+
+	void addConnection(const poidex p1, const poidex p2, const Barscalar& distance)
+	{
+		Barscalar value = factory->getValue(p1);
+		add(p1, factory->getPoint(p1), value, distance);
+
+		value = factory->getValue(p2);
+		add(p2, factory->getPoint(p2), value, distance);
+	}
+
+	bool isSingle() const
+	{
+		return resline->matr.size() == 2;
+	}
+};
 
 
 void BarcodeCreator::processCompByStepRadius(Barcontainer* item)
@@ -1575,7 +1682,7 @@ void BarcodeCreator::processCompByStepRadius(Barcontainer* item)
 			if (val.dist > settings.maxRadius && foundSt == 0)
 				foundSt = curIndexInSortedArr;
 
-			processRadar(val, foundSt == 0);
+			processRadius(val, foundSt == 0);
 		}
 	}
 	addItemToCont(item);
@@ -1583,7 +1690,7 @@ void BarcodeCreator::processCompByStepRadius(Barcontainer* item)
 }
 
 
-void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
+void BarcodeCreator::processRadius(const indexCov& val, bool allowAttach)
 {
 	curpoindex = val.offset;
 	curpix = getPoint(curpoindex);
@@ -1591,121 +1698,55 @@ void BarcodeCreator::processRadar(const indexCov& val, bool allowAttach)
 	bc::point NextPoint = val.getNextPoint(curpix);
 	poidex NextPindex = NextPoint.getLiner(wid);
 
-	Component* first = getComp(curpoindex);
-	Component* connected = getComp(NextPindex);
+	RadiusComponent* first = dynamic_cast<RadiusComponent*>(getComp(curpoindex));
+	RadiusComponent* connected = dynamic_cast<RadiusComponent*>(getComp(NextPindex));
+	curbright = val.dist;
 
 	if (first != nullptr)
 	{
-		Barscalar Nscalar = workingImg->get(NextPoint.x, NextPoint.y);
+		Barscalar nextColor = workingImg->get(NextPoint.x, NextPoint.y);
 		//curpoindex = NextPindex;
 		//curpix = NextPoint;
 
 		//если в найденном уже есть этот элемент
 		//существует ли ребро вокруг
-		if (connected != nullptr && first != connected)
+		if (connected != nullptr)
 		{
-			if (!allowAttach)
-				return;
-
-			if (val.dist > 0)
+			if (first != connected)
 			{
-				first->markNotSame();
-				connected->markNotSame();
+				if (!allowAttach)
+					return;
+
+				if (val.dist > 0)
+				{
+					first->markNotSame();
+					connected->markNotSame();
+				}
+
+				curbright = val.dist;
+				Barscalar currentColor = workingImg->get(curpix.x, curpix.y);
+				radiusAttach<RadiusComponent>(first, nextColor, connected, currentColor, this, settings, val.dist);
 			}
-
-			switch (settings.attachMode)
-			{
-			case AttachMode::dontTouch:
-				return;
-
-			case AttachMode::firstEatSecond:
-				if (first->startIndex > connected->startIndex)
-				{
-					std::swap(first, connected);
-				}
-				break;
-			case AttachMode::secondEatFirst:
-				if (first->startIndex < connected->startIndex)
-				{
-					std::swap(first, connected);
-				}
-				break;
-			case AttachMode::morePointsEatLow:
-				if (first->getTotalSize() < connected->getTotalSize())
-				{
-					std::swap(first, connected);
-				}
-				break;
-			case AttachMode::createNew:
-			{
-				if (first->justCreated())
-				{
-					connected->merge(first);
-				}
-				else if (connected->justCreated())
-				{
-					first->merge(connected);
-				}
-				else
-				{
-					if (val.dist < settings.maxRadius)
-					{
-						if (first->resline->getMatrSize() > connected->resline->getMatrSize())
-						{
-							first->merge(connected);
-						}
-						else
-							connected->merge(first);
-					}
-					else
-					{
-						curbright = workingImg->get(curpix.x, curpix.y);
-						COMPP newOne = new RadiusComponent(this);
-						newOne->resline->start = MIN(curbright, Nscalar);
-						newOne->markNotSame();
-
-						first->setParent(newOne);
-						connected->setParent(newOne);
-					}
-				}
-				return;
-			}
-			default: throw;
-			}
-
-			// By default: kill connected with curpoindex
-			curbright = val.dist;
-
-			first->addChild(connected);
 		}
-		else if (connected == nullptr)
+		else
 		{
-			if (!first->add(NextPindex, NextPoint, Nscalar))
-			{
-				connected = new RadiusComponent(NextPindex, Nscalar, this);
-			}
+			first->add(NextPindex, NextPoint, nextColor, curbright);
 		}
 	}
 	else
 	{
-		curbright = workingImg->get(curpix.x, curpix.y);
+		Barscalar currentColor = workingImg->get(curpix.x, curpix.y);
 		// Ребро не создано или не получилось присоединить
 		if (connected == nullptr)
 		{
-			first = new RadiusComponent(curpoindex, curbright, this);
-
-			Barscalar Nscalar = workingImg->get(NextPoint.x, NextPoint.y);
-			//curpoindex = NextPindex;
-			//curpix = NextPoint;
-
-			if (!first->add(NextPindex, NextPoint, Nscalar))
-			{
-				connected = new RadiusComponent(NextPindex, Nscalar, this);
-			}
+			first = new RadiusComponent(this, curbright);
+			Barscalar nextColor = workingImg->get(NextPoint.x, NextPoint.y);
+			first->addInit(curpoindex, curpix, currentColor, NextPindex, NextPoint, nextColor);
 		}
-		else if (!connected->add(curpoindex, curpix, curbright))
+		else
 		{
-			first = new RadiusComponent(curpoindex, curbright, this);
+			connected->add(curpoindex, curpix, currentColor, curbright);
+			//first = new RadiusComponent(curpoindex, currentColor, curbright, this);
 		}
 	}
 }
@@ -1759,7 +1800,7 @@ void BarcodeCreator::processByValueRadius(Barcontainer* item)
 			if (val.dist > settings.maxRadius)
 				break;
 
-			processRadar(val, true);
+			processRadius(val, true);
 		}
 
 		if (curIndexInSortedArr == processCount)
@@ -1768,4 +1809,207 @@ void BarcodeCreator::processByValueRadius(Barcontainer* item)
 
 	addItemToCont(item);
 	clearIncluded();
+}
+
+
+void BarcodeCreator::processHoleByRadius(Barcontainer* item)
+{
+	connections.clear();
+
+	auto* get = geometrySortedArr.get();
+	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
+	{
+		const indexCov& val = get[curIndexInSortedArr];
+		if (val.dist > settings.maxRadius)
+			break;
+
+		processHoleRadius(val);
+	}
+	curbright = get[curIndexInSortedArr - 1].dist;
+	addItemToCont(item);
+	clearIncluded();
+}
+
+constexpr size_t chash(poidex a, poidex b)
+{
+	if (a < b)
+		std::swap(a, b);
+	return (static_cast<size_t>(a) << 8) | b;
+}
+
+void BarcodeCreator::processHoleRadius(const indexCov& val)
+{
+	curpoindex = val.offset;
+	curpix = getPoint(curpoindex);
+
+	bc::point NextPoint = val.getNextPoint(curpix);
+	poidex NextPindex = NextPoint.getLiner(wid);
+
+	curbright = val.dist;
+
+	const auto offsets = val.getOffsets(curpix, wid);
+	bool fouund = false;
+	size_t rebHash = chash(curpoindex, NextPindex);
+	auto& conv = connections[rebHash];
+	//assert(conv.size() < 2);
+
+	for (auto& i : offsets)
+	{
+		auto holes1 = connections.find(chash(curpoindex, i));
+		if (holes1 == connections.end())
+			continue;
+
+		auto holes2 = connections.find(chash(NextPindex, i));
+		if (holes2 == connections.end())
+			continue;
+
+		Barscalar curColor = workingImg->get(curpix.x, curpix.y);
+		Barscalar nextColor = workingImg->get(NextPoint.x, NextPoint.y);
+
+
+		auto& h1co = holes1->second;
+		//assert(h1co.size() <= 2);
+		int sa = 0;
+
+		for (auto& h1 : h1co.cons)
+		{
+			h1 = h1->getMaxparent();
+			if (h1->resline == nullptr)
+				continue;
+
+			bool f = false;
+
+			auto& h2co = holes2->second;
+			//assert(h2co.size() <= 2);
+			for (auto& h2 : h2co.cons)
+			{
+				h2 = h2->getMaxparent();
+				if (h2->resline == nullptr)
+					continue;
+
+				if (h1 == h2)
+				{
+					conv.add(h1);
+				}
+				else if (h1->resline->matr.size() == 2)
+				{
+					h2->add(curpoindex, curpix, curColor, curbright);
+					assert(h1->resline->root == nullptr);
+					delete h1->resline;
+					h1->resline = nullptr;
+
+					h1 = h2;
+					sa |= 1;
+
+					conv.add(h2);
+				}
+				else if (h2->resline->matr.size() == 2)
+				{
+					h1->add(NextPindex, NextPoint, nextColor, curbright);
+					assert(h2->resline->root == nullptr);
+					delete h2->resline;
+					h2->resline = nullptr;
+
+					sa |= 2;
+					h2 = h1;
+					conv.add(h1);
+				}
+				else if (h1co.exists(h2) && h2co.exists(h1))
+				{
+					auto* hsd = radiusAttach<HoleRadius>(dynamic_cast<HoleRadius*>(h1), nextColor, dynamic_cast<HoleRadius*>(h2), curColor, this, settings, val.dist);
+					conv.add(hsd);
+
+					h1 = h1->getMaxparent();
+
+					f = true;
+				}
+				else
+					continue;
+
+				fouund = true;
+			}
+
+			if ((sa & 2) != 0)
+			{
+				sa &= ~2;
+				h2co.clearDeleted();
+			}
+			//if (f)
+			//	break;
+		}
+
+		if ((sa & 1) != 0)
+		{
+			h1co.clearDeleted();
+		}
+	}
+
+	if (!fouund)
+	{
+		HoleRadius* firsth = new HoleRadius(this, curbright);
+		firsth->addConnection(curpoindex, NextPindex, curbright);
+		conv.cons.push_back(firsth);
+	}
+
+	//if (first != nullptr)
+	//{
+	//	if (connected != nullptr && connected != first)
+	//	{
+	//
+
+	//		if (fouund)
+	//		{
+	//			radiusAttach<HoleRadius>(first, connected, this, settings, val.dist);
+	//		}
+	//		else
+	//		{
+	//			HoleRadius* firsth = new HoleRadius(this);
+	//			firsth->addConnection(curpoindex, NextPindex);
+	//		}
+
+	//		first = nullptr;
+	//	}
+	//}
+	//else
+	//{
+	//	// Ребро не создано или не получилось присоединить
+	//	if (connected == nullptr)
+	//	{
+	//		HoleRadius* firsth = new HoleRadius(this);
+	//		firsth->addConnection(curpoindex, NextPindex);
+	//	}
+	//	else
+	//	{
+	//		first = connected;
+	//	}
+	//}
+
+	//bool added = false;
+	//while (first)
+	//{
+	//	const auto offsets = val.getOffsets(curpix, wid);
+	//	for (auto& i : offsets)
+	//	{
+	//		if (connections.count({ curpoindex, NextPindex, connected->resline->id }))
+	//		{
+	//			Barscalar nextColor = workingImg->get(NextPoint.x, NextPoint.y);
+	//			first->add(NextPindex, NextPoint, nextColor);
+	//			first = nullptr;
+	//			added = true;
+	//			break;
+	//		}
+	//	}
+
+	//	if (!first && first->next)
+	//		first = first->next;
+	//	else
+	//		break;
+	//}
+
+	//if (!added)
+	//{
+	//	HoleRadius* firsth = new HoleRadius(this);
+	//	firsth->addConnection(curpoindex, NextPindex);
+	//	first->next = firsth;
+	//}
 }

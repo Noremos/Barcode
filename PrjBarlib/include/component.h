@@ -38,7 +38,7 @@ namespace bc
 		float energy = 0;
 	protected:
 		int cashedSize = 0;
-		Barscalar lastVal = 0;
+		Barscalar lastDistance = 0;
 		bool same = true;
 		//Barscalar avgSr = 0;
 		//point startPoint;
@@ -56,8 +56,8 @@ namespace bc
 	public:
 
 
-		Component(poidex pix, const Barscalar& val, bc::BarcodeCreator* factory);
-		Component(BarcodeCreator* factory, bool create = false);
+		Component(poidex pix, const Barscalar& val, const Barscalar& distance, bc::BarcodeCreator* factory);
+		Component(BarcodeCreator* factory, Barscalar start);
 
 		int getLastRowSize()
 		{
@@ -66,21 +66,17 @@ namespace bc
 
 		Barscalar getStart();
 
-		Barscalar getLast()
-		{
-			return lastVal;
-		}
+		//Barscalar getLast()
+		//{
+		//	return lastVal;
+		//}
 
 		bool isAlive()
 		{
 			return lived;
 		}
-		void markNotSame()
-		{
-			same = false;
-		}
-
-		virtual bool justCreated();
+		void markNotSame();
+		virtual bool justCreated(const Barscalar& currentDistance);
 
 		//Barscalar len()
 		//{
@@ -108,14 +104,10 @@ namespace bc
 
 
 		bool isContain(poidex index);
-		virtual bool add(const poidex index, const point p, const Barscalar& col, bool forsed = false);
+		virtual bool add(const poidex index, const point p, const Barscalar& value, const Barscalar& distance, bool forsed = false);
 		void kill();
 		virtual void kill(const Barscalar& endScalar);
-		virtual void setParent(Component* parnt);
-		inline void addChild(Component* child)
-		{
-			child->setParent(this);
-		}
+		void addChild(Component* child, const Barscalar& lastValue, const Barscalar& distance);
 
 
 		bool canBeConnected(const bc::point& p, bool incrSum = false);
@@ -141,22 +133,62 @@ namespace bc
 	class RadiusComponent : public Component
 	{
 	public:
-		RadiusComponent(BarcodeCreator* factory) : Component(factory)
+		RadiusComponent(BarcodeCreator* factory, const Barscalar& startDistance) : Component(factory, startDistance)
 		{ }
 
-		RadiusComponent(poidex pix, const Barscalar& val, bc::BarcodeCreator* factory) : Component(pix, val, factory)
-		{ }
-
-		virtual void kill(const Barscalar& distance)
+		void addInit(poidex pix1, bc::point p1, const Barscalar& val1, poidex pix2, bc::point p2, const Barscalar& val2)
 		{
-			Component::kill(Component::getStart() + distance);
+			add(pix1, p1, val1, lastDistance);
+			add(pix2, p2, val2, lastDistance);
 		}
 
-		bool justCreated()
+		bool justCreated(const Barscalar& distance) override
 		{
-			return same;
+			return same || resline->matr.size() == 2;
 		}
-
-
 	};
+
+	//class RadiusHole;
+
+	//struct RCon
+	//{
+	//	poidex cons[8];
+	//	char size = 0;
+
+	//	std::vector<RadiusHole*> holes;
+
+	//	RCon()
+	//	{
+	//		std::fill_n(cons, 8, -1);
+	//	}
+	//};
+	//class RadiusRoot
+	//{
+	//public:
+	//	std::vector<RCon> rebs;
+	//	std::vector<RadiusHole*> field;
+	//	std::vector<std::unique_ptr<RadiusHole>> holes;
+	//	DatagridProvider* img;
+
+	//	void findPath(const poidex p1, const poidex p2, bool first, std::vector<poidex>& out);
+	//	void addConnection(const poidex p1, const poidex p2);
+
+	//};
+
+	//class RadiusHole
+	//{
+	//	barline* resline;
+	//	int leftToCollapse;
+	//public:
+
+	//	RadiusHole(const std::vector<poidex>& path);
+	//	void addConnection();
+	//	inline bool isAlive() const
+	//	{
+	//		return leftToCollapse > 0;
+	//	}
+	//	void add(const barvalue& value);
+	//	void tryAddChild();
+
+	//};
 }

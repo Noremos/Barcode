@@ -57,6 +57,6 @@ export namespace bc
 	Baritem;
 	BarcodeCreator;
 	using bc::PloyPoints;
-	CloudPointsBarcode;
+	//CloudPointsBarcode;
 	indexCov;
 }

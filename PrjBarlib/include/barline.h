@@ -289,15 +289,16 @@ namespace bc
 			return temp;
 		}
 
-		void setparent(barline* nparent)
+		void addChild(barline* nchild)
 		{
-			assert(parentId == -1);
-			assert(nparent != nullptr);
-			assert(this != nparent);
-			assert(this->parentId != id);
+			assert(root);
+			assert(nchild->parentId == -1);
+			assert(nchild != nullptr);
+			assert(this != nchild);
+			assert(id != -1);
 
-			this->parentId = nparent->id;
-			nparent->childrenId.push_back(id);
+			nchild->parentId = id;
+			childrenId.push_back(nchild->id);
 		}
 
 		Barscalar len() const
