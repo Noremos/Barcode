@@ -91,7 +91,7 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& valu
 
 
 	factory->setInclude(index, this);
-	if (factory->settings.createBinaryMasks)
+	//if (factory->settings.createBinaryMasks)
 	{
 		resline->addCoord(p, value);
 	}

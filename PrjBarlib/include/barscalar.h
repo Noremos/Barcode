@@ -101,10 +101,10 @@ public:
 			break;
 		case BarType::BYTE8_3:
 		case BarType::BYTE8_4:
-			data.b3[0] = i;
-			data.b3[1] = i;
-			data.b3[2] = i;
-			data.b3[3] = i;
+			data.b3[0] = static_cast<unsigned char>(i);
+			data.b3[1] = static_cast<unsigned char>(i);
+			data.b3[2] = static_cast<unsigned char>(i);
+			data.b3[3] = static_cast<unsigned char>(i);
 			break;
 		case BarType::FLOAT32_1:
 			data.f = i;

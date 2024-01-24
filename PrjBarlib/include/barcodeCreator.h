@@ -58,6 +58,9 @@ namespace bc {
 				return bc::point(p.x, p.y + 1);
 			case bottomLeft:
 				return bc::point(p.x - 1, p.y + 1);
+			default:
+				assert(false);
+				return { 0,0 };
 			}
 		}
 

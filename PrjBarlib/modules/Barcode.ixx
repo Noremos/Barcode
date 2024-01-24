@@ -36,7 +36,6 @@ module;
 import BarScalarModule;
 import BarTypes;
 import BarImgModule;
-import BarImgModule;
 
 #include "../include/barclasses.h"
 #include "../include/component.h"

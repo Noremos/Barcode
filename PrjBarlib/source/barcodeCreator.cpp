@@ -1710,11 +1710,6 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 template<class CP>
 static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barscalar valueToSecond, BarcodeCreator* factory, float distance)
 {
-	if (distance > 0)
-	{
-		first->markNotSame();
-		connected->markNotSame();
-	}
 
 	switch (factory->settings.attachMode)
 	{
@@ -1777,6 +1772,12 @@ static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barsca
 	}
 	default: throw;
 	}
+
+	//if (distance > 0)
+	//{
+	//	first->markNotSame();
+	//	connected->markNotSame();
+	//}
 
 	first->addChild(connected, valueToSecond, distance);
 	if (first->resline)
@@ -1869,11 +1870,11 @@ void BarcodeCreator::processRadius(const indexCov& val, bool allowAttach)
 				if (!allowAttach)
 					return;
 
-				if (val.dist > 0)
-				{
-					first->markNotSame();
-					connected->markNotSame();
-				}
+				//if (val.dist > 0)
+				//{
+				//	first->markNotSame();
+				//	connected->markNotSame();
+				//}
 
 				curbright = val.dist;
 				Barscalar currentColor = workingImg->get(curpix.x, curpix.y);
