@@ -556,7 +556,7 @@ void bc::Component::merge(bc::Component* dummy)
 }
 
 
-void bc::Component::attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& distance, AttachList& attachList)
+void bc::Component::attach(const barstruct& settings, bc::point p, bc::poidex index, Barscalar& distance, AttachList& attachList)
 {
 	switch (settings.attachMode)
 	{

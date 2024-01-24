@@ -450,10 +450,140 @@ struct RadiusOffs
 	nextPoz pos;
 };
 
-bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::ProcType type, float maxRadius, size_t& toProcess, const bc::DatagridProvider* mask, int maskId)
+
+
+float caclRgbDistance(const Barscalar& a, const Barscalar& b)
+{
+	return a.val_distance(b);
+}
+
+
+struct hsv {
+	double h;       // angle in degrees
+	double s;       // a fraction between 0 and 1
+	double v;       // a fraction between 0 and 1
+
+	hsv(int r, int g, int b)
+	{
+		double      min, max, delta;
+
+		min = r < g ? r : g;
+		min = min < b ? min : b;
+
+		max = r > g ? r : g;
+		max = max > b ? max : b;
+
+		v = max;                                // v
+		delta = max - min;
+		if (delta < 0.00001)
+		{
+			s = 0;
+			h = 0; // undefined, maybe nan?
+		}
+		if (max > 0.0) { // NOTE: if Max is == 0, this divide would cause a crash
+			s = (delta / max);                  // s
+
+			if (r >= max)                           // > is bogus, just keeps compilor happy
+				h = (g - b) / delta;        // between yellow & magenta
+			else if (g >= max)
+				h = 2.0 + (b - r) / delta;  // between cyan & yellow
+			else
+				h = 4.0 + (r - g) / delta;  // between magenta & cyan
+
+			h *= 60.0;                              // degrees
+
+			if (h < 0.0)
+				h += 360.0;
+
+		}
+		else
+		{
+			// if max is 0, then r = g = b = 0              
+			// s = 0, h is undefined
+			s = 0.0;
+			h = NAN;                            // its now undefined
+		}
+	}
+};
+
+
+struct CIELAB
+{
+	float c, a, b;
+	
+	CIELAB(int r, int g, int b)
+	{
+		toLab(r, g, b);
+	}
+
+	CIELAB(const Barscalar rgb)
+	{
+		toLab(rgb.data.b3[0], rgb.data.b3[1], rgb.data.b3[2]);
+	}
+
+	// Convert RGB to CIELAB
+	void toLab(int red, int green, int blue)
+	{
+		// Convert RGB to XYZ
+		double r = red / 255.0;
+		double g = green / 255.0;
+		double b = blue / 255.0;
+
+		r = (r > 0.04045) ? pow(((r + 0.055) / 1.055), 2.4) : (r / 12.92);
+		g = (g > 0.04045) ? pow(((g + 0.055) / 1.055), 2.4) : (g / 12.92);
+		b = (b > 0.04045) ? pow(((b + 0.055) / 1.055), 2.4) : (b / 12.92);
+
+		r *= 100.0;
+		g *= 100.0;
+		b *= 100.0;
+
+		double x = r * 0.4124564 + g * 0.3575761 + b * 0.1804375;
+		double y = r * 0.2126729 + g * 0.7151522 + b * 0.0721750;
+		double z = r * 0.0193339 + g * 0.1191920 + b * 0.9503041;
+
+		// Convert XYZ to CIELAB
+		x /= 95.047;
+		y /= 100.000;
+		z /= 108.883;
+
+		x = (x > 0.008856) ? pow(x, 0.3333) : ((16.0 * x) / 116.0);
+		y = (y > 0.008856) ? pow(y, 0.3333) : ((16.0 * y) / 116.0);
+		z = (z > 0.008856) ? pow(z, 0.3333) : ((16.0 * z) / 116.0);
+
+		c = (116.0 * y) - 16.0;
+		a = x - y;
+		b = y - z;
+	}
+
+	// Comparison operator for sorting based on CIELAB
+	bool operator<(const CIELAB& other) const {
+		return std::tie(c, a, b) < std::tie(other.c, other.a, other.b);
+	}
+};
+
+
+float caclHsvDistance(const Barscalar& a, const Barscalar& b)
+{
+	hsv hsv0(a.data.b3[0], a.data.b3[1], a.data.b3[2]);
+	hsv hsv1(b.data.b3[0], b.data.b3[1], b.data.b3[2]);
+
+	float dh = std::min(abs(hsv1.h - hsv0.h), 360 - abs(hsv1.h - hsv0.h)) / 180.0;
+	float ds = abs(hsv1.s - hsv0.s);
+	float dv = abs(hsv1.v - hsv0.v) / 255.0;
+
+	return std::sqrt(dh * dh + ds * ds + dv * dv);
+}
+
+bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::barstruct sets, float maxRadius, size_t& toProcess)
 {
 	int wid = workingImg->wid();
 	int hei = workingImg->hei();
+	std::function<float(const Barscalar& a, const Barscalar& b)> calcDistnace;
+	if (sets.trueSort && workingImg->getType() == BarType::BYTE8_3)
+		calcDistnace = caclHsvDistance;
+	else
+		calcDistnace = caclRgbDistance;
+
 
 	int totalSize = 4 * static_cast<size_t>(wid) * hei + wid + hei;
 	float dist;
@@ -480,7 +610,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::Pro
 	// Сичтаем расстояние между всеми соседними пикселями для каждого пикселя.
 	// Чтобы не считать повтороно, от текущего проверяем только уникальные - в форме отражённой по вертикали буквы "L"
 	int k = 0;
-	if (mask)
+	if (sets.mask)
 	{
 		for (int h = 0; h < hei - 1; ++h)
 		{
@@ -489,7 +619,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::Pro
 				int offset = wid * h + w;
 				const Barscalar cur = workingImg->get(w, h);
 
-				if (mask->get(w, h) != maskId)
+				if (sets.mask->get(w, h) != sets.maskId)
 				{
 					continue;
 				}
@@ -498,10 +628,10 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::Pro
 				for (size_t l = 0; l < 3; l++)
 				{
 					const auto& off = offs[l];
-					if (mask->get(w + off.x, h + off.y) != maskId)
+					if (sets.mask->get(w + off.x, h + off.y) != sets.maskId)
 					{
 						nextd[l] = workingImg->get(w + off.x, h + off.y);
-						dist = cur.val_distance(nextd[l].value());
+						dist = calcDistnace(cur, nextd[l].value());
 						data[k++] = indexCov(offset, dist, off.pos);
 					}
 				}
@@ -510,7 +640,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::Pro
 				// n 0
 				if (nextd[0].has_value() && nextd[1].has_value())
 				{
-					dist = nextd[0].value().val_distance(nextd[1].value());
+					dist = calcDistnace(nextd[0].value(), nextd[1].value());
 					offset = wid * h + w + 1;
 					data[k++] = indexCov(offset, dist, bottomLeft);
 				}
@@ -520,26 +650,26 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::Pro
 		const int wd = wid - 1;
 		for (int h = 0; h < hei - 1; ++h)
 		{
-			if (mask->get(wd, h) != maskId || mask->get(wd, h + 1) != maskId)
+			if (sets.mask->get(wd, h) != sets.maskId || sets.mask->get(wd, h + 1) != sets.maskId)
 				continue;
 
 			int offset = wid * h + wd;
 			Barscalar cur = workingImg->get(wd, h);
 			Barscalar next = workingImg->get(wd, h + 1);
-			dist = cur.val_distance(next);
+			dist = calcDistnace(cur, next);
 			data[k++] = indexCov(offset, dist, bottomCenter);
 		}
 
 		int hd = hei - 1;
 		for (int w = 0; w < wid - 1; ++w)
 		{
-			if (mask->get(w, hd) != maskId || mask->get(w + 1, hd) != maskId)
+			if (sets.mask->get(w, hd) != sets.maskId || sets.mask->get(w + 1, hd) != sets.maskId)
 				continue;
 
 			int offset = wid * hd + w;
 			const Barscalar cur = workingImg->get(w, hd);
 			const Barscalar next = workingImg->get(w + 1, hd);
-			dist = cur.val_distance(next);
+			dist = calcDistnace(cur, next);
 			data[k++] = indexCov(offset, dist, middleRight);
 		}
 	}
@@ -558,14 +688,14 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::Pro
 					const auto& off = offs[l];
 
 					nextd[l] = workingImg->get(w + off.x, h + off.y);
-					dist = cur.val_distance(nextd[l]);
+					dist = calcDistnace(cur, nextd[l]);
 					data[k++] = indexCov(offset, dist, off.pos);
 				}
 
 				// 0 c
 				// n 0
 
-				dist = nextd[0].val_distance(nextd[1]);
+				dist = calcDistnace(nextd[0], nextd[1]);
 				offset = wid * h + w + 1;
 
 				data[k++] = indexCov(offset, dist, bottomLeft);
@@ -578,7 +708,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::Pro
 			int offset = wid * h + wd;
 			const Barscalar cur = workingImg->get(wd, h);
 			const Barscalar next = workingImg->get(wd, h + 1);
-			dist = cur.val_distance(next);
+			dist = calcDistnace(cur, next);
 			data[k++] = indexCov(offset, dist, bottomCenter);
 		}
 
@@ -588,7 +718,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::Pro
 			int offset = wid * hd + w;
 			const Barscalar cur = workingImg->get(w, hd);
 			const Barscalar next = workingImg->get(w + 1, hd);
-			dist = cur.val_distance(next);
+			dist = calcDistnace(cur, next);
 			data[k++] = indexCov(offset, dist, middleRight);
 		}
 	}
@@ -787,7 +917,7 @@ int BarcodeCreator::sortOrtoPixels(bc::ProcType type, int rtoe, int off, int off
 
 struct myclassFromMin {
 	const bc::DatagridProvider* workingImg;
-	bool operator() (poidex& a, poidex& b)
+	bool operator() (poidex a, poidex b)
 	{
 		return workingImg->getLiner(a) < workingImg->getLiner(b);
 	}
@@ -796,14 +926,14 @@ struct myclassFromMin {
 
 struct myclassFromMax {
 	const bc::DatagridProvider* workingImg;
-	bool operator() (poidex& a, poidex& b)
+	bool operator() (poidex a, poidex b)
 	{
 		return workingImg->getLiner(a) > workingImg->getLiner(b);
 	}
 };
 
 
-void BarcodeCreator::sortPixels(bc::ProcType type, const bc::DatagridProvider* mask, int maskId)
+void BarcodeCreator::sortPixels(ProcType type)
 {
 	switch (workingImg->getType())
 	{
@@ -811,19 +941,31 @@ void BarcodeCreator::sortPixels(bc::ProcType type, const bc::DatagridProvider* m
 	case BarType::BYTE8_3:
 	case BarType::BYTE8_4:
 	{
+		if (settings.trueSort)
+		{
+			poidex* data = new poidex[totalSize + 1];//256
+
+			for (size_t i = 0; i < totalSize; ++i)//wid
+				data[i] = i;
+
+			std::sort(data, &data[totalSize], [this](poidex a, poidex b) {
+				return CIELAB(workingImg->getLiner(a)) < CIELAB(workingImg->getLiner(b));
+				});
+			break;
+		}
 		uint hist[256];//256
 		uint offs[256];//256
 		std::fill_n(hist, 256, 0);
 		std::fill_n(offs, 256, 0);
 
-		if (mask)
+		if (settings.mask)
 		{
 			processCount = 0;
 			for (int j = 0; j < workingImg->hei(); ++j)//hei
 			{
 				for (int i = 0; i < workingImg->wid(); ++i)//wid
 				{
-					if (mask->get(i, j) != maskId)
+					if (settings.mask->get(i, j) != settings.maskId)
 						continue;
 
 					auto p = (int)workingImg->get(i, j);
@@ -855,11 +997,11 @@ void BarcodeCreator::sortPixels(bc::ProcType type, const bc::DatagridProvider* m
 		poidex* data = new poidex[processCount + 1];
 		memset(data, 0, (processCount + 1) * sizeof(poidex));
 
-		if (mask)
+		if (settings.mask)
 		{
 			for (size_t i = 0; i < totalSize; i++)
 			{
-				if (mask->getLiner(i) != maskId)
+				if (settings.mask->getLiner(i) != settings.maskId)
 					continue;
 
 				uchar p = workingImg->getLiner(i).getAvgUchar();
@@ -932,7 +1074,7 @@ void BarcodeCreator::sortPixels(bc::ProcType type, const bc::DatagridProvider* m
 
 
 
-void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, const barstruct& struc)
+void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type)
 {
 	wid = src->wid();
 	hei = src->hei();
@@ -968,7 +1110,7 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, const
 	switch (type)
 	{
 	case ProcType::Radius:
-		geometrySortedArr.reset(sortPixelsByRadius(workingImg, type, settings.maxRadius, this->processCount, struc.mask, struc.maskId));
+		geometrySortedArr.reset(sortPixelsByRadius(workingImg, settings, settings.maxRadius, this->processCount));
 		sortedArr = nullptr;
 		break;
 	case ProcType::StepRadius:
@@ -981,7 +1123,7 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type, const
 	case ProcType::f255t0:
 	case ProcType::invertf0:
 	case ProcType::experiment:
-		sortPixels(type, struc.mask, struc.maskId);
+		sortPixels(type);
 		break;
 	default:
 		assert(false);
@@ -1254,16 +1396,17 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 }
 
 
-void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* src, Barcontainer* item)
+void BarcodeCreator::processTypeF(const bc::DatagridProvider* src, Barcontainer* item)
 {
-	init(src, str.proctype, str);
+	auto p = settings.proctype;
+	init(src, p);
 	root = new Baritem(workingImg->wid(), type);
 	item->addItem(root);
-	switch (str.comtype)
+	switch (settings.comtype)
 	{
 	case ComponentType::Component:
 	{
-		switch (str.proctype)
+		switch (settings.proctype)
 		{
 		case ProcType::Radius:
 			processCompByRadius(item);
@@ -1273,7 +1416,7 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 			//			cv::namedWindow("drawimg", cv::WINDOW_NORMAL);
 
 			//			drawimg = BarImg(workingImg->wid(), workingImg->hei(), 1);
-			totalSize = sortOrtoPixels(str.proctype, 2, 0); // go down-right
+			totalSize = sortOrtoPixels(settings.proctype, 2, 0); // go down-right
 			processComp();
 			sortedArr.reset();
 
@@ -1281,39 +1424,39 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 			int hwid = swid / 2 + swid % 2;
 			for (int i = 0; i < swid; ++i)//wid Идям по диагонали
 			{
-				totalSize = sortOrtoPixels(str.proctype, 0, i); // go down
+				totalSize = sortOrtoPixels(settings.proctype, 0, i); // go down
 				processComp();
 				sortedArr.reset();
 
 				if (i < workingImg->hei())
 				{
-					totalSize = sortOrtoPixels(str.proctype, 1, i); // go rigth
+					totalSize = sortOrtoPixels(settings.proctype, 1, i); // go rigth
 					processComp();
 					sortedArr.reset();
 				}
 
-				//sortOrtoPixels(str.proctype, 2, i); // go down-right
+				//sortOrtoPixels(settings.proctype, 2, i); // go down-right
 				//processComp(item);
 				if (i < hwid)
 				{
-					totalSize = sortOrtoPixels(str.proctype, 3, i * 2);// go down-left
+					totalSize = sortOrtoPixels(settings.proctype, 3, i * 2);// go down-left
 					processComp();
 					sortedArr.reset();
 				}
 				else
 				{
-					totalSize = sortOrtoPixels(str.proctype, 3, swid - 1, i - hwid);// go down-left
+					totalSize = sortOrtoPixels(settings.proctype, 3, swid - 1, i - hwid);// go down-left
 					processComp();
 					sortedArr.reset();
 				}
 
 				// Нинии паралелные остновной, ихсодят в разыне стороны (одна по ширине, другая по высоте)
 
-				totalSize = sortOrtoPixels(str.proctype, 2, i);// go down-right
+				totalSize = sortOrtoPixels(settings.proctype, 2, i);// go down-right
 				processComp();
 				sortedArr.reset();
 
-				totalSize = sortOrtoPixels(str.proctype, 2, 0, i);// go down-right
+				totalSize = sortOrtoPixels(settings.proctype, 2, 0, i);// go down-right
 				processComp();
 				sortedArr.reset();
 
@@ -1340,7 +1483,7 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 		break;
 	}
 	case ComponentType::Hole:
-		if (str.proctype == ProcType::Radius)
+		if (settings.proctype == ProcType::Radius)
 			processHoleByRadius(item);
 		else
 			processHole(item);
@@ -1358,23 +1501,23 @@ void BarcodeCreator::processTypeF(barstruct& str, const bc::DatagridProvider* sr
 }
 
 
-void BarcodeCreator::processFULL(barstruct& str, const bc::DatagridProvider* img, Barcontainer* item)
+void BarcodeCreator::processFULL(const bc::DatagridProvider* img, Barcontainer* item)
 {
 	bool rgb = (img->channels() != 1);
 
 
-	//	if (str.comtype == ComponentType::Component && rgb)
+	//	if (settings.comtype == ComponentType::Component && rgb)
 	//	{
 	//		BarImg* res = new BarImg();
 	//		cvtColorV3B2U1C(*img, *res);
 	//		originalImg = false;
 	//		needDelImg = true;
 	//		type = BarType::BYTE8_1;
-	//		processTypeF(str, res, item);
+	//		processTypeF(settings, res, item);
 	//		return;
 	//	}
 
-	switch (str.coltype)
+	switch (settings.coltype)
 	{
 		// To RGB
 	case ColorType::rgb:
@@ -1387,7 +1530,7 @@ void BarcodeCreator::processFULL(barstruct& str, const bc::DatagridProvider* img
 		originalImg = false;
 		needDelImg = true;
 		type = BarType::BYTE8_3;
-		processTypeF(str, res, item);
+		processTypeF(res, item);
 		return;
 	}
 	case ColorType::gray:
@@ -1400,7 +1543,7 @@ void BarcodeCreator::processFULL(barstruct& str, const bc::DatagridProvider* img
 		originalImg = false;
 		needDelImg = true;
 		type = BarType::BYTE8_1;
-		processTypeF(str, res, item);
+		processTypeF(res, item);
 		return;
 	}
 	default:
@@ -1410,23 +1553,32 @@ void BarcodeCreator::processFULL(barstruct& str, const bc::DatagridProvider* img
 	type = img->getType();
 	originalImg = true;
 	needDelImg = false;
-	processTypeF(str, img, item);
+	processTypeF(img, item);
 }
 
 
 bc::Barcontainer* BarcodeCreator::createBarcode(const bc::DatagridProvider* img, const BarConstructor& structure)
 {
-	this->settings = structure;
 	this->settings.createBinaryMasks = true;
 
 	settings.checkCorrect();
 	Barcontainer* cont = new Barcontainer();
 
-	for (auto& it : settings.structure)
+	for (auto& it : structure.structs)
 	{
-		processFULL(it, img, cont);
+		this->settings = it;
+		processFULL(img, cont);
 	}
 	return cont;
+}
+
+bc::Baritem* BarcodeCreator::createBarcode(const bc::DatagridProvider* img, const barstruct& structure)
+{
+	settings = structure;
+	Barcontainer cont;
+
+	processFULL(img, &cont);
+	return cont.exractItem(0);
 }
 
 // ***************************************************
@@ -1556,7 +1708,7 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 //template bc::Barcontainer<ushort>* BarcodeCreator<ushort>::createBarcode(const bc::DatagridProvider<ushort>*, const BarConstructor<ushort>&)
 
 template<class CP>
-static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barscalar valueToSecond, BarcodeCreator* factory, const BarConstructor& settings, float distance)
+static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barscalar valueToSecond, BarcodeCreator* factory, float distance)
 {
 	if (distance > 0)
 	{
@@ -1564,7 +1716,7 @@ static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barsca
 		connected->markNotSame();
 	}
 
-	switch (settings.attachMode)
+	switch (factory->settings.attachMode)
 	{
 	case AttachMode::dontTouch:
 		return nullptr;
@@ -1604,7 +1756,7 @@ static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barsca
 		}
 		else
 		{
-			if (distance < settings.minAttachRadius)
+			if (distance < factory->settings.minAttachRadius)
 			{
 				if (first->resline->getMatrSize() > connected->resline->getMatrSize())
 				{
@@ -1725,7 +1877,7 @@ void BarcodeCreator::processRadius(const indexCov& val, bool allowAttach)
 
 				curbright = val.dist;
 				Barscalar currentColor = workingImg->get(curpix.x, curpix.y);
-				radiusAttach<RadiusComponent>(first, nextColor, connected, currentColor, this, settings, val.dist);
+				radiusAttach<RadiusComponent>(first, nextColor, connected, currentColor, this, val.dist);
 			}
 		}
 		else
@@ -1916,7 +2068,7 @@ void BarcodeCreator::processHoleRadius(const indexCov& val)
 				}
 				else if (h1co.exists(h2) && h2co.exists(h1))
 				{
-					auto* hsd = radiusAttach<HoleRadius>(dynamic_cast<HoleRadius*>(h1), nextColor, dynamic_cast<HoleRadius*>(h2), curColor, this, settings, val.dist);
+					auto* hsd = radiusAttach<HoleRadius>(dynamic_cast<HoleRadius*>(h1), nextColor, dynamic_cast<HoleRadius*>(h2), curColor, this, val.dist);
 					conv.add(hsd);
 
 					h1 = h1->getMaxparent();

@@ -113,31 +113,8 @@ namespace bc
 	//	}
 	class DatagridProvider;
 
+
 	struct barstruct
-	{
-		ComponentType comtype;
-		ProcType proctype;
-		ColorType coltype;
-		barstruct()
-		{
-			comtype = ComponentType::Component;
-			proctype = ProcType::f0t255;
-			coltype = ColorType::gray;
-		}
-		barstruct(ProcType pt, ColorType colT, ComponentType comT)
-		{
-			this->comtype = comT;
-			this->proctype = pt;
-			this->coltype = colT;
-		}
-
-		bc::DatagridProvider* mask = nullptr;
-		int maskId = 0;
-	};
-
-
-
-	struct BarConstructor
 	{
 		CachedValue stepPorog;
 		CachedValue maxLen;
@@ -146,7 +123,6 @@ namespace bc
 	public:
 		//Barscalar foneStart;
 		//Barscalar foneEnd;
-		std::vector<barstruct> structure;
 		ReturnType returnType = ReturnType::barcode2d;
 		BarType type;
 
@@ -159,14 +135,32 @@ namespace bc
 		int colorRange = INT32_MAX;
 		float energyStart = 100;
 
+		bool trueSort = false;
+
 #ifdef USE_OPENCV
 		bool visualize = false;
 		int waitK = 1;
 #endif // USE_OPENCV
 
+		ComponentType comtype;
+		ProcType proctype;
+		ColorType coltype;
+		barstruct()
+		{
+			comtype = ComponentType::Component;
+			proctype = ProcType::f0t255;
+			coltype = ColorType::gray;
+		}
+
+
+		bc::DatagridProvider* mask = nullptr;
+		int maskId = 0;
+
 		inline void addStructure(ProcType pt, ColorType colT, ComponentType comT)
 		{
-			structure.push_back(barstruct(pt, colT, comT));
+			this->comtype = comT;
+			this->proctype = pt;
+			this->coltype = colT;
 		}
 
 		void checkCorrect() const
@@ -177,8 +171,8 @@ namespace bc
 			//if (createGraph && !createBinaryMasks)
 			//	throw std::exception();
 
-			if (structure.size() == 0)
-				throw std::exception();
+			//if (structure.size() == 0)
+				//throw std::exception();
 
 			//getStepPorog();
 		}
@@ -202,6 +196,20 @@ namespace bc
 		void setMaxLen(Barscalar val)
 		{
 			maxLen.set(val);
+		}
+	};
+
+	class BarConstructor
+	{
+	public:
+		std::vector<barstruct> structs;
+		inline void addStructure(ProcType pt, ColorType colT, ComponentType comT)
+		{
+			structs.push_back({});
+			auto e = structs.back();
+			e.comtype = comT;
+			e.proctype = pt;
+			e.coltype = colT;
 		}
 	};
 

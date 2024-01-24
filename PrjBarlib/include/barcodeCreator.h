@@ -107,10 +107,11 @@ namespace bc {
 #ifdef USE_OPENCV
 		std::vector<cv::Vec3b> colors;
 #endif
-
-		BarConstructor settings;
+	public:
+		barstruct settings;
 		bool skipAddPointsToParent = false;
 
+	private:
 		Include* included = nullptr;
 		struct RebInfo
 		{
@@ -276,7 +277,7 @@ namespace bc {
 
 
 		int sortOrtoPixels(bc::ProcType type, int rtoe = 0, int off = 0, int offDop = 0);
-		void sortPixels(bc::ProcType type, const bc::DatagridProvider* mask, int maskId);
+		void sortPixels(bc::ProcType type);
 
 		void clearIncluded();
 
@@ -285,16 +286,16 @@ namespace bc {
 		void VISUAL_DEBUG_COMP();
 
 	public:
-		void init(const bc::DatagridProvider* src, ProcType& type, const barstruct& struc);
+		void init(const bc::DatagridProvider* src, ProcType& type);
 
 	private:
 		void processComp(Barcontainer* item = nullptr);
 		void processHole(Barcontainer* item = nullptr);
 		//void processHole255to0(bcBarImg& img, int* retBty, Barcontainer* item = nullptr);
 
-		void processTypeF(barstruct& str, const bc::DatagridProvider* img, Barcontainer* item = nullptr);
+		void processTypeF(const bc::DatagridProvider* img, Barcontainer* item = nullptr);
 
-		void processFULL(barstruct& str, const bc::DatagridProvider* img, bc::Barcontainer* item);
+		void processFULL(const bc::DatagridProvider* img, bc::Barcontainer* item);
 		void addItemToCont(Barcontainer* item);
 
 		void computeNdBarcode(Baritem* lines, int n);
@@ -307,6 +308,7 @@ namespace bc {
 //#endif
 
 		bc::Barcontainer* createBarcode(const bc::DatagridProvider* img, const BarConstructor& structure);
+		bc::Baritem* createBarcode(const bc::DatagridProvider* img, const barstruct& structure);
 		//bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 
 

@@ -125,7 +125,7 @@ namespace bc
 			Barscalar diff;
 		};
 		using AttachList = std::vector<AttachInfo>;
-		static void attach(const BarConstructor& settings, bc::point p, bc::poidex index, Barscalar& bars, AttachList& attachList);
+		static void attach(const barstruct& settings, bc::point p, bc::poidex index, Barscalar& bars, AttachList& attachList);
 	};
 
 	//typedef barmap<point, Component*, pointHash> cmap;
