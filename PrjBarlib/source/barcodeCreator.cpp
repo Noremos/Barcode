@@ -556,8 +556,15 @@ struct CIELAB
 	}
 
 	// Comparison operator for sorting based on CIELAB
-	bool operator<(const CIELAB& other) const {
+	bool operator<(const CIELAB& other) const
+	{
 		return std::tie(c, a, b) < std::tie(other.c, other.a, other.b);
+	}
+
+	// Comparison operator for sorting based on CIELAB
+	bool operator<=(const CIELAB& other) const
+	{
+		return std::tie(c, a, b) <= std::tie(other.c, other.a, other.b);
 	}
 };
 
