@@ -1,3 +1,4 @@
+#ifndef SKIP_M
 #pragma once
 
 #include <bitset>
@@ -6,11 +7,13 @@
 #include <sstream>
 
 #include "../include/barscalar.h"
-
+#endif
 
 
 namespace StateBinFile
 {
+	using uint = unsigned int;
+	using uchar = unsigned char;
 
 	struct uint_6bit
 	{
