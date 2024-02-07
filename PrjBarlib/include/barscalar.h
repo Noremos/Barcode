@@ -107,10 +107,10 @@ public:
 			data.b3[3] = static_cast<unsigned char>(i);
 			break;
 		case BarType::FLOAT32_1:
-			data.f = i;
+			data.f = static_cast<float>(i);
 			break;
 		case BarType::INT32_1:
-			data.i = i;
+			data.i = static_cast<int>(i);
 			break;
 //			assert(false);
 		default:

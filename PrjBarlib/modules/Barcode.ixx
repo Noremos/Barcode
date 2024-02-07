@@ -26,7 +26,6 @@ module;
 #include <map>
 #include <vector>
 #include <iostream>
-#include "presets.h"
 #include <unordered_set>
 #ifdef __linux
 #include <climits>
@@ -37,6 +36,7 @@ import BarScalarModule;
 import BarTypes;
 import BarImgModule;
 
+#include "../include/presets.h"
 #include "../include/barclasses.h"
 #include "../include/component.h"
 #include "../include/hole.h"
