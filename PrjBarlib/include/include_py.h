@@ -1,3 +1,5 @@
+#ifndef SKIP_M_INC
+
 #pragma once
 
 #ifdef INCLUDE_PY
@@ -15,5 +17,7 @@
 namespace py = pybind11;
 namespace bn = pybind11;
 namespace bp = pybind11;
+
+#endif
 
 #endif

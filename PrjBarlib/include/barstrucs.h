@@ -17,7 +17,7 @@ const unsigned int BAR_MAX_WID = 65535;
 #define BARVALUE_RAM_OPTIMIZATION
 
 
-namespace bc
+MEXP namespace bc
 {
 	struct barRGB;
 	struct barBGR;

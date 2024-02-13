@@ -1,7 +1,7 @@
 #include "ReaderTypes.h"
 
 
-class ImageReader
+MEXP class ImageReader
 {
 public:
 	virtual rowptr getRowData(int ri) = 0;

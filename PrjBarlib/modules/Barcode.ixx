@@ -36,6 +36,9 @@ import BarScalarModule;
 import BarTypes;
 import BarImgModule;
 
+export module BarcodeModule;
+#define MEXP export
+
 #include "../include/presets.h"
 #include "../include/barclasses.h"
 #include "../include/component.h"
@@ -47,7 +50,7 @@ import BarImgModule;
 #include "../source/component.cpp"
 #include "../source/hole.cpp"
 
-export module BarcodeModule;
+
 
 
 export namespace bc

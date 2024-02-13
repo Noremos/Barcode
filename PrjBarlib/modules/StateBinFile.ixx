@@ -1,5 +1,4 @@
 module;
-#define SKIP_M
 
 #include <bitset>
 #include <fstream>
@@ -8,17 +7,14 @@ module;
 #include <cassert>
 
 
+#include "../include/barscalar.h"
 // #include "BinFile.h"
 
 export module StateBinIO;
 
-import BarScalarModule;
+// import BarScalarModule;
 
+#define SKIP_M
+#undef MEXP
+#define MEXP export
 #include "StateBinFile.h"
-
-export namespace StateBinFile
-{
-	BinState;
-	BinStateReader;
-	BinStateWriter;
-}

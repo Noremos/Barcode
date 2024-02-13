@@ -1,3 +1,4 @@
+#ifndef M_SKIP_INC
 #pragma once
 #include "base.h"
 #include <queue>
@@ -6,11 +7,11 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#endif
 
+MEXP enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rgb8, argb8 };
 
-enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rgb8, argb8 };
-
-constexpr int getImgTypeSize(ImageType type)
+MEXP constexpr int getImgTypeSize(ImageType type)
 {
 	switch (type)
 	{
@@ -25,7 +26,7 @@ constexpr int getImgTypeSize(ImageType type)
 	case ImageType::float64:
 		return 8;
 	default:
-		throw std::exception("");
+		throw std::exception();
 	}
 	//return 0;
 }
@@ -98,7 +99,7 @@ struct RT_rgb
 	}
 };
 
-union valtype
+MEXP union valtype
 {
 	short s;
 	float f;
@@ -107,7 +108,7 @@ union valtype
 };
 
 // TODO rewrite it!
-struct roweltype
+MEXP struct roweltype
 {
 	ImageType type;
 	valtype val;
@@ -277,7 +278,7 @@ struct roweltype
 };
 
 
-union rowtype
+MEXP union rowtype
 {
 	short* s;
 	float* f;
@@ -288,7 +289,7 @@ union rowtype
 };
 
 
-struct rowptr
+MEXP struct rowptr
 {
 	ImageType type;
 	rowtype ptr;
@@ -760,7 +761,7 @@ struct rowptr
 };
 
 
-class RowPtrHolder
+MEXP class RowPtrHolder
 {
 public:
 	rowptr row;
@@ -781,10 +782,10 @@ public:
 
 
 //typedef double rowtype;
-using cachedRow = RowPtrHolder*;
+MEXP using cachedRow = RowPtrHolder*;
 
 
-struct DataRect
+MEXP struct DataRect
 {
 	roweltype minVal;
 	roweltype maxVal;
@@ -984,7 +985,7 @@ struct DataRect
 
 //#define DEBUG_OUT
 
-template<class T>
+MEXP template<class T>
 class PointerDel
 {
 public:
@@ -994,7 +995,7 @@ public:
 	}
 };
 
-template<class T>
+MEXP template<class T>
 class PointerArrayDel
 {
 public:
@@ -1037,7 +1038,7 @@ public:
 //}
 
 
-template<class T, class DEL>
+MEXP template<class T, class DEL>
 class Cache
 {
 	DEL deallocator;
@@ -1167,7 +1168,7 @@ public:
 	}
 };
 
-class ForceRowDel
+MEXP class ForceRowDel
 {
 public:
 	void free(RowPtrHolder* rowHolder)
@@ -1176,10 +1177,10 @@ public:
 	}
 };
 
-using RowptrCache = Cache<RowPtrHolder*, ForceRowDel>;
+MEXP using RowptrCache = Cache<RowPtrHolder*, ForceRowDel>;
 
 
-template<class T>
+MEXP template<class T>
 using PointerCache = Cache<T, PointerDel<T>>;
 
 //typedef float rowtype;
@@ -1198,7 +1199,7 @@ using PointerCache = Cache<T, PointerDel<T>>;
 //	}
 //};
 
-struct bytebuffer
+MEXP struct bytebuffer
 {
 	uchar* buffer = nullptr;
 	size_t capasity = 0;

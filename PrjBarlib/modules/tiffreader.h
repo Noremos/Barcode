@@ -1,6 +1,7 @@
 #ifndef TIFFREADER_H
 #define TIFFREADER_H
 //
+#ifndef SKIP_M_INC
 
 #include <exception>
 #include <stdio.h>
@@ -13,7 +14,9 @@
 #include "decoder.h"
 #include "sidesrc/flat_hash_map/unordered_map.hpp"
 
-enum class Tags : int {
+#endif
+
+MEXP enum class Tags : int {
 	//A general indication of the kind of data contained in this subfile.
 	NewSubfileType = 254,
 
@@ -224,9 +227,8 @@ enum class tifftype : short
 	SAMPLEFORMAT_COMPLEXIEEEFP
 
 };
-#include <string>
 
-struct GeoTiffTags
+MEXP struct GeoTiffTags
 {
 	short GTModelTypeGeoKey = 0;
 	std::string GTCitationGeoKey; //ASCII Projection  text|3253
@@ -238,7 +240,7 @@ struct GeoTiffTags
 	short ProjCoordTransGeoKey = 0;
 };
 
-struct TiffTags
+MEXP struct TiffTags
 {
 	//A general indication of the kind of data contained in this subfile.
 	size_t NewSubfileType = 0;
@@ -403,9 +405,9 @@ struct TiffTags
 };
 
 
-class TiffReader;
+MEXP class TiffReader;
 
-class TiffIFD
+MEXP class TiffIFD
 {
 public:
 	TiffIFD()
@@ -516,7 +518,7 @@ private:
 };
 
 
-struct SubImgInfo
+MEXP struct SubImgInfo
 {
 	int width;
 	int height;

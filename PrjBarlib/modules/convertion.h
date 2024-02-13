@@ -1,8 +1,10 @@
 #ifndef CONVERTION_H
 #define CONVERTION_H
+#ifndef M_SKIP_INC
 #include "base.h"
 #include <cstring>
 #include <bit>
+#endif
 
 union toduble
 {

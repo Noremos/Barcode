@@ -1,10 +1,9 @@
 #ifndef SKIP_M_INC
 #include "tiffreader.h"
-#endif // !SKIP_M_INC
 
 #ifndef QSLOT_CODE
 #include <iostream>
-#define OUT cout
+#define OUT std::cout
 #else
 #include <QDebug>
 #define OUT qDebug()
@@ -17,6 +16,7 @@
 #include <string>
 #include <cassert>
 #include "sidesrc/fast_float.h"
+#endif // !SKIP_M_INC
 
 
 
@@ -534,6 +534,8 @@ void TiffReader::read(uchar* buffer, offu64 offset, offu64 len)
 {
 #ifdef _MSC_VER
 	_fseeki64(pFile, offset, SEEK_SET);
+#elif defined(__APPLE__)
+	fseeko(pFile, offset, SEEK_SET);
 #else
 	fseeko64(pFile, offset, SEEK_SET);
 #endif
@@ -928,7 +930,11 @@ bool TiffReader::open(const std::string& path)
 	ready = false;
 	isTile = false;
 
+#ifdef __APPLE__
+	pFile = fopen(path.c_str(), "rb");
+#else
 	fopen_s(&pFile, path.c_str(), "rb");
+#endif
 	if (pFile == NULL)
 	{
 		perror("Error opening file");

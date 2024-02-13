@@ -1,6 +1,6 @@
 #ifndef SKIP_M_INC
 
-#include "barclasses.h"
+#include "../include/barclasses.h"
 #include <math.h>
 
 #endif
@@ -99,7 +99,7 @@ void bc::Baritem::relen()
 		barlines[i]->start -= mini;
 
 	//mini = std::min_element(arr.begin(), arr.end(), [](barline &b1, barline &b2) { return b1.start < b2.start; })->start;
-	//std::for_each(arr.begin(), arr.end(), [mini](barline &n) {return n.start - uchar(mini); });
+	//std::for_each(arr.begin(), arr.end(), [mini](barline &n) {return n.start - buchar(mini); });
 }
 
 void bc::Baritem::removePorog(const Barscalar porog)

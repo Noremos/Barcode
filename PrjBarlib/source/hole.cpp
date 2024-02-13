@@ -1,7 +1,7 @@
 #ifndef SKIP_M_INC
 
-#include "hole.h"
-#include "barcodeCreator.h"
+#include "../include/hole.h"
+#include "../include/barcodeCreator.h"
 
 #endif // !SKIP_M_INC
 
@@ -139,4 +139,3 @@ bool bc::Hole::findCross(point p, bc::Hole* hole)
 	}
 	return false;
 }
-

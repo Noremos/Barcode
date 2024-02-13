@@ -1,7 +1,7 @@
 #ifndef SKIP_M_INC
 
 
-#include "barcodeCreator.h"
+#include "../include/barcodeCreator.h"
 
 #include <stack>
 #include <string>
@@ -12,7 +12,7 @@
 #include <iostream>
 #include <map>
 
-#include <barImg.h>
+#include "../include/barImg.h"
 #include <cmath>
 
 
@@ -498,7 +498,7 @@ struct hsv {
 		}
 		else
 		{
-			// if max is 0, then r = g = b = 0              
+			// if max is 0, then r = g = b = 0
 			// s = 0, h is undefined
 			s = 0.0;
 			h = NAN;                            // its now undefined
@@ -510,7 +510,7 @@ struct hsv {
 struct CIELAB
 {
 	float c, a, b;
-	
+
 	CIELAB(int r, int g, int b)
 	{
 		toLab(r, g, b);

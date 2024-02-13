@@ -17,6 +17,7 @@ export module BarTypes;
 
 import BarScalarModule;
 
+#define MEXP export
 #include "../include/barstrucs.h"
 #include "../include/barline.h"
 
@@ -24,42 +25,6 @@ export namespace bc
 {
 	const unsigned int BAR_MAX_WID = 65535;
 
-	BType;
-	BIndex;
-	poidex;
-
-	point;
-	pointHash;
-	pmap;
-
-	CachedValue;
-	BarConstructor;
-	DatagridProvider;
-
-	BarRect;
-	barline;
-	BarclinesHolder;
-	using bc::BarRoot;
-
-	using bc::barlinevector;
-	using bc::barvector;
-	using bc::barcounter;
-	barvalue;
-	CachedValue;
-	bar3dvalue;
-
-	barstruct;
-
-	CompireStrategy;
-	ComponentType;
-	ProcType;
-	ColorType;
-	ReturnType;
-	ReturnType;
-	AttachMode;
-	ProcessStrategy;
-
-	BarRect;
 	bc::BarRect getBarRect(const bc::barvector& matrix)
 	{
 		int l, r, t, d;

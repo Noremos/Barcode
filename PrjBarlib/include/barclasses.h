@@ -7,7 +7,7 @@
 #include <iostream>
 #endif
 
-namespace bc
+MEXP namespace bc
 {
 	class EXPORT Barbase
 	{

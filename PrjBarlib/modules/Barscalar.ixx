@@ -1,5 +1,4 @@
 module;
-#define SKIP_M_INC
 
 #include <vector>
 #include <assert.h>
@@ -10,11 +9,9 @@ module;
 #include "../include/include_py.h"
 
 export module BarScalarModule;
-
+#define MEXP export
+#define SKIP_M_INC
 #include "../include/barscalar.h"
 
-export
-{
-    BarType;
-    Barscalar;
-}
+// export BarType;
+// export Barscalar;

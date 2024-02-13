@@ -172,7 +172,7 @@ void bc::CloudPointsBarcode::sortTriangulate()
 }
 
 
-void CloudPointsBarcode::process(Barcontainer* item)
+void bc::CloudPointsBarcode::process(Barcontainer* item)
 {
 	if (useHolde)
 	{
@@ -602,7 +602,7 @@ void CloudPointsBarcode::processHold()
 	{
 		const PointIndexCov& val = sortedArr.get()[curIndexInSortedArr];
 
-		//const uint curIndex = val.points[0];
+		//const buint curIndex = val.points[0];
 		CloudPoint curCloudPoint = cloud->points[val.points[0]];
 		bc::point curPoint(curCloudPoint.x, curCloudPoint.y);
 		poidex curPoindex = curPoint.getLiner(BAR_MAX_WID);

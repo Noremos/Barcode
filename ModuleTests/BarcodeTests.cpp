@@ -171,7 +171,7 @@ TEST(BarcodeTests, component6by6)
 {
 	bc::BarcodeCreator test;
 	auto bcont = defineConstr();
-	
+
 	TestImg img(6,6,1, new unsigned char[36]{
 		63,121,73,14,120,135,
 		237,90,194,136,4,43,
@@ -180,9 +180,9 @@ TEST(BarcodeTests, component6by6)
 		65,141,145,34,203,167,
 		158,234,20,145,80,176
 	});
-	
+
 	auto* ret = test.createBarcode(&img, bcont);
-	
+
 	ASSERT_TRUE(ret->count() == (size_t)1);
 }
 

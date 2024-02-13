@@ -38,7 +38,7 @@ namespace bc {
 		//middleLeft,
 		bottomLeft
 	};
-	struct indexCov
+	MEXP struct indexCov
 	{
 		poidex offset = 0;
 		float dist = 0;
@@ -99,7 +99,7 @@ namespace bc {
 	using Include = Component*;
 
 
-	class EXPORT BarcodeCreator
+	MEXP class EXPORT BarcodeCreator
 	{
 		typedef bc::DatagridProvider bcBarImg;
 
@@ -351,5 +351,5 @@ namespace bc {
 		std::unique_ptr<indexCov> geometrySortedArr;
 	};
 
-	using PloyPoints = std::vector<bc::point>;
+	MEXP using PloyPoints = std::vector<bc::point>;
 }

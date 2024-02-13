@@ -1,5 +1,5 @@
-#pragma once
 #ifndef SKIP_M_INC
+#pragma once
 
 #include <vector>
 #include <assert.h>
@@ -55,7 +55,7 @@ using uchar = unsigned char;
 //	}
 //};
 
-enum class BarType : char
+MEXP enum class BarType : char
 {
 	NONE = 0,
 	BYTE8_1,
@@ -67,7 +67,7 @@ enum class BarType : char
 	//INT32_3
 };
 
-class EXPORT Barscalar
+MEXP class EXPORT Barscalar
 {
 	union BarData
 	{
@@ -1210,6 +1210,7 @@ public:
 			return data.b3[index];
 		default:
 			assert(false);
+			return 0;
 		}
 	}
 

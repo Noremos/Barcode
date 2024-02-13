@@ -1,8 +1,8 @@
 #ifndef SKIP_M_INC
 
-#include "component.h"
+#include "../include/component.h"
 
-#include "barcodeCreator.h"
+#include "../include/barcodeCreator.h"
 #include <assert.h>
 
 #endif

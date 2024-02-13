@@ -12,7 +12,7 @@
 #include "barstrucs.h"
 #endif
 
-namespace bc {
+MEXP namespace bc {
 
 
 	/*struct BarVec3f

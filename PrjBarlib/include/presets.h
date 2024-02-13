@@ -1,4 +1,7 @@
+#ifndef SKIP_M_INC
 #pragma once
+#endif
+#define MEXP
 // #undef USE_OPENCV
 //#define VDEBUG
 //#define ENABLE_ENERGY
@@ -6,9 +9,8 @@
 //#define POINTS_ARE_AVAILABLE
 
 
-#include "../side/flat_hash_map/unordered_map.hpp"
-
-
+// #include "../side/flat_hash_map/unordered_map.hpp"
+#include <unordered_map>
 
 typedef unsigned char uchar;
 typedef unsigned short ushort;
@@ -16,10 +18,10 @@ typedef unsigned int uint;
 
 
 template<class TKey, class TVal>
-using barmap = ska::unordered_map<TKey, TVal>;
+using barmap = std::unordered_map<TKey, TVal>;
 
 template<class TKey, class TVal, class THasher>
-using barmapHash = ska::unordered_map<TKey, TVal, THasher>;
+using barmapHash = std::unordered_map<TKey, TVal, THasher>;
 
 
 

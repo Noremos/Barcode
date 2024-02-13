@@ -12,7 +12,7 @@
 #include <unordered_set>
 #include <stack>
 #endif
-namespace bc
+MEXP namespace bc
 {
 	struct barline;
 	using barlinevector = std::vector<barline*>;

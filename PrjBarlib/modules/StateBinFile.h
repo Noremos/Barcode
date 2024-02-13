@@ -10,7 +10,7 @@
 #endif
 
 
-namespace StateBinFile
+MEXP namespace StateBinFile
 {
 	using uint = unsigned int;
 	using uchar = unsigned char;

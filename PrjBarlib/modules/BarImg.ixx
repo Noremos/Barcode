@@ -1,5 +1,5 @@
 module;
-#define SKIP_M_INC
+
 #include "../include/presets.h"
 
 #include <iterator>
@@ -11,10 +11,8 @@ module;
 
 export module BarImgModule;
 import BarTypes;
+import BarScalarModule;
 
+#define MEXP
+#define SKIP_M_INC
 #include "../include/barImg.h"
-
-export namespace bc
-{
-    BarImg;
-}
