@@ -116,8 +116,7 @@ MEXP namespace bc
 
 	struct barstruct
 	{
-		CachedValue stepPorog;
-		CachedValue maxLen;
+		float maxLen= 999999;
 		float maxRadius = 999999;
 		float minAttachRadius = 0;
 	public:
@@ -180,22 +179,17 @@ MEXP namespace bc
 		// разница соединяемых значений должна быть меньше этого значения
 		Barscalar getMaxStepPorog() const
 		{
-			return stepPorog.getOrDefault(Barscalar(0));
-		}
-
-		void setStep(Barscalar val)
-		{
-			stepPorog.set(val);
+			return maxRadius;
 		}
 
 		Barscalar getMaxLen() const
 		{
-			return maxLen.getOrDefault(Barscalar(0));
+			return maxLen;
 		}
 
-		void setMaxLen(Barscalar val)
+		void setMaxLen(float val)
 		{
-			maxLen.set(val);
+			maxLen = val;
 		}
 	};
 

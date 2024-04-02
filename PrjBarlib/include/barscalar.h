@@ -311,6 +311,7 @@ private:
 		case BarType::BYTE8_3:
 		case BarType::BYTE8_4:
 		case BarType::FLOAT32_1:
+		case BarType::FLOAT32_3:
 		{
 			float a = this->getAvgFloat();
 			float b = X.getAvgFloat();
@@ -1177,6 +1178,62 @@ public:
 	{
 		Barscalar res = *this;
 		res /= R;
+		return res;
+	}
+
+	Barscalar operator%(int n)
+	{
+		Barscalar res = *this;
+		switch (type)
+		{
+		case BarType::BYTE8_1:
+			res.data.b1 %= n;
+			break;
+		case BarType::BYTE8_3:
+		{
+			for (char i = 0; i < 3; ++i)
+				res.data.b3[i] %= n;
+
+			break;
+		}
+		case BarType::FLOAT32_1:
+			res.data.f = static_cast<int>(data.f) % n;
+			break;
+		default:
+			assert(false);
+		}
+		return res;
+	}
+
+	Barscalar operator%(const Barscalar& r)
+	{
+		Barscalar res = *this;
+		switch (type)
+		{
+		case BarType::BYTE8_1:
+			res.data.b1 %= r.getByte8();
+			break;
+		case BarType::BYTE8_3:
+		{
+			if (r.type == BarType::BYTE8_1)
+			{
+				for (char i = 0; i < 3; ++i)
+					res.data.b3[i] %= r.getAvgUchar();
+			}
+			else
+			{
+				for (char i = 0; i < 3; ++i)
+					res.data.b3[i] %= r.data.b3[i];
+			}
+
+			break;
+		}
+		case BarType::FLOAT32_1:
+			res.data.f = static_cast<int>(data.f) % static_cast<int>(r.getAvgFloat());
+			break;
+		default:
+			assert(false);
+		}
 		return res;
 	}
 

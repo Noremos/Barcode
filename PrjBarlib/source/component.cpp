@@ -386,7 +386,7 @@ void bc::Component::passConnections(BarcodeCreator* factory)
 			continue;
 
 		// if len more then maxlen, kill the component
-		const bool more = factory->settings.maxLen.isCached && factory->curbright.absDiff(first->getStart()) > factory->settings.maxLen.getOrDefault(0);
+		const bool more = factory->curbright.absDiff(first->getStart()) > factory->settings.maxLen;
 		if (more)
 		{
 			//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);
@@ -476,7 +476,7 @@ void bc::Component::process(BarcodeCreator* factory)
 		else
 		{
 			// if len more then maxlen, kill the component
-			bool more = factory->settings.maxLen.isCached && factory->curbright.absDiff(first->getStart()) > factory->settings.maxLen.getOrDefault(0);
+			bool more = factory->curbright.absDiff(first->getStart()) > factory->settings.maxLen;
 			if (more)
 			{
 				//qDebug() << first->num << " " << curbright << " " << settings.maxLen.getOrDefault(0);

@@ -55,7 +55,6 @@ PYBIND11_MODULE(barpy, m)
 		;
 
 
-	
 	class_<bc::point>(m,  "Point")
 		.def(init<int, int>())
 		.def_readwrite("x", &bc::point::x)
@@ -135,6 +134,7 @@ PYBIND11_MODULE(barpy, m)
 	class_<bc::Baritem>(m,  "Baritem")
 		.def("sum", &bc::Baritem::sum)
 		.def("relen", &bc::Baritem::relen)
+		.def("normalize", &bc::Baritem::relen)
 		.def("clone", &bc::Baritem::clone, return_value_policy::take_ownership)
 		.def("maxLen", &bc::Baritem::maxLen)
 		.def("removePorog", &bc::Baritem::removePorog)
@@ -171,7 +171,6 @@ PYBIND11_MODULE(barpy, m)
 	class_<bc::BarConstructor>(m,  "BarConstructor")
 		.def(py::init<>())
 		.def("addStructure", &bc::BarConstructor::addStructure, "ProcType"_a, "ColorType"_a, "ComponentType"_a)
-		.def("setPorogStep", &bc::BarConstructor::setStep, "porog"_a)
 		.def("setMaxLen", &bc::BarConstructor::setMaxLen, "len"_a)
 		.def_readwrite("maxRadius", &bc::BarConstructor::maxRadius)
 		.def_readwrite("returnType", &bc::BarConstructor::returnType)

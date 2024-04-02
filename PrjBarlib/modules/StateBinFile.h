@@ -215,17 +215,17 @@ MEXP namespace StateBinFile
 			close();
 		}
 
-		void beginItem()
+		void beginItem() override
 		{
 			//itemPtr.reset(new bc::Baritem());
 		}
 
-		void endItem()
+		void endItem() override
 		{
 			//return itemPtr.release();
 		}
 
-		virtual bool isReading()
+		virtual bool isReading() override
 		{
 			return true;
 		}
@@ -251,7 +251,7 @@ MEXP namespace StateBinFile
 		}
 
 
-		bool open(const std::string& path)
+		bool open(const std::string& path) override
 		{
 			if (!inside)
 				throw;
@@ -279,11 +279,11 @@ MEXP namespace StateBinFile
 			return memoffs.size();
 		}
 
-		virtual bool ended()
+		virtual bool ended() override
 		{
 			return stream.eof() || stream.tellg() >= itemsEndPos;
 		}
-		virtual void close()
+		virtual void close() override
 		{
 			if (inside)
 				mainStream.close();
@@ -332,35 +332,35 @@ MEXP namespace StateBinFile
 			return ysize;
 		}
 
-		bool pBool(bool)
+		bool pBool(bool) override
 		{
 			uchar value;
 			readRaw(value);
 			return value > 0;
 		}
 
-		short pShort(short)
+		short pShort(short) override
 		{
 			short vale;
 			readRaw(vale);
 			return vale;
 		}
 
-		act pInt(act)
+		act pInt(act) override
 		{
 			act vale;
 			readRaw(vale);
 			return vale;
 		}
 
-		float pFloat(float)
+		float pFloat(float) override
 		{
 			float val;
 			readRaw(val);
 			return val;
 		}
 
-		size_t pInt64(size_t)
+		size_t pInt64(size_t) override
 		{
 			size_t vale;
 			readRaw(vale);
@@ -372,14 +372,14 @@ MEXP namespace StateBinFile
 			return parseBarscal(stream);
 		}
 
-		uchar* pElement(const uchar* begin, size_t elId, size_t elSize)
+		uchar* pElement(const uchar* begin, size_t elId, size_t elSize) override
 		{
 			char* start = (char*)begin + elId * elSize;
 			stream.read(start, elSize);
 			return (uchar*)start;
 		}
 
-		act pArray(act arrSize)
+		act pArray(act arrSize) override
 		{
 			return pInt(arrSize);
 		}

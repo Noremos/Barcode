@@ -1,3 +1,4 @@
+#include <cstddef>
 #ifndef SKIP_M_INC
 
 
@@ -1012,7 +1013,7 @@ void BarcodeCreator::sortPixels(ProcType type)
 					continue;
 
 				uchar p = workingImg->getLiner(i).getAvgUchar();
-				assert(offs[p] < processCount);
+				assert(offs[p] < processCount || processCount == 0);
 				data[offs[p]++] = i;
 			}
 		}
@@ -1144,7 +1145,7 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type)
 
 #endif
 	included = new Include[totalSize];
-	memset(included, NULL, totalSize * sizeof(Include));
+	std::fill(included, included + totalSize, nullptr);
 
 #ifdef USE_OPENCV
 	if (colors.size() == 0 && settings.visualize)

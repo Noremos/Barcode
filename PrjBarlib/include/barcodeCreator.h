@@ -160,18 +160,6 @@ namespace bc {
 			if (workingImg != nullptr && needDelImg)
 				delete workingImg;
 			workingImg = newWI;
-
-			if (!settings.stepPorog.isCached || !settings.maxLen.isCached)
-			{
-				Barscalar maxVal, minVal;
-				workingImg->maxAndMin(minVal, maxVal);
-
-				if (!settings.stepPorog.isCached)
-					settings.stepPorog.set(maxVal - minVal);
-
-				if (!settings.maxLen.isCached)
-					settings.maxLen.set(maxVal - minVal);
-			}
 		}
 
 	protected:
@@ -218,7 +206,7 @@ namespace bc {
 
 		bool GETDIFF(const Barscalar& a, const Barscalar& b) const
 		{
-			return !this->settings.stepPorog.isCached || (a > b ? a - b : b - a) <= this->settings.getMaxStepPorog();
+			return a.absDiff(b) <= this->settings.getMaxStepPorog();
 		}
 	public:
 		point getPoint(poidex i) const
