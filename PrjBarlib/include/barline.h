@@ -70,7 +70,7 @@ MEXP namespace bc
 		}
 
 		barline(Barscalar _start, Barscalar _end, int = 0, barcounter* _barc = nullptr, size_t coordsSize = 0) :
-			start(_start), m_end(_end), id(-1), parentId(-1)
+			start(_start), m_end(_end)
 			//			  ,matWid(wid)
 		{
 			matr.reserve(coordsSize);

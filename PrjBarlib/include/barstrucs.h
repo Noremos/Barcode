@@ -297,7 +297,8 @@ MEXP namespace bc
 	{
 		Barscalar value;
 		size_t count = 0;
-		float rat = 0.f, cx = 0, cy = 0;
+		float cx = 0.f, cy = 0.f;
+		float rat = 0.f;
 
 		bar3dvalue(Barscalar value, size_t count)
 		{
@@ -308,7 +309,7 @@ MEXP namespace bc
 		{
 		}
 
-		bar3dvalue(float x, float y, float r) : cx(x), cy(y), rat(r), count(0), value()
+		bar3dvalue(float x, float y, float r) : cx(x), cy(y), rat(r)
 		{
 		}
 	};
