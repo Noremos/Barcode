@@ -1157,7 +1157,7 @@ public:
 	{
 		for (auto& it : cachedData)
 		{
-			size_t t = it.second->byteSize();
+			// size_t t = it.second->byteSize();
 			// printRemove(t);
 			deallocator.free(it.second);
 		}

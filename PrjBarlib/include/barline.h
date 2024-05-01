@@ -789,7 +789,6 @@ MEXP namespace bc
 
 		bool is3dmoreing() const
 		{
-			float d = (float)this->len() / 256;
 			int coos[256];
 			for (size_t i = 0; i < bar3d->size(); ++i)
 			{

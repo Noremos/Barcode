@@ -421,10 +421,10 @@ MEXP namespace StateBinFile
 
 	public:
 
-		BinStateWriter() : stream(filestream), inside(true)
+		BinStateWriter() : inside(true), stream(filestream)
 		{ }
 
-		BinStateWriter(std::ostream& outStream) : stream(outStream), inside(false)
+		BinStateWriter(std::ostream& outStream) : inside(false), stream(outStream)
 		{
 			size_t memOff = 0;
 			writeRaw(memOff);

@@ -487,7 +487,7 @@ public:
 		case BarType::BYTE8_3:
 		{
 			float res = 0.f;
-			for (char i = 0; i < 3; ++i)
+			for (unsigned char i = 0; i < 3; ++i)
 			{
 				res += static_cast<float>(data.b3[i]) / static_cast<float>(X.data.b3[i]);
 			}
@@ -740,15 +740,15 @@ public:
 //			switch (fraction.type)
 //			{
 //				case BarType::BYTE8_1:
-//					for (char i = 0; i < 3; ++i)
+//					for (unsigned char i = 0; i < 3; ++i)
 //						data.b3[i] = fraction.data.b1;
 //					break;
 //				case BarType::BYTE8_3:
-//					for (char i = 0; i < 3; ++i)
+//					for (unsigned char i = 0; i < 3; ++i)
 //						data.b3[i] = fraction.data.b3[i];
 //					break;
 //				case BarType::FLOAT32_1:
-//					for (char i = 0; i < 3; ++i)
+//					for (unsigned char i = 0; i < 3; ++i)
 //						data.b3[i] = fraction.data.f;
 //					break;
 //				default:
@@ -826,7 +826,7 @@ public:
 		case BarType::BYTE8_3:
 		{
 			float res = 0;
-			for (char i = 0; i < 3; i++)
+			for (unsigned char i = 0; i < 3; i++)
 				res += sp(difMax(data.b3[i], R.data.b3[i]));
 
 			return sqrtf(res);
@@ -863,7 +863,7 @@ public:
 			data.b1 += R;
 			break;
 		case BarType::BYTE8_3:
-			for (char i = 0; i < 3; ++i)
+			for (unsigned char i = 0; i < 3; ++i)
 				data.b3[i] += R;
 			break;
 		case BarType::FLOAT32_1:
@@ -888,15 +888,15 @@ public:
 			switch (type)
 			{
 			case BarType::BYTE8_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] += R.data.b1;
 				break;
 			case BarType::BYTE8_3:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] += R.data.b3[i];
 				break;
 			case BarType::FLOAT32_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] += R.data.f;
 				break;
 			default:
@@ -928,15 +928,15 @@ public:
 			switch (type)
 			{
 			case BarType::BYTE8_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] -= R;
 				break;
 			case BarType::BYTE8_3:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] -= R;
 				break;
 			case BarType::FLOAT32_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] -= R;
 				break;
 			default:
@@ -965,15 +965,15 @@ public:
 			switch (type)
 			{
 			case BarType::BYTE8_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] -= R.data.b1;
 				break;
 			case BarType::BYTE8_3:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] -= R.data.b3[i];
 				break;
 			case BarType::FLOAT32_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] -= (uchar)R.data.f;
 				break;
 			default:
@@ -1000,7 +1000,7 @@ public:
 			data.b1 *= R;
 			break;
 		case BarType::BYTE8_3:
-			for (char i = 0; i < 3; ++i)
+			for (unsigned char i = 0; i < 3; ++i)
 				data.b3[i] *= R;
 			break;
 		default:
@@ -1022,15 +1022,15 @@ public:
 			switch (type)
 			{
 			case BarType::BYTE8_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] *= R.data.b1;
 				break;
 			case BarType::BYTE8_3:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] *= R.data.b3[i];
 				break;
 			case BarType::FLOAT32_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] *= R.data.f;
 				break;
 			default:
@@ -1061,15 +1061,15 @@ public:
 			switch (type)
 			{
 			case BarType::BYTE8_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] /= R;
 				break;
 			case BarType::BYTE8_3:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] /= R;
 				break;
 			case BarType::FLOAT32_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] /= R;
 				break;
 			default:
@@ -1098,15 +1098,15 @@ public:
 			switch (type)
 			{
 			case BarType::BYTE8_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] /= R.data.b1;
 				break;
 			case BarType::BYTE8_3:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] /= R.data.b3[i];
 				break;
 			case BarType::FLOAT32_1:
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					data.b3[i] /= R.data.f;
 				break;
 			default:
@@ -1197,7 +1197,7 @@ public:
 			break;
 		case BarType::BYTE8_3:
 		{
-			for (char i = 0; i < 3; ++i)
+			for (unsigned char i = 0; i < 3; ++i)
 				res.data.b3[i] %= n;
 
 			break;
@@ -1223,12 +1223,12 @@ public:
 		{
 			if (r.type == BarType::BYTE8_1)
 			{
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					res.data.b3[i] %= r.getAvgUchar();
 			}
 			else
 			{
-				for (char i = 0; i < 3; ++i)
+				for (unsigned char i = 0; i < 3; ++i)
 					res.data.b3[i] %= r.data.b3[i];
 			}
 

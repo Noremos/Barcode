@@ -29,20 +29,20 @@ using namespace bc;
 
 
 
-static inline void split(const DatagridProvider& src, std::vector<BarImg*>& bgr)
-{
-	size_t step = static_cast<size_t>(src.channels()) * src.typeSize();
-	for (int k = 0; k < src.channels(); k++)
-	{
-		BarImg* ib = new BarImg(src.wid(), src.hei());
-		bgr.push_back(ib);
+// static inline void split(const DatagridProvider& src, std::vector<BarImg*>& bgr)
+// {
+// 	size_t step = static_cast<size_t>(src.channels()) * src.typeSize();
+// 	for (int k = 0; k < src.channels(); k++)
+// 	{
+// 		BarImg* ib = new BarImg(src.wid(), src.hei());
+// 		bgr.push_back(ib);
 
-		for (size_t i = 0; i < static_cast<unsigned long long>(src.length()) * src.typeSize(); i += step)
-		{
-			ib->setLiner(i, src.getLiner(i));
-		}
-	}
-}
+// 		for (size_t i = 0; i < static_cast<unsigned long long>(src.length()) * src.typeSize(); i += step)
+// 		{
+// 			ib->setLiner(i, src.getLiner(i));
+// 		}
+// 	}
+// }
 
 enum class BarConvert
 {
@@ -1390,7 +1390,7 @@ void BarcodeCreator::processTypeF(const bc::DatagridProvider* src, Barcontainer*
 
 void BarcodeCreator::processFULL(const bc::DatagridProvider* img, Barcontainer* item)
 {
-	bool rgb = (img->channels() != 1);
+	// bool rgb = (img->channels() != 1);
 
 
 	//	if (settings.comtype == ComponentType::Component && rgb)

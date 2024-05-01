@@ -341,7 +341,6 @@ void bc::Component::passConnections(BarcodeCreator* factory)
 
 void bc::Component::process(BarcodeCreator* factory)
 {
-	Component* first = nullptr;
 	//TODO выделять паять заранее
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
 
