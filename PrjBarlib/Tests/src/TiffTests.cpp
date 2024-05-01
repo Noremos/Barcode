@@ -4,9 +4,9 @@
 #include "pch.h"
 #include "gtest/gtest.h"
 //#include "../PrjBarlib/modules/tiffreader.h"
-#include "../ModuleTests/stb_image.h"
-#define TIFF_FILE_PATH "../ModuleTests/files/tiff/sample_640×426.tiff"
-#define PNG_FILE_PATH "../ModuleTests/files/png/sample_640×426.png"
+#include "stb_image.h"
+#define TIFF_FILE_PATH "../files/tiff/sample_640×426.tiff"
+#define PNG_FILE_PATH "../files/png/sample_640×426.png"
 int main(int argc, char* argv[])
 {
 	::testing::InitGoogleTest(&argc, argv);
@@ -55,7 +55,7 @@ TEST(TiffReaderTags, TagComparison) // не ясно, как посмотрет�
 	reader.open(TIFF_FILE_PATH);
 	reader.setCurrentSubImage(1);
 	// TiffTags& actualTags = reader.getTags();
-	// TiffTags expectedTags = 
+	// TiffTags expectedTags =
 }
 
 TEST(TiffReaderArea, RegionComparison)

@@ -3,8 +3,8 @@
 
 #include "barstrucs.h"
 
-#include "include_py.h"
-#include "include_cv.h"
+#include "../extra/include_py.h"
+#include "../extra/include_cv.h"
 
 #include <math.h>
 #include <string>
@@ -27,6 +27,8 @@ MEXP namespace bc
 	struct ShortPoint
 	{
 		short x, y;
+		ShortPoint(short x, short y) : x(x), y(y)
+		{ }
 
 		short diff(int a)
 		{

@@ -370,3 +370,7 @@ PrjBarlib/algorithmes
 PrjBarlib/build
 CMake
 out
+PrjBarlib/Tests/*.make
+PrjBarlib/Tests/Makefile
+PrjBarlib/Tests/build
+PrjBarlib/Tests/build/BarTests

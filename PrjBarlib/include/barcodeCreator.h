@@ -11,8 +11,8 @@
 #include <memory>
 
 
-#include "include_py.h"
-#include "include_cv.h"
+#include "../extra/include_py.h"
+#include "../extra/include_cv.h"
 #endif
 
 #define COMPP Component*
