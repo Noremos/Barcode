@@ -113,6 +113,7 @@ namespace bc {
 	public:
 		barstruct settings;
 		bool skipAddPointsToParent = false;
+		int sameStart = 0;
 
 	private:
 		Include* included = nullptr;
@@ -206,6 +207,7 @@ namespace bc {
 
 		bool GETDIFF(const Barscalar& a, const Barscalar& b) const
 		{
+			return true;
 			return a.absDiff(b) <= this->settings.getMaxStepPorog();
 		}
 	public:

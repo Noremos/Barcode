@@ -44,11 +44,6 @@ static inline void split(const DatagridProvider& src, std::vector<BarImg*>& bgr)
 	}
 }
 
-//template<class Barscalar, class U>
-//static inline void split(const DatagridProvider<BarVec3b>& src, std::vector<DatagridProvider<U>*>& bgr)
-//{
-//}
-
 enum class BarConvert
 {
 	BGR2GRAY,
@@ -84,123 +79,7 @@ inline void cvtColorV3B2U1C(const bc::DatagridProvider& source, bc::BarImg& dest
 		dest.setLiner(i, (uchar)accum);
 	}
 }
-//template<class Barscalar, class U>
-//static inline void cvtColor(const bc::DatagridProvider& source, bc::DatagridProvider<U>& dest)
-//{
 
-//}
-
-//// note: this function is not a member function!
-
-//BarImg operator+(const Barscalar& c1, BarImg& c2);
-//BarImg operator-(const Barscalar& c1, const BarImg& c2);
-
-#ifdef USE_OPENCV
-
-cv::Mat convertProvider2Mat(DatagridProvider* img)
-{
-	cv::Mat m = cv::Mat::zeros(img->hei(), img->wid(), CV_8UC1);
-	for (size_t i = 0; i < img->length(); i++)
-	{
-		auto p = img->getPointAt(i);
-		m.at<uchar>(p.y, p.x) = img->get(p.x, p.y).data.b1;
-	}
-	return m;
-}
-
-
-cv::Mat convertRGBProvider2Mat(const DatagridProvider* img)
-{
-	cv::Mat m = cv::Mat::zeros(img->hei(), img->wid(), CV_8UC3);
-	for (size_t i = 0; i < img->length(); i++)
-	{
-		auto p = img->getPointAt(i);
-		m.at<cv::Vec3b>(p.y, p.x) = img->get(p.x, p.y).toCvVec();
-	}
-	return m;
-}
-
-#endif // USE_OPENCV
-
-void BarcodeCreator::draw(std::string name)
-{
-#ifdef USE_OPENCV
-
-	int wd = wid * 10;
-	int hi = hei * 10;
-	cv::Mat img(hi, wd, CV_8UC3, cv::Scalar(255, 255, 255));
-	cv::Vec3b v(100, 100, 100);
-	size_t size = colors.size();
-	//если 2 занимают одну клтку
-
-	for (int i = 0; i < hi; i += 10)
-		for (int j = 0; j < wd; j++) {
-			img.at<cv::Vec3b>(i, j) = v;
-			img.at<cv::Vec3b>(i + 1, j) = v;
-		}
-
-
-	for (int j = 0; j < wd; j += 10)
-		for (int i = 0; i < hi; i++) {
-			img.at<cv::Vec3b>(i, j) = v;
-			img.at<cv::Vec3b>(i, j + 1) = v;
-		}
-
-	for (size_t i = 0; i < totalSize; i++) {
-		//		Hole *phole = dynamic_cast<Hole *>(included[i]);
-		//		if (phole == nullptr)
-		//			continue;
-		COMPP comp = getInclude(i);
-		if (comp == nullptr || !comp->isAlive())
-			continue;
-		int x = static_cast<int>(i % wid);
-		int y = static_cast<int>(i / wid);
-		int tic = 1;
-		int marc = cv::MARKER_TILTED_CROSS;
-		cv::Vec3b col;
-
-		cv::Point p(x, y);
-		//		if (!phole->isValid)
-		//		{
-		//			marc = cv::MARKER_DIAMOND;
-		//			col = cv::Vec3b(0, 0, 255);
-		//		}
-		//		else if (phole->getIsOutside())
-		//		{
-		//			col = cv::Vec3b(0, 0, 10);
-		//			tic = 2;
-		//			marc = cv::MARKER_CROSS;
-		//		}
-		//		else
-		{
-			Hole* hd = dynamic_cast<Hole*>(comp);
-			col = colors[(size_t)comp->startIndex % size];
-
-			marc = cv::MARKER_TILTED_CROSS;
-		}
-
-		p.x = p.x * 10 + 5;
-		p.y = p.y * 10 + 5;
-		cv::drawMarker(img, p, col, marc, 10, tic, cv::LINE_4);
-
-	}
-	cv::namedWindow(name, cv::WINDOW_GUI_EXPANDED);
-	cv::imshow(name, img);
-
-	const int corWin = 600;
-	const int corHei = 500;
-	if (wd > hi)
-	{
-		float ad = (float)corWin / wd;
-		cv::resizeWindow(name, corWin, (int)(hi * ad));
-	}
-	else
-	{
-		float ad = (float)corHei / hi;
-		cv::resizeWindow(name, (int)(wd * ad), corHei);
-	}
-#endif // USE_OPENCV
-}
 
 struct Connect
 {
@@ -1088,10 +967,11 @@ void BarcodeCreator::init(const bc::DatagridProvider* src, ProcType& type)
 	hei = src->hei();
 
 	needDelImg = false;
+	sameStart = 0;
 
 	if (type == ProcType::invertf0)
 	{
-		Barscalar mmin = 0, mmax = 0;
+		Barscalar mmin, mmax;
 		src->maxAndMin(mmin, mmax);
 		bc::BarImg* newone = new BarImg(src->wid(), src->hei());
 		for (size_t i = 0; i < src->length(); ++i)
@@ -1188,7 +1068,6 @@ void BarcodeCreator::processComp(Barcontainer* item)
 {
 	poidex* indexarr = sortedArr.get();
 	Barscalar prev = workingImg->get(getPoint(indexarr[0]));
-	int stPass0 = 0;
 	int state = 0;
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
 	{
@@ -1207,13 +1086,13 @@ void BarcodeCreator::processComp(Barcontainer* item)
 			{
 			case 0:
 				state = 1;
-				curIndexInSortedArr = stPass0 - 1;
+				curIndexInSortedArr = sameStart - 1;
 				continue;
 			case 1:
 				state = 2; // Skip first after stage 1 start
 				break;
 			case 2:
-				stPass0 = curIndexInSortedArr;
+				sameStart = curIndexInSortedArr;
 				state = 0;
 				break;
 			default:
@@ -1228,7 +1107,7 @@ void BarcodeCreator::processComp(Barcontainer* item)
 			Component::passSame(this);
 			if (curIndexInSortedArr == processCount - 1)
 			{
-				curIndexInSortedArr = stPass0 - 1;
+				curIndexInSortedArr = sameStart - 1;
 				state = 1;
 			}
 			break;
@@ -1365,7 +1244,7 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 	BarRoot* rootNode = nullptr;
 	if (settings.createGraph)
 	{
-		rootNode = new BarRoot(0, 0, workingImg->wid(), nullptr, 0);
+		rootNode = new BarRoot();
 		rootNode->initRoot(lines);
 	}
 
@@ -1642,7 +1521,9 @@ bc::Barcontainer* bc::BarcodeCreator::createPysBarcode(bn::array& img, bc::BarCo
 
 void BarcodeCreator::processCompByRadius(Barcontainer* item)
 {
+	sameStart = 0;
 	auto* get = geometrySortedArr.get();
+	float last = get[0].dist;
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
 	{
 		const indexCov& val = get[curIndexInSortedArr];
@@ -1650,53 +1531,13 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 		{
 			break;
 		}
+		if (last != val.dist)
+		{
+			sameStart = curIndexInSortedArr;
+			last = val.dist;
+		}
 
 		processRadius(val, true);
-
-#ifdef USE_OPENCV
-		if (settings.visualize)
-		{
-			const BarMat* mat = reinterpret_cast<const BarMat*>(this->workingImg);
-
-			if (mat)
-			{
-				Mat wimg;
-				bool is3d = this->type == BarType::BYTE8_3;
-				if (!is3d)
-					cv::cvtColor(mat->mat, wimg, cv::COLOR_GRAY2BGR);
-				else
-					mat->mat.copyTo(wimg);
-
-				int size = colors.size();
-
-				for (size_t i = 0; i < totalSize; i++)
-				{
-					COMPP comp = getInclude(i);
-					if (comp == nullptr || !comp->isAlive())
-						continue;
-					int x = static_cast<int>(i % wid);
-					int y = static_cast<int>(i / wid);
-					int tic = 1;
-					int marc = cv::MARKER_TILTED_CROSS;
-
-					cv::Point p(x, y);
-					cv::Vec3b col = colors[(size_t)comp->startIndex % size];
-
-					wimg.at<cv::Vec3b>(y, x) = col;
-				}
-				//wimg.at<cv::Vec3b>(curpix.y, curpix.x) = cv::Vec3b(255, 0, 0);
-				//wimg.at<cv::Vec3b>(NextPoint.y, NextPoint.x) = cv::Vec3b(0,0,255);
-
-				cv::namedWindow("img", cv::WINDOW_NORMAL);
-				cv::imshow("img", wimg);
-			}
-			else
-			{
-				draw("radius");
-			}
-			cv::waitKey(settings.waitK);
-		}
-#endif // USE_OPENCV
 	}
 	curbright = get[curIndexInSortedArr - 1].dist;
 
@@ -1718,7 +1559,6 @@ void BarcodeCreator::processCompByRadius(Barcontainer* item)
 template<class CP>
 static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barscalar valueToSecond, BarcodeCreator* factory, float distance)
 {
-
 	switch (factory->settings.attachMode)
 	{
 	case AttachMode::dontTouch:
@@ -1747,12 +1587,12 @@ static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barsca
 		break;
 	case AttachMode::createNew:
 	{
-		if (first->justCreated(distance))
+		if (first->justCreated())
 		{
 			connected->merge(first);
 			return connected;
 		}
-		else if (connected->justCreated(distance))
+		else if (connected->justCreated())
 		{
 			first->merge(connected);
 			return first;
@@ -1771,9 +1611,8 @@ static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barsca
 			else
 			{
 				CP* newOne = new CP(factory, distance);
-				newOne->markNotSame();
-				newOne->addChild(first, valueToFirst, distance);
-				newOne->addChild(connected, valueToSecond, distance);
+				newOne->addChild(first, valueToFirst, false);
+				newOne->addChild(connected, valueToSecond, false);
 				return newOne;
 			}
 		}
@@ -1787,7 +1626,7 @@ static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barsca
 	//	connected->markNotSame();
 	//}
 
-	first->addChild(connected, valueToSecond, distance);
+	first->addChild(connected, valueToSecond, true);
 	if (first->resline)
 	{
 		return first;

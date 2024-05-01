@@ -90,6 +90,12 @@ public:
 		type = BarType::BYTE8_1;
 	}
 
+	Barscalar(float f)
+	{
+		data.f = f;
+		type = BarType::FLOAT32_1;
+	}
+
 	template<typename T>
 	Barscalar(T i, BarType type)
 	{
@@ -1262,9 +1268,11 @@ public:
 			assert(index < 3);
 			return data.b3[index];
 		case BarType::BYTE8_1:
+			assert(index == 0);
+			return data.b1;
 		case BarType::FLOAT32_1:
 			assert(index == 0);
-			return data.b3[index];
+			return static_cast<uchar>(data.f);
 		default:
 			assert(false);
 			return 0;

@@ -331,7 +331,7 @@ MEXP namespace bc
 
 		Barscalar value;
 
-		barvalue(BType x, BType y, Barscalar value)
+		barvalue(BType x, BType y, const Barscalar& value)
 		{
 			assert(x >= 0);
 			assert(y >= 0);
@@ -340,7 +340,7 @@ MEXP namespace bc
 			this->value = value;
 		}
 
-		barvalue(bc::point p, Barscalar value)
+		barvalue(bc::point p, const Barscalar&  value)
 		{
 			assert(p.x >= 0);
 			assert(p.y >= 0);

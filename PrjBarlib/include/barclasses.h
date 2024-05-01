@@ -163,7 +163,7 @@ MEXP namespace bc
 
 		Barscalar getMax()
 		{
-			Barscalar _max{ 0 };
+			Barscalar _max(static_cast<uchar>(0));
 			for (auto* b : this->barlines)
 			{
 				if (b->start + b->len() > _max)

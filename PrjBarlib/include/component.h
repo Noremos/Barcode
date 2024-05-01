@@ -1,3 +1,4 @@
+#include "barscalar.h"
 #ifndef SKIP_M_INC
 #pragma once
 #include <vector>
@@ -34,12 +35,11 @@ namespace bc
 	public:
 		Component* parent = nullptr;
 		barline* resline = nullptr;
+		Barscalar lastDistance;
 
 		float energy = 0;
 	protected:
 		int cashedSize = 0;
-		Barscalar lastDistance = 0;
-		bool same = true;
 		//Barscalar avgSr = 0;
 		//point startPoint;
 		bool lived = true;
@@ -75,8 +75,8 @@ namespace bc
 		{
 			return lived;
 		}
-		void markNotSame();
-		virtual bool justCreated(const Barscalar& currentDistance);
+
+		virtual bool justCreated();
 
 		//Barscalar len()
 		//{
@@ -107,8 +107,7 @@ namespace bc
 		virtual bool add(const poidex index, const point p, const Barscalar& value, const Barscalar& distance, bool forsed = false);
 		void kill();
 		virtual void kill(const Barscalar& endScalar);
-		void addChild(Component* child, const Barscalar& lastValue, const Barscalar& distance);
-
+		void addChild(Component* child, const Barscalar& lastValue, bool allowMerge);
 
 		bool canBeConnected(const bc::point& p, bool incrSum = false);
 
@@ -140,11 +139,6 @@ namespace bc
 		{
 			add(pix1, p1, val1, lastDistance);
 			add(pix2, p2, val2, lastDistance);
-		}
-
-		bool justCreated(const Barscalar& distance) override
-		{
-			return same || resline->matr.size() == 2;
 		}
 	};
 

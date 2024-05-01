@@ -49,18 +49,11 @@ Barscalar bc::Component::getStart()
 	return resline->start;
 }
 
-void bc::Component::markNotSame()
-{
-	if (same)
-	{
-		same = false;
-		resline->initRoot(factory->root);
-	}
-}
 
-bool bc::Component::justCreated(const Barscalar& currentDistance)
+bool bc::Component::justCreated()
 {
-	return lastDistance == currentDistance && same;
+	// started after the same start
+	return startIndex >= factory->sameStart;
 }
 
 bool bc::Component::isContain(poidex index)
@@ -91,20 +84,19 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& valu
 
 
 	factory->setInclude(index, this);
+	// Ignore createBinaryMasks to merge points
 	//if (factory->settings.createBinaryMasks)
 	{
 		resline->addCoord(p, value);
 	}
-	bool eq = distance == lastDistance;
-	bool wasSame = same;
 
-	if (!eq && same)
+	const bool eq = distance == lastDistance;
+
+	if (!eq && resline->root == nullptr)
 	{
 		// Not just created
 		resline->initRoot(factory->root);
 	}
-
-	same = same && eq;
 
 	// 3d barcode/ —читаем кол-во добавленных значений
 	if (!eq)
@@ -120,69 +112,6 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& valu
 		}
 		cashedSize = 0;
 	}
-	// else
-	// {
-	// 	x += p.x;
-	// 	y += p.y;
-	// 	if (x > xMax)
-	// 		xMax = x;
-	// 	if (x < xMin)
-	// 		xMin = x;
-
-	// 	if (y > yMax)
-	// 		yMax = y;
-	// 	if (y < yMin)
-	// 		yMin = y;
-	// }
-
-
-#ifdef ENABLE_ENERGY
-
-	if (!same && wasSame)
-	{
-		int dd = resline->matr.size();
-		for (barvalue& val : resline->matr)
-		{
-			factory->energy[barvalue::getStatInd(val.getX(), val.getY(), factory->wid)] = dd;
-		}
-		if (dd > factory->maxe)
-			factory->maxe = dd;
-	}
-	else
-	{
-		int dds = 1;
-		static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 } };
-		for (size_t i = 0; i < 8; i++)
-		{
-			point po = p + poss[i];
-			if (factory->IS_OUT_OF_REG(po.x, po.y))
-				continue;
-
-			poidex d = po.getLiner(factory->wid);
-			assert(d < factory->totalSize);
-			auto& t = factory->energy[d];
-			if (t != 0)
-			{
-				//t /= 2;
-				//dds += t;
-
-				//t--;
-				dds++;
-			}
-		}
-		if (dds > factory->maxe)
-			factory->maxe = dds;
-
-
-		poidex dd = p.getLiner(factory->wid);
-		assert(dd < factory->totalSize);
-
-		//if (dds == 0)
-			//factory->energy[dd] = factory->maxe;
-		//else
-		factory->energy[dd] = dds;
-	}
-#endif
 
 	++cashedSize;
 	lastDistance = distance;
@@ -204,13 +133,6 @@ void bc::Component::kill(const Barscalar& endDistance)
 
 	resline->m_end = endDistance;
 
-	//if (col < resline->start)
-	//	resline->start = col;
-	//if (col > resline->m_end)
-	//	resline->m_end = col;
-
-//	assert(resline->len() != 0);
-
 	if (factory->settings.returnType == ReturnType::barcode3dold)
 	{
 		resline->bar3d->push_back(bar3dvalue(resline->matr.back().value, cashedSize));
@@ -220,18 +142,8 @@ void bc::Component::kill(const Barscalar& endDistance)
 		resline->bar3d->push_back(bar3dvalue(resline->matr.back().value, cashedSize));
 	}
 
-	if (parent == nullptr && factory->settings.createBinaryMasks)
+	//if (factory->settings.createBinaryMasks)
 	{
-		// Not working for radius
-		//Barscalar bot = resline->start;
-		//Barscalar top = resline->m_end;
-
-		//if (bot > top)
-		//{
-		//	bot = resline->m_end;
-		//	top = resline->start;
-		//}
-
 		for (barvalue& a : resline->matr)
 		{
 			//assert(bot <= a.value);
@@ -240,7 +152,7 @@ void bc::Component::kill(const Barscalar& endDistance)
 		}
 	}
 
-	if (same)
+	if (resline->root == nullptr)
 	{
 		// Not just created
 		resline->initRoot(factory->root);
@@ -251,28 +163,26 @@ void bc::Component::kill(const Barscalar& endDistance)
 }
 
 
-void bc::Component::addChild(bc::Component* child, const Barscalar& endValue, const Barscalar& distance)
+void bc::Component::addChild(bc::Component* child, const Barscalar& endValue, bool allowMerge)
 {
 	assert(child->lived);
 	assert(lived);
 	assert(child->parent == nullptr);
 	assert(this != child);
 
-	if (child->justCreated(distance))
+	if (allowMerge)
 	{
-		merge(child);
-		return;
+		if (child->justCreated())
+		{
+			merge(child);
+			return;
+		}
+		if (justCreated())
+		{
+			child->merge(this);
+			return;
+		}
 	}
-	if (justCreated(distance))
-	{
-		child->merge(this);
-		return;
-	}
-
-	child->parent = this;
-
-	if (same)
-		markNotSame();
 
 
 #ifndef POINTS_ARE_AVAILABLE
@@ -283,7 +193,7 @@ void bc::Component::addChild(bc::Component* child, const Barscalar& endValue, co
 
 
 	// Мы объединяем, потому что одинаковый добавился (но для оптимизации не добавлятся в конце)
-	if (factory->settings.createBinaryMasks && resline->matr.size() > 0)
+	if (/*factory->settings.createBinaryMasks &&*/ resline->matr.size() > 0)
 	{
 		// Эти точки считаются как только что присоединившиеся
 		resline->matr.reserve(resline->matr.size() + child->resline->matr.size() + 1);
@@ -295,8 +205,8 @@ void bc::Component::addChild(bc::Component* child, const Barscalar& endValue, co
 		//parnt->lastVal = lastVal;
 	}
 
-
-	child->kill(distance);
+	child->kill(endValue);
+	child->parent = this; //! Should by after the kill
 
 	if (factory->settings.createGraph)
 		resline->addChild(child->resline);
@@ -341,7 +251,7 @@ void bc::Component::passSame(BarcodeCreator* factory)
 		if (first == nullptr)//существует ли ребро вокруг
 			continue;
 
-		if (first->justCreated(factory->curbright))
+		if (first->justCreated())
 		{
 			if (justCreated)
 			{
@@ -370,7 +280,7 @@ void bc::Component::passConnections(BarcodeCreator* factory)
 
 	AttachList attachCondidates;
 	attachCondidates.reserve(8);
-	attachCondidates.push_back({ factory->getPorogComp(factory->curpix, factory->curpoindex), 0});
+	attachCondidates.push_back({ factory->getComp(factory->curpoindex)});
 
 	for (uchar i = 0; i < 8; ++i)
 	{
@@ -463,7 +373,7 @@ void bc::Component::process(BarcodeCreator* factory)
 			minComp = first;
 		}
 
-		if (first->justCreated(factory->curbright))
+		if (first->justCreated())
 		{
 			if (justCreated)
 			{
@@ -498,7 +408,7 @@ void bc::Component::process(BarcodeCreator* factory)
 	}
 
 	if (justCreated)
-		attachCondidates.push_back({ justCreated, 0 });
+		attachCondidates.push_back({justCreated});
 
 	if (attachCondidates.size() == 0)
 	{
@@ -603,16 +513,15 @@ void bc::Component::attach(const barstruct& settings, bc::point p, bc::poidex in
 	case AttachMode::createNew:
 	{
 		COMPP newOne = new Component(attachList.front().comp->factory, distance);
-		newOne->markNotSame();
 		for (size_t i = 0; i < attachList.size() - 1; i++)
 		{
 			if (attachList[i].comp == attachList[i + 1].comp)
 				continue;
 
-			newOne->addChild(attachList[i].comp, distance, distance);
+			newOne->addChild(attachList[i].comp, distance, false);
 		}
 
-		newOne->addChild(attachList.back().comp, distance, distance);
+		newOne->addChild(attachList.back().comp, distance, false);
 		return;
 	}
 	default: throw;
@@ -636,7 +545,7 @@ void bc::Component::attach(const barstruct& settings, bc::point p, bc::poidex in
 		//	continue;
 		//}
 
-		left->addChild(right, distance, distance);
+		left->addChild(right, distance, true);
 		// left can be merged so check it
 		if (left->resline)
 			right = left;

@@ -252,7 +252,7 @@ MEXP namespace bc
 			return BarRect(l, t, r - l + 1, d - t + 1);
 		}
 
-		void addCoord(const point& p, Barscalar bright)
+		void addCoord(const point& p, const Barscalar& bright)
 		{
 			matr.push_back(barvalue(p, bright));
 			//			if (bright < start)

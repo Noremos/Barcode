@@ -4,6 +4,7 @@ workspace "Barcode Research"
 
    filter { "configurations:Debug" }
       defines { "DEBUG" }
+      symbols "On"
 
    filter { "configurations:Release" }
       defines { "NDEBUG" }

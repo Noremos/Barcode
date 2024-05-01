@@ -31,7 +31,7 @@ void bc::Baritem::add(bc::barline* line)
 
 Barscalar bc::Baritem::sum() const
 {
-	Barscalar ssum = 0;
+	Barscalar ssum;
 	for (const barline* l : barlines)
 		ssum += l->len();
 
@@ -77,7 +77,7 @@ bc::Baritem* bc::Baritem::clone() const
 
 Barscalar bc::Baritem::maxLen() const
 {
-	Barscalar max = 0;
+	Barscalar max;
 	for (const barline* l : barlines)
 		if (l->len() > max)
 			max = l->len();
@@ -357,7 +357,7 @@ bc::Barcontainer::Barcontainer()
 
 Barscalar bc::Barcontainer::sum() const
 {
-	Barscalar sm = 0;
+	Barscalar sm;
 	for (const Baritem *it : items)
 	{
 		if (it!=nullptr)
@@ -377,7 +377,7 @@ void bc::Barcontainer::relen()
 
 Barscalar bc::Barcontainer::maxLen() const
 {
-	Barscalar mx = 0;
+	Barscalar mx;
 	for (const Baritem* it : items)
 	{
 		if (it!=nullptr)
