@@ -1468,6 +1468,12 @@ bc::Baritem* BarcodeCreator::createBarcode(const bc::DatagridProvider* img, cons
 	return cont.exractItem(0);
 }
 
+std::unique_ptr<bc::Baritem> BarcodeCreator::create(const bc::DatagridProvider& img, const barstruct& structure)
+{
+	BarcodeCreator bc;
+	return std::unique_ptr<bc::Baritem>(bc.createBarcode(&img, structure));
+}
+
 // ***************************************************
 
 

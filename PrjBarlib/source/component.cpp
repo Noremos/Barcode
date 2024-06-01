@@ -209,7 +209,12 @@ void bc::Component::addChild(bc::Component* child, const Barscalar& endValue, bo
 	child->parent = this; //! Should by after the kill
 
 	if (factory->settings.createGraph)
+	{
+		if (resline->root == nullptr)
+			resline->initRoot(factory->root);
+
 		resline->addChild(child->resline);
+	}
 }
 
 bool bc::Component::canBeConnected(const bc::point& p, bool incrSum)

@@ -46,8 +46,8 @@ MEXP namespace bc
 		BarclinesHolder* root = nullptr;
 		// Graph
 		std::vector<uint> childrenId;
-		uint id = -1;
-		uint parentId = -1;
+		uint id = UINT_MAX;
+		uint parentId = UINT_MAX;
 
 		// Binary mask
 		bc::barvector matr;
@@ -144,8 +144,8 @@ MEXP namespace bc
 			this->m_end = obj.m_end;
 			//			this->matWid = obj.matWid;
 
-			this->id = std::exchange(obj.id, -1);
-			this->parentId = std::exchange(obj.parentId, -1);
+			this->id = std::exchange(obj.id, UINT_MAX);
+			this->parentId = std::exchange(obj.parentId, UINT_MAX);
 			this->childrenId = std::move(obj.childrenId);
 			this->isCopy = false;
 			matr = std::move(obj.matr);
@@ -161,8 +161,8 @@ MEXP namespace bc
 			this->m_end = obj.m_end;
 			//			this->matWid = obj.matWid;
 			this->isCopy = false;
-			this->id = std::exchange(obj.id, -1);
-			this->parentId = std::exchange(obj.parentId, -1);
+			this->id = std::exchange(obj.id, UINT_MAX);
+			this->parentId = std::exchange(obj.parentId, UINT_MAX);
 			this->childrenId = std::move(obj.childrenId);
 			this->isCopy = false;
 			matr = std::move(obj.matr);
@@ -294,10 +294,10 @@ MEXP namespace bc
 		void addChild(barline* nchild)
 		{
 			assert(root);
-			assert(nchild->parentId == -1);
+			assert(nchild->parentId == UINT_MAX);
 			assert(nchild != nullptr);
 			assert(this != nchild);
-			assert(id != -1);
+			assert(id != UINT_MAX);
 
 			nchild->parentId = id;
 			childrenId.push_back(nchild->id);
@@ -514,7 +514,7 @@ MEXP namespace bc
 
 		bc::barline* getParent() const
 		{
-			if (parentId == -1)
+			if (parentId == UINT_MAX)
 				return nullptr;
 
 			return root->barlines[parentId];
@@ -659,7 +659,7 @@ MEXP namespace bc
 					{
 						for (int i = 0; i < total; ++i)
 						{
-							if (childrenId[i] == -1)
+							if (childrenId[i] == UINT_MAX)
 								continue;
 
 							outObj += TO_STRING::toStr(childrenId[i]);
@@ -670,7 +670,7 @@ MEXP namespace bc
 					{
 						for (int i = 0; i < total; ++i)
 						{
-							if (childrenId[i] == -1)
+							if (childrenId[i] == UINT_MAX)
 								continue;
 
 							getChild(i)->getJsonObject<TSTR, TO_STRING>(outObj, exportGraph, export3dbar, expotrBinaryMask);
@@ -740,7 +740,7 @@ MEXP namespace bc
 			{
 				auto child = getChild(i);
 				child->getChilredAsList(lines, true, keepMatrix);
-				childrenId[i] = -1;
+				childrenId[i] = UINT_MAX;
 			}
 		}
 
