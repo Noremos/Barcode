@@ -16,14 +16,12 @@ bc::Baritem::Baritem(int wid, BarType type)
 
 void bc::Baritem::add(Barscalar st, Barscalar len)
 {
-	barlines.push_back(new barline(st, len, wid));
-	barlines.back()->initRoot(this);
+	(new barline(st, len, wid))->initRoot(this);
 }
 
 void bc::Baritem::add(bc::barline* line)
 {
-	barlines.push_back(line);
-	if (line->id == -1)
+	if (line->id == UINT_MAX)
 	{
 		line->initRoot(this);
 	}
@@ -337,7 +335,7 @@ void bc::Baritem::sortByStart()
 
 bc::Baritem::~Baritem()
 {
-	for (auto* bline : barlines)
+	for (bc::barline* bline : barlines)
 	{
 		if (bline != nullptr)
 			delete bline;

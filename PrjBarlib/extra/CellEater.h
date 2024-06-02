@@ -236,7 +236,7 @@ namespace bc
 			for (auto* line : lines)
 			{
 				if (line->matr.size() > 0)
-					item->barlines.push_back(line);
+					line->initRoot(item);
 				else
 					delete line;
 			}
