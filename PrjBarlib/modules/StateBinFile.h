@@ -107,6 +107,7 @@ MEXP namespace StateBinFile
 		virtual float pFloat(float value) = 0;
 		virtual size_t pInt64(size_t value) = 0;
 		virtual Barscalar pBarscalar(const Barscalar& value) = 0;
+		virtual BackString pString(const BackString& value) = 0;
 
 		virtual uchar* pElement(const uchar* arrayData, size_t elId, size_t elSize) = 0;
 		//virtual void pElementDynamic(const uchar* arrayData, size_t elId, size_t elSize) = 0;
@@ -335,8 +336,8 @@ MEXP namespace StateBinFile
 		bool pBool(bool) override
 		{
 			uchar value;
-			readRaw(value);
-			return value > 0;
+			readRaw<uchar>(value);
+			return value != 0;
 		}
 
 		short pShort(short) override
@@ -370,6 +371,17 @@ MEXP namespace StateBinFile
 		Barscalar pBarscalar(const Barscalar&) override
 		{
 			return parseBarscal(stream);
+		}
+
+		BackString pString(const BackString&) override
+		{
+			ushort len;
+			readRaw(len);
+
+			BackString buff;
+			buff.resize(len);
+			stream.read(buff.data(), len);
+			return buff;
 		}
 
 		uchar* pElement(const uchar* begin, size_t elId, size_t elSize) override
@@ -435,12 +447,12 @@ MEXP namespace StateBinFile
 			close();
 		}
 
-		virtual bool isReading()
+		virtual bool isReading() override
 		{
 			return false;
 		}
 
-		bool open(const std::string& path)
+		bool open(const std::string& path) override
 		{
 			//binFile.setFileName(path);
 			filestream.open(path, std::ios::binary | std::ios::trunc);
@@ -454,12 +466,12 @@ MEXP namespace StateBinFile
 			return filestream.is_open();
 		}
 
-		virtual bool ended()
+		virtual bool ended() override
 		{
 			throw;
 		}
 
-		int pType(BarType bt)
+		int pType(BarType bt) override
 		{
 			pInt((int)bt);
 
@@ -482,67 +494,77 @@ MEXP namespace StateBinFile
 			return (int)bt;
 		}
 
-		bool pBool(bool value)
+		bool pBool(bool value) override
 		{
-			writeRaw(value ? 1 : 0);
+			writeRaw<uchar>(value ? uchar(1) : uchar(0));
 			return value;
 		}
 
-		short pShort(short value)
-		{
-			writeRaw(value);
-			return value;
-		}
-
-		act pInt(act value)
+		short pShort(short value) override
 		{
 			writeRaw(value);
 			return value;
 		}
 
-		float pFloat(float value)
+		act pInt(act value) override
 		{
 			writeRaw(value);
 			return value;
 		}
 
-		size_t pInt64(size_t value)
+		float pFloat(float value) override
 		{
 			writeRaw(value);
 			return value;
 		}
 
-		Barscalar pBarscalar(const Barscalar& value)
+		size_t pInt64(size_t value) override
+		{
+			writeRaw(value);
+			return value;
+		}
+
+		Barscalar pBarscalar(const Barscalar& value) override
 		{
 			valueFunction(stream, value);
 			return value;
 		}
 
-		uchar* pElement(const uchar* begin, size_t elId, size_t elSize)
+		BackString pString(const BackString& value) override
+		{
+			assert(value.length() < USHRT_MAX);
+			const ushort len = static_cast<ushort>(value.length());
+
+			pShort(len);
+			stream.write(value.data(), len);
+			return value;
+		}
+
+		uchar* pElement(const uchar* begin, size_t elId, size_t elSize) override
 		{
 			char* start = (char*)begin + elId * elSize;
 			stream.write(start, elSize);
 			return (uchar*)start;
 		}
 
-		act pArray(act arrSize)
+		act pArray(act arrSize) override
 		{
 			return pInt(arrSize);
 		}
 
 
-		void beginItem()
+		void beginItem() override
 		{
 			//item = input;
 			memoffs.push_back(stream.tellp());
 		}
 
-		void endItem()
+		void endItem() override
 		{
 			//return item;
 		}
 
-		void close()
+		void close() override
 		{
 			if (filestream.is_open() || !inside)
 			{

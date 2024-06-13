@@ -132,6 +132,7 @@ void bc::Component::kill(const Barscalar& endDistance)
 	lived = false;
 
 	resline->m_end = endDistance;
+	assert(resline->m_end - resline->start >= 0);
 
 	if (factory->settings.returnType == ReturnType::barcode3dold)
 	{
