@@ -304,7 +304,7 @@ namespace bc {
 		bc::Baritem* createBarcode(const bc::DatagridProvider* img, const barstruct& structure);
 		//bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 
-		std::unique_ptr<bc::Baritem> create(const bc::DatagridProvider& img, const barstruct& structure = {});
+		static std::unique_ptr<bc::Baritem> create(const bc::DatagridProvider& img, const barstruct& structure = {});
 
 		BarcodeCreator()
 		{ }

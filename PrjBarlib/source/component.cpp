@@ -90,7 +90,7 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& valu
 		resline->addCoord(p, value);
 	}
 
-	const bool eq = distance == lastDistance;
+	const bool eq = distance.getAvgFloat() == lastDistance.getAvgFloat();
 
 	if (!eq && resline->root == nullptr)
 	{
@@ -132,7 +132,7 @@ void bc::Component::kill(const Barscalar& endDistance)
 	lived = false;
 
 	resline->m_end = endDistance;
-	assert(resline->m_end - resline->start >= 0);
+	// assert(resline->m_end.getAvgFloat() != resline->start.getAvgFloat());
 
 	if (factory->settings.returnType == ReturnType::barcode3dold)
 	{
@@ -570,7 +570,7 @@ void bc::Component::attach(const barstruct& settings, bc::point p, bc::poidex in
 //
 //void RadiusRoot::findPath(const poidex p1, const poidex p2, bool frist, std::vector<poidex>& out)
 //{
-//	std::unordered_set<poidex> pathset;
+//	std::unordered_set<poidex> landscape;
 //	std::unordered_set<poidex> extraTernimate;
 //	const auto* curConnectons = &rebs[p1];
 //
@@ -607,7 +607,7 @@ void bc::Component::attach(const barstruct& settings, bc::point p, bc::poidex in
 //			{
 //				return;
 //			}
-//			else if (cur != -1 && pathset.count(cur) == 0)
+//			else if (cur != -1 && landscape.count(cur) == 0)
 //			{
 //				break;
 //			}
@@ -627,7 +627,7 @@ void bc::Component::attach(const barstruct& settings, bc::point p, bc::poidex in
 //				return;
 //			}
 //
-//			pathset.insert(cur);
+//			landscape.insert(cur);
 //
 //			curConnectons = &rebs[cur];
 //		}

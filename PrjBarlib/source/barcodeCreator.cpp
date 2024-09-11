@@ -838,6 +838,7 @@ void BarcodeCreator::sortPixels(ProcType type)
 			std::sort(data, &data[totalSize], [this](poidex a, poidex b) {
 				return CIELAB(workingImg->getLiner(a)) < CIELAB(workingImg->getLiner(b));
 				});
+			delete[] data;
 			break;
 		}
 		uint hist[256];//256
@@ -867,7 +868,7 @@ void BarcodeCreator::sortPixels(ProcType type)
 			{
 				for (int i = 0; i < workingImg->wid(); ++i)//wid
 				{
-					auto p = (int)workingImg->get(i, j);
+					auto p = (int)workingImg->get(i, j).getAvgUchar();
 					++hist[p];//можно vector, но хз
 				}
 			}
@@ -1069,6 +1070,7 @@ void BarcodeCreator::processComp(Barcontainer* item)
 	poidex* indexarr = sortedArr.get();
 	Barscalar prev = workingImg->get(getPoint(indexarr[0]));
 	int state = 0;
+	sameStart = 0;
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < processCount; ++curIndexInSortedArr)
 	{
 		curpoindex = indexarr[curIndexInSortedArr];
@@ -1079,25 +1081,23 @@ void BarcodeCreator::processComp(Barcontainer* item)
 		assert(curpoindex == wid * curpix.y + curpix.x);
 
 		curbright = workingImg->get(curpix.x, curpix.y);
-		if (prev != curbright)
+
+		if (prev.getAvgFloat() != curbright.getAvgFloat())
 		{
-			prev = curbright;
 			switch (state)
 			{
 			case 0:
-				state = 1;
+				state = 2;
 				curIndexInSortedArr = sameStart - 1;
 				continue;
-			case 1:
-				state = 2; // Skip first after stage 1 start
-				break;
 			case 2:
-				sameStart = curIndexInSortedArr;
 				state = 0;
+				sameStart = curIndexInSortedArr;
 				break;
 			default:
 				assert(false);
 			}
+			prev = curbright;
 		}
 
 
@@ -1108,10 +1108,9 @@ void BarcodeCreator::processComp(Barcontainer* item)
 			if (curIndexInSortedArr == processCount - 1)
 			{
 				curIndexInSortedArr = sameStart - 1;
-				state = 1;
+				state = 2;
 			}
 			break;
-		case 1:
 		case 2:
 			Component::passConnections(this);
 			break;
@@ -1761,7 +1760,7 @@ void BarcodeCreator::processByValueRadius(Barcontainer* item)
 {
 	Barscalar samax, sadym;
 	workingImg->maxAndMin(sadym, samax);
-	int smax = (int)samax.getAvgUchar();
+	float smax = (int)samax.getAvgFloat();
 
 	settings.maxRadius = 0.f;
 	BarImg img(workingImg->wid(), workingImg->hei(), workingImg->channels());
