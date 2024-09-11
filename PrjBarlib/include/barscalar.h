@@ -772,7 +772,7 @@ public:
 		case BarType::BYTE8_1:
 			return static_cast<float>(data.b1);
 		case BarType::BYTE8_3:
-			return ((float)data.b3[0] + (float)data.b3[1] + (float)data.b3[2]) / 3.f;
+			return (static_cast<float>(data.b3[0]) + static_cast<float>(data.b3[1]) + static_cast<float>(data.b3[2])) / 3.f;
 		case BarType::FLOAT32_1:
 			return data.f;
 		case BarType::INT32_1:
@@ -991,17 +991,22 @@ public:
 		return *this;
 	}
 
+	constexpr void multiplySafe(uchar& src, uchar by)
+	{
+		src = std::min(static_cast<int>(src) * by, 255);
+	}
+
 	template<typename T>
 	Barscalar& operator*=(T R)
 	{
 		switch (type)
 		{
 		case BarType::BYTE8_1:
-			data.b1 *= R;
+			multiplySafe(data.b1, R);
 			break;
 		case BarType::BYTE8_3:
 			for (unsigned char i = 0; i < 3; ++i)
-				data.b3[i] *= R;
+				multiplySafe(data.b3[i], R);
 			break;
 		default:
 			data.f *= R;
