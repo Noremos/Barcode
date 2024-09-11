@@ -2,7 +2,6 @@
 #pragma once
 #include "base.h"
 #include <queue>
-#include "sidesrc/flat_hash_map/unordered_map.hpp"
 
 #include <string>
 #include <sstream>
@@ -1044,7 +1043,7 @@ class Cache
 	DEL deallocator;
 protected:
 	std::queue<int> cacheIndexs;
-	ska::unordered_map<int, T> cachedData;
+	std::unordered_map<int, T> cachedData;
 	size_t maxElementsSize = 16;
 	size_t maxCacheSize = 10000000;
 	size_t storedSize = 0;

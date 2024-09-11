@@ -12,7 +12,6 @@
 #include "ImageReader.h"
 #include "convertion.h"
 #include "decoder.h"
-#include "sidesrc/flat_hash_map/unordered_map.hpp"
 
 #endif
 
@@ -401,7 +400,7 @@ MEXP struct TiffTags
 		}
 	};
 
-	ska::unordered_map<ushort, ExtraData> extraTegs;
+	std::unordered_map<ushort, ExtraData> extraTegs;
 };
 
 
