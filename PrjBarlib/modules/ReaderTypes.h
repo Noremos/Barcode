@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <unordered_map>
 #endif
 
 MEXP enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rgb8, argb8 };

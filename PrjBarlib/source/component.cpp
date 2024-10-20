@@ -4,6 +4,7 @@
 
 #include "../include/barcodeCreator.h"
 #include <assert.h>
+#include <algorithm>
 
 #endif
 

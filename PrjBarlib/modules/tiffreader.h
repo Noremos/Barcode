@@ -12,6 +12,7 @@
 #include "ImageReader.h"
 #include "convertion.h"
 #include "decoder.h"
+#include <unordered_map>
 
 #endif
 
