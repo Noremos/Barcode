@@ -64,7 +64,7 @@ namespace bc {
 			}
 		}
 
-		constexpr std::vector<poidex> getOffsets(const bc::point& p, int wid) const
+		std::vector<poidex> getOffsets(const bc::point& p, int wid) const
 		{
 			std::vector<poidex> out;
 			switch (poz)
