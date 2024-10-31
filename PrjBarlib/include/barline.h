@@ -11,6 +11,7 @@
 #include <vector>
 #include <unordered_set>
 #include <stack>
+#include <limits.h>
 #endif
 MEXP namespace bc
 {

@@ -12,6 +12,7 @@
 #include <chrono>
 #include <iostream>
 #include <map>
+#include <optional>
 
 #include "../include/barImg.h"
 #include <cmath>

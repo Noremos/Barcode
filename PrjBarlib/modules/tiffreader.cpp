@@ -16,6 +16,7 @@
 #include <string>
 #include <cassert>
 #include "sidesrc/fast_float.h"
+
 #endif // !SKIP_M_INC
 
 
@@ -932,8 +933,10 @@ bool TiffReader::open(const std::string& path)
 
 #ifdef __APPLE__
 	pFile = fopen(path.c_str(), "rb");
-#else
+#elif _WIN32
 	fopen_s(&pFile, path.c_str(), "rb");
+#else
+	pFile = fopen(path.c_str(), "rb");
 #endif
 	if (pFile == NULL)
 	{
