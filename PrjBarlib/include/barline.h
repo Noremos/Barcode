@@ -235,20 +235,23 @@ MEXP namespace bc
 
 		BarRect getBarRect()  const
 		{
-			int l, r, t, d;
-			r = l = matr[0].getX();
-			t = d = matr[0].getY();
-			for (size_t j = 0; j < matr.size(); ++j)
+			int l = 0, r = 0, t = 0, d = 0;
+			if (matr.size() > 0)
 			{
-				if (l > matr[j].getX())
-					l = matr[j].getX();
-				if (r < matr[j].getX())
-					r = matr[j].getX();
+				r = l = matr[0].getX();
+				t = d = matr[0].getY();
+				for (size_t j = 0; j < matr.size(); ++j)
+				{
+					if (l > matr[j].getX())
+						l = matr[j].getX();
+					if (r < matr[j].getX())
+						r = matr[j].getX();
 
-				if (t > matr[j].getY())
-					t = matr[j].getY();
-				if (d < matr[j].getY())
-					d = matr[j].getY();
+					if (t > matr[j].getY())
+						t = matr[j].getY();
+					if (d < matr[j].getY())
+						d = matr[j].getY();
+				}
 			}
 			return BarRect(l, t, r - l + 1, d - t + 1);
 		}
