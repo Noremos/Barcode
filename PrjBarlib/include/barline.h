@@ -527,9 +527,9 @@ MEXP namespace bc
 		bc::barline* getChild(uint id) const
 		{
 			if (id < 0 || id >= childrenId.size())
-				return root->barlines[childrenId[id]];
-			else
 				return nullptr;
+
+			return root->barlines[childrenId[id]];
 		}
 
 		size_t getChildrenCount() const
