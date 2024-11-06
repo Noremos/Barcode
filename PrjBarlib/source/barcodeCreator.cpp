@@ -1246,6 +1246,7 @@ void BarcodeCreator::computeNdBarcode(Baritem* lines, int n)
 	{
 		rootNode = new BarRoot();
 		rootNode->initRoot(lines);
+		lines->setRootNode(rootNode);
 	}
 
 	for (COMPP c : components)
