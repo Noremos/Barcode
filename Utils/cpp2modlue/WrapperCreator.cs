@@ -559,16 +559,16 @@ namespace BarcodeNet.Internal.PInvoke
         [Pure, DllImport(DllExtern, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern IntPtr Barbase_byte_self_destructor(IntPtr self);
         [Pure, DllImport(DllExtern, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern IntPtr Barbase_byte_removePorog(IntPtr self, byte porog);
+        public static extern IntPtr Barbase_byte_removeByThreshold(IntPtr self, byte porog);
         [Pure, DllImport(DllExtern, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern IntPtr Barbase_byte_preprocessBar(IntPtr self, byte porog, bool normalize);
+        public static extern IntPtr Barbase_byte_preprocessBarcode(IntPtr self, byte porog, bool normalize);
         [Pure, DllImport(DllExtern, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern IntPtr Barbase_byte_compireFull(IntPtr self, IntPtr Y, CompireStrategy strat, out float returnValue);
+        public static extern IntPtr Barbase_byte_compareFull(IntPtr self, IntPtr Y, CompareStrategy strat, out float returnValue);
         [Pure, DllImport(DllExtern, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern IntPtr Barbase_byte_clone(IntPtr self, out IntPtr returnValue);
         [Pure, DllImport(DllExtern, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern IntPtr Barbase_byte_sum(IntPtr self, out byte returnValue);
         [Pure, DllImport(DllExtern, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern IntPtr Barbase_byte_relen(IntPtr self);
+        public static extern IntPtr Barbase_byte_relength(IntPtr self);
     }
 }*/

@@ -2,3 +2,6 @@
 	path = PrjBarlib\\side/pybind11
 	url = ../../pybind/pybind11
 	branch = stable
+[submodule "PrjBarlib/modules/pybind11"]
+	path = PrjBarlib/modules/pybind11
+	url = https://github.com/pybind/pybind11

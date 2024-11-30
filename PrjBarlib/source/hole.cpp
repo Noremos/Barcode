@@ -64,7 +64,7 @@ bool bc::Hole::tryAdd(const point& p)
 	}
 
 	static char poss[9][2] = { { -1,0 },{ -1,-1 },{ 0,-1 },{ 1,-1 },{ 1,0 },{ 1,1 },{ 0,1 },{ -1,1 },{ -1,0 } };
-	for (char i = 0; i < 8; ++i)
+	for (unsigned char i = 0; i < 8; ++i)
 	{
 		//Она соединяется только с соседними ближйми ребрами
 		if (this->isContain(p + poss[i]) && (this->isContain(p + poss[i + 1]) ||

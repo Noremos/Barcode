@@ -9,7 +9,7 @@
 using namespace py;
 
 
-PYBIND11_MODULE(barpy, m)
+PYBIND11_MODULE(libbarpy, m)
 {
 	enum_<bc::AttachMode>(m, "AttachMode")
 		.value("firstEatSecond", bc::AttachMode::firstEatSecond)
@@ -19,11 +19,11 @@ PYBIND11_MODULE(barpy, m)
 		.value("morePointsEatLow", bc::AttachMode::morePointsEatLow)
 		;
 
-	enum_<bc::CompireStrategy>(m, "CompireStrategy")
-		.value("CommonToLen", bc::CompireStrategy::CommonToLen)
-		.value("CommonToSum", bc::CompireStrategy::CommonToSum)
-		.value("compire3d", bc::CompireStrategy::compire3dHist)
-		.value("compire3dBrightless", bc::CompireStrategy::compire3dBrightless)
+	enum_<bc::CompareStrategy>(m, "CompareStrategy")
+		.value("CommonToLen", bc::CompareStrategy::CommonToLen)
+		.value("CommonToSum", bc::CompareStrategy::CommonToSum)
+		.value("compare3d", bc::CompareStrategy::compare3dHist)
+		.value("compare3dBrightless", bc::CompareStrategy::compare3dBrightless)
 		;
 
 	enum_<bc::ComponentType>(m,  "ComponentType")
@@ -63,7 +63,7 @@ PYBIND11_MODULE(barpy, m)
 
 
 	class_<Barscalar>(m, "Barscalar")
-		.def(init<int>())
+		.def(init<uchar>())
 		.def(init<float, BarType>())
 		.def(init<int, BarType>())
 		.def(init<int, int, int>())
@@ -97,7 +97,7 @@ PYBIND11_MODULE(barpy, m)
 	//py::implicitly_convertible<Barscalar, py::object>();
 	//py::implicitly_convertible<Barscalar, float>();
 
-	class_<bc::barvalue>(m, "Matrvalue")
+	class_<bc::barvalue>(m, "MatrixValue")
 		.def(py::init<>())
 		.def_readwrite("x", &bc::barvalue::x)
 		.def_readwrite("y", &bc::barvalue::y)
@@ -117,74 +117,93 @@ PYBIND11_MODULE(barpy, m)
 		.def("len", &bc::barline::len)
 		.def("end", &bc::barline::end)
 		.def("getPoints", &bc::barline::getPoints, (arg("skipChildPoints") = false))
-		.def("getPointsSize", &bc::barline::getPointsSize)
-		.def("getMatrvalue", &bc::barline::getPoint)
+		.def("getMatrixSize", &bc::barline::getPointsSize)
+		.def("getMatrixValue", &bc::barline::getPoint)
 		.def("getRect", &bc::barline::getRect)
 		.def("getParent", &bc::barline::getParent, return_value_policy::reference_internal)
 		.def("getChildren", &bc::barline::getChildren)
-		.def("compire3dbars", &bc::barline::compire3dbars)
+		.def("compare3dbars", &bc::barline::compare3dbars)
 
 		.def("get3dList", &bc::barline::getBarcode3d)
 		.def("get3dSize", &bc::barline::getBarcode3dSize)
 		.def("get3dValue", &bc::barline::getBarcode3dValue)
+		.def("__len__", &bc::barline::getPointsSize)
 
 		//.add_property("points", make_getter(&bc::barline::matr))
 		;
 
 	class_<bc::Baritem>(m,  "Baritem")
 		.def("sum", &bc::Baritem::sum)
-		.def("relen", &bc::Baritem::relen)
-		.def("normalize", &bc::Baritem::relen)
+		.def("relength", &bc::Baritem::relength)
+		.def("normalize", &bc::Baritem::normalize)
 		.def("clone", &bc::Baritem::clone, return_value_policy::take_ownership)
 		.def("maxLen", &bc::Baritem::maxLen)
-		.def("removePorog", &bc::Baritem::removePorog)
-		.def("preprocessBar", &bc::Baritem::preprocessBar)
-		.def("cmp", &bc::Baritem::cmp, "bitem"_a, "compireStrategy"_a)
-		.def("cmpOccurrence", &bc::Baritem::compareOccurrence, "bitem"_a, "compireStrategy"_a)
-		.def("compireBestRes", &bc::Baritem::compireBestRes, "bitem"_a, "compireStrategy"_a)
-		.def("getBarcode", &bc::Baritem::getBarcode, return_value_policy::reference_internal)
+		.def("removeByThreshold", &bc::Baritem::removeByThreshold)
+		.def("preprocessBarcode", &bc::Baritem::preprocessBarcode)
+		.def("cmp", &bc::Baritem::cmp, "bitem"_a, "CompareStrategy"_a)
+		.def("cmpOccurrence", &bc::Baritem::compareOccurrence, "bitem"_a, "CompareStrategy"_a)
+		.def("compareBestRes", &bc::Baritem::compareBestRes, "bitem"_a, "CompareStrategy"_a)
+		.def("getBarcodeLines", &bc::Baritem::getBarcodeLines, return_value_policy::reference_internal,
+		     "Returns a list of barline")
 		.def("SortByLineLen", &bc::Baritem::sortByLen)
 		.def("SortByPointsCount", &bc::Baritem::sortBySize)
 		.def("calcHistByBarlen", &bc::Baritem::calcHistByBarlen)
 		.def("getRootNode", &bc::Baritem::getRootNode, return_value_policy::reference_internal)
 		.def("getBettyNumbers", &bc::Baritem::PY_getBettyNumbers)
-
+		.def("__len__", &bc::Baritem::getBarcodeLinesCount)
 		;
 
 	class_<bc::Barcontainer>(m,  "Barcontainer")
 		.def("sum", &bc::Barcontainer::sum)
-		.def("relen", &bc::Barcontainer::relen)
+		.def("relength", &bc::Barcontainer::relength)
 		.def("clone", &bc::Barcontainer::clone, return_value_policy::take_ownership)
 		.def("maxLen", &bc::Barcontainer::maxLen)
 		.def("count", &bc::Barcontainer::count)
-		.def("removePorog", &bc::Barcontainer::removePorog, "porog"_a)
-		.def("preprocessBar", &bc::Barcontainer::preprocessBar, "porog"_a, "normalize"_a)
+		.def("removeByThreshold", &bc::Barcontainer::removeByThreshold, "threshold"_a)
+		.def("preprocessBarcode", &bc::Barcontainer::preprocessBarcode, "threshold"_a, "normalize"_a)
 		//.def("compireCTML", &bc::Barcontainer::compireCTML, args("bc"))
 		//.def("compireCTS", &bc::Barcontainer::compireCTS, args("bc"))
 		//.def("compireCTML", static_cast<float (bc::Barcontainer::*)(const bc::Barbase*) const> (&bc::Barcontainer::compireCTML), args("bc"))
 		//.def("compireCTS", static_cast<float (bc::Barcontainer::*)(bc::Barbase const*) const>(m,  &bc::Barcontainer::compireCTS), args("bc"))
 		.def("addItem", &bc::Barcontainer::addItem, "Baritem"_a)
 		.def("getItem", &bc::Barcontainer::getItem, "index"_a, return_value_policy::reference_internal)
+		.def("__len__", &bc::Barcontainer::getBarcodesCount)
 		;
 
+	class_<bc::barstruct>(m,  "barstruct")
+		.def(py::init<>())
+		.def_readwrite("comtype", &bc::barstruct::comtype)
+		.def_readwrite("proctype", &bc::barstruct::proctype)
+		.def_readwrite("coltype", &bc::barstruct::coltype)
+		.def_readwrite("maxRadius", &bc::barstruct::maxRadius)
+		.def_readwrite("returnType", &bc::barstruct::returnType)
+		.def_readwrite("createBinaryMasks", &bc::barstruct::createBinaryMasks)
+		.def_readwrite("createGraph", &bc::barstruct::createGraph)
+		.def_readwrite("attachMode", &bc::barstruct::attachMode)
+		.def_readwrite("killOnMaxLen", &bc::barstruct::killOnMaxLen)
+		.def_readwrite("colorRange", &bc::barstruct::colorRange)
+		.def_readwrite("trueSort", &bc::barstruct::trueSort)
+		.def("setMaxLen", &bc::barstruct::setMaxLen, "val"_a)
+	;
 
 	class_<bc::BarConstructor>(m,  "BarConstructor")
 		.def(py::init<>())
 		.def("addStructure", &bc::BarConstructor::addStructure, "ProcType"_a, "ColorType"_a, "ComponentType"_a)
-		.def("setMaxLen", &bc::BarConstructor::setMaxLen, "len"_a)
-		.def_readwrite("maxRadius", &bc::BarConstructor::maxRadius)
-		.def_readwrite("returnType", &bc::BarConstructor::returnType)
-		.def_readwrite("createBinaryMasks", &bc::BarConstructor::createBinaryMasks)
-		.def_readwrite("createGraph", &bc::BarConstructor::createGraph)
-		.def_readwrite("attachMode", &bc::BarConstructor::attachMode)
-		.def_readwrite("killOnMaxLen", &bc::BarConstructor::killOnMaxLen)
 		;
 	;
 
-	class_<bc::BarcodeCreator>(m,  "BarcodeCreator")
-		.def(py::init<>())
-		.def("createBarcode", &bc::BarcodeCreator::createPysBarcode, "image"_a, "structure"_a, return_value_policy::take_ownership)
-		;
+	m.def("create", &bc::BarcodeCreator::pycreate, R"pbdoc(
+			Create a single barcode
+
+			Some other explanation about the add function.
+		)pbdoc");
+
+	m.def("createMultiple", &bc::BarcodeCreator::pycreateMultiple, R"pbdoc(
+			Create multiple barcodes from a single image
+
+			Some other explanation about the add function.
+		)pbdoc");
+
 
 #ifdef VERSION_INFO
 	m.attr("__version__") = VERSION_INFO;

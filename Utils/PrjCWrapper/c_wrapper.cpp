@@ -39,9 +39,9 @@ extern "C"
 		BarscalarMap.insert(pair(handl, ret));
 		return handl;
 	}
-	void Baritem_relen(BaritemHandler handler)
+	void Baritem_relength(BaritemHandler handler)
 	{
-		BaritemMap[handler]->relen();
+		BaritemMap[handler]->relength();
 	}
 	BarscalarHandler Baritem_maxLen(BaritemHandler handler)
 	{
@@ -61,23 +61,23 @@ extern "C"
 	{
 		BaritemMap[handler]->getBettyNumbers(bs);
 	}
-	void Baritem_removePorog(BaritemHandler handler, BarscalarHandler porog)
+	void Baritem_removeByThreshold(BaritemHandler handler, BarscalarHandler porog)
 	{
-		BaritemMap[handler]->removePorog(BarscalarMap[porog]);
+		BaritemMap[handler]->removeByThreshold(BarscalarMap[porog]);
 	}
-	void Baritem_preprocessBar(BaritemHandler handler, BarscalarHandler porog, bool normalize)
+	void Baritem_preprocessBarcode(BaritemHandler handler, BarscalarHandler porog, bool normalize)
 	{
-		BaritemMap[handler]->preprocessBar(BarscalarMap[porog], normalize);
+		BaritemMap[handler]->preprocessBarcode(BarscalarMap[porog], normalize);
 	}
-	float Baritem_compireFull(BaritemHandler handler, BarbaseHandler bc, CompireStrategy strat)
+	float Baritem_compareFull(BaritemHandler handler, BarbaseHandler bc, CompareStrategy strat)
 	{
-		return BaritemMap[handler]->compireFull(BarbaseMap[bc], strat);
+		return BaritemMap[handler]->compareFull(BarbaseMap[bc], strat);
 	}
-	float Baritem_compireBestRes(BaritemHandler handler, BaritemHandler bc, CompireStrategy strat)
+	float Baritem_compareBestRes(BaritemHandler handler, BaritemHandler bc, CompareStrategy strat)
 	{
-		return BaritemMap[handler]->compireBestRes(BaritemMap[bc], strat);
+		return BaritemMap[handler]->compareBestRes(BaritemMap[bc], strat);
 	}
-	float Baritem_compareOccurrence(BaritemHandler handler, BaritemHandler bc, CompireStrategy strat)
+	float Baritem_compareOccurrence(BaritemHandler handler, BaritemHandler bc, CompareStrategy strat)
 	{
 		return BaritemMap[handler]->compareOccurrence(BaritemMap[bc], strat);
 	}
@@ -128,9 +128,9 @@ extern "C"
 		BarscalarMap.insert(pair(handl, ret));
 		return handl;
 	}
-	void Barcontainer_relen(BarcontainerHandler handler)
+	void Barcontainer_relength(BarcontainerHandler handler)
 	{
-		BarcontainerMap[handler]->relen();
+		BarcontainerMap[handler]->relength();
 	}
 	BarbaseHandler Barcontainer_clone(BarcontainerHandler handler)
 	{
@@ -190,19 +190,19 @@ extern "C"
 	{
 		BarcontainerMap[handler]->addItem(BaritemMap[item]);
 	}
-	void Barcontainer_removePorog(BarcontainerHandler handler, BarscalarHandler porog)
+	void Barcontainer_removeByThreshold(BarcontainerHandler handler, BarscalarHandler porog)
 	{
-		BarcontainerMap[handler]->removePorog(BarscalarMap[porog]);
+		BarcontainerMap[handler]->removeByThreshold(BarscalarMap[porog]);
 	}
-	void Barcontainer_preprocessBar(BarcontainerHandler handler, BarscalarHandler porog, bool normalize)
+	void Barcontainer_preprocessBarcode(BarcontainerHandler handler, BarscalarHandler porog, bool normalize)
 	{
-		BarcontainerMap[handler]->preprocessBar(BarscalarMap[porog], normalize);
+		BarcontainerMap[handler]->preprocessBarcode(BarscalarMap[porog], normalize);
 	}
-	float Barcontainer_compireFull(BarcontainerHandler handler, BarbaseHandler bc, CompireStrategy strat)
+	float Barcontainer_compareFull(BarcontainerHandler handler, BarbaseHandler bc, CompareStrategy strat)
 	{
-		return BarcontainerMap[handler]->compireFull(BarbaseMap[bc], strat);
+		return BarcontainerMap[handler]->compareFull(BarbaseMap[bc], strat);
 	}
-	float Barcontainer_compireBest(BarcontainerHandler handler, BaritemHandler bc, CompireStrategy strat)
+	float Barcontainer_compireBest(BarcontainerHandler handler, BaritemHandler bc, CompareStrategy strat)
 	{
 		return BarcontainerMap[handler]->compireBest(BaritemMap[bc], strat);
 	}
@@ -302,9 +302,9 @@ extern "C"
 	{
 		barlineMap[handler]->getChildsMatr(vect);
 	}
-	float barline_compire3dbars(barlineHandler handler, barlineHandler inc, CompireStrategy cmp)
+	float barline_compare3dbars(barlineHandler handler, barlineHandler inc, CompareStrategy cmp)
 	{
-		return barlineMap[handler]->compire3dbars(barlineMap[inc], cmp);
+		return barlineMap[handler]->compare3dbars(barlineMap[inc], cmp);
 	}
 	barlineHandler barline_getParent(barlineHandler handler)
 	{

@@ -641,26 +641,26 @@ MEXP namespace bc {
 				type = BarType::BYTE8_3;
 		}
 
-		int wid() const
+		int wid() const override
 		{
 			return mat.shape(1);
 		}
 
-		int hei() const
+		int hei() const override
 		{
 			return mat.shape(0);
 		}
 
-		int channels() const
+		int channels() const override
 		{
 			return mat.ndim() <= 2 ? 1 : mat.shape(2);
 		}
 
-		Barscalar get(int x, int y) const
+		Barscalar get(int x, int y) const override
 		{
 			if (type == BarType::BYTE8_1)
 			{
-				return Barscalar(*((char*)mat.data() + y * strides[0] + x * strides[1]));
+				return Barscalar(*((const char*)mat.data() + y * strides[0] + x * strides[1]), type);
 			}
 			else
 			{
@@ -672,7 +672,7 @@ MEXP namespace bc {
 		Barscalar max() const
 		{
 			if (this->length() == 0)
-				return 0;
+				return Barscalar(0, type);
 
 			Barscalar max = this->getLiner(0);
 			for (size_t i = 1; i < this->length(); i++)
@@ -701,7 +701,7 @@ MEXP namespace bc {
 			}
 		}
 
-		size_t typeSize() const
+		size_t typeSize() const override
 		{
 			return mat.dtype().itemsize();
 		}

@@ -88,7 +88,7 @@ export namespace bc
 
 	barstruct;
 
-	CompireStrategy;
+	CompareStrategy;
 	ComponentType;
 	ProcType;
 	ColorType;

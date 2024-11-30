@@ -2,7 +2,8 @@
 # To add a new markdown cell, type '# %% [markdown]'
 
 import sys
-
+import numpy as np
+import cv2
 import os
 
 #снег, дождь
@@ -11,31 +12,16 @@ import os
 # sys.path.append('D:\\Programs\\Python\\BARPY')
 
 # сам модуль
-# sys.path.append('/Users/sam/Edu/library/Barcode/PrjBarlib/build/Python')
+sys.path.append('D:/Programs/C++/Barcode/PrjBarlib/modules/python/module')
+import barpy as bc
 
-import raster_barcode as bc
-import raster_barcode.barcode as bcc
-import cv2
-
-
-# img = cv2.imread('image.png', cv2.IMREAD_GRAYSCALE)
-img = cv2.imread('/Users/sam/Edu/bar/12/1.png', cv2.IMREAD_GRAYSCALE)
-
-cont = bc.barstruct()
-barc =  bcc.create_barcode(img, cont)
-
-cmp = barc.get_largest_component()
-img = bcc.combine_components_into_matrix(cmp, img.shape, img.dtype)
-cv2.imshow("source",img)
-cv2.waitKey(0)
-
-exit(0)
 
 # Вывести все объекты (классы) из библиотеки
 print(dir(bc))
 
+
 # Для построения баркода необходиом использовать структуру Barstruct, которая инициализируется настройками
-# ProcType -- как строить баркод: с 0-й яркости по 255-ю или с 255-й по 0-ю
+# ProcType -- как строить барокд: с 0-й яркости по 255-ю или с 255-й по 0-ю
 # ColorType -- формат входного изображеия: серый, ргб (создаться 3 баркода) или адаптивный (как в изображении)
 # ComponentType -- Срутктура баркода: компонента или дыра
 

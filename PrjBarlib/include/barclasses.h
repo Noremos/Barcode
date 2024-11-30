@@ -12,12 +12,12 @@ MEXP namespace bc
 	class EXPORT Barbase
 	{
 	public:
-		virtual void removePorog(Barscalar const porog) = 0;
-		virtual void preprocessBar(Barscalar const& porog, bool normalize) = 0;
-		virtual float compireFull(const Barbase* Y, bc::CompireStrategy strat) const = 0;
+		virtual void removeByThreshold(Barscalar const porog) = 0;
+		virtual void preprocessBarcode(Barscalar const& porog, bool normalize) = 0;
+		virtual float compareFull(const Barbase* Y, bc::CompareStrategy strat) const = 0;
 		virtual Barbase* clone() const = 0;
 		virtual Barscalar sum() const = 0;
-		virtual void relen() = 0;
+		virtual void relength() = 0;
 		//    virtual void fullCompite(barbase const *bc, CompireFunction fn, float poroc = 0.5f) = 0;
 		virtual ~Barbase();
 	};
@@ -86,7 +86,7 @@ MEXP namespace bc
 		void add(barline* line);
 
 		Barscalar sum() const;
-		void relen();
+		void relength();
 		Barscalar maxLen() const;
 		Baritem* clone() const;
 		inline BarType getType()
@@ -109,11 +109,11 @@ MEXP namespace bc
 		void getBettyNumbers(int* bs);
 
 		// remove lines than less then passed value
-		void removePorog(Barscalar const porog);
-		void preprocessBar(Barscalar const& porog, bool normalize);
-		float compireFull(const Barbase* bc, bc::CompireStrategy strat) const;
-		float compireBestRes(Baritem const* bc, bc::CompireStrategy strat) const;
-		float compareOccurrence(Baritem const* bc, bc::CompireStrategy strat) const;
+		void removeByThreshold(Barscalar const porog);
+		void preprocessBarcode(Barscalar const& porog, bool normalize);
+		float compareFull(const Barbase* bc, bc::CompareStrategy strat) const;
+		float compareBestRes(Baritem const* bc, bc::CompareStrategy strat) const;
+		float compareOccurrence(Baritem const* bc, bc::CompareStrategy strat) const;
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
 		void normalize();
 
@@ -412,6 +412,11 @@ MEXP namespace bc
 		//	}
 		//}
 
+		size_t getBarcodeLinesCount() const
+		{
+			return barlines.size();
+		}
+
 #ifdef _PYD
 		// only for uchar
 		bp::list calcHistByBarlen(/*Barscalar maxLen*/)
@@ -469,7 +474,7 @@ MEXP namespace bc
 		}
 
 
-		bp::list getBarcode()
+		bp::list getBarcodeLines()
 		{
 			bp::list lines;
 			for (auto* line : barlines)
@@ -480,9 +485,9 @@ MEXP namespace bc
 			return lines;
 		}
 
-		float cmp(const Baritem* bitem, bc::CompireStrategy strat) const
+		float cmp(const Baritem* bitem, bc::CompareStrategy strat) const
 		{
-			return compireFull((const Baritem*)bitem, strat);
+			return compareFull((const Baritem*)bitem, strat);
 		}
 
 
@@ -502,7 +507,7 @@ MEXP namespace bc
 		Barcontainer();
 
 		Barscalar sum() const;
-		void relen();
+		void relength();
 		Barbase* clone() const;
 		Barscalar maxLen() const;
 		size_t count();
@@ -553,11 +558,16 @@ MEXP namespace bc
 		Baritem* lastItem();
 		void addItem(Baritem* item);
 		// remove lines than less then passed value
-		void removePorog(Barscalar const porog);
-		void preprocessBar(Barscalar const& porog, bool normalize);
+		void removeByThreshold(Barscalar const porog);
+		void preprocessBarcode(Barscalar const& porog, bool normalize);
 
-		float compireFull(const Barbase* bc, bc::CompireStrategy strat) const;
-		float compireBest(const Baritem* bc, bc::CompireStrategy strat) const;
+		float compareFull(const Barbase* bc, bc::CompareStrategy strat) const;
+		float compireBest(const Baritem* bc, bc::CompareStrategy strat) const;
+
+		size_t getBarcodesCount() const
+		{
+			return items.size();
+		}
 
 		void clear()
 		{

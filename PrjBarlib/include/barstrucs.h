@@ -22,7 +22,7 @@ MEXP namespace bc
 	struct barRGB;
 	struct barBGR;
 
-	enum class CompireStrategy { CommonToSum, CommonToLen, compire3dHist, compire3dBrightless, FromMethod, Complex, Temp1, Temp2 };
+	enum class CompareStrategy { CommonToSum, CommonToLen, compare3dHist, compare3dBrightless, FromMethod, Complex, Temp1, Temp2 };
 
 	enum class ComponentType { Component = 0, Hole = 1, FullPrepair, PrepairComp };
 	enum class ProcType { f0t255 = 0, f255t0 = 1, Radius = 2, invertf0 = 3, experiment = 4, StepRadius = 5, ValueRadius = 6 };
@@ -123,7 +123,7 @@ MEXP namespace bc
 		//Barscalar foneStart;
 		//Barscalar foneEnd;
 		ReturnType returnType = ReturnType::barcode2d;
-		BarType type;
+		BarType type = BarType::NONE;
 
 		bool createGraph = false;
 		bool createBinaryMasks = false;
@@ -141,16 +141,9 @@ MEXP namespace bc
 		int waitK = 1;
 #endif // USE_OPENCV
 
-		ComponentType comtype;
-		ProcType proctype;
-		ColorType coltype;
-		barstruct()
-		{
-			comtype = ComponentType::Component;
-			proctype = ProcType::f0t255;
-			coltype = ColorType::gray;
-		}
-
+		ComponentType comtype = ComponentType::Component;
+		ProcType proctype = ProcType::f0t255;
+		ColorType coltype = ColorType::gray;
 
 		bc::DatagridProvider* mask = nullptr;
 		int maskId = 0;
@@ -204,6 +197,10 @@ MEXP namespace bc
 			e.comtype = comT;
 			e.proctype = pt;
 			e.coltype = colT;
+		}
+		inline void add(barstruct str)
+		{
+			structs.push_back(str);
 		}
 	};
 

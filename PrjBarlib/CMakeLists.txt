@@ -15,13 +15,8 @@ set(CMAKE_VS_PLATFORM_NAME "x64")
 set(CMAKE_CONFIGURATION_TYPES
     "Debug"
     "dll"
-    "dllcvless"
-    "Python37"
-    "Python38"
+    "Python"
     "PythonDebug"
-    "Release"
-    "stl"
-    "stlcvless"
     CACHE STRING "" FORCE
 )
 
@@ -33,13 +28,9 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "")
     set(CMAKE_CXX_FLAGS_DEBUG "")
     set(CMAKE_CXX_FLAGS_DLL "")
-    set(CMAKE_CXX_FLAGS_DLLCVLESS "")
-    set(CMAKE_CXX_FLAGS_PYTHON37 "")
-    set(CMAKE_CXX_FLAGS_PYTHON38 "")
+    set(CMAKE_CXX_FLAGS_PYTHON "")
     set(CMAKE_CXX_FLAGS_PYTHONDEBUG "")
     set(CMAKE_CXX_FLAGS_RELEASE "")
-    set(CMAKE_CXX_FLAGS_STL "")
-    set(CMAKE_CXX_FLAGS_STLCVLESS "")
     set(CMAKE_CXX_FLAGS_TEST "")
 endif()
 
@@ -104,28 +95,10 @@ set(PROJECT_NAME Barlib)
 ################################################################################
 # Source groups
 ################################################################################
-set(no_group_source_files
-   "source/Source.cpp"
-)
+# set(no_group_source_files
+#    "source/Source.cpp"
+# )
 source_group("" FILES ${no_group_source_files})
-
-set(Genetic
-    "include/GenCommand.h"
-    "include/GenCommon.h"
-    "include/MachineProcessor.h"
-    "source/Neuro.cpp"
-)
-source_group("Genetic" FILES ${Genetic})
-
-set(algorithmes
-   "algorithmes/detection.h"
-    "algorithmes/ExportStats.h"
-   "algorithmes/noise.h"
-    "algorithmes/prep.h"
-    "algorithmes/roofs.h"
-    "algorithmes/algMain.h"
-)
-source_group("algorithmes" FILES ${algorithmes})
 
 set(classes
     "include/barclasses.h"
@@ -138,8 +111,7 @@ set(classes
 source_group("classes" FILES ${classes})
 
 set(include
-    "include/include_cv.h"
-    "include/include_py.h"
+    "extra/include_py.h"
     "include/presets.h"
 )
 source_group("include" FILES ${include})
@@ -156,16 +128,13 @@ source_group("main" FILES ${main})
 
 set(pylib
     "cpp.hint"
-    "include/pytemplcalsses.h"
     "main.def"
-    "source/Barpy.cpp"
+    "extra/Barpy.cpp"
 )
 source_group("pylib" FILES ${pylib})
 
 set(ALL_FILES
     ${no_group_source_files}
-    # ${Genetic}
-    # ${algorithmes}
     ${classes}
     ${include}
     ${main}
@@ -175,15 +144,15 @@ set(ALL_FILES
 ################################################################################
 # Target
 ################################################################################
-add_executable(${PROJECT_NAME} ${ALL_FILES})
+# add_executable(${PROJECT_NAME} ${ALL_FILES})
+add_library(${PROJECT_NAME} MODULE ${ALL_FILES})
 
 set(ROOT_NAMESPACE Barcode)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     COMMON_LANGUAGE_RUNTIME_DLLCVLESS   "No"
     COMMON_LANGUAGE_RUNTIME_DLL         "No"
-    COMMON_LANGUAGE_RUNTIME_PYTHON37    "No"
-    COMMON_LANGUAGE_RUNTIME_PYTHON38    "No"
+    COMMON_LANGUAGE_RUNTIME_PYTHON    "No"
     COMMON_LANGUAGE_RUNTIME_PYTHONDEBUG "No"
 )
 ################################################################################
@@ -192,34 +161,24 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     TARGET_NAME_DLL         "barcode"
-    TARGET_NAME_PYTHON37    "barpy"
-    TARGET_NAME_PYTHON38    "barpy"
+    TARGET_NAME_PYTHON      "barpy"
     TARGET_NAME_PYTHONDEBUG "barpy"
-    TARGET_NAME_STLCVLESS   "barcode"
-    TARGET_NAME_STL         "barcode"
     TARGET_NAME_TEST        "barcode"
 )
 ################################################################################
 # Output directory
 ################################################################################
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    OUTPUT_DIRECTORY_DLLCVLESS   "${CMAKE_SOURCE_DIR}/build/dynamiclib"
-    OUTPUT_DIRECTORY_DLL         "${CMAKE_SOURCE_DIR}/buildx64/dynamiclib_cv/"
-    OUTPUT_DIRECTORY_PYTHON37    "${CMAKE_SOURCE_DIR}/build/Python37/"
-    OUTPUT_DIRECTORY_PYTHON38    "${CMAKE_SOURCE_DIR}/build/Python38/"
+    OUTPUT_DIRECTORY_DLL         "${CMAKE_SOURCE_DIR}/build/ddl/"
+    OUTPUT_DIRECTORY_PYTHON37    "${CMAKE_SOURCE_DIR}/build/Python/"
     OUTPUT_DIRECTORY_PYTHONDEBUG "${CMAKE_SOURCE_DIR}/build/PythonDebug/"
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    INTERPROCEDURAL_OPTIMIZATION_DLLCVLESS   "TRUE"
     INTERPROCEDURAL_OPTIMIZATION_DLL         "TRUE"
-    INTERPROCEDURAL_OPTIMIZATION_PYTHON37    "TRUE"
-    INTERPROCEDURAL_OPTIMIZATION_PYTHON38    "TRUE"
+    INTERPROCEDURAL_OPTIMIZATION_PYTHON      "TRUE"
     INTERPROCEDURAL_OPTIMIZATION_PYTHONDEBUG "TRUE"
     INTERPROCEDURAL_OPTIMIZATION_RELEASE     "TRUE"
-    INTERPROCEDURAL_OPTIMIZATION_STLCVLESS   "TRUE"
-    INTERPROCEDURAL_OPTIMIZATION_STL         "TRUE"
-    INTERPROCEDURAL_OPTIMIZATION_TEST        "TRUE"
 )
 ################################################################################
 # Include directories
@@ -227,3 +186,27 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE "${ADDITIONAL_LIBRARY_DEPENDENCIES}")
+
+if(CMAKE_CONFIGURATION_TYPES MATCHES "Python" OR CMAKE_CONFIGURATION_TYPES MATCHES "PythonDebug")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "_PYD")
+endif()
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/modules/pybind11/include)
+
+
+
+if(CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
+    set(OUT_FOLTE "Debug")
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG)
+    target_compile_options(${PROJECT_NAME} PRIVATE -g)
+else()
+    set(OUT_FOLTE "Release")
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE NDEBUG)
+    target_compile_options(${PROJECT_NAME} PRIVATE -O3 -Wall -DNDEBUG -g)
+endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Build/${CMAKE_CONFIGURATION_TYPES}/"
+)

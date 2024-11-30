@@ -83,7 +83,7 @@ Barscalar bc::Baritem::maxLen() const
 	return max;
 }
 
-void bc::Baritem::relen()
+void bc::Baritem::relength()
 {
 	if (barlines.size() == 0)
 		return;
@@ -100,7 +100,7 @@ void bc::Baritem::relen()
 	//std::for_each(arr.begin(), arr.end(), [mini](barline &n) {return n.start - buchar(mini); });
 }
 
-void bc::Baritem::removePorog(const Barscalar porog)
+void bc::Baritem::removeByThreshold(const Barscalar porog)
 {
 	if (porog == 0)
 		return;
@@ -117,15 +117,15 @@ void bc::Baritem::removePorog(const Barscalar porog)
 	barlines.insert(barlines.begin(), res.begin(), res.end());
 }
 
-void bc::Baritem::preprocessBar(const Barscalar& porog, bool normalize)
+void bc::Baritem::preprocessBarcode(const Barscalar& porog, bool normalize)
 {
-	this->removePorog(porog);
+	this->removeByThreshold(porog);
 
 	if (normalize)
-		this->relen();
+		this->relength();
 }
 
-float findCoof(bc::barline* X, bc::barline* Y, bc::CompireStrategy& strat)
+float findCoof(bc::barline* X, bc::barline* Y, bc::CompareStrategy& strat)
 {
 	const Barscalar &Xst = X->start < X->end() ? X->start : X->end();
 	const Barscalar &Xed = X->start < X->end() ? X->end() : X->start;
@@ -135,7 +135,7 @@ float findCoof(bc::barline* X, bc::barline* Y, bc::CompireStrategy& strat)
 
 
 	float maxlen, minlen;
-	if (strat == bc::CompireStrategy::CommonToSum)
+	if (strat == bc::CompareStrategy::CommonToSum)
 	{
 		if (Xst == Yst && Xed == Yed)
 			return 1.f;
@@ -148,7 +148,7 @@ float findCoof(bc::barline* X, bc::barline* Y, bc::CompireStrategy& strat)
 		ed = MAX(Xed, Yed).getAvgFloat();
 		maxlen = ed - st;
 	}
-	else if (strat == bc::CompireStrategy::CommonToLen)
+	else if (strat == bc::CompareStrategy::CommonToLen)
 	{
 		if (Xst == Yst && Xed == Yed)
 			return 1.f;
@@ -161,7 +161,7 @@ float findCoof(bc::barline* X, bc::barline* Y, bc::CompireStrategy& strat)
 	}
 	else
 	{
-		return X->compire3dbars(Y, strat);
+		return X->compare3dbars(Y, strat);
 	}
 
 	if (minlen <= 0 || maxlen <= 0)
@@ -182,7 +182,7 @@ void soirBarlens(bc::barlinevector& barl)
 		});
 }
 
-float bc::Baritem::compireBestRes(const bc::Baritem* bc, bc::CompireStrategy strat) const
+float bc::Baritem::compareBestRes(const bc::Baritem* bc, bc::CompareStrategy strat) const
 {
 	barlinevector Xbarlines = barlines;
 	barlinevector Ybarlines = dynamic_cast<const Baritem*>(bc)->barlines;
@@ -225,7 +225,7 @@ float bc::Baritem::compireBestRes(const bc::Baritem* bc, bc::CompireStrategy str
 	return tsum / totalsum;
 }
 
-float bc::Baritem::compireFull(const bc::Barbase* bc, bc::CompireStrategy strat) const
+float bc::Baritem::compareFull(const bc::Barbase* bc, bc::CompareStrategy strat) const
 {
 	barlinevector Xbarlines = barlines;
 	barlinevector Ybarlines = dynamic_cast<const Baritem*>(bc)->barlines;
@@ -252,7 +252,7 @@ float bc::Baritem::compireFull(const bc::Barbase* bc, bc::CompireStrategy strat)
 	return totalsum !=0 ? tcoof / totalsum : 0;
 }
 
-float bc::Baritem::compareOccurrence(const bc::Baritem* bc, bc::CompireStrategy strat) const
+float bc::Baritem::compareOccurrence(const bc::Baritem* bc, bc::CompareStrategy strat) const
 {
 	barlinevector Xbarlines = barlines;
 	barlinevector Ybarlines = dynamic_cast<const Baritem*>(bc)->barlines;
@@ -364,12 +364,12 @@ Barscalar bc::Barcontainer::sum() const
 	return sm;
 }
 
-void bc::Barcontainer::relen()
+void bc::Barcontainer::relength()
 {
 	for (Baritem *it : items)
 	{
 		if (it!=nullptr)
-			it->relen();
+			it->relength();
 	}
 }
 
@@ -438,22 +438,22 @@ void bc::Barcontainer::addItem(bc::Baritem* item)
 }
 
 
-void bc::Barcontainer::removePorog(const Barscalar porog)
+void bc::Barcontainer::removeByThreshold(const Barscalar porog)
 {
 	for (Baritem *it : items)
 	{
 		if (it!=nullptr)
-			it->removePorog(porog);
+			it->removeByThreshold(porog);
 	}
 }
 
 
-void bc::Barcontainer::preprocessBar(const Barscalar& porog, bool normalize)
+void bc::Barcontainer::preprocessBarcode(const Barscalar& porog, bool normalize)
 {
 	for (Baritem *it : items)
 	{
 		if (it!=nullptr)
-			it->preprocessBar(porog, normalize);
+			it->preprocessBarcode(porog, normalize);
 	}
 }
 
@@ -471,7 +471,7 @@ bc::Barbase* bc::Barcontainer::clone() const
 }
 
 
-float bc::Barcontainer::compireFull(const bc::Barbase* bc, bc::CompireStrategy strat) const
+float bc::Barcontainer::compareFull(const bc::Barbase* bc, bc::CompareStrategy strat) const
 {
 	const Barcontainer* bcr = dynamic_cast<const Barcontainer*>(bc);
     float res = 0;
@@ -479,19 +479,19 @@ float bc::Barcontainer::compireFull(const bc::Barbase* bc, bc::CompireStrategy s
 	for (size_t i = 0; i < MIN(items.size(), bcr->items.size()); i++)
 	{
 		if (items[i]!=nullptr)
-			res += items[i]->compireFull(bcr->items[i], strat) * static_cast<float>(items[i]->sum() + bcr->items[i]->sum()) / s;
+			res += items[i]->compareFull(bcr->items[i], strat) * static_cast<float>(items[i]->sum() + bcr->items[i]->sum()) / s;
 	}
 
     return res;
 }
 
-float bc::Barcontainer::compireBest(const bc::Baritem* bc, bc::CompireStrategy strat) const
+float bc::Barcontainer::compireBest(const bc::Baritem* bc, bc::CompareStrategy strat) const
 {
 	float res = 0;
 	for (size_t i = 0; i < items.size(); i++)
 	{
 		if (items[i] != nullptr)
-			res = MAX(items[i]->compireFull(bc, strat), res);
+			res = MAX(items[i]->compareFull(bc, strat), res);
 	}
 
 	return res;

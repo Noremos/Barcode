@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+setup.cfg
+raster_barcode/__init__.py
+raster_barcode/libbarpy.pyi
+raster_barcode/libbarpy.so
+raster_barcode.egg-info/PKG-INFO
+raster_barcode.egg-info/SOURCES.txt
+raster_barcode.egg-info/dependency_links.txt
+raster_barcode.egg-info/requires.txt
+raster_barcode.egg-info/top_level.txt

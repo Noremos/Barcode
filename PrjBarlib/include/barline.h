@@ -191,6 +191,11 @@ MEXP namespace bc
 			return matr;
 		}
 
+		size_t getMatrixCount() const
+		{
+			return matr.size();
+		}
+
 		//bc::Component *comp;
 		//    cv::Mat binmat;
 #ifdef USE_OPENCV
@@ -431,13 +436,13 @@ MEXP namespace bc
 			return bar3d->at(index);
 		}
 
-		//  bc::CompireStrategy::compire3dHist ONLY FOR !!! UCHAR !!!
-		float compire3dbars(bc::barline* inc, bc::CompireStrategy cmp)
+		//  bc::CompareStrategy::compare3dHist ONLY FOR !!! UCHAR !!!
+		float compare3dbars(bc::barline* inc, bc::CompareStrategy cmp)
 		{
 			float t = 0, x2 = 0, y2 = 0;
 			size_t n = MIN(bar3d->size(), inc->bar3d->size());
 
-			if (cmp == bc::CompireStrategy::compire3dHist)
+			if (cmp == bc::CompareStrategy::compare3dHist)
 			{
 				Barscalar s0[255];
 
@@ -463,7 +468,7 @@ MEXP namespace bc
 				for (size_t i = 0; i < 255; i++)
 					t += static_cast<float>(s0[i] * s1[i]);
 			}
-			else if (cmp == bc::CompireStrategy::compire3dBrightless)
+			else if (cmp == bc::CompareStrategy::compare3dBrightless)
 			{
 				for (size_t i = 0; i < bar3d->size(); ++i)
 				{
@@ -615,16 +620,12 @@ MEXP namespace bc
 		bp::list getChildren()
 		{
 			bp::list list;
-			for (barline* child : children)
-				list.append(child);
+			for (size_t i = 0; i < getChildrenCount(); i++)
+				list.append(getChild(i));
 
 			return list;
 		}
 
-		bc::barline* getParent()
-		{
-			return this->parent;
-		}
 #endif // _PYD
 
 		enum class ExportGraphType

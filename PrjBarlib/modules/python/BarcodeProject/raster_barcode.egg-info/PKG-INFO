@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: raster_barcode
+Version: 1.0.0
+Summary: A Python package wrapping the Bar library.
+Home-page: https://your_project_website_or_repo
+Author: Your Name
+Author-email: your.email@example.com
+License: MIT
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: Microsoft :: Windows :: MacOS
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy

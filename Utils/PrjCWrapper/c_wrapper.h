@@ -23,15 +23,15 @@ extern "C"
 	void Baritem_add(BaritemHandler handler, BarscalarHandler st, BarscalarHandler len);
 	void Baritem_add(BaritemHandler handler, barlineHandler line);
 	BarscalarHandler Baritem_sum(BaritemHandler handler);
-	void Baritem_relen(BaritemHandler handler);
+	void Baritem_relength(BaritemHandler handler);
 	BarscalarHandler Baritem_maxLen(BaritemHandler handler);
 	BaritemHandler Baritem_clone(BaritemHandler handler);
 	void Baritem_getBettyNumbers(BaritemHandler handler, int bs);
-	void Baritem_removePorog(BaritemHandler handler, BarscalarHandler porog);
-	void Baritem_preprocessBar(BaritemHandler handler, BarscalarHandler porog, bool normalize);
-	float Baritem_compireFull(BaritemHandler handler, BarbaseHandler bc, CompireStrategy strat);
-	float Baritem_compireBestRes(BaritemHandler handler, BaritemHandler bc, CompireStrategy strat);
-	float Baritem_compareOccurrence(BaritemHandler handler, BaritemHandler bc, CompireStrategy strat);
+	void Baritem_removeByThreshold(BaritemHandler handler, BarscalarHandler porog);
+	void Baritem_preprocessBarcode(BaritemHandler handler, BarscalarHandler porog, bool normalize);
+	float Baritem_compareFull(BaritemHandler handler, BarbaseHandler bc, CompareStrategy strat);
+	float Baritem_compareBestRes(BaritemHandler handler, BaritemHandler bc, CompareStrategy strat);
+	float Baritem_compareOccurrence(BaritemHandler handler, BaritemHandler bc, CompareStrategy strat);
 	void Baritem_normalize(BaritemHandler handler);
 	void Baritem_getJsonObejct(BaritemHandler handler, string out);
 	void Baritem_getJsonLinesArray(BaritemHandler handler, string out);
@@ -47,7 +47,7 @@ extern "C"
 
 	// Functions:
 	BarscalarHandler Barcontainer_sum(BarcontainerHandler handler);
-	void Barcontainer_relen(BarcontainerHandler handler);
+	void Barcontainer_relength(BarcontainerHandler handler);
 	BarbaseHandler Barcontainer_clone(BarcontainerHandler handler);
 	BarscalarHandler Barcontainer_maxLen(BarcontainerHandler handler);
 	unsigned long long Barcontainer_count(BarcontainerHandler handler);
@@ -58,10 +58,10 @@ extern "C"
 	void Barcontainer_exractItems(BarcontainerHandler handler, vector< Baritem *);
 	BaritemHandler Barcontainer_lastItem(BarcontainerHandler handler);
 	void Barcontainer_addItem(BarcontainerHandler handler, BaritemHandler item);
-	void Barcontainer_removePorog(BarcontainerHandler handler, BarscalarHandler porog);
-	void Barcontainer_preprocessBar(BarcontainerHandler handler, BarscalarHandler porog, bool normalize);
-	float Barcontainer_compireFull(BarcontainerHandler handler, BarbaseHandler bc, CompireStrategy strat);
-	float Barcontainer_compireBest(BarcontainerHandler handler, BaritemHandler bc, CompireStrategy strat);
+	void Barcontainer_removeByThreshold(BarcontainerHandler handler, BarscalarHandler porog);
+	void Barcontainer_preprocessBarcode(BarcontainerHandler handler, BarscalarHandler porog, bool normalize);
+	float Barcontainer_compareFull(BarcontainerHandler handler, BarbaseHandler bc, CompareStrategy strat);
+	float Barcontainer_compireBest(BarcontainerHandler handler, BaritemHandler bc, CompareStrategy strat);
 	void Barcontainer_clear(BarcontainerHandler handler);
 	// For class : barline
 
@@ -87,7 +87,7 @@ extern "C"
 	pointHandler barline_getPointValue(barlineHandler handler, unsigned long long index);
 	void barline_getChildsMatr(barlineHandler handler, unordered_map< bc::point, bool, bc::pointHash);
 	void barline_getChildsMatr(barlineHandler handler, barvector vect);
-	float barline_compire3dbars(barlineHandler handler, barlineHandler inc, CompireStrategy cmp);
+	float barline_compare3dbars(barlineHandler handler, barlineHandler inc, CompareStrategy cmp);
 	barlineHandler barline_getParent(barlineHandler handler);
 	void barline_getJsonObject(barlineHandler handler, string outObj, bool exportGraph = false, bool export3dbar = false, bool expotrBinaryMask = false);
 	void barline_getChilredAsList(barlineHandler handler, barlinevector lines, bool includeItself, bool clone);

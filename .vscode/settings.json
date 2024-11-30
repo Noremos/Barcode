@@ -64,6 +64,20 @@
         "xutility": "cpp",
         "variant": "cpp",
         "unordered_set": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "__node_handle": "cpp",
+        "optional": "cpp",
+        "__config": "cpp",
+        "__hash_table": "cpp",
+        "__locale": "cpp",
+        "__tree": "cpp",
+        "bitset": "cpp",
+        "complex": "cpp",
+        "forward_list": "cpp",
+        "mutex": "cpp",
+        "queue": "cpp",
+        "set": "cpp",
+        "typeindex": "cpp",
+        "valarray": "cpp"
     }
 }

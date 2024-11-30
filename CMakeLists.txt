@@ -12,9 +12,7 @@ if(NOT CMAKE_VS_PLATFORM_NAME AND CMAKE_CONFIGURATION_TYPES STREQ)
 endif()
 message("${CMAKE_VS_PLATFORM_NAME} architecture in use")
 
-if(NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "Any CPU"
-     OR "${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64"
-     OR "${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x86"))
+if(NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64"))
     message(FATAL_ERROR "${CMAKE_VS_PLATFORM_NAME} arch is not supported!")
 endif()
 
@@ -24,8 +22,7 @@ endif()
 set(CMAKE_CONFIGURATION_TYPES
     "Debug"
     "dll"
-    "Python37"
-    "Python38"
+    "Python310"
     "PythonDebug"
     "Release"
     CACHE STRING "" FORCE
@@ -100,14 +97,6 @@ if(MSVC)
     set(CMAKE_STATIC_LINKER_FLAGS_TEST "${CMAKE_STATIC_LINKER_FLAGS}")
 endif()
 
-################################################################################
-# Nuget packages function stub.
-################################################################################
-function(use_package TARGET PACKAGE VERSION)
-    message(WARNING "No implementation of use_package. Create yours. "
-                    "Package \"${PACKAGE}\" with version \"${VERSION}\" "
-                    "for target \"${TARGET}\" is ignored!")
-endfunction()
 
 ################################################################################
 # Common utils

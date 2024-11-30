@@ -26,8 +26,9 @@
 
 using namespace bc;
 
+#ifdef _WIN32
 #pragma warning(disable : 4996)
-
+#endif
 
 
 // static inline void split(const DatagridProvider& src, std::vector<BarImg*>& bgr)
@@ -1495,7 +1496,7 @@ uchar dif(uchar a, uchar b)
 
 #ifdef _PYD
 
-bc::Barcontainer* bc::BarcodeCreator::createPysBarcode(bn::array& img, bc::BarConstructor& structure)
+bc::Barcontainer* bc::BarcodeCreator::pycreateMultiple(bn::array& img, bc::BarConstructor& structure)
 {
 	//auto shape = img.get_shape();
 
@@ -1510,7 +1511,8 @@ bc::Barcontainer* bc::BarcodeCreator::createPysBarcode(bn::array& img, bc::BarCo
 	bc::BarNdarray image(img);
 	//try
 	//{
-	return createBarcode(&image, structure);
+	BarcodeCreator bc;
+	return bc.createBarcode(&image, structure);
 	//}
 	//catch (const std::exception& ex)
 	//{
@@ -1521,10 +1523,16 @@ bc::Barcontainer* bc::BarcodeCreator::createPysBarcode(bn::array& img, bc::BarCo
 	//bc::BarImg image(img.shape(1), img.shape(0), img.get_nd(), (uchar*)img.get_data(), false, false);
 	//return createBarcode(&image, structure);
 }
+
+
+bc::Baritem* bc::BarcodeCreator::pycreate(bn::array& img, const barstruct& structure)
+{
+	bc::BarNdarray image(img);
+	return create(image, structure).release();
+}
 #endif
+
 // GEOMERTY
-
-
 
 void BarcodeCreator::processCompByRadius(Barcontainer* item)
 {
@@ -1884,8 +1892,6 @@ void BarcodeCreator::processHoleRadius(const indexCov& val)
 			if (h1->resline == nullptr)
 				continue;
 
-			bool f = false;
-
 			auto& h2co = holes2->second;
 			//assert(h2co.size() <= 2);
 			for (auto& h2 : h2co.cons)
@@ -1927,8 +1933,6 @@ void BarcodeCreator::processHoleRadius(const indexCov& val)
 					conv.add(hsd);
 
 					h1 = h1->getMaxparent();
-
-					f = true;
 				}
 				else
 					continue;

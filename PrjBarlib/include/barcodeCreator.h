@@ -322,7 +322,8 @@ namespace bc {
 
 #ifdef _PYD
 
-		bc::Barcontainer* createPysBarcode(bn::array& img, bc::BarConstructor& structure);
+		static Barcontainer* pycreateMultiple(bn::array& img, bc::BarConstructor& structure);
+		static Baritem* pycreate(bn::array& img, const barstruct& structure);
 #endif // _PYD
 
 		///////////GEOMETRY

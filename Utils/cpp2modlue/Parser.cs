@@ -582,7 +582,7 @@ namespace Parcsh
                 if (tyarg.Length == 0)
                     continue;
 
-                //if (tyarg == "bc::CompireStrategy& strat")
+                //if (tyarg == "bc::CompareStrategy& strat")
                 //    Console.WriteLine();
                 if (tem)
                 {
