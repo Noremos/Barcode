@@ -20,8 +20,8 @@ stubgen -m libbarpy -o .
 $PYTHON_BIN "$SCRIPT_DIR/correct_types.py" "libbarpy.pyi"
 
 cd ..
-# $PYTHON_BIN -m build
-%PYTHON_BIN% setup.py bdist_wheel
+$PYTHON_BIN -m build
+# %PYTHON_BIN% setup.py bdist_wheel
 
 
 # Test install

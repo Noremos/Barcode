@@ -13,9 +13,9 @@ pip install mypy build setuptools
 cd %OUTPUT_DIR%
 stubgen -m libbarpy -o .
 cd ..
-@REM %PYTHON_BIN% -m build
+%PYTHON_BIN% -m build
 
-%PYTHON_BIN% setup.py bdist_wheel
+@REM %PYTHON_BIN% setup.py bdist_wheel
 
 REM Test install
 pip install dist\raster_barcode-*.whl
