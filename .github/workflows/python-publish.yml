@@ -50,13 +50,13 @@ jobs:
 
           cd build
           make config=python Barlib
-          cd ..
+          cp -rf PrjBarlib/build/Python/BarcodeProject/dist ../dist
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
           name: release-dists
-          path: ${{ github.workspace }}/PrjBarlib/build/Python/BarcodeProject/dist/
+          path: ${{ github.workspace }}/dist
 
   pypi-publish:
     runs-on: ubuntu-latest
@@ -82,9 +82,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-dists
-          path: ./
+          path: dist
 
       - name: Publish release distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: ./
+          packages-dir: dist
