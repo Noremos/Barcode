@@ -6,14 +6,14 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Upload Python Package
+name: Build and Upload Python Package
 
 on:
   release:
     types: [published]
   push:
     branches:
-      - test_release
+      - test-release
 
 permissions:
   contents: read
