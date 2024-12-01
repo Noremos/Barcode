@@ -44,7 +44,7 @@ jobs:
       - name: Build release distributions
         run: |
           cd PrjBarlib
-          premake5 gmake2 --python-include-path=$Python3_ROOT_DIR/include \
+          premake5 gmake2 --python-include-path=$Python3_ROOT_DIR/include/python3.13 \
           	--python-lib-path=$LD_LIBRARY_PATH/ \
           	--python-version=3.13
 
