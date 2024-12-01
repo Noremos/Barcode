@@ -27,18 +27,26 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
+          python-version: "3.12"
+
+      - uses: actions/setup-python@v5
+        with:
           python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          app-get install premake5
 
       - name: Build release distributions
         run: |
-          app install premake5
           cd PrjBarlib
           chmod +x make.sh
           make.sh
           premake5 gmake2 --python-include-path=/usr/include/python3.13 \
           	--python-lib-path=/usr/lib/ \
           	--python-version=3.13
-        
+
           cd build
           make config=python Barlib
 
