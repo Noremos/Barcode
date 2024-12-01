@@ -12,8 +12,8 @@ on:
   release:
     types: [published]
   push:
-    tags:
-      - test-release
+    branches:
+      - test_release
 
 permissions:
   contents: read
