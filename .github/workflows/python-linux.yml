@@ -49,7 +49,7 @@ jobs:
           	--python-version=3.13
 
           cd build
-          msbuild /p:Configuration=python Barlib.vcxproj
+          make config=python Barlib
 
           cp -rf ./Python/BarcodeProject/dist ../../dist
 
