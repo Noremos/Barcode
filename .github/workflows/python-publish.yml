@@ -59,7 +59,7 @@ jobs:
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
-          name: release-dists
+          name: linux-dist
           path: ${{ github.workspace }}/dist
 
   pypi-publish:
