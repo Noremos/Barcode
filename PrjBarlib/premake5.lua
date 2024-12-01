@@ -56,22 +56,22 @@ workspace "Barcode"
 	filter { "configurations:Debug", "action:vs*" }
 		defines { "DEBUG" }
 		symbols "On"
-		targetdir "Build/Debug/"
+		targetdir "build/Debug/"
 
 	filter { "configurations:Release" }
 		defines { "NDEBUG" }
 		optimize "On"
-		targetdir "Build/Release/"
+		targetdir "build/Release/"
 
 	filter { "configurations:dll" }
-		targetdir "Build/dll/"
+		targetdir "build/dll/"
 
 	filter { "configurations:Python" }
-		targetdir "Build/Python/"
+		targetdir "build/Python/"
 		setPythonSetup()
 
 	filter { "configurations:PythonDebug" }
-		targetdir "Build/PythonDebug/"
+		targetdir "build/PythonDebug/"
 		defines { "_PYD" }
 
 		setPythonSetup()
@@ -80,7 +80,6 @@ workspace "Barcode"
 		defines { "COMMON_LANGUAGE_RUNTIME_DLLCVLESS=No", "COMMON_LANGUAGE_RUNTIME_DLL=No", "COMMON_LANGUAGE_RUNTIME_PYTHON=No", "COMMON_LANGUAGE_RUNTIME_PYTHONDEBUG=No" }
 
 	if os.host() == "windows" then
-		cppdialect "C++20"
 		systemversion("latest")
 		system      "windows"
 		platforms { "win64" }
@@ -88,23 +87,19 @@ workspace "Barcode"
 		symbolspath '$(TargetName).pdb'
 
 	elseif os.host() == "linux" then
-		cppdialect "gnu++20"
 		system      "linux"
 		platforms { "linux64" }
 
 	else -- MACOSX
-		cppdialect "gnu++20"
 		system      "macosx"
 		platforms { "macosx64" }
-
-		-- buildoptions { "-F /Library/Frameworks" }
-		-- linkoptions  { "-F /Library/Frameworks" }
 	end
 
 project "Barlib"
 	kind "SharedLib" -- Equivalent to add_library(... MODULE ...) in CMake
 	language "C++"
 	targetname "barpy"
+	cppdialect "C++20"
 
 	if os.host() == "windows" then
 		targetextension ".pyd"
