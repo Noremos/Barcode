@@ -68,6 +68,7 @@ jobs:
           submodules: true
 
       - uses: actions/setup-python@v5
+        id: cp313
         with:
           python-version: "3.13"
 
@@ -87,7 +88,7 @@ jobs:
       - name: Build release distributions
         run: |
           cd PrjBarlib
-          premake5 vs2022 --python-include-path=$Python3_ROOT_DIR/include/python3.13 --python-lib-path=$LD_LIBRARY_PATH/ --python-version=3.13
+          premake5 vs2022 --python-include-path=${{ steps.cp313.outputs.python-path }}/include --python-lib-path=${{ steps.cp313.outputs.python-path }}/libs --python-version=3.13
 
           cd build
           msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj 
