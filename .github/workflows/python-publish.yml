@@ -30,9 +30,9 @@ jobs:
           python-version: "3.13"
 
       - uses: awalsh128/cache-apt-pkgs-action@latest
-          with:
-            packages: premake5
-            version: 1.0
+        with:
+          packages: premake5
+          version: 1.0
 
       - name: Build release distributions
         run: |
