@@ -78,6 +78,9 @@ jobs:
             ${{ github.workspace }}/.premake-build
           key: ${{ runner.os }}-premake5
 
+      - name: setup-msbuild
+        uses: microsoft/setup-msbuild@v2
+      
       # install premmake5
       - uses: Jarod42/install-premake5@v1
 
