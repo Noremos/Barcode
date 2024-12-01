@@ -50,7 +50,7 @@ jobs:
 
           cd build
           make config=python Barlib
-          cp -rf PrjBarlib/build/Python/BarcodeProject/dist ../dist
+          cp -rf ./Python/BarcodeProject/dist ../dist
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
