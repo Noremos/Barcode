@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="raster_barcode",
     version="1.0.0",
-    description="A Python wrapper for the Barcode library.",
+    description="Python wrapper for the Barcode library.",
     author="Art A",
     author_email="your.email@example.com",
     url="https://your_project_website_or_repo",
