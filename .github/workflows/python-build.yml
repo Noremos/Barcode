@@ -19,7 +19,47 @@ permissions:
   contents: read
 
 jobs:
-  release-build:
+  linux-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # Cache the premmake5 binary
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ${{ github.workspace }}/.premake-build
+          key: ${{ runner.os }}-premake5
+
+      # install premmake5
+      - uses: Jarod42/install-premake5@v1
+
+      - name: Build release distributions
+        run: |
+          cd PrjBarlib
+          premake5 gmake2 --python-include-path=$Python3_ROOT_DIR/include/python3.13 \
+          	--python-lib-path=$LD_LIBRARY_PATH/ \
+          	--python-version=3.13
+
+          cd build
+          make config=python Barlib
+
+          cp -rf ./Python/BarcodeProject/dist ../../dist
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-dist
+          path: ${{ github.workspace }}/dist
+
+  windows-build:
     runs-on: windows-latest
 
     steps:
@@ -49,7 +89,7 @@ jobs:
           cd build
           msbuild /p:Configuration=python Barlib.vcxproj
 
-          cp -rf ./Python/BarcodeProject/dist ../../dist
+          xcopy /E /I /Y .\Python\BarcodeProject\dist ..\..\dist
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
@@ -60,7 +100,8 @@ jobs:
   pypi-publish:
     runs-on: ubuntu-latest
     needs:
-      - release-build
+      - linux-build
+      - windows-build
     permissions:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
@@ -80,6 +121,12 @@ jobs:
       - name: Retrieve release distributions
         uses: actions/download-artifact@v4
         with:
+          name: linux-dist
+          path: dist
+
+      - name: Retrieve release distributions
+        uses: actions/download-artifact@v4
+        with:
           name: windows-dist
           path: dist
 
@@ -87,4 +134,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
-
