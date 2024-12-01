@@ -82,17 +82,16 @@ workspace "Barcode"
 	if os.host() == "windows" then
 		systemversion("latest")
 		system      "windows"
-		platforms { "win64" }
+		architecture "x64"
 
 		symbolspath '$(TargetName).pdb'
 
 	elseif os.host() == "linux" then
 		system      "linux"
-		platforms { "linux64" }
+		architecture "x64"
 
 	else -- MACOSX
 		system      "macosx"
-		platforms { "macosx64" }
 	end
 
 project "Barlib"
