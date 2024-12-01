@@ -13,14 +13,16 @@ cd "$OUTPUT_DIR"
 # Create virtual environment
 $PYTHON_BIN -m venv .venv
 source ./.venv/bin/activate
-pip install mypy build
+pip install mypy build setuptools
 
 stubgen -m libbarpy -o .
 
 $PYTHON_BIN "$SCRIPT_DIR/correct_types.py" "libbarpy.pyi"
 
 cd ..
-$PYTHON_BIN -m build
+# $PYTHON_BIN -m build
+%PYTHON_BIN% setup.py bdist_wheel
+
 
 # Test install
 pip install dist/raster_barcode-*.whl

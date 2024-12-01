@@ -8,12 +8,14 @@ if "%PYTHON_BIN%"=="" set PYTHON_BIN=python3
 REM Create virtual environment
 %PYTHON_BIN% -m venv .venv
 call .venv\Scripts\activate.bat
-pip install mypy build
+pip install mypy build setuptools
 
 cd %OUTPUT_DIR%
 stubgen -m libbarpy -o .
 cd ..
-%PYTHON_BIN% -m build
+@REM %PYTHON_BIN% -m build
+
+%PYTHON_BIN% setup.py bdist_wheel
 
 REM Test install
 pip install dist\raster_barcode-*.whl
