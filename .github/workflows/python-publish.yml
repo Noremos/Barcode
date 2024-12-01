@@ -24,11 +24,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
+      # Cache the premmake5 binary
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.premake-build
+          key: ${{ runner.os }}-premake5
+
+      # install premmake5
       - uses: Jarod42/install-premake5@v1
 
       - name: Build release distributions
