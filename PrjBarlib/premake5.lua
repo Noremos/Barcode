@@ -195,6 +195,7 @@ project "Barlib"
 	newoption {
 		trigger = "disable-postbuild",
 		value = "no",
+		description = "Do not add postbuild actions",
 	}
 
 
