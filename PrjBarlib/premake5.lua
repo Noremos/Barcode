@@ -143,29 +143,30 @@ project "Barlib"
 	-- `filter { }` settings allow cleaning up the output of the build configurations.
 
 
-	pythonBin = getPythonNameInDirsro(_OPTIONS["python-version"])
-	projectDir = "%[%{!cfg.targetdir}/BarcodeProject/]"
-	libraryDir =  projectDir .. "/raster_barcode/]"
+	if _OPTIONS["disable-postbuild"] == "yes" then
+		pythonBin = getPythonNameInDirsro(_OPTIONS["python-version"])
+		projectDir = "%[%{!cfg.targetdir}/BarcodeProject/]"
+		libraryDir =  projectDir .. "/raster_barcode/]"
 
-
-	filter "configurations:Python or PythonDebug"
-		postbuildcommands
-		{
-			"{RMDIR} %[%{!cfg.targetdir}/BarcodeProject]",
-			"{COPYDIR} %[%{prj.location}/modules/python/BarcodeProject] %[%{!cfg.targetdir}/BarcodeProject]",
-			"{COPYFILE} %[%{!cfg.buildtarget.abspath}]  %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/]",
-		}
-
-		if os.host() == "windows" then
-			postbuildcommands {
-				"%[%{prj.location}/modules/python/make_package.bat] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin .. ".exe",
+		filter "configurations:Python or PythonDebug"
+			postbuildcommands
+			{
+				"{RMDIR} %[%{!cfg.targetdir}/BarcodeProject]",
+				"{COPYDIR} %[%{prj.location}/modules/python/BarcodeProject] %[%{!cfg.targetdir}/BarcodeProject]",
+				"{COPYFILE} %[%{!cfg.buildtarget.abspath}]  %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/]",
 			}
-		else
-			postbuildcommands {
-				"chmod +x %[%{prj.location}/modules/python/make_package.sh]",
-				"%[%{prj.location}/modules/python/make_package.sh] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin,
-			}
-		end
+
+			if os.host() == "windows" then
+				postbuildcommands {
+					"%[%{prj.location}/modules/python/make_package.bat] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin .. ".exe",
+				}
+			else
+				postbuildcommands {
+					"chmod +x %[%{prj.location}/modules/python/make_package.sh]",
+					"%[%{prj.location}/modules/python/make_package.sh] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin,
+				}
+			end
+	end
 
 	-- Options
 	newoption {
@@ -185,7 +186,16 @@ project "Barlib"
 		description = "Python version. For example: 3.13",
 	}
 
+	newoption {
+		trigger = "python-version",
+		value = "<VERSION>",
+		description = "Python version. For example: 3.13",
+	}
 
+	newoption {
+		trigger = "disable-postbuild",
+		value = "no",
+	}
 
 
 	-- pythonBin = "python" .. _OPTIONS["python-version"]
