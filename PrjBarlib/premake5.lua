@@ -1,6 +1,32 @@
+
+-- Options
+newoption {
+	trigger = "disable-postbuild",
+	description = "Do not add postbuild actions"
+}
+
+newoption {
+	trigger = "python-include-path",
+	value = "<PATH>",
+	description = "A path to the Python include folder. For example: /opt/homebrew/Cellar/python@3.13/3.13.0_1/include",
+}
+newoption {
+	trigger = "python-lib-path",
+	value = "<PATH>",
+	description = "A path to the Python lib file. For example: /opt/homebrew/Cellar/python@3.13/3.13.0_1/lib",
+}
+
+newoption {
+	trigger = "python-version",
+	value = "<VERSION>",
+	description = "Python version. For example: 3.13",
+}
+
+
+
 function queryTerminal(command)
     local success, handle = pcall(io.popen, command)
-    if not success then 
+    if not success then
         return ""
     end
 
@@ -45,8 +71,6 @@ function getPythonNameInDirsro(python_version)
 end
 
 function setPythonSetup()
-	print("Python version: " .. _OPTIONS["python-version"])
-
 	defines { "_PYD" }
 
 	includedirs { "include", "modules/pybind11/include" }
@@ -61,7 +85,7 @@ end
 workspace "Barcode"
 	configurations { "Debug", "dll", "Python", "PythonDebug" }
 	location "build"
-	
+
 	-- Define supported configurations
 	filter { "configurations:Debug", "action:vs*" }
 		defines { "DEBUG" }
@@ -108,6 +132,12 @@ project "Barlib"
 	targetname "barpy"
 	cppdialect "C++20"
 
+
+	print("Python version: " .. _OPTIONS["python-version"])
+	if _OPTIONS["disable-postbuild"] then
+		print("Disable postbuild")
+	end
+
 	if os.host() == "windows" then
 		targetextension ".pyd"
 	else
@@ -142,8 +172,8 @@ project "Barlib"
 	-- Solution folder names can be assigned if necessary but isn't in the original CMake file.
 	-- `filter { }` settings allow cleaning up the output of the build configurations.
 
-
-	if _OPTIONS["disable-postbuild"] == "no" then
+	filter { "options:disable-postbuild" }
+		print("Enabling postbuild commands")
 		pythonBin = getPythonNameInDirsro(_OPTIONS["python-version"])
 		projectDir = "%[%{!cfg.targetdir}/BarcodeProject/]"
 		libraryDir =  projectDir .. "/raster_barcode/]"
@@ -166,37 +196,6 @@ project "Barlib"
 					"%[%{prj.location}/modules/python/make_package.sh] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin,
 				}
 			end
-	end
-
-	-- Options
-	newoption {
-		trigger = "python-include-path",
-		value = "<PATH>",
-		description = "A path to the Python include folder. For example: /opt/homebrew/Cellar/python@3.13/3.13.0_1/include",
-	}
-	 newoption {
-		trigger = "python-lib-path",
-		value = "<PATH>",
-		description = "A path to the Python lib file. For example: /opt/homebrew/Cellar/python@3.13/3.13.0_1/lib",
-	}
-
-	 newoption {
-		trigger = "python-version",
-		value = "<VERSION>",
-		description = "Python version. For example: 3.13",
-	}
-
-	newoption {
-		trigger = "python-version",
-		value = "<VERSION>",
-		description = "Python version. For example: 3.13",
-	}
-
-	newoption {
-		trigger = "disable-postbuild",
-		value = "no",
-		description = "Do not add postbuild actions",
-	}
 
 
 	-- pythonBin = "python" .. _OPTIONS["python-version"]
@@ -227,3 +226,4 @@ project "Barlib"
 	-- 	postbuildcommands {
 	-- 		pythonBin .. srcPythonModules .."correct_types.py " .. outLibraryDir .. "libbarpy.pyi",
 	-- 	}
+
