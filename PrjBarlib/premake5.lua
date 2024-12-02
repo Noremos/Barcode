@@ -44,8 +44,13 @@ function setPythonSetup()
 	includedirs { "include", "modules/pybind11/include" }
 	includedirs {  _OPTIONS["python-include-path"] }
 
+	python_version = _OPTIONS["python-version"]
+	if os.host() == "windows" then
+		python_version = python_version:gsub("%.", "")
+	end
+
 	libdirs { _OPTIONS["python-lib-path"] }
-	links { "python" .. _OPTIONS["python-version"] } -- Link against the Python 3.10 library
+	links { "python" .. python_version } -- Link against the Python 3.10 library
 end
 
 workspace "Barcode"
@@ -72,8 +77,6 @@ workspace "Barcode"
 
 	filter { "configurations:PythonDebug" }
 		targetdir "build/PythonDebug/"
-		defines { "_PYD" }
-
 		setPythonSetup()
 
 	filter { "action:vs*" }
