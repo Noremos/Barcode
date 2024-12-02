@@ -97,8 +97,7 @@ jobs:
 
           cd build
           msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj 
-
-          xcopy /Q /E /Y /I "modules\python\BarcodeProject" "Python\BarcodeProject"
+          xcopy /E /Y /I "..\modules\python\BarcodeProject" "Python\BarcodeProject"
           copy /B /Y "Python\barpy.pyd"  "Python\BarcodeProject\raster_barcode\barpy.pyd"
           call ..\modules\python\make_package.bat Python\BarcodeProject\raster_barcode\ python313.exe
 
