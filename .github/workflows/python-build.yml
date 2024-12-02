@@ -31,6 +31,12 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Test Python vars
+        run: |
+          @echo pythonLocation: $pythonLocation
+          @echo pythonLocation: ${{ steps.cp313.pythonLocation }}
+          @echo pythonLocation: ${{ pythonLocation }}
+
       # Cache the premmake5 binary
       - uses: actions/cache@v3
         with:
@@ -88,7 +94,7 @@ jobs:
       - name: Build release distributions
         run: |
           cd PrjBarlib
-          premake5 vs2022 --python-include-path= C:\hostedtoolcache\windows\Python\3.13.0\x64/include --python-lib-path= C:\hostedtoolcache\windows\Python\3.13.0\x64/libs --python-version=3.13
+          premake5 vs2022 --python-include-path=${{ pythonLocation }}/include --python-lib-path=${{ pythonLocation }}/libs --python-version=3.13
 
           cd build
           msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj 
