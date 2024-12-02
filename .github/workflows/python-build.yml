@@ -95,9 +95,12 @@ jobs:
           cd PrjBarlib
           premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=3.13 --disable-postbuild=yes
 
-          xcopy /Q /E /Y /I "build\modules\python\BarcodeProject" "Python\BarcodeProject"
-          copy /B /Y "build\Python\barpy.pyd"  "build\Python\BarcodeProject\raster_barcode\barpy.pyd"
-          call modules\python\make_package.bat build\Python\BarcodeProject\raster_barcode\ python313.exe
+          cd build
+          msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj 
+
+          xcopy /Q /E /Y /I "modules\python\BarcodeProject" "Python\BarcodeProject"
+          copy /B /Y "Python\barpy.pyd"  "Python\BarcodeProject\raster_barcode\barpy.pyd"
+          call ..\modules\python\make_package.bat Python\BarcodeProject\raster_barcode\ python313.exe
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
