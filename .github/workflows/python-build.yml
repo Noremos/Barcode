@@ -33,7 +33,6 @@ jobs:
 
       - name: Test Python vars
         run: |
-          @echo pythonLocation: $pythonLocation
           @echo pythonLocation: ${{ steps.cp313.pythonLocation }}
           @echo pythonLocation: ${{ pythonLocation }}
 
