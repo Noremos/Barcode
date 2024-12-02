@@ -93,7 +93,7 @@ jobs:
       - name: Build release distributions
         run: |
           cd PrjBarlib
-          premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ pythonLocation }}/libs --python-version=3.13
+          premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=3.13
 
           cd build
           msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj 
