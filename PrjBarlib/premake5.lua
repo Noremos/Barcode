@@ -36,6 +36,14 @@ end
 --     print("lib: " .. pythonLib)
 -- end
 
+function getPythonNameInDirsro(python_version)
+	if os.host() == "windows" then
+		python_version = python_version:gsub("%.", "")
+	end
+
+	return "python" .. python_version
+end
+
 function setPythonSetup()
 	print("Python version: " .. _OPTIONS["python-version"])
 
@@ -44,13 +52,10 @@ function setPythonSetup()
 	includedirs { "include", "modules/pybind11/include" }
 	includedirs {  _OPTIONS["python-include-path"] }
 
-	python_version = _OPTIONS["python-version"]
-	if os.host() == "windows" then
-		python_version = python_version:gsub("%.", "")
-	end
+	python_version = getPythonNameInDirsro(_OPTIONS["python-version"])
 
 	libdirs { _OPTIONS["python-lib-path"] }
-	links { "python" .. python_version } -- Link against the Python 3.10 library
+	links { python_version } -- Link against the Python 3.10 library
 end
 
 workspace "Barcode"
@@ -138,7 +143,7 @@ project "Barlib"
 	-- `filter { }` settings allow cleaning up the output of the build configurations.
 
 
-	pythonBin = "python" .. _OPTIONS["python-version"]
+	pythonBin = getPythonNameInDirsro(_OPTIONS["python-version"])
 	projectDir = "%[%{!cfg.targetdir}/BarcodeProject/]"
 	libraryDir =  projectDir .. "/raster_barcode/]"
 
