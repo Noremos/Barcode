@@ -133,9 +133,11 @@ project "Barlib"
 	cppdialect "C++20"
 
 
+	enable_postbuild = true
 	print("Python version: " .. _OPTIONS["python-version"])
 	if _OPTIONS["disable-postbuild"] then
 		print("Disable postbuild")
+		enable_postbuild = false
 	end
 
 	if os.host() == "windows" then
@@ -172,7 +174,7 @@ project "Barlib"
 	-- Solution folder names can be assigned if necessary but isn't in the original CMake file.
 	-- `filter { }` settings allow cleaning up the output of the build configurations.
 
-	filter { "options:disable-postbuild" }
+	if enable_postbuild then
 		print("Enabling postbuild commands")
 		pythonBin = getPythonNameInDirsro(_OPTIONS["python-version"])
 		projectDir = "%[%{!cfg.targetdir}/BarcodeProject/]"
@@ -196,6 +198,7 @@ project "Barlib"
 					"%[%{prj.location}/modules/python/make_package.sh] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin,
 				}
 			end
+	end
 
 
 	-- pythonBin = "python" .. _OPTIONS["python-version"]
