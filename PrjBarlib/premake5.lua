@@ -143,7 +143,7 @@ project "Barlib"
 	-- `filter { }` settings allow cleaning up the output of the build configurations.
 
 
-	if _OPTIONS["disable-postbuild"] == "yes" then
+	if _OPTIONS["disable-postbuild"] == "no" then
 		pythonBin = getPythonNameInDirsro(_OPTIONS["python-version"])
 		projectDir = "%[%{!cfg.targetdir}/BarcodeProject/]"
 		libraryDir =  projectDir .. "/raster_barcode/]"
