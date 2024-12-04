@@ -180,29 +180,6 @@ project "Barlib"
 		projectDir = "%[%{!cfg.targetdir}/BarcodeProject/]"
 		libraryDir =  projectDir .. "/raster_barcode/]"
 
-		filter "configurations:Python or PythonDebug"
-			if os.host() == "windows" then
-				postbuildcommands {
-					"cmd",
-				}
-			end
-
-			postbuildcommands
-			{
-				"{COPYDIR} %[%{prj.location}/../modules/python/BarcodeProject] %[%{!cfg.targetdir}/BarcodeProject]",
-				"{COPYFILE} %[%{!cfg.buildtarget.abspath}]  %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/]",
-			}
-
-			if os.host() == "windows" then
-				postbuildcommands {
-					"%[%{prj.location}/../modules/python/make_package.bat] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. "python.exe",
-				}
-			else
-				postbuildcommands {
-					"chmod +x %[%{prj.location}/../modules/python/make_package.sh]",
-					"%[%{prj.location}/../modules/python/make_package.sh] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin,
-				}
-			end
 	end
 
 

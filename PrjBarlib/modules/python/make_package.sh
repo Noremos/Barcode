@@ -1,12 +1,16 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-OUTPUT_DIR="$1"
+BUILD_DIR="$1"
+OUTPUT_DIR="$1/BarcodeProject/raster_barcode"
 
 PYTHON_BIN="$2"
 if [ -z "$PYTHON_BIN" ]; then
 	PYTHON_BIN="python3"
 fi
+
+cp -rf "$SCRIPT_DIR/BarcodeProject" "$BUILD_DIR/BarcodeProject"
+cp "$BUILD_DIR/libbarpy.so" "$OUTPUT_DIR/"
 
 cd "$OUTPUT_DIR"
 
