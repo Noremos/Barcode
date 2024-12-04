@@ -23,7 +23,6 @@ newoption {
 }
 
 
-
 function queryTerminal(command)
     local success, handle = pcall(io.popen, command)
     if not success then
@@ -129,7 +128,6 @@ workspace "Barcode"
 project "Barlib"
 	kind "SharedLib" -- Equivalent to add_library(... MODULE ...) in CMake
 	language "C++"
-	targetname "barpy"
 	cppdialect "C++20"
 
 
@@ -141,8 +139,10 @@ project "Barlib"
 	end
 
 	if os.host() == "windows" then
+		targetname "libbarpy"
 		targetextension ".pyd"
 	else
+		targetname "barpy"
 		targetextension ".so"
 	end
 
@@ -181,21 +181,26 @@ project "Barlib"
 		libraryDir =  projectDir .. "/raster_barcode/]"
 
 		filter "configurations:Python or PythonDebug"
+			if os.host() == "windows" then
+				postbuildcommands {
+					"cmd",
+				}
+			end
+
 			postbuildcommands
 			{
-				"{RMDIR} %[%{!cfg.targetdir}/BarcodeProject]",
-				"{COPYDIR} %[%{prj.location}/modules/python/BarcodeProject] %[%{!cfg.targetdir}/BarcodeProject]",
+				"{COPYDIR} %[%{prj.location}/../modules/python/BarcodeProject] %[%{!cfg.targetdir}/BarcodeProject]",
 				"{COPYFILE} %[%{!cfg.buildtarget.abspath}]  %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/]",
 			}
 
 			if os.host() == "windows" then
 				postbuildcommands {
-					"%[%{prj.location}/modules/python/make_package.bat] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin .. ".exe",
+					"%[%{prj.location}/../modules/python/make_package.bat] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. "python.exe",
 				}
 			else
 				postbuildcommands {
-					"chmod +x %[%{prj.location}/modules/python/make_package.sh]",
-					"%[%{prj.location}/modules/python/make_package.sh] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin,
+					"chmod +x %[%{prj.location}/../modules/python/make_package.sh]",
+					"%[%{prj.location}/../modules/python/make_package.sh] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin,
 				}
 			end
 	end
