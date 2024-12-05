@@ -6,7 +6,7 @@ setup(
     description="Python wrapper for the Barcode library.",
     author="Art A",
     author_email="your.email@example.com",
-    url="https://your_project_website_or_repo",
+    url="https://github.com/Noremos/Barcode",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     license="MIT",
@@ -26,10 +26,9 @@ setup(
     ],
     package_data={
         "raster_barcode": [
-            "libbarpy.so;platform_system=='Linux'",
+            "libbarpy.so",
             "libbarpy.pyi",
-            "libbarpy.so;platform_system=='Macos'",
-            "libbarpy.pyd;platform_system=='Windows'",
+            "libbarpy.pyd"
         ],
     },
     has_ext_modules = lambda: True,

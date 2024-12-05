@@ -10,13 +10,13 @@ if [ -z "$PYTHON_BIN" ]; then
 fi
 
 cp -rf "$SCRIPT_DIR/BarcodeProject" "$BUILD_DIR/BarcodeProject"
-cp "$BUILD_DIR/libbarpy.so" "$OUTPUT_DIR/"
+cp "$BUILD_DIR/libbarpy.so" "$OUTPUT_DIR/libbarpy.so"
 
 cd "$OUTPUT_DIR"
 
 # Create virtual environment
-$PYTHON_BIN -m venv .venv
-source ./.venv/bin/activate
+$PYTHON_BIN -m venv ../../.venv
+source ../../.venv/bin/activate
 pip install mypy build setuptools
 
 stubgen -m libbarpy -o .
