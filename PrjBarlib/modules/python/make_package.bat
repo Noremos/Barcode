@@ -22,7 +22,7 @@ stubgen -m libbarpy -o .
 %PYTHON_BIN% "%scriptpath%/correct_types.py" "libbarpy.pyi"
 
 cd ..
-%PYTHON_BIN% -m build
+py -m build
 
 @REM %PYTHON_BIN% setup.py bdist_wheel
 
