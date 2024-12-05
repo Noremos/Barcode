@@ -51,6 +51,8 @@ jobs:
           cd build
           make config=python Barlib
 
+          bash ../modules/python/make_package.sh Python ${{ steps.cp313.outputs.python-path }}
+
           cp -rf ./Python/BarcodeProject/dist ../../dist
 
       - name: Upload distributions
@@ -86,7 +88,7 @@ jobs:
 
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@v2
-      
+
       # install premmake5
       - uses: Jarod42/install-premake5@v1
 
@@ -96,10 +98,9 @@ jobs:
           premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=3.13 --disable-postbuild
 
           cd build
-          msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj 
-          xcopy /E /Y /I "..\modules\python\BarcodeProject" "Python\BarcodeProject"
-          copy /B /Y "Python\barpy.pyd"  "Python\BarcodeProject\raster_barcode\barpy.pyd"
-          call ..\modules\python\make_package.bat Python\BarcodeProject\raster_barcode\ python313.exe
+          msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj
+          call "../modules/python/make_package.bat" Python ${{ steps.cp313.outputs.python-path }}
+          copy Python\BarcodeProject\dist dist
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
