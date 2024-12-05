@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   linux-build:
-    runs-on: ubuntu-latest
+    runs-on: quay.io/pypa/musllinux_1_1_x86_64
 
     steps:
       - uses: actions/checkout@v4
@@ -49,7 +49,8 @@ jobs:
           	--python-version=3.13
 
           cd build
-          make config=python Barlib
+          make config=python Barlib \
+          	manylinux_compat=on
 
       - name: Make package
         run: |
@@ -149,6 +150,7 @@ jobs:
           echo "python -m pip install --upgrade auditwheel"
           python -m pip install --upgrade auditwheel
           echo "python -m auditwheel repair -w dist dist/*.whl"
+          python -m show dist/*.whl
           python -m auditwheel repair -w dist dist/*.whl
 
       - name: Retrieve release distributions
