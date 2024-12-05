@@ -108,7 +108,7 @@ jobs:
           cd PrjBarlib/build
 
           ../modules/python/make_package.bat Python ${{ steps.cp313.outputs.python-path }}
-          copy Python\BarcodeProject\dist ..\..\dist
+          xcopy Python\BarcodeProject\dist ..\..\dist /Q /E /Y /I
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
