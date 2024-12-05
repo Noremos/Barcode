@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   linux-build:
-    runs-on: quay.io/pypa/musllinux_1_1_x86_64
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -41,16 +41,21 @@ jobs:
       # install premmake5
       - uses: Jarod42/install-premake5@v1
 
+      # Install dependencies
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential patchelf
+
       - name: Build library
         run: |
           cd PrjBarlib
           premake5 gmake2 --python-include-path=$Python3_ROOT_DIR/include/python3.13 \
-          	--python-lib-path=$LD_LIBRARY_PATH/ \
-          	--python-version=3.13
+            --python-lib-path=$LD_LIBRARY_PATH/ \
+            --python-version=3.13
 
           cd build
-          make config=python Barlib \
-          	manylinux_compat=on
+          make config=python Barlib
 
       - name: Make package
         run: |
@@ -59,11 +64,17 @@ jobs:
 
           cp -rf ./Python/BarcodeProject/dist ../../dist
 
+      - name: Repair and validate wheel
+        run: |
+          python -m pip install --upgrade auditwheel
+          auditwheel repair --plat manylinux_2_28_x86_64 -w dist dist/*.whl
+          ls dist
+
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
           name: linux-dist
-          path: ${{ github.workspace }}/dist
+          path: dist
 
   windows-build:
     runs-on: windows-latest
@@ -138,26 +149,22 @@ jobs:
       # url: https://pypi.org/project/YOURPROJECT/${{ github.event.release.name }}
 
     steps:
-      - name: Retrieve release distributions
+      - name: Retrieve Linux distributions
         uses: actions/download-artifact@v4
         with:
           name: linux-dist
           path: dist
 
-      - name : Convert Ubintu to manylinux
-        run: |
-          echo "Converting ubuntu to manylinux..."
-          echo "python -m pip install --upgrade auditwheel"
-          python -m pip install --upgrade auditwheel
-          echo "python -m auditwheel repair -w dist dist/*.whl"
-          python -m show dist/*.whl
-          python -m auditwheel repair -w dist dist/*.whl
-
-      - name: Retrieve release distributions
+      - name: Retrieve Windows distributions
         uses: actions/download-artifact@v4
         with:
           name: windows-dist
           path: dist
+
+      - name: Validate wheels
+        run: |
+          python -m pip install twine
+          twine check dist/*
 
       - name: Publish release distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
