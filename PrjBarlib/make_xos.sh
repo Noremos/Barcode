@@ -5,4 +5,5 @@ cd build
 make config=python clean
 make config=python Barlib
 
+rm -rf Python/BarcodeProject
 bash ../modules/python/make_package.sh Python python313
