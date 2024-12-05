@@ -143,6 +143,14 @@ jobs:
           name: linux-dist
           path: dist
 
+      - name : Convert Ubintu to manylinux
+        run: |
+          echo "Converting ubuntu to manylinux..."
+          echo "python -m pip install --upgrade auditwheel"
+          python -m pip install --upgrade auditwheel
+          echo "python -m auditwheel repair -w dist dist/*.whl"
+          python -m auditwheel repair -w dist dist/*.whl
+
       - name: Retrieve release distributions
         uses: actions/download-artifact@v4
         with:
