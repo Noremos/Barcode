@@ -41,7 +41,7 @@ jobs:
       # install premmake5
       - uses: Jarod42/install-premake5@v1
 
-      - name: Build release distributions
+      - name: Build library
         run: |
           cd PrjBarlib
           premake5 gmake2 --python-include-path=$Python3_ROOT_DIR/include/python3.13 \
@@ -51,6 +51,9 @@ jobs:
           cd build
           make config=python Barlib
 
+      - name: Make package
+        run: |
+          cd PrjBarlib/build
           bash ../modules/python/make_package.sh Python ${{ steps.cp313.outputs.python-path }}
 
           cp -rf ./Python/BarcodeProject/dist ../../dist
@@ -92,7 +95,7 @@ jobs:
       # install premmake5
       - uses: Jarod42/install-premake5@v1
 
-      - name: Build release distributions
+      - name: Build library
         run: |
           cd PrjBarlib
           premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=3.13 --disable-postbuild
@@ -100,6 +103,13 @@ jobs:
           cd build
           msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj
           call "../modules/python/make_package.bat" Python ${{ steps.cp313.outputs.python-path }}
+          copy Python\BarcodeProject\dist dist
+
+      - name: Make package
+        run: |
+          cd PrjBarlib/build
+
+          ../modules/python/make_package.bat Python ${{ steps.cp313.outputs.python-path }}
           copy Python\BarcodeProject\dist dist
 
       - name: Upload distributions

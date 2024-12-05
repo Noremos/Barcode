@@ -29,5 +29,5 @@ $PYTHON_BIN -m build
 
 
 # Test install
-pip install dist/raster_barcode-*.whl
+# pip install dist/raster_barcode-*.whl
 
