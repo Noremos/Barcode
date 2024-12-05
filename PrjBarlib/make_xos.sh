@@ -4,3 +4,5 @@ premake5 gmake2 --python-include-path=/opt/homebrew/opt/python@3.13/Frameworks/P
 cd build
 make config=python clean
 make config=python Barlib
+
+bash ../modules/python/make_package.sh Python python313
