@@ -102,8 +102,6 @@ jobs:
 
           cd build
           msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj
-          call "../modules/python/make_package.bat" Python ${{ steps.cp313.outputs.python-path }}
-          copy Python\BarcodeProject\dist dist
 
       - name: Make package
         run: |
