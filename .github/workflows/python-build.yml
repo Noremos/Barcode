@@ -54,7 +54,7 @@ jobs:
               mv premake5 /usr/local/bin/
 
               cd PrjBarlib
-              premake5 gmake2 --python-include-path=/opt/python/cp313-cp313m/include/python3.13 \
+              premake5 gmake2 --python-include-path=/opt/python/cp313-cp313m/include \
                 --python-lib-path=/opt/python/cp313-cp313m/lib \
                 --python-version=3.13
 
