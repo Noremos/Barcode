@@ -19,21 +19,6 @@ permissions:
   contents: read
 
 jobs:
-  build_wheels:
-    name: Build wheels on ubuntu-latest
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22.0
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels
-          path: ./wheelhouse/*.whl
-
   linux-build:
     runs-on: ubuntu-latest
 
@@ -46,38 +31,37 @@ jobs:
         with:
           python-version: "3.13"
 
-      # Cache the premmake5 binary
+      # Cache the premake5 binary
       - uses: actions/cache@v3
         with:
           path: |
             ${{ github.workspace }}/.premake-build
           key: ${{ runner.os }}-premake5
 
-      # install premmake5
+      # Install premake5
       - uses: Jarod42/install-premake5@v1
 
-      # Install dependencies
-      - name: Install system packages
+      - name: Build on manylinux
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential patchelf
+          docker run --rm \
+            -v ${{ github.workspace }}:/project \
+            -w /project \
+            quay.io/pypa/manylinux_2_28_x86_64 \
+            bash -c "
+              yum install -y patchelf
+              cd PrjBarlib
+              premake5 gmake2 --python-include-path=/opt/python/cp313-cp313m/include/python3.13 \
+                --python-lib-path=/opt/python/cp313-cp313m/lib \
+                --python-version=3.13
 
-      - name: Build library
-        run: |
-          cd PrjBarlib
-          premake5 gmake2 --python-include-path=$Python3_ROOT_DIR/include/python3.13 \
-            --python-lib-path=$LD_LIBRARY_PATH/ \
-            --python-version=3.13
+              cd build
+              make config=python Barlib
 
-          cd build
-          make config=python Barlib
-
-      - name: Make package
-        run: |
-          cd PrjBarlib/build
-          bash ../modules/python/make_package.sh Python ${{ steps.cp313.outputs.python-path }}
-
-          cp -rf ./Python/BarcodeProject/dist ../../dist
+              cd ../modules/python
+              bash make_package.sh Python /opt/python/cp313-cp313m
+              mkdir -p /project/dist
+              cp -rf ./Python/BarcodeProject/dist /project/dist
+            "
 
       - name: Repair and validate wheel
         run: |
@@ -148,20 +132,13 @@ jobs:
     needs:
       - linux-build
       - windows-build
+
     permissions:
-      # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
 
-    # Dedicated environments with protections for publishing are strongly recommended.
-    # For more information, see: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#deployment-protection-rules
     environment:
       name: pypi
-      # OPTIONAL: uncomment and update to include your PyPI project URL in the deployment status:
-      # url: https://pypi.org/p/YOURPROJECT
-      #
-      # ALTERNATIVE: if your GitHub Release name is the PyPI project version string
-      # ALTERNATIVE: exactly, uncomment the following line instead:
-      # url: https://pypi.org/project/YOURPROJECT/${{ github.event.release.name }}
+      url: https://pypi.org/project/raster-barcode
 
     steps:
       - name: Retrieve Linux distributions
