@@ -31,16 +31,6 @@ jobs:
         with:
           python-version: "3.13"
 
-      # Cache the premake5 binary
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ${{ github.workspace }}/.premake-build
-          key: ${{ runner.os }}-premake5
-
-      # Install premake5
-      - uses: Jarod42/install-premake5@v1
-
       - name: Build on manylinux
         run: |
           docker run --rm \
@@ -53,11 +43,12 @@ jobs:
               tar -xvf premake5.tar.gz
               mv premake5 /usr/local/bin/
 
-              ls /opt/python/cp313-cp313m
-              ls /opt/python/cp313-cp313m/include
-              ls /opt/python/cp313-cp313m/include/python3.13
-              ls /opt/python/cp313-cp313m/lib
-              ls /opt/python/cp313-cp313m/bin
+              ls /opt/python
+              ls /opt/python/cp313-cp313
+              ls /opt/python/cp313-cp313/include
+              ls /opt/python/cp313-cp313/include/python3.13
+              ls /opt/python/cp313-cp313/lib
+              ls /opt/python/cp313-cp313/bin
 
               cd PrjBarlib
               premake5 gmake2 --python-include-path=/opt/python/cp313-cp313m/include/python3.13 \
