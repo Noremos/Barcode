@@ -54,7 +54,7 @@ jobs:
               mv premake5 /usr/local/bin/
 
               cd PrjBarlib
-              premake5 gmake2 --python-include-path=/opt/python/cp313-cp313m/include \
+              premake5 gmake2 --python-include-path=/opt/python/cp313-cp313m/include/python3.13 \
                 --python-lib-path=/opt/python/cp313-cp313m/lib \
                 --python-version=3.13
 
@@ -62,7 +62,7 @@ jobs:
               make config=python Barlib
 
               cd ../modules/python
-              bash make_package.sh Python /opt/python/cp313-cp313m
+              bash make_package.sh Python /opt/python/cp313-cp313m/bin/python3
               mkdir -p /project/dist
               cp -rf ./Python/BarcodeProject/dist /project/dist
             "
