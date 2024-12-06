@@ -43,23 +43,28 @@ jobs:
               tar -xvf premake5.tar.gz
               mv premake5 /usr/local/bin/
 
-              ls /opt/python
+              echo -------/opt/python/cp313-cp313
               ls /opt/python/cp313-cp313
+
+              echo -------//opt/python/cp313-cp313/include
               ls /opt/python/cp313-cp313/include
+
+              echo -------//opt/python/cp313-cp313/include/python3.13
               ls /opt/python/cp313-cp313/include/python3.13
+
+              echo -------//opt/python/cp313-cp313/lib
               ls /opt/python/cp313-cp313/lib
-              ls /opt/python/cp313-cp313/bin
 
               cd PrjBarlib
-              premake5 gmake2 --python-include-path=/opt/python/cp313-cp313m/include/python3.13 \
-                --python-lib-path=/opt/python/cp313-cp313m/lib \
+              premake5 gmake2 --python-include-path=/opt/python/cp313-cp313/include \
+                --python-lib-path=/opt/python/cp313-cp313/lib \
                 --python-version=3.13
 
               cd build
               make config=python Barlib
 
               cd ../modules/python
-              bash make_package.sh Python /opt/python/cp313-cp313m/bin/python3
+              bash make_package.sh Python /opt/python/cp313-cp313/bin/python3
               mkdir -p /project/dist
               cp -rf ./Python/BarcodeProject/dist /project/dist
             "
@@ -76,57 +81,57 @@ jobs:
           name: linux-dist
           path: dist
 
-  windows-build:
-    runs-on: windows-latest
+  # windows-build:
+  #   runs-on: windows-latest
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: true
 
-      - uses: actions/setup-python@v5
-        id: cp313
-        with:
-          python-version: "3.13"
+  #     - uses: actions/setup-python@v5
+  #       id: cp313
+  #       with:
+  #         python-version: "3.13"
 
-      - name: Test Python vars
-        run: |
-          echo pythonLocation: ${{ env.pythonLocation }}
-          echo pythonLocation: ${{ steps.cp313.pythonLocation }}
+  #     - name: Test Python vars
+  #       run: |
+  #         echo pythonLocation: ${{ env.pythonLocation }}
+  #         echo pythonLocation: ${{ steps.cp313.pythonLocation }}
 
-      # Cache the premmake5 binary
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ${{ github.workspace }}/.premake-build
-          key: ${{ runner.os }}-premake5
+  #     # Cache the premmake5 binary
+  #     - uses: actions/cache@v3
+  #       with:
+  #         path: |
+  #           ${{ github.workspace }}/.premake-build
+  #         key: ${{ runner.os }}-premake5
 
-      - name: setup-msbuild
-        uses: microsoft/setup-msbuild@v2
+  #     - name: setup-msbuild
+  #       uses: microsoft/setup-msbuild@v2
 
-      # install premmake5
-      - uses: Jarod42/install-premake5@v1
+  #     # install premmake5
+  #     - uses: Jarod42/install-premake5@v1
 
-      - name: Build library
-        run: |
-          cd PrjBarlib
-          premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=3.13 --disable-postbuild
+  #     - name: Build library
+  #       run: |
+  #         cd PrjBarlib
+  #         premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=3.13 --disable-postbuild
 
-          cd build
-          msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj
+  #         cd build
+  #         msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj
 
-      - name: Make package
-        run: |
-          cd PrjBarlib/build
+  #     - name: Make package
+  #       run: |
+  #         cd PrjBarlib/build
 
-          ../modules/python/make_package.bat Python ${{ steps.cp313.outputs.python-path }}
-          xcopy Python\BarcodeProject\dist ..\..\dist /Q /E /Y /I
+  #         ../modules/python/make_package.bat Python ${{ steps.cp313.outputs.python-path }}
+  #         xcopy Python\BarcodeProject\dist ..\..\dist /Q /E /Y /I
 
-      - name: Upload distributions
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-dist
-          path: ${{ github.workspace }}/dist
+  #     - name: Upload distributions
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: windows-dist
+  #         path: ${{ github.workspace }}/dist
 
   pypi-publish:
     runs-on: ubuntu-latest
