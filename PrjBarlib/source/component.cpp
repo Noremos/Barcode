@@ -466,7 +466,7 @@ void bc::Component::merge(bc::Component* dummy)
 #endif // POINTS_ARE_AVAILABLE
 
 
-	assert(dummy->resline->id == -1);
+	assert(dummy->resline->id == static_cast<uint>(-1));
 	delete dummy->resline;
 	dummy->resline = nullptr;
 }

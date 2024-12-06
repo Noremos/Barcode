@@ -451,7 +451,7 @@ MEXP namespace bc
 		// only for uchar
 		bp::list calcHistByPointsSize(/*Barscalar maxLen*/)
 		{
-			int rm = 0;
+			size_t rm = 0;
 			for (size_t i = 0; i < barlines.size(); i++)
 			{
 				int rf = barlines[i]->getPointsSize();

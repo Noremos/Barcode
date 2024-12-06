@@ -113,7 +113,7 @@ namespace bc {
 	public:
 		barstruct settings;
 		bool skipAddPointsToParent = false;
-		int sameStart = 0;
+		size_t sameStart = 0;
 
 	private:
 		Include* included = nullptr;
