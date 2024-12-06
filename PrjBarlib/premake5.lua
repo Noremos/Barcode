@@ -78,7 +78,7 @@ function setPythonSetup()
 	python_version = getPythonNameInDirsro(_OPTIONS["python-version"])
 
 	libdirs { _OPTIONS["python-lib-path"] }
-	links { python_version } -- Link against the Python 3.10 library
+	links { python_version }
 end
 
 workspace "Barcode"
