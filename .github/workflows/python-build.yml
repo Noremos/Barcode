@@ -39,11 +39,13 @@ jobs:
               tar -xvf premake5.tar.gz
               mv premake5 /usr/local/bin/
 
-              echo -------/opt/python/cp313-cp313/lib/python3.13
-              ls /opt/python/cp313-cp313/lib/python3.13
+              echo ------find
+              find /opt/python/cp313-cp313/lib/python3.13 -name "lib*so"
 
               cd PrjBarlib
-              premake5 gmake2 --python-include-path=/opt/python/cp313-cp313/include/python3.13 --python-lib-path=/opt/python/cp313-cp313/lib/python3.13/ python-version=3.13
+              premake5 gmake2 --python-include-path=/opt/python/cp313-cp313/include/python3.13 \
+                --python-lib-path=/opt/python/cp313-cp313/ \
+                --python-version=3.13
 
               cd build
               make config=python Barlib
