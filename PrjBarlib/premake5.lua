@@ -81,10 +81,10 @@ function setPythonSetup()
 		linkoptions { "-undefined dynamic_lookup" }
 	elseif os.host() == "linux" then
 		linkoptions { "-fPIC" }
+	else -- windows
+		libdirs { _OPTIONS["python-lib-path"] }
+		links { python_version }
 	end
-
-	-- libdirs { _OPTIONS["python-lib-path"] }
-	-- links { python_version }
 end
 
 workspace "Barcode"
