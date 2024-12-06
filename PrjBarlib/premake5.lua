@@ -1,7 +1,7 @@
 
 -- Options
 newoption {
-	trigger = "disable-postbuild",
+	trigger = "enable-postbuild",
 	description = "Do not add postbuild actions"
 }
 
@@ -137,11 +137,11 @@ project "Barlib"
 	cppdialect "C++20"
 
 
-	enable_postbuild = true
+	enable_postbuild = false
 	print("Python version: " .. _OPTIONS["python-version"])
-	if _OPTIONS["disable-postbuild"] then
-		print("Disable postbuild")
-		enable_postbuild = false
+	if _OPTIONS["enable-postbuild"] then
+		print("Enable postbuild")
+		enable_postbuild = true
 	end
 
 	if os.host() == "windows" then

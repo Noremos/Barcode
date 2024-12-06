@@ -45,11 +45,11 @@ jobs:
 
               cd build
               make config=python Barlib
+              echo --DONE--
 
-              cd ../modules/python
-              bash make_package.sh Python /opt/python/cp313-cp313/bin/python3
+              bash ../modules/python/make_package.sh Python /opt/python/cp313-cp313/bin/python3
               mkdir -p /project/dist
-              cp -rf ./Python/BarcodeProject/dist /project/dist
+              cp -rf ./Python/BarcodeProject/dist/* /project/dist/
             "
 
       - uses: actions/setup-python@v5
@@ -102,7 +102,7 @@ jobs:
   #     - name: Build library
   #       run: |
   #         cd PrjBarlib
-  #         premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=3.13 --disable-postbuild
+  #         premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=3.13
 
   #         cd build
   #         msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj
