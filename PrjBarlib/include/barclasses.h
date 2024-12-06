@@ -421,7 +421,7 @@ MEXP namespace bc
 		// only for uchar
 		bp::list calcHistByBarlen(/*Barscalar maxLen*/)
 		{
-			int maxLen = 256;
+			unsigned short maxLen = 256;
 			int* hist = new int[maxLen];
 			memset(hist, 0, maxLen * sizeof(int));
 
@@ -429,7 +429,7 @@ MEXP namespace bc
 				++hist[static_cast<int>(barlines[i]->len())];
 
 			bp::list pyhist;
-			for (size_t i = 0; i < maxLen; i++)
+			for (unsigned short i = 0; i < maxLen; i++)
 				pyhist.append(hist[i]);
 
 			delete[] hist;
@@ -454,7 +454,7 @@ MEXP namespace bc
 			size_t rm = 0;
 			for (size_t i = 0; i < barlines.size(); i++)
 			{
-				int rf = barlines[i]->getPointsSize();
+				size_t rf = barlines[i]->getPointsSize();
 				if (rf > rm)
 					rm = rf;
 			}
