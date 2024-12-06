@@ -77,8 +77,14 @@ function setPythonSetup()
 
 	python_version = getPythonNameInDirsro(_OPTIONS["python-version"])
 
-	libdirs { _OPTIONS["python-lib-path"] }
-	links { python_version }
+	if os.host() == "macosx" then
+		linkoptions { "-undefined dynamic_lookup" }
+	elseif os.host() == "linux" then
+		linkoptions { "-fPIC" }
+	end
+
+	-- libdirs { _OPTIONS["python-lib-path"] }
+	-- links { python_version }
 end
 
 workspace "Barcode"
