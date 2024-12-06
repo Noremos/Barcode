@@ -90,7 +90,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: |
-            ${{ github.workspace }}/.premake-build
+            ${{ github.workspace }}\.premake-build
           key: ${{ runner.os }}-premake5
 
       - name: setup-msbuild
