@@ -7,3 +7,5 @@ make config=python Barlib
 
 rm -rf Python/BarcodeProject
 bash ../modules/python/make_package.sh Python python3
+
+cp -r ./Python/BarcodeProject/dist ../../dist
