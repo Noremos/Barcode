@@ -113,7 +113,7 @@ namespace bc {
 	public:
 		barstruct settings;
 		bool skipAddPointsToParent = false;
-		int sameStart = 0;
+		size_t sameStart = 0;
 
 	private:
 		Include* included = nullptr;
@@ -261,7 +261,7 @@ namespace bc {
 			return included[wid * p.y + p.x] != nullptr;
 		}
 
-		HOLEP getHole(uint x, uint y);
+		HOLEP getHole(int x, int y);
 		HOLEP getHole(const point& p);
 
 		HOLEP tryAttach(HOLEP h1, HOLEP h2, point p);
