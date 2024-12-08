@@ -395,7 +395,7 @@ MEXP namespace bc
 			return matr[index].getPoint();
 		}
 
-		void getChildsMatr(barmapHash<bc::point, bool, bc::pointHash>& childs)
+		void getChildsMatr(barmapHash<bc::point, bool, bc::pointHash>& childs) const
 		{
 			for (uint chilId : this->childrenId)
 			{
@@ -855,6 +855,8 @@ MEXP namespace bc
 				std::swap(st, ed);
 
 			addBettyNumbers(bs, st);
+
+			return bs;
 		}
 
 		void addBettyNumbers(std::array<int, 256>& bs, short offset) const
