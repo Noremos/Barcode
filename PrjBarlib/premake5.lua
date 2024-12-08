@@ -1,6 +1,31 @@
+
+-- Options
+newoption {
+	trigger = "enable-postbuild",
+	description = "Do not add postbuild actions"
+}
+
+newoption {
+	trigger = "python-include-path",
+	value = "<PATH>",
+	description = "A path to the Python include folder. For example: /opt/homebrew/Cellar/python@3.13/3.13.0_1/include",
+}
+newoption {
+	trigger = "python-lib-path",
+	value = "<PATH>",
+	description = "A path to the Python lib file. For example: /opt/homebrew/Cellar/python@3.13/3.13.0_1/lib",
+}
+
+newoption {
+	trigger = "python-version",
+	value = "<VERSION>",
+	description = "Python version. For example: 3.13",
+}
+
+
 function queryTerminal(command)
     local success, handle = pcall(io.popen, command)
-    if not success then 
+    if not success then
         return ""
     end
 
@@ -36,79 +61,94 @@ end
 --     print("lib: " .. pythonLib)
 -- end
 
-function setPythonSetup()
-	print("Python version: " .. _OPTIONS["python-version"])
+function getPythonNameInDirsro(python_version)
+	if os.host() == "windows" then
+		python_version = python_version:gsub("%.", "")
+	end
 
+	return "python" .. python_version
+end
+
+function setPythonSetup()
 	defines { "_PYD" }
 
 	includedirs { "include", "modules/pybind11/include" }
 	includedirs {  _OPTIONS["python-include-path"] }
 
-	libdirs { _OPTIONS["python-lib-path"] }
-	links { "python" .. _OPTIONS["python-version"] } -- Link against the Python 3.10 library
+	python_version = getPythonNameInDirsro(_OPTIONS["python-version"])
+
+	if os.host() == "macosx" then
+		linkoptions { "-undefined dynamic_lookup" }
+	elseif os.host() == "linux" then
+		linkoptions { "-fPIC" }
+	else -- windows
+		libdirs { _OPTIONS["python-lib-path"] }
+		links { python_version }
+	end
 end
 
 workspace "Barcode"
 	configurations { "Debug", "dll", "Python", "PythonDebug" }
 	location "build"
-	
+
 	-- Define supported configurations
 	filter { "configurations:Debug", "action:vs*" }
 		defines { "DEBUG" }
 		symbols "On"
-		targetdir "Build/Debug/"
+		targetdir "build/Debug/"
 
 	filter { "configurations:Release" }
 		defines { "NDEBUG" }
 		optimize "On"
-		targetdir "Build/Release/"
+		targetdir "build/Release/"
 
 	filter { "configurations:dll" }
-		targetdir "Build/dll/"
+		targetdir "build/dll/"
 
 	filter { "configurations:Python" }
-		targetdir "Build/Python/"
+		targetdir "build/Python/"
 		setPythonSetup()
 
 	filter { "configurations:PythonDebug" }
-		targetdir "Build/PythonDebug/"
-		defines { "_PYD" }
-
+		targetdir "build/PythonDebug/"
 		setPythonSetup()
 
 	filter { "action:vs*" }
 		defines { "COMMON_LANGUAGE_RUNTIME_DLLCVLESS=No", "COMMON_LANGUAGE_RUNTIME_DLL=No", "COMMON_LANGUAGE_RUNTIME_PYTHON=No", "COMMON_LANGUAGE_RUNTIME_PYTHONDEBUG=No" }
 
 	if os.host() == "windows" then
-		cppdialect "C++20"
 		systemversion("latest")
 		system      "windows"
-		platforms { "win64" }
+		architecture "x64"
 
 		symbolspath '$(TargetName).pdb'
 
 	elseif os.host() == "linux" then
-		cppdialect "gnu++20"
 		system      "linux"
-		platforms { "linux64" }
+		architecture "x64"
 
 	else -- MACOSX
-		cppdialect "gnu++20"
 		system      "macosx"
-		platforms { "macosx64" }
-
-		-- buildoptions { "-F /Library/Frameworks" }
-		-- linkoptions  { "-F /Library/Frameworks" }
 	end
 
 project "Barlib"
 	kind "SharedLib" -- Equivalent to add_library(... MODULE ...) in CMake
 	language "C++"
-	targetname "barpy"
+	cppdialect "C++20"
+
+
+	enable_postbuild = false
+	print("Python version: " .. _OPTIONS["python-version"])
+	if _OPTIONS["enable-postbuild"] then
+		print("Enable postbuild")
+		enable_postbuild = true
+	end
 
 	if os.host() == "windows" then
+		targetname "libbarpy"
 		targetextension ".pyd"
 	else
+		targetname "barpy"
 		targetextension ".so"
 	end
 
@@ -140,50 +180,13 @@ project "Barlib"
 	-- Solution folder names can be assigned if necessary but isn't in the original CMake file.
 	-- `filter { }` settings allow cleaning up the output of the build configurations.
 
+	if enable_postbuild then
+		print("Enabling postbuild commands")
+		pythonBin = getPythonNameInDirsro(_OPTIONS["python-version"])
+		projectDir = "%[%{!cfg.targetdir}/BarcodeProject/]"
+		libraryDir =  projectDir .. "/raster_barcode/]"
 
-	pythonBin = "python" .. _OPTIONS["python-version"]
-	projectDir = "%[%{!cfg.targetdir}/BarcodeProject/]"
-	libraryDir =  projectDir .. "/raster_barcode/]"
-
-
-	filter "configurations:Python or PythonDebug"
-		postbuildcommands
-		{
-			"{RMDIR} %[%{!cfg.targetdir}/BarcodeProject]",
-			"{COPYDIR} %[%{prj.location}/modules/python/BarcodeProject] %[%{!cfg.targetdir}/BarcodeProject]",
-			"{COPYFILE} %[%{!cfg.buildtarget.abspath}]  %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/]",
-		}
-
-		if os.host() == "windows" then
-			postbuildcommands {
-				"%[%{prj.location}/modules/python/make_package.bat] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin .. ".exe",
-			}
-		else
-			postbuildcommands {
-				"chmod +x %[%{prj.location}/modules/python/make_package.sh]",
-				"%[%{prj.location}/modules/python/make_package.sh] %[%{!cfg.targetdir}/BarcodeProject/raster_barcode/] " .. pythonBin,
-			}
-		end
-
-	-- Options
-	newoption {
-		trigger = "python-include-path",
-		value = "<PATH>",
-		description = "A path to the Python include folder. For example: /opt/homebrew/Cellar/python@3.13/3.13.0_1/include",
-	}
-	 newoption {
-		trigger = "python-lib-path",
-		value = "<PATH>",
-		description = "A path to the Python lib file. For example: /opt/homebrew/Cellar/python@3.13/3.13.0_1/lib",
-	}
-
-	 newoption {
-		trigger = "python-version",
-		value = "<VERSION>",
-		description = "Python version. For example: 3.13",
-	}
-
-
+	end
 
 
 	-- pythonBin = "python" .. _OPTIONS["python-version"]
@@ -214,3 +217,4 @@ project "Barlib"
 	-- 	postbuildcommands {
 	-- 		pythonBin .. srcPythonModules .."correct_types.py " .. outLibraryDir .. "libbarpy.pyi",
 	-- 	}
+

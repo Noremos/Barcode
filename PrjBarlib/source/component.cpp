@@ -318,7 +318,7 @@ void bc::Component::passConnections(BarcodeCreator* factory)
 			//auto asd = attachCondidates.find(first->startIndex);
 
 			bool found = false;
-			for (short i = 0; i < attachCondidates.size(); i++)
+			for (unsigned short i = 0; i < attachCondidates.size(); i++)
 			{
 				auto& inf = attachCondidates[i];
 				if (inf.comp != first)
@@ -466,7 +466,7 @@ void bc::Component::merge(bc::Component* dummy)
 #endif // POINTS_ARE_AVAILABLE
 
 
-	assert(dummy->resline->id == -1);
+	assert(dummy->resline->id == static_cast<uint>(-1));
 	delete dummy->resline;
 	dummy->resline = nullptr;
 }

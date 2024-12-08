@@ -136,7 +136,7 @@ COMPP BarcodeCreator::getInclude(const size_t pos)
 }
 
 
-HOLEP BarcodeCreator::getHole(uint x, uint y)
+HOLEP BarcodeCreator::getHole(int x, int y)
 {
 	if (x < 0 || y < 0 || x >= wid || y >= hei)
 		return nullptr;

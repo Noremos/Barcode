@@ -192,8 +192,7 @@ MEXP namespace bc
 		std::vector<barstruct> structs;
 		inline void addStructure(ProcType pt, ColorType colT, ComponentType comT)
 		{
-			structs.push_back({});
-			auto e = structs.back();
+			auto& e = structs.emplace_back();
 			e.comtype = comT;
 			e.proctype = pt;
 			e.coltype = colT;
