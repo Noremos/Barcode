@@ -7,7 +7,7 @@
 
 #define PY_SILENS
 using namespace py;
-
+#define VERSION_INFO "1.0.0"
 
 PYBIND11_MODULE(libbarpy, m)
 {
@@ -113,9 +113,9 @@ PYBIND11_MODULE(libbarpy, m)
 		;
 
 	class_<bc::barline>(m,  "Barline")
-		.def("start", &bc::barline::pystart)
-		.def("len", &bc::barline::len)
-		.def("end", &bc::barline::end)
+		.def("start", &bc::barline::getStart)
+		.def("len", &bc::barline::getLength)
+		.def("end", &bc::barline::getEnd)
 		.def("getPoints", &bc::barline::getPoints, (arg("skipChildPoints") = false))
 		.def("getMatrixSize", &bc::barline::getPointsSize)
 		.def("getMatrixValue", &bc::barline::getPoint)
@@ -212,39 +212,6 @@ PYBIND11_MODULE(libbarpy, m)
 	m.attr("__version__") = "dev";
 #endif
 }
-
-//template<>
-//PyObject* type_into_python<barvector>::convert(barvector const& map)
-//{
-//	//auto d = t.date();
-//	//auto tod = t.time_of_day();
-//	//auto usec = tod.total_microseconds() % 1000000;
-//	//return PyDateTime_FromDateAndTime(d.year(), d.month(), d.day(), tod.hours(), tod.minutes(), tod.seconds(), usec);
-//	return nullptr;
-//}
-//
-//
-//template<>
-//PyObject* type_into_python<std::vector<bc::barline>>::convert(std::vector<bc::barline> const& bar)
-//{
-//	bp::object get_iter = bp::iterator<std::vector<bc::barline> >();
-//	bp::object iter = get_iter(bar);
-//	bp::list l(iter);
-//	//return PyObject_New(bp::list, &l);
-//
-//	//bp::PyDateTime_FromDateAndTime
-//	//PyObject_vec
-//	//PyObject* py_object = new PyObject();
-//	//py_object.
-//	//bp::handle<> handle(py_object);
-//	//bp::object* o =new object(bar);
-//	//return o;//new list(bar)
-//	//bp::list* barlest = new list();
-//	//for (auto line : bar)
-//	//	barlest.append(line);
-//	//return barlest;
-//	return nullptr;
-//}
 
 
 #endif // _PYD

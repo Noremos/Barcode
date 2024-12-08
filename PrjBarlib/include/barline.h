@@ -559,10 +559,10 @@ MEXP namespace bc
 		}
 
 #ifdef _PYD
-		bp::list getPoints(bool skipChildPoints = false) const
+		bp::set getPoints(bool skipChildPoints = false) const
 		{
 			barmapHash<bc::point, bool, bc::pointHash> childs;
-			bp::list l;
+			bp::set l;
 
 			if (skipChildPoints)
 			{
@@ -571,25 +571,25 @@ MEXP namespace bc
 				for (size_t i = 0; i < matr.size(); i++)
 				{
 					if (childs.find(matr[i].getPoint()) == childs.end())
-						l.append(matr[i]);
+						l.add(matr[i]);
 				}
 			}
 			else
 			{
 				for (size_t i = 0; i < matr.size(); i++)
-					l.append(matr[i]);
+					l.add(matr[i]);
 			}
 
 			return l;
 		}
 
-		bp::list getBarcode3d() const
+		bp::set getBarcode3d() const
 		{
-			bp::list l;
+			bp::set l;
 			if (bar3d != nullptr)
 			{
 				for (size_t i = 0; i < bar3d->size(); i++)
-					l.append(bar3d->at(i));
+					l.add(bar3d->at(i));
 			}
 
 			return l;
@@ -621,32 +621,32 @@ MEXP namespace bc
 		//	return pydict;
 		//}
 
-		bp::list getRect() const
+		bp::set getRect() const
 		{
 			BarRect rect = getBarRect();
-			bp::list ls;
-			ls.append(rect.x);
-			ls.append(rect.y);
-			ls.append(rect.width);
-			ls.append(rect.height);
+			bp::set ls;
+			ls.add(rect.x);
+			ls.add(rect.y);
+			ls.add(rect.width);
+			ls.add(rect.height);
 			return ls;
 		}
 
-		bp::list getChildren() const
+		bp::set getChildren() const
 		{
-			bp::list list;
+			bp::set list;
 			for (size_t i = 0; i < getChildrenCount(); i++)
-				list.append(getChild(i));
+				list.add(getChild(i));
 
 			return list;
 		}
 
-		bp::list PY_getBettyNumbers() const
+		bp::set PY_getBettyNumbers() const
 		{
 			auto hist = getBettyNumbers();
-			bp::list pyhist;
+			bp::set pyhist;
 			for (size_t i = 0; i < 256; i++)
-				pyhist.append(hist[i]);
+				pyhist.add(hist[i]);
 
 			return pyhist;
 		}

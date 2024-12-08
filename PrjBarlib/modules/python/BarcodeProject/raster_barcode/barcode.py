@@ -14,7 +14,7 @@ def append_line_to_matrix(barline : Barline, matrix : np.array):
 
 def combine_components_into_matrix(barlines : list[Barline] | Barline, shape : tuple, type = np.uint8):
 
-	if barlines is Barline:
+	if isinstance(barlines, Barline):
 		barlines = [barlines]
 
 	binmap = np.zeros(shape, type)
@@ -27,8 +27,8 @@ def combine_components_into_matrix(barlines : list[Barline] | Barline, shape : t
 
 
 class Barcode:
-	def __init__(self, img, bstruct : barstruct = barstruct()):
-		self.shape = (0,0)
+	def __init__(self, img : np.ndarray, bstruct : barstruct = barstruct()):
+		self.shape = img.shape
 		self.type = np.uint8
 		self.item = create(img, bstruct)
 		self.revert = bstruct.proctype == ProcType.f0t255
@@ -46,12 +46,18 @@ class Barcode:
 		return lines[biggestMatrixId]
 
 	def get_first_component(self):
-		return self.item.getBarcodeLines()[0]
+		bar = self.item.getBarcodeLines()
+		return bar[0]
 
 	def get_first_component_matrix(self):
-		matrix = np.array(self.item.getBarcodeLines()[0].getPoints())
-		return matrix
+		bar = self.item.getBarcodeLines()
+		if len(bar) > 0:
+			return np.array(self.item.getBarcodeLines()[0].getPoints())
+		else:
+			return np.array([])
 
+	def getComponents(self):
+		return self.item.getBarcodeLines()
 
 	def split_components(self, threshold : int):
 		if threshold > len(self.item.getBarcodeLines()):
@@ -65,51 +71,27 @@ class Barcode:
 		b = combine_components_into_matrix(self, b, self.shape, type)
 		return (a, b)
 
-
 	def combine_components_into_matrix(self):
 		return combine_components_into_matrix(self.item.getBarcodeLines(), self.shape, self.type)
 
+	def filter(self, LL = 180):
+		bar = self.item.getBarcodeLines()
 
-	def filter(img, revert, LL = 180):
-		struct = BarConstructor()
-		struct.returnType = ReturnType.barcode2d
-		struct.createBinaryMasks = True
-		struct.createGraph = False
-		struct.setPorogStep(255)
-		struct.addStructure(ProcType.f0t255 if not revert else ProcType.f255t0, ColorType.gray, ComponentType.Component)
-
-		containet = create(img, struct)
-
-		item = containet.getItem(0)
-		bar = item.getBarcodeLines()
-
-		binmap = np.zeros(img.shape, np.uint8)
+		binmap = np.zeros(self.shape, np.uint8)
 		for bl in bar:
 
 			if bl.len() < LL:
 				continue
 
-			#! Третий(самый быстрый (в теории)):
 			append_line_to_matrix(bl, binmap)
 
-
-		if not revert:
+		if not self.revert:
 			binmap = 255 - binmap
 
 		return binmap
 
-	def segmentation(img, revert, minSize, useBinarySegment = True):
-		struct = barstruct()
-		struct.returnType = ReturnType.barcode2d
-		struct.createBinaryMasks = True
-		struct.createGraph = False
-		struct.setPorogStep(minSize)
-		struct/(ProcType.f0t255 if not revert else ProcType.f255t0, ColorType.gray, ComponentType.Component)
-
-		containet = create(img, struct)
-
-		item = containet.getItem(0)
-		bar = item.getBarcodeLines()
+	def segmentation(self, useBinarySegment = True):
+		bar = self.item.getBarcodeLines()
 
 		# red=(0,0,255)
 		# blue =(255,0,0)
@@ -122,9 +104,9 @@ class Barcode:
 			for i in range(len(bar)):
 				colors.append(np.array([randint(0, 255),randint(0, 255),randint(0, 255)]))
 
-			binmap = np.zeros((img.shape[0],img.shape[1],3), np.uint8)
+			binmap = np.zeros((self.shape[0],self.shape[1],3), np.uint8)
 		else:
-			binmap = np.zeros((img.shape[0],img.shape[1]), np.uint8)
+			binmap = np.zeros((self.shape[0],self.shape[1]), np.uint8)
 
 		i=0
 		for bl in bar:
@@ -133,7 +115,7 @@ class Barcode:
 			if bl.len() < 40: #and len(keyvals)<500:
 				continue
 
-			if (len(keyvals)>img.shape[0]*img.shape[1]*0.9):
+			if (len(keyvals)>self.shape[0]*self.shape[1]*0.9):
 				continue
 
 			for p in keyvals:

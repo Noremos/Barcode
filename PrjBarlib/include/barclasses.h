@@ -419,7 +419,7 @@ MEXP namespace bc
 
 #ifdef _PYD
 		// only for uchar
-		bp::list calcHistByBarlen(/*Barscalar maxLen*/)
+		bp::set calcHistByBarlen(/*Barscalar maxLen*/)
 		{
 			unsigned short maxLen = 256;
 			int* hist = new int[maxLen];
@@ -428,27 +428,27 @@ MEXP namespace bc
 			for (size_t i = 0; i < barlines.size(); i++)
 				++hist[static_cast<int>(barlines[i]->len())];
 
-			bp::list pyhist;
+			bp::set pyhist;
 			for (unsigned short i = 0; i < maxLen; i++)
-				pyhist.append(hist[i]);
+				pyhist.add(hist[i]);
 
 			delete[] hist;
 
 			return pyhist;
 		}
 
-		bp::list PY_getBettyNumbers()
+		bp::set PY_getBettyNumbers()
 		{
 			auto hist = getBettyNumbers();
-			bp::list pyhist;
+			bp::set pyhist;
 			for (size_t i = 0; i < 256; i++)
-				pyhist.append(hist[i]);
+				pyhist.add(hist[i]);
 
 			return pyhist;
 		}
 
 		// only for uchar
-		bp::list calcHistByPointsSize(/*Barscalar maxLen*/)
+		bp::set calcHistByPointsSize(/*Barscalar maxLen*/)
 		{
 			size_t rm = 0;
 			for (size_t i = 0; i < barlines.size(); i++)
@@ -463,9 +463,9 @@ MEXP namespace bc
 			for (size_t i = 0; i < barlines.size(); i++)
 				++hist[barlines[i]->getPointsSize()];
 
-			bp::list pyhist;
+			bp::set pyhist;
 			for (size_t i = 0; i < rm; i++)
-				pyhist.append(hist[i]);
+				pyhist.add(hist[i]);
 
 			delete[] hist;
 
@@ -473,13 +473,13 @@ MEXP namespace bc
 		}
 
 
-		bp::list getBarcodeLines()
+		bp::set getBarcodeLines()
 		{
-			bp::list lines;
+			bp::set lines;
 			for (auto* line : barlines)
 			{
 				// on deliting list will call ~destr for every line
-				lines.append(line);
+				lines.add(line);
 			}
 			return lines;
 		}
