@@ -36,9 +36,10 @@ Barscalar bc::Baritem::sum() const
 	return ssum;
 }
 
-void bc::Baritem::getBettyNumbers(int* bs)
+std::array<int, 256> bc::Baritem::getBettyNumbers() const
 {
-	memset(bs, 0, 256 * sizeof(int));
+	std::array<int, 256> bs;
+	std::fill(bs.begin(), bs.end(), 0);
 
 	for (const barline* l : barlines)
 	{
@@ -47,6 +48,8 @@ void bc::Baritem::getBettyNumbers(int* bs)
 			++bs[i];
 		}
 	}
+
+	return bs;
 }
 
 //

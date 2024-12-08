@@ -155,7 +155,7 @@ public:
 	}
 
 
-	unsigned char getInt() const
+	int getInt() const
 	{
 		return data.i;
 	}

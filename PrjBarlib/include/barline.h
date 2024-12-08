@@ -238,7 +238,7 @@ MEXP namespace bc
 		//		matr->push_back(barvalue(mat.getPointAt(i), mat.getLiner(i), mat._wid));
 		//}
 
-		BarRect getBarRect()  const
+		BarRect getBarRect() const
 		{
 			int l = 0, r = 0, t = 0, d = 0;
 			if (matr.size() > 0)
@@ -316,6 +316,22 @@ MEXP namespace bc
 		{
 			return m_end > start ? m_end - start : start - m_end;
 		}
+
+		Barscalar getLength() const
+		{
+			return m_end > start ? m_end - start : start - m_end;
+		}
+
+		Barscalar getStart() const
+		{
+			return start;
+		}
+
+		Barscalar getEnd() const
+		{
+			return m_end;
+		}
+
 #ifdef INCLUDE_PY
 		bp::tuple pystart()
 		{
@@ -543,8 +559,7 @@ MEXP namespace bc
 		}
 
 #ifdef _PYD
-
-		bp::list getPoints(bool skipChildPoints = false)
+		bp::list getPoints(bool skipChildPoints = false) const
 		{
 			barmapHash<bc::point, bool, bc::pointHash> childs;
 			bp::list l;
@@ -568,7 +583,7 @@ MEXP namespace bc
 			return l;
 		}
 
-		bp::list getBarcode3d()
+		bp::list getBarcode3d() const
 		{
 			bp::list l;
 			if (bar3d != nullptr)
@@ -606,7 +621,7 @@ MEXP namespace bc
 		//	return pydict;
 		//}
 
-		bp::list getRect()
+		bp::list getRect() const
 		{
 			BarRect rect = getBarRect();
 			bp::list ls;
@@ -617,13 +632,23 @@ MEXP namespace bc
 			return ls;
 		}
 
-		bp::list getChildren()
+		bp::list getChildren() const
 		{
 			bp::list list;
 			for (size_t i = 0; i < getChildrenCount(); i++)
 				list.append(getChild(i));
 
 			return list;
+		}
+
+		bp::list PY_getBettyNumbers() const
+		{
+			auto hist = getBettyNumbers();
+			bp::list pyhist;
+			for (size_t i = 0; i < 256; i++)
+				pyhist.append(hist[i]);
+
+			return pyhist;
 		}
 
 #endif // _PYD
@@ -819,9 +844,10 @@ MEXP namespace bc
 			return true;
 		}
 
-		void getBettyNumbers(int* bs) const
+		std::array<int, 256> getBettyNumbers() const
 		{
-			memset(bs, 0, 256 * sizeof(int));
+			std::array<int, 256> bs;
+			std::fill(bs.begin(), bs.end(), 0);
 
 			short st = start.getAvgUchar();
 			short ed = end().getAvgUchar();
@@ -831,7 +857,7 @@ MEXP namespace bc
 			addBettyNumbers(bs, st);
 		}
 
-		void addBettyNumbers(int* bs, short offset) const
+		void addBettyNumbers(std::array<int, 256>& bs, short offset) const
 		{
 			auto st = start.getAvgUchar();
 			auto ed = end().getAvgUchar();

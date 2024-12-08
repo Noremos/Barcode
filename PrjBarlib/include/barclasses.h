@@ -106,7 +106,7 @@ MEXP namespace bc
 				type = BarType::BYTE8_1;
 		}
 
-		void getBettyNumbers(int* bs);
+		std::array<int, 256> getBettyNumbers() const;
 
 		// remove lines than less then passed value
 		void removeByThreshold(Barscalar const porog);
@@ -161,13 +161,13 @@ MEXP namespace bc
 			rootNode = root;
 		}
 
-		Barscalar getMax()
+		Barscalar getMaxEnd() const
 		{
 			Barscalar _max(static_cast<uchar>(0));
 			for (auto* b : this->barlines)
 			{
-				if (b->start + b->len() > _max)
-					_max = b->start + b->len();
+				if (b->end() > _max)
+					_max = b->end();
 			}
 			return _max;
 		}
@@ -439,8 +439,7 @@ MEXP namespace bc
 
 		bp::list PY_getBettyNumbers()
 		{
-			int hist[256];
-			getBettyNumbers(hist);
+			auto hist = getBettyNumbers();
 			bp::list pyhist;
 			for (size_t i = 0; i < 256; i++)
 				pyhist.append(hist[i]);
@@ -524,6 +523,17 @@ MEXP namespace bc
 			}
 		}
 
+		Baritem *extractItem(size_t index)
+		{
+			if (index < items.size())
+			{
+				auto *item = items[index];
+				items[index] = nullptr;
+				return item;
+			}
+			return nullptr;
+		}
+
 		Baritem *exractItem(size_t index)
 		{
 			if (index < items.size())
@@ -535,7 +545,7 @@ MEXP namespace bc
 			return nullptr;
 		}
 
-		void remoeLast()
+		void removeLast()
 		{
 			size_t s = items.size();
 			if (s > 0)

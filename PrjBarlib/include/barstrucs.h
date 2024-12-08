@@ -30,7 +30,7 @@ MEXP namespace bc
 
 	enum class ReturnType { barcode2d, barcode3d, barcode3dold };
 	enum class AttachMode { firstEatSecond, secondEatFirst, createNew, dontTouch, morePointsEatLow, closer };
-	enum class ProcessStrategy { brightness, radius };// classic or geometry
+	// enum class ProcessStrategy { brightness, radius };// classic or geometry
 
 	typedef unsigned int poidex;
 
@@ -116,7 +116,7 @@ MEXP namespace bc
 
 	struct barstruct
 	{
-		float maxLen= 999999;
+		float maxLen = 999999;
 		float maxRadius = 999999;
 		float minAttachRadius = 0;
 	public:
