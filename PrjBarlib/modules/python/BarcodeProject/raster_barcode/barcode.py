@@ -2,22 +2,18 @@ from .libbarpy import *  # Import symbols from the .pyd file
 import numpy as np
 
 
-def get_matrix(item : Baritem):
-	matrix = np.array(item.getBarcodeLines()[0].getPoints())
-	return matrix
-
 def append_line_to_matrix(barline : Barline, matrix : np.array):
 	ksize = barline.getMatrixSize()
 	for i in range(ksize):
 		p = barline.getMatrixValue(i)
 		matrix[p.y,p.x] += p.value.value()
 
-def combine_components_into_matrix(barlines : list[Barline] | Barline, shape : tuple, type = np.uint8):
+def combine_components_into_matrix(barlines : list[Barline] | Barline, shape : tuple, imgType = np.uint8):
 
 	if isinstance(barlines, Barline):
 		barlines = [barlines]
 
-	binmap = np.zeros(shape, type)
+	binmap = np.zeros(shape, imgType)
 
 	# isRgb = len(shape) == 3
 	for bl in barlines:
@@ -29,7 +25,7 @@ def combine_components_into_matrix(barlines : list[Barline] | Barline, shape : t
 class Barcode:
 	def __init__(self, img : np.ndarray, bstruct : barstruct = barstruct()):
 		self.shape = img.shape
-		self.type = np.uint8
+		self.imgType = img.dtype
 		self.item = create(img, bstruct)
 		self.revert = bstruct.proctype == ProcType.f0t255
 		pass
@@ -49,30 +45,42 @@ class Barcode:
 		bar = self.item.getBarcodeLines()
 		return bar[0]
 
-	def get_first_component_matrix(self):
+	def get_first_component_points(self):
 		bar = self.item.getBarcodeLines()
 		if len(bar) > 0:
 			return np.array(self.item.getBarcodeLines()[0].getPoints())
 		else:
 			return np.array([])
 
-	def getComponents(self):
+	def restore(self):
+		bar = self.item.getBarcodeLines()
+
+		binmap = np.zeros(self.shape, np.uint8)
+		for bl in bar:
+			append_line_to_matrix(bl, binmap)
+
+		if not self.revert:
+			binmap = 255 - binmap
+
+		return binmap
+
+	def getComponents(self) -> set[Barline]:
 		return self.item.getBarcodeLines()
 
-	def split_components(self, threshold : int):
+	def split_components(self, threshold : int) -> tuple[np.array, np.array]:
 		if threshold > len(self.item.getBarcodeLines()):
-			a = combine_components_into_matrix(self, self.item.getBarcodeLines(), self.shape, type)
-			b = np.zeros(self.shape, type)
+			a = combine_components_into_matrix(self, self.item.getBarcodeLines(), self.shape, self.imgType)
+			b = np.zeros(self.shape, self.imgType)
 			return (a, b)
 
 		a = self.item.getBarcodeLines()[:threshold]
 		b = self.item.getBarcodeLines()[threshold:]
-		a = combine_components_into_matrix(self, a, self.shape, type)
-		b = combine_components_into_matrix(self, b, self.shape, type)
+		a = combine_components_into_matrix(self, a, self.shape, self.imgType)
+		b = combine_components_into_matrix(self, b, self.shape, self.imgType)
 		return (a, b)
 
 	def combine_components_into_matrix(self):
-		return combine_components_into_matrix(self.item.getBarcodeLines(), self.shape, self.type)
+		return combine_components_into_matrix(self.item.getBarcodeLines(), self.shape, self.imgType)
 
 	def filter(self, LL = 180):
 		bar = self.item.getBarcodeLines()

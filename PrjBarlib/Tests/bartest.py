@@ -5,14 +5,13 @@ import sys
 
 import os
 
-import raster_barcode as bc
-import raster_barcode.barcode as bcc
+import raster_barcode as bcc
 import raster_barcode.barplot as bcp
 import cv2
 
 img = cv2.imread('1.png', cv2.IMREAD_GRAYSCALE)
 
-cont = bc.barstruct()
+cont = bcc.barstruct()
 barc =  bcc.create_barcode(img, cont)
 
 cmp = barc.get_largest_component()
