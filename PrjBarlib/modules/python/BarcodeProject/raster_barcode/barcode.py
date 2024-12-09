@@ -27,7 +27,7 @@ class Barcode:
 		self.shape = img.shape
 		self.imgType = img.dtype
 		self.item = create(img, build_options)
-		self.revert = build_options.proctype == ProcType.f0t255
+		self.revert = build_options.proctype == ProcType.f255t0
 		pass
 
 	def get_largest_component(self):
