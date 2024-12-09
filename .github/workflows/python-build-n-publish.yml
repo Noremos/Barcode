@@ -50,7 +50,7 @@ jobs:
               bash ../modules/python/make_package.sh Python /opt/python/cp313-cp313/bin/python3
 
               mkdir -p /project/dist
-              python -m pip install --upgrade auditwheel
+              /opt/python/cp313-cp313/bin/python3 -m pip install --upgrade auditwheel
               auditwheel repair --plat manylinux_2_28_x86_64 ./Python/BarcodeProject/dist/*.whl -w /project/dist
 
               # cp -rf ./Python/BarcodeProject/dist/* /project/dist/

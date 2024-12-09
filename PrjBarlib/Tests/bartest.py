@@ -9,13 +9,13 @@ import raster_barcode as bcc
 import raster_barcode.barplot as bcp
 import cv2
 
-img = cv2.imread('1.png', cv2.IMREAD_GRAYSCALE)
+img = cv2.imread('/Users/sam/Edu/bar/12/1.png', cv2.IMREAD_GRAYSCALE)
 
 cont = bcc.barstruct()
 barc =  bcc.create_barcode(img, cont)
 
 cmp = barc.get_largest_component()
-img = bcc.combine_components_into_matrix(cmp, img.shape, img.dtype)
+img = bcc.combine_components_into_matrix(cmp, img.shape, img.type)
 # cv2.imshow("source",img)
 # cv2.waitKey(0)
 
