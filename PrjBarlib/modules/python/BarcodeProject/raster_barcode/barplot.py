@@ -37,7 +37,7 @@ def plot_barcode_lines(lines : set[bc.Barline] | bc.Baritem | bc.Barline, name, 
 
 	k = 1
 	for line in lines:
-		x_coords = [line.start().getAvgUchar(), line.end]
+		x_coords = [line.start().getAvgUchar(), line.end.getAvgUchar()]
 		heights = [k, k]
 		ax.plot(x_coords, heights, linestyle='-', color=colors[k % len(colors)], linewidth= 1)
 		k += 1
