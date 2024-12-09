@@ -23,11 +23,11 @@ def combine_components_into_matrix(barlines : list[Barline] | Barline, shape : t
 
 
 class Barcode:
-	def __init__(self, img : np.ndarray, bstruct : barstruct = barstruct()):
+	def __init__(self, img : np.ndarray, build_options : barstruct = barstruct()):
 		self.shape = img.shape
 		self.imgType = img.dtype
-		self.item = create(img, bstruct)
-		self.revert = bstruct.proctype == ProcType.f0t255
+		self.item = create(img, build_options)
+		self.revert = build_options.proctype == ProcType.f0t255
 		pass
 
 	def get_largest_component(self):
@@ -53,11 +53,7 @@ class Barcode:
 			return np.array([])
 
 	def restore(self):
-		bar = self.item.getBarcodeLines()
-
-		binmap = np.zeros(self.shape, np.uint8)
-		for bl in bar:
-			append_line_to_matrix(bl, binmap)
+		binmap = combine_components_into_matrix(self.item.getBarcodeLines(), self.shape, self.imgType)
 
 		if not self.revert:
 			binmap = 255 - binmap
