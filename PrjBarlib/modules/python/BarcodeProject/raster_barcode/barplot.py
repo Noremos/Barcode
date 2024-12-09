@@ -5,7 +5,13 @@ import numpy as np
 from . import barcode as bc
 
 def plot_barcode_lines(lines : set[bc.Barline] | bc.Baritem | bc.Barline, name, show = False, save = False):
-	if isinstance(lines, bc.Baritem):
+	if isinstance(lines, bc.Barcode):
+		reverse = lines.revert
+		lines = lines.item.getBarcodeLines()
+		if reverse:
+			lines.reverse()
+
+	elif isinstance(lines, bc.Baritem):
 		lines = lines.getBarcodeLines()
 	elif isinstance(lines, bc.Barline):
 		lines = [lines]
@@ -31,7 +37,7 @@ def plot_barcode_lines(lines : set[bc.Barline] | bc.Baritem | bc.Barline, name, 
 
 	k = 1
 	for line in lines:
-		x_coords = [line.start, line.end]
+		x_coords = [line.start().getAvgUchar(), line.end]
 		heights = [k, k]
 		ax.plot(x_coords, heights, linestyle='-', color=colors[k % len(colors)], linewidth= 1)
 		k += 1

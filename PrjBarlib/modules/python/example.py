@@ -22,6 +22,7 @@ import cv2
 img = cv2.imread('/Users/sam/Edu/bar/12/1.png', cv2.IMREAD_GRAYSCALE)
 
 cont = bc.barstruct()
+cont.proctype = bc.ProcType.f255t0
 barc =  bcc.create_barcode(img, cont)
 
 cmp = barc.get_largest_component()
