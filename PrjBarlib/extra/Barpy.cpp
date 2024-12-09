@@ -7,7 +7,7 @@
 
 #define PY_SILENS
 using namespace py;
-#define VERSION_INFO "1.0.2"
+#define VERSION_INFO "1.0.3"
 
 PYBIND11_MODULE(libbarpy, m)
 {
