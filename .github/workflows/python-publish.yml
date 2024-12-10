@@ -135,7 +135,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/project/raster-barcode
+      url: https://pypi.org/project/ImageTopoDec
 
     steps:
       - name: Retrieve Linux distributions
