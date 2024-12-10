@@ -97,12 +97,8 @@ workspace "Barcode"
 		symbols "On"
 		targetdir "build/Debug/"
 
-	filter { "configurations:Release" }
-		defines { "NDEBUG" }
-		optimize "On"
-		targetdir "build/Release/"
-
 	filter { "configurations:dll" }
+		defines { "NDEBUG" }
 		targetdir "build/dll/"
 
 	filter { "configurations:Python" }
@@ -169,7 +165,7 @@ project "Barlib"
 	filter "configurations:Debug or PythonDebug"
 		buildoptions { "-g" }
 
-	filter "configurations:Release or Python"
+	filter "configurations:dll or Python"
 		buildoptions { "-O3", "-Wall", "-g" }
 
 	filter "system:windows"
