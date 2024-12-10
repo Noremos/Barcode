@@ -2,7 +2,7 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 BUILD_DIR="$1"
-OUTPUT_DIR="$1/BarcodeProject/raster_barcode"
+OUTPUT_DIR="$1/BarcodeProject/ImageTopoDec"
 
 PYTHON_BIN="$2"
 if [ -z "$PYTHON_BIN" ]; then
@@ -29,5 +29,5 @@ python -m build
 
 
 # Test install
-# pip install dist/raster_barcode-*.whl
+# pip install dist/ImageTopoDec-*.whl
 

@@ -5,8 +5,8 @@ import sys
 
 import os
 
-import raster_barcode as bcc
-import raster_barcode.barplot as bcp
+import ImageTopoDec as bcc
+import ImageTopoDec.barplot as bcp
 import cv2
 
 img = cv2.imread('/Users/sam/Edu/bar/12/1.png', cv2.IMREAD_GRAYSCALE)

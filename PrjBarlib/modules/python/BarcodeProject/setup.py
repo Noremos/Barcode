@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="raster_barcode",
+    name="ImageTopoDec",
     version="1.0.0",
     description="Python wrapper for the Barcode library.",
     author="Art A",
@@ -25,7 +25,7 @@ setup(
         "matplotlib",
     ],
     package_data={
-        "raster_barcode": [
+        "ImageTopoDec": [
             "libbarpy.so",
             "libbarpy.pyi",
             "libbarpy.pyd"

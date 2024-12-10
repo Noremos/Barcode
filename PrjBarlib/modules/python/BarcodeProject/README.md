@@ -3,9 +3,9 @@
 
 Example:
 
-	import raster_barcode as bc
-	import raster_barcode.barcode as bcc
-	import raster_barcode.barplot as bcp
+	import ImageTopoDec as bc
+	import ImageTopoDec.barcode as bcc
+	import ImageTopoDec.barplot as bcp
 	import cv2
 
 

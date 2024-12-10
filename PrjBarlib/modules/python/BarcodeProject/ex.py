@@ -12,7 +12,7 @@ import os
 
 # сам модуль
 # sys.path.append('/Users/sam/Edu/library/Barcode/PrjBarlib/build/Python')
-import raster_barcode as bc
+import ImageTopoDec as bc
 import cv2
 
 

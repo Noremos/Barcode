@@ -184,14 +184,14 @@ project "Barlib"
 		print("Enabling postbuild commands")
 		pythonBin = getPythonNameInDirsro(_OPTIONS["python-version"])
 		projectDir = "%[%{!cfg.targetdir}/BarcodeProject/]"
-		libraryDir =  projectDir .. "/raster_barcode/]"
+		libraryDir =  projectDir .. "/ImageTopoDec/]"
 
 	end
 
 
 	-- pythonBin = "python" .. _OPTIONS["python-version"]
 	-- outProjectDir = "%{!cfg.targetdir}/BarcodeProject/"
-	-- outLibraryDir =  outProjectDir .. "raster_barcode/"
+	-- outLibraryDir =  outProjectDir .. "ImageTopoDec/"
 
 	-- srcPythonModules = "%[%{prj.location}/modules/python/"
 

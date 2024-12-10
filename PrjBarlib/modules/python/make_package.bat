@@ -4,7 +4,7 @@ set scriptpath=%~dp0
 
 set BUILD_DIR=%1
 set PYTHON_BIN=%2
-set OUTPUT_DIR=%BUILD_DIR%\BarcodeProject\raster_barcode
+set OUTPUT_DIR=%BUILD_DIR%\BarcodeProject\ImageTopoDec
 
 if "%PYTHON_BIN%"=="" set PYTHON_BIN=python3
 
@@ -27,5 +27,5 @@ py -m build
 @REM %PYTHON_BIN% setup.py bdist_wheel
 
 @REM REM Test install
-@REM pip install dist\raster_barcode-*.whl
+@REM pip install dist\ImageTopoDec-*.whl
 

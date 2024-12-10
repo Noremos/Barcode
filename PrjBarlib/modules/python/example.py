@@ -13,8 +13,8 @@ import os
 # сам модуль
 # sys.path.append('/Users/sam/Edu/library/Barcode/PrjBarlib/build/Python')
 
-import raster_barcode as bc
-import raster_barcode.barcode as bcc
+import ImageTopoDec as bc
+import ImageTopoDec.barcode as bcc
 import cv2
 
 
