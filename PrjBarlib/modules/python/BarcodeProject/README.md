@@ -166,7 +166,7 @@ This function can display or save the plot.
 
 # C++ Library Interface
 
-The library uses the `bc` namespace, where all classes are defined. These classes can be categorized into interface classes (used by the user) and internal classes. Tables 3-6 provide descriptions of the interface classes and enumerations.
+The library uses the `bc` namespace, where all classes are defined. These classes can be categorized into interface classes (used by the user) and internal classes. Tables 3-5 provide descriptions of the interface classes and enumerations.
 
 ## Table 3. C++ Library Interface Description
 
