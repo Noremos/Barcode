@@ -54,6 +54,10 @@ Figure 1. Source image
 
 ```python
 # Create barcode and visualize the largest component
+cont = bc.barstruct()
+cont.proctype = bc.ProcType.f255t0
+barc =  bcc.create_barcode(img, cont)
+
 cmp = barc.get_largest_component()
 img = bcc.combine_components_into_matrix(cmp, img.shape, img.dtype)
 
