@@ -167,8 +167,8 @@ float findCoof(bc::barline* X, bc::barline* Y, bc::CompareStrategy& strat)
 		return X->compare3dbars(Y, strat);
 	}
 
-	if (minlen <= 0 || maxlen <= 0)
-		return -1;
+	// if (minlen <= 0 || maxlen <= 0)
+	// 	return -1;
 
 	assert(minlen <= maxlen);
 	return minlen / maxlen;
@@ -207,7 +207,7 @@ float bc::Baritem::compareBestRes(const bc::Baritem* bc, bc::CompareStrategy str
 		{
 			for (size_t j = 0, totalY = Ybarlines.size(); j < totalY; ++j)
 			{
-                float coof = findCoof(Xbarlines[i], Ybarlines[j], strat);
+				float coof = findCoof(Xbarlines[i], Ybarlines[j], strat);
 				if (coof < 0)
 					continue;
 
@@ -237,21 +237,37 @@ float bc::Baritem::compareFull(const bc::Barbase* bc, bc::CompareStrategy strat)
 		return 0;
 
 	float totalsum = 0;
-    size_t n = MIN(Xbarlines.size(), Ybarlines.size());
+	size_t n = MIN(Xbarlines.size(), Ybarlines.size());
+	size_t nm = MIN(Xbarlines.size(), Ybarlines.size());
 	soirBarlens(Xbarlines);
 	soirBarlens(Ybarlines);
 
 	float tcoof = 0.f;
 	for (size_t i = 0; i < n; ++i)
 	{
-        float coof = findCoof(Xbarlines[i], Ybarlines[i], strat);
+		float coof = findCoof(Xbarlines[i], Ybarlines[i], strat);
 		if (coof < 0)
 			continue;
 
 		float xysum = static_cast<float>(Xbarlines[i]->len()) + static_cast<float>(Ybarlines[i]->len());
+		tcoof += xysum * coof;
+		totalsum += xysum;
+	}
+
+	bc::barline dummy((uchar)0, (uchar)0);
+
+	barlinevector& max = Xbarlines.size() > Ybarlines.size() ? Xbarlines : Ybarlines;
+	for (size_t i = n; i < nm; i++)
+	{
+		float coof = findCoof(max[i], &dummy, strat);
+		if (coof < 0)
+			continue;
+
+		float xysum = static_cast<float>(max[i]->len());
 		totalsum += xysum;
 		tcoof += xysum * coof;
 	}
+
 	return totalsum !=0 ? tcoof / totalsum : 0;
 }
 
@@ -275,7 +291,7 @@ float bc::Baritem::compareOccurrence(const bc::Baritem* bc, bc::CompareStrategy 
 		size_t jk = 0;
 		for (size_t j = 0, total2 = Ybarlines.size(); j < total2; ++j)
 		{
-            float coof = findCoof(Xbarlines[re], Ybarlines[j], strat);
+			float coof = findCoof(Xbarlines[re], Ybarlines[j], strat);
 			if (coof < 0)
 				continue;
 
@@ -310,8 +326,8 @@ void bc::Baritem::normalize()
 
 	for (size_t i = 0; i < barlines.size(); ++i)
 	{
-		barlines[i]->start = (barlines[i]->start - mini) / (maxi - mini);
-		barlines[i]->m_end = barlines[i]->start + (barlines[i]->len() - mini) / (maxi - mini);
+		barlines[i]->start = (barlines[i]->start - mini).getAvgFloat() / (maxi - mini).getAvgFloat();
+		barlines[i]->m_end = barlines[i]->start + barlines[i]->len().getAvgFloat() / (maxi - mini).getAvgFloat();
 	}
 }
 
@@ -413,16 +429,16 @@ bc::Baritem* bc::Barcontainer::getItem(size_t i)
 
 //bc::Baritem *bc::Barcontainer::operator[](int i)
 //{
-//    if (items.size() == 0)
-//        return nullptr;
+//	if (items.size() == 0)
+//		return nullptr;
 
-//    while (i < 0)
-//        i += items.size();
+//	while (i < 0)
+//		i += items.size();
 
-//    while (i >= (int) items.size())
-//        i -= items.size();
+//	while (i >= (int) items.size())
+//		i -= items.size();
 
-//    return items[i];
+//	return items[i];
 //}
 
 
@@ -477,15 +493,15 @@ bc::Barbase* bc::Barcontainer::clone() const
 float bc::Barcontainer::compareFull(const bc::Barbase* bc, bc::CompareStrategy strat) const
 {
 	const Barcontainer* bcr = dynamic_cast<const Barcontainer*>(bc);
-    float res = 0;
-    float s = static_cast<float>(sum() + bcr->sum());
+	float res = 0;
+	float s = static_cast<float>(sum() + bcr->sum());
 	for (size_t i = 0; i < MIN(items.size(), bcr->items.size()); i++)
 	{
 		if (items[i]!=nullptr)
 			res += items[i]->compareFull(bcr->items[i], strat) * static_cast<float>(items[i]->sum() + bcr->items[i]->sum()) / s;
 	}
 
-    return res;
+	return res;
 }
 
 float bc::Barcontainer::compireBest(const bc::Baritem* bc, bc::CompareStrategy strat) const
