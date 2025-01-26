@@ -1259,6 +1259,9 @@ public:
 		case BarType::FLOAT32_1:
 			assert(index == 0);
 			return data.b3[index];
+		case BarType::BYTE8_4:
+			assert(index < 4);
+			return data.b3[index];
 		default:
 			assert(false);
 			return data.b1;
