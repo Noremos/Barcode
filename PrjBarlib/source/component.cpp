@@ -5,8 +5,31 @@
 #include "../include/barcodeCreator.h"
 #include <assert.h>
 #include <algorithm>
+#include <iostream>
 
 #endif
+
+class DummyOutput
+{
+public:
+	template<class T>
+	DummyOutput& operator<<(const T&)
+	{
+		return *this;
+	}
+
+	DummyOutput& operator<<(std::ostream& (*pf)(std::ostream&))
+	{
+		return *this;
+	}
+};
+static DummyOutput dummyOut;
+
+#define DEBUG_OUTPUT dummyOut
+#define DEBUG_ENDL std::endl
+
+// #define DEBUG_OUTPUT std::cout
+// #define DEBUG_ENDL DEBUG_ENDL
 
 void bc::Component::init(BarcodeCreator* factory, const Barscalar& val)
 {
@@ -26,6 +49,8 @@ void bc::Component::init(BarcodeCreator* factory, const Barscalar& val)
 	if (factory->settings.returnType == bc::ReturnType::barcode3d ||
 		factory->settings.returnType == bc::ReturnType::barcode3dold)
 		resline->bar3d = new barcounter();
+
+	DEBUG_OUTPUT << "Creating comp №" << startIndex << " with start " << resline->start.getAvgFloat() <<  DEBUG_ENDL;
 }
 
 
@@ -117,6 +142,7 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& valu
 	++cashedSize;
 	lastDistance = distance;
 
+	DEBUG_OUTPUT << "Comp №" << startIndex << ": adding " << resline->start.getAvgFloat() << " at " << p.x << "," << p.y << DEBUG_ENDL;
 	return true;
 }
 
@@ -162,6 +188,7 @@ void bc::Component::kill(const Barscalar& endDistance)
 
 	lastDistance = endDistance;
 	cashedSize = 0;
+	DEBUG_OUTPUT << "Comp №" << startIndex << ": endlife at " << endDistance.getAvgFloat() << DEBUG_ENDL;
 }
 
 
@@ -217,6 +244,7 @@ void bc::Component::addChild(bc::Component* child, const Barscalar& endValue, bo
 
 		resline->addChild(child->resline);
 	}
+	DEBUG_OUTPUT << "Comp №" << startIndex << ": adding the child " << child->startIndex << DEBUG_ENDL;
 }
 
 bool bc::Component::canBeConnected(const bc::point& p, bool incrSum)
@@ -469,6 +497,7 @@ void bc::Component::merge(bc::Component* dummy)
 	assert(dummy->resline->id == static_cast<uint>(-1));
 	delete dummy->resline;
 	dummy->resline = nullptr;
+	DEBUG_OUTPUT << "Comp №" << startIndex << ": merging the child №" << dummy->startIndex << DEBUG_ENDL;
 }
 
 
