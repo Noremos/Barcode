@@ -82,6 +82,18 @@ inline void cvtColorV3B2U1C(const bc::DatagridProvider& source, bc::BarImg& dest
 	}
 }
 
+inline void cvtColorRemoveAlpha(const bc::DatagridProvider& source, bc::BarImg& dest)
+{
+	dest.resize(source.wid(), source.hei());
+
+	for (size_t i = 0; i < source.length(); ++i)
+	{
+		auto value = source.getLiner(i);
+		value.type = BarType::BYTE8_3;
+		dest.setLiner(i, value);
+	}
+}
+
 
 struct Connect
 {
@@ -1432,6 +1444,19 @@ void BarcodeCreator::processFULL(const bc::DatagridProvider* img, Barcontainer* 
 		originalImg = false;
 		needDelImg = true;
 		type = BarType::BYTE8_1;
+		processTypeF(res, item);
+		return;
+	}
+	case ColorType::native:
+	{
+		if (img->type != BarType::BYTE8_4)
+			break;
+
+		BarImg* res = new BarImg(img->wid(), img->hei(), 3);
+		cvtColorRemoveAlpha(*img, *res);
+		originalImg = false;
+		needDelImg = true;
+		type = BarType::BYTE8_3;
 		processTypeF(res, item);
 		return;
 	}
