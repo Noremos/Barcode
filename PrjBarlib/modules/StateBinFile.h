@@ -252,7 +252,7 @@ MEXP namespace StateBinFile
 		}
 
 
-		bool open(const std::string& path) override
+		bool open(const std::string& path, bool trivial)
 		{
 			if (!inside)
 				throw;
@@ -262,11 +262,18 @@ MEXP namespace StateBinFile
 
 			if (mainStream.is_open())
 			{
-				intiOnOpen();
+				if (!trivial)
+					intiOnOpen();
+
 				return true;
 			}
 			else
 				return false;
+		}
+
+		bool open(const std::string& path) override
+		{
+			return open(path, false);
 		}
 
 		void moveIndex(int index)
