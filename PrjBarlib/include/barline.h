@@ -545,6 +545,18 @@ MEXP namespace bc
 			return root->barlines[parentId];
 		}
 
+		bc::barline* getMaxParent()
+		{
+			bc::barline* ret = this;
+
+			while (ret->parentId != UINT_MAX)
+			{
+				ret = root->barlines[ret->parentId];
+			}
+
+			return ret;
+		}
+
 		bc::barline* getChild(uint id) const
 		{
 			if (id < 0 || id >= childrenId.size())

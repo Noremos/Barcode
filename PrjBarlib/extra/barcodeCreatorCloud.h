@@ -1,10 +1,8 @@
 #ifndef SKIP_M_INC
 #pragma once
 
-#include "presets.h"
-
-#include "barstrucs.h"
-#include "barclasses.h"
+#include "../include/barstrucs.h"
+#include "../include/barclasses.h"
 
 #include <functional>
 #include <memory>
@@ -22,9 +20,10 @@ namespace bc
 	{
 		struct PointIndexCov
 		{
-			uint points[2];
-			float dist = 0;
-			PointIndexCov(uint ind0 = 0, uint ind1 = 0, float _dist = 0) : dist(_dist)
+			uint points[2] = {};
+			float dist = {};
+			PointIndexCov() = default;
+			PointIndexCov(uint ind0, uint ind1, float _dist) : dist(_dist)
 			{
 				points[0] = ind0;
 				points[1] = ind1;
@@ -65,16 +64,13 @@ namespace bc
 			}
 		};
 
-		struct CloudPoints
-		{
-			std::vector<CloudPoint> points;
-		};
+		using CloudPoints = std::vector<CloudPoint>;
 
 	public:
 		CloudPointsBarcode()
 		{}
 
-		bc::Barcontainer* createBarcode(const CloudPoints* points);
+		std::unique_ptr<bc::Baritem> createBarcode(const CloudPoints* points);
 		//bc::Barcontainer* searchHoles(float* img, int wid, int hei, float nullVal = -9999);
 		bool useHolde = false;
 		// static std::function<void(const point&, const point&, bool)> drawLine;
@@ -95,7 +91,7 @@ namespace bc
 		inline barline* getComp(poidex ind) const
 		{
 			auto itr = included.find(ind);
-			return itr != included.end() ? itr->second : nullptr;
+			return itr != included.end() ? itr->second->getMaxParent() : nullptr;
 		}
 
 		void sortPixels();
@@ -122,6 +118,7 @@ namespace bc
 		ComponentsVector components;
 		std::unique_ptr<PointIndexCov> sortedArr;
 
+		Baritem* root = nullptr;
 	};
 
 }

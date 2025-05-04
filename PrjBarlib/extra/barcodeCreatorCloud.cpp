@@ -1,17 +1,16 @@
-#include "../include/barcodeCreatorCloud.h"
+#include "BarcodeCreatorCloud.h"
+#include <memory>
 // Radius
+using namespace bc;
 
-bc::Barcontainer* CloudPointsBarcode::createBarcode(const CloudPoints* points)
+std::unique_ptr<bc::Baritem> CloudPointsBarcode::createBarcode(const CloudPoints* points)
 {
-	Barcontainer* cont = new Barcontainer();
-	if (points->points.size() > 0)
-		processFULL(points, cont);
-	return cont;
-}
+	std::unique_ptr<Barcontainer> cont(new Barcontainer());
+	if (points->size() > 0)
+		processTypeF(points, cont.get());
 
-void CloudPointsBarcode::processFULL(const CloudPoints* points, Barcontainer* item)
-{
-	processTypeF(points, item);
+	std::unique_ptr<bc::Baritem> it(cont->exractItem(0));
+	return it;
 }
 
 void CloudPointsBarcode::processTypeF(const CloudPoints* points, Barcontainer* item)
@@ -97,7 +96,7 @@ bool intersectLineLine(LineSegment a, LineSegment b)
 
 void bc::CloudPointsBarcode::sortPixels()
 {
-	const size_t wid = cloud->points.size();
+	const size_t wid = (*cloud).size();
 
 	// n(n+1)/2
 	totalSize = wid * (wid + 1) / 2 - wid;
@@ -105,7 +104,6 @@ void bc::CloudPointsBarcode::sortPixels()
 	//	if (totalSize > 500000)
 	//		throw std::exception();
 
-	int s = sizeof(PointIndexCov);
 	float dist;
 	PointIndexCov* data = new PointIndexCov[totalSize];
 	sortedArr.reset(data);
@@ -121,7 +119,7 @@ void bc::CloudPointsBarcode::sortPixels()
 		{
 			//			int offset = wid * i + j;
 
-			dist = cloud->points[i].distanse(cloud->points[j]);
+			dist = (*cloud)[i].distanse((*cloud)[j]);
 			data[k++] = PointIndexCov(i, j, dist);
 		}
 	}
@@ -132,39 +130,42 @@ void bc::CloudPointsBarcode::sortPixels()
 		return a.dist < b.dist;
 		});
 
-	if (useHolde)
+	// ------------
+	// Holes
+	if (!useHolde)
+		return;
+
+	std::vector<PointIndexCov> newVals;
+	newVals.push_back(data[0]);
+
+	for (size_t i = 1; i < totalSize; i++)
 	{
-		std::vector<PointIndexCov> newVals;
-		newVals.push_back(data[0]);
-
-		for (size_t i = 1; i < totalSize; i++)
+		const PointIndexCov& a = data[i];
+		Point3D a1 = (*cloud)[a.points[0]];
+		Point3D a2 = (*cloud)[a.points[1]];
+		bool f = true;
+		if (newVals.size() == 50)
+			f = true;
+		for (size_t j = 0; j < newVals.size(); j++)
 		{
-			const PointIndexCov& a = data[i];
-			Point3D a1 = cloud->points[a.points[0]];
-			Point3D a2 = cloud->points[a.points[1]];
-			bool f = true;
-			if (newVals.size() == 50)
-				f = true;
-			for (size_t j = 0; j < newVals.size(); j++)
+			const PointIndexCov& b = newVals[j];
+			Point3D b1 = (*cloud)[b.points[0]];
+			Point3D b2 = (*cloud)[b.points[1]];
+			if (intersectLineLine({ a1, a2 }, { b1, b2 }))
 			{
-				const PointIndexCov& b = newVals[j];
-				Point3D b1 = cloud->points[b.points[0]];
-				Point3D b2 = cloud->points[b.points[1]];
-				if (intersectLineLine({ a1, a2 }, { b1, b2 }))
-				{
-					f = false;
-					break;
-				}
+				f = false;
+				break;
 			}
-
-			if (f)
-				newVals.push_back(a);
 		}
 
-		totalSize = newVals.size();
-		sortedArr.reset(new PointIndexCov[totalSize]);
-		std::copy(newVals.begin(), newVals.end(), sortedArr.get());
+		if (f)
+			newVals.push_back(a);
 	}
+
+	totalSize = newVals.size();
+	sortedArr.reset(new PointIndexCov[totalSize]);
+	std::copy(newVals.begin(), newVals.end(), sortedArr.get());
+
 }
 
 void bc::CloudPointsBarcode::sortTriangulate()
@@ -174,6 +175,8 @@ void bc::CloudPointsBarcode::sortTriangulate()
 
 void bc::CloudPointsBarcode::process(Barcontainer* item)
 {
+	root = new Baritem(0, BarType::FLOAT32_1);
+	item->addItem(root);
 	if (useHolde)
 	{
 		processHold();
@@ -187,7 +190,7 @@ void bc::CloudPointsBarcode::process(Barcontainer* item)
 		}
 	}
 
-	addItemToCont(item);
+	root->barlines = std::move(components);
 	clearIncluded();
 }
 
@@ -195,12 +198,12 @@ void bc::CloudPointsBarcode::process(Barcontainer* item)
 void CloudPointsBarcode::processComp(const  CloudPointsBarcode::PointIndexCov& val)
 {
 	const int curIndex = val.points[0];
-	CloudPoint curCloudPoint = cloud->points[curIndex];
+	CloudPoint curCloudPoint = (*cloud)[curIndex];
 	bc::point curPoint(curCloudPoint.x, curCloudPoint.y);
 	poidex curPoindex = curPoint.getLiner(BAR_MAX_WID);
 
 	int nextIndex = val.points[1];
-	CloudPoint nextCloudPoint = cloud->points[nextIndex];
+	CloudPoint nextCloudPoint = (*cloud)[nextIndex];
 	bc::point nextPoint(nextCloudPoint.x, nextCloudPoint.y);
 	poidex nextPoindex = nextPoint.getLiner(BAR_MAX_WID);
 
@@ -209,12 +212,12 @@ void CloudPointsBarcode::processComp(const  CloudPointsBarcode::PointIndexCov& v
 
 	if (first != nullptr)
 	{
-		assert(first->m_end == 0);
+		//assert(first->m_end == 0);
 		//если в найденном уже есть этот элемент
 		//существует ли ребро вокруг
 		if (connected != nullptr && first != connected)
 		{
-			assert(connected->m_end == 0);
+			//assert(connected->m_end == 0);
 
 			barline* main = first;
 			barline* sub = connected;
@@ -225,15 +228,15 @@ void CloudPointsBarcode::processComp(const  CloudPointsBarcode::PointIndexCov& v
 				sub = first;
 			}
 
-			for (size_t i = 0; i < sub->matr.size(); i++)
-			{
-				auto& pas = sub->matr[i];
-				bc::point p = pas.getPoint();
-				main->addCoord(p, pas.value);
-				setInclude(p.getLiner(BAR_MAX_WID), main);
-			}
+			// for (size_t i = 0; i < sub->matr.size(); i++)
+			// {
+			// 	auto& pas = sub->matr[i];
+			// 	bc::point p = pas.getPoint();
+			// 	main->addCoord(p, pas.value);
+			// 	setInclude(p.getLiner(BAR_MAX_WID), main);
+			// }
 
-			sub->setparent(main);
+			main->addChild(sub);
 			sub->m_end = val.dist;
 		}
 		else if (connected == nullptr)
@@ -247,10 +250,11 @@ void CloudPointsBarcode::processComp(const  CloudPointsBarcode::PointIndexCov& v
 		// Ребро не создано или не получилось присоединить
 		if (connected == nullptr)
 		{
-			connected = new barline(Barscalar(val.dist, BarType::FLOAT32_1), 0, 0);
+			connected = new barline(Barscalar(val.dist, BarType::FLOAT32_1), Barscalar(val.dist, BarType::FLOAT32_1));
+			connected->initRoot(root);
 			components.push_back(connected);
 		}
-		assert(connected->m_end == 0);
+		// assert(connected->m_end == 0);
 
 		connected->addCoord(curPoint, curCloudPoint.getScalar());
 		setInclude(curPoindex, connected);
@@ -266,9 +270,10 @@ struct HoleInfo
 	barline* line = nullptr;
 	int connesLeft = 0;
 
-	HoleInfo(Barscalar start)
+	HoleInfo(Barscalar start,Baritem* root )
 	{
-		line = new barline(start, 0, 0);
+		line = new barline(start, start);
+		line->initRoot(root);
 	}
 
 	bool holeStarted()
@@ -323,6 +328,24 @@ struct GraphPoint
 struct Graph
 {
 	barmap<poidex, GraphPoint> graphPoints;
+	bc::CloudPointsBarcode::ComponentsVector instakilled;
+
+	bc::CloudPointsBarcode::ComponentsVector& vect;
+	bc::Baritem* root;
+
+	Graph(bc::Baritem* root, bc::CloudPointsBarcode::ComponentsVector& components)
+		: vect(components),
+		root(root)
+	{ }
+
+	~Graph()
+	{
+		for (size_t i = 0; i < instakilled.size(); i++)
+		{
+			delete instakilled[i];
+		}
+	}
+
 
 	GraphPoint* getGrath(poidex p)
 	{
@@ -502,7 +525,7 @@ struct Graph
 	};
 
 
-	bool findHole(poidex p1, poidex p2, float dist, bc::CloudPointsBarcode::ComponentsVector& vect, bc::CloudPointsBarcode::ComponentsVector& instakilled)
+	bool findHole(poidex p1, poidex p2, float dist)
 	{
 		GraphPoint* h1 = getGrath(p1);
 		GraphPoint* h2 = getGrath(p2);
@@ -531,7 +554,7 @@ struct Graph
 		pew.push_back(h2->p);
 		pew.push_back(h1->p);
 
-		std::shared_ptr<HoleInfo> main = std::make_shared<HoleInfo>(dist);
+		std::shared_ptr<HoleInfo> main = std::make_shared<HoleInfo>(dist, root);
 
 		for (auto& p : paths)
 		{
@@ -594,21 +617,19 @@ struct Graph
 
 void CloudPointsBarcode::processHold()
 {
-	Graph grath;
-
-	ComponentsVector instakilled;
+	Graph grath(root, components);
 
 	for (curIndexInSortedArr = 0; curIndexInSortedArr < totalSize; ++curIndexInSortedArr)
 	{
 		const PointIndexCov& val = sortedArr.get()[curIndexInSortedArr];
 
 		//const buint curIndex = val.points[0];
-		CloudPoint curCloudPoint = cloud->points[val.points[0]];
+		CloudPoint curCloudPoint = (*cloud)[val.points[0]];
 		bc::point curPoint(curCloudPoint.x, curCloudPoint.y);
 		poidex curPoindex = curPoint.getLiner(BAR_MAX_WID);
 
 		//int unextIndex = val.points[1];
-		CloudPoint nextCloudPoint = cloud->points[val.points[1]];
+		CloudPoint nextCloudPoint = (*cloud)[val.points[1]];
 		bc::point nextPoint(nextCloudPoint.x, nextCloudPoint.y);
 		poidex nextPoindex = nextPoint.getLiner(BAR_MAX_WID);
 
@@ -644,7 +665,7 @@ void CloudPointsBarcode::processHold()
 						//	drawLine(curPoint, nextPoint, true);
 						using namespace std::chrono_literals;
 						//std::this_thread::sleep_for(1000ms);
-						bool h = grath.findHole(curPoindex, nextPoindex, val.dist, components, instakilled);
+						bool h = grath.findHole(curPoindex, nextPoindex, val.dist);
 						//endPoints();
 						assert(h);
 					}
@@ -660,7 +681,7 @@ void CloudPointsBarcode::processHold()
 					barline* fLines[2];
 					fLines[0] = first->hole ? first->hole->line : nullptr;
 					fLines[1] = connected->hole ? connected->hole->line : nullptr;
-					bool h = grath.findHole(curPoindex, nextPoindex, val.dist, components, instakilled);
+					bool h = grath.findHole(curPoindex, nextPoindex, val.dist);
 					if (h)
 					{
 						barline* newHole = connected->hole->line;
@@ -682,7 +703,7 @@ void CloudPointsBarcode::processHold()
 							}
 
 							if (p != newHole)
-								p->setparent(newHole);
+								newHole->addChild(p);
 						}
 					}
 				}
@@ -707,32 +728,10 @@ void CloudPointsBarcode::processHold()
 			grath.addConnect(nextPoindex, curPoindex, curCloudPoint.getScalar());
 		}
 	} // For!
-
-	for (size_t i = 0; i < instakilled.size(); i++)
-	{
-		delete instakilled[i];
-	}
 }
-
-
-void CloudPointsBarcode::addItemToCont(Barcontainer* container)
-{
-	if (container != nullptr)
-	{
-		Baritem* lines = new Baritem(0, BarType::FLOAT32_1);
-		lines->barlines = std::move(components);
-		container->addItem(lines);
-	}
-}
-
 
 void CloudPointsBarcode::clearIncluded()
 {
-	for (size_t i = 0; i < components.size(); ++i)
-	{
-		delete components[i];
-	}
-
 	components.clear();
 	included.clear();
 	sortedArr.reset(nullptr);
