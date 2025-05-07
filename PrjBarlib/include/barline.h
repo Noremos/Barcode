@@ -356,7 +356,7 @@ MEXP namespace bc
 				start.getAvgFloat() - m_end.getAvgFloat();
 		}
 
-		int getDeath()
+		int getDeath() const
 		{
 			int r = 0;
 			barline* temp = getParent();
