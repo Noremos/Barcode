@@ -520,7 +520,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::bar
 				int offset = wid * h + w;
 				const Barscalar cur = workingImg->get(w, h);
 
-				if (sets.mask->get(w, h) != sets.maskId)
+				if (sets.mask->get(w, h) != sets.maskValueId)
 				{
 					continue;
 				}
@@ -529,7 +529,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::bar
 				for (size_t l = 0; l < 3; l++)
 				{
 					const auto& off = offs[l];
-					if (sets.mask->get(w + off.x, h + off.y) != sets.maskId)
+					if (sets.mask->get(w + off.x, h + off.y) != sets.maskValueId)
 					{
 						nextd[l] = workingImg->get(w + off.x, h + off.y);
 						dist = calcDistnace(cur, nextd[l].value());
@@ -551,7 +551,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::bar
 		const int wd = wid - 1;
 		for (int h = 0; h < hei - 1; ++h)
 		{
-			if (sets.mask->get(wd, h) != sets.maskId || sets.mask->get(wd, h + 1) != sets.maskId)
+			if (sets.mask->get(wd, h) != sets.maskValueId || sets.mask->get(wd, h + 1) != sets.maskValueId)
 				continue;
 
 			int offset = wid * h + wd;
@@ -564,7 +564,7 @@ bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::bar
 		int hd = hei - 1;
 		for (int w = 0; w < wid - 1; ++w)
 		{
-			if (sets.mask->get(w, hd) != sets.maskId || sets.mask->get(w + 1, hd) != sets.maskId)
+			if (sets.mask->get(w, hd) != sets.maskValueId || sets.mask->get(w + 1, hd) != sets.maskValueId)
 				continue;
 
 			int offset = wid * hd + w;
@@ -867,7 +867,7 @@ void BarcodeCreator::sortPixels(ProcType type)
 			{
 				for (int i = 0; i < workingImg->wid(); ++i)//wid
 				{
-					if (settings.mask->get(i, j) != settings.maskId)
+					if (settings.mask->get(i, j) != settings.maskValueId)
 						continue;
 
 					auto p = (int)workingImg->get(i, j);
@@ -903,7 +903,7 @@ void BarcodeCreator::sortPixels(ProcType type)
 		{
 			for (size_t i = 0; i < totalSize; i++)
 			{
-				if (settings.mask->getLiner(i) != settings.maskId)
+				if (settings.mask->getLiner(i) != settings.maskValueId)
 					continue;
 
 				uchar p = workingImg->getLiner(i).getAvgUchar();

@@ -9,6 +9,12 @@
 using namespace py;
 #define VERSION_INFO "1.0.4"
 
+void bc::barstruct::setMask(bn::array& img, int maskValueId)
+{
+	bc::BarNdarray image(img);
+	holder.reset(new bc::BarNdarray(img);)
+}
+
 PYBIND11_MODULE(libbarpy, m)
 {
 	enum_<bc::AttachMode>(m, "AttachMode")
@@ -184,6 +190,8 @@ PYBIND11_MODULE(libbarpy, m)
 		.def_readwrite("killOnMaxLen", &bc::barstruct::killOnMaxLen)
 		.def_readwrite("colorRange", &bc::barstruct::colorRange)
 		.def_readwrite("trueSort", &bc::barstruct::trueSort)
+		.def("setMask", &bc::barstruct::setMask)
+		.def("removeMask", &bc::barstruct::removeMask)
 		.def("setMaxLen", &bc::barstruct::setMaxLen, "val"_a)
 	;
 

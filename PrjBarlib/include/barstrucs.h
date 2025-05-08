@@ -146,7 +146,7 @@ MEXP namespace bc
 		ColorType coltype = ColorType::gray;
 
 		bc::DatagridProvider* mask = nullptr;
-		int maskId = 0;
+		int maskValueId = 0;
 
 		inline void addStructure(ProcType pt, ColorType colT, ComponentType comT)
 		{
@@ -184,6 +184,17 @@ MEXP namespace bc
 		{
 			maxLen = val;
 		}
+
+#ifdef _PYD
+		std::unique_ptr<bc::BarNdarray> holder;
+		void setMask(bn::array& img, int maskValueId);
+
+		void removeMask()
+		{
+			mask = nullptr;
+			holder.reset();
+		}
+#endif
 	};
 
 	class BarConstructor

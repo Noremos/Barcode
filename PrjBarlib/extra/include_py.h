@@ -18,6 +18,10 @@ namespace py = pybind11;
 namespace bn = pybind11;
 namespace bp = pybind11;
 
+namespace bc
+{
+	class BarNdarray;
+}
 #endif
 
 #endif
