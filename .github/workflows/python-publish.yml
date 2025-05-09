@@ -24,6 +24,11 @@ jobs:
           submodules: true
 
       - name: Build on manylinux
+        env:
+          PYVER: '$(echo ${{ matrix.python-version }} | tr -d .)'
+          PYROOT: /opt/python/cp$(echo 3.13 | tr -d .)-cp$(echo 3.13 | tr -d .)'
+          PYBIN: /opt/python/cp$(echo 3.13 | tr -d .)-cp$(echo 3.13 | tr -d .)/bin/python3'
+          PYINCLUDE: '/opt/python/cp$(echo 3.13 | tr -d .)-cp$(echo 3.13 | tr -d .)/include/python${{ matrix.python-version }}'
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/project \
@@ -35,13 +40,10 @@ jobs:
               tar -xvf premake5.tar.gz
               mv premake5 /usr/local/bin/
 
-              PYVER='$(echo ${{ matrix.python-version }} | tr -d .)'
-              PYROOT='/opt/python/cp${PYVER}-cp${PYVER}'
-              PYBIN='${PYROOT}/bin/python3'
-              PYINCLUDE='${PYROOT}/include/python${{ matrix.python-version }}'
 
-              echo '--BUILDING for Python ${PYVER}--'
-              echo --PYTHON_ROOT='${PYROOT}'--
+
+              echo '--BUILDING for Python $PYVER--'
+              echo --PYTHON_ROOT='$PYROOT'--
               echo '--PYTHON_BIN=${PYBIN}--'
               echo '--PYTHON_INCLUDE=${PYINCLUDE}--'
 
