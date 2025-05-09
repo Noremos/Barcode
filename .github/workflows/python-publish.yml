@@ -1,11 +1,3 @@
-# This workflow will upload a Python Package to PyPI when a release is created
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 name: Build and Upload Python Package
 
 on:
@@ -21,6 +13,9 @@ permissions:
 jobs:
   linux-build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -39,41 +34,34 @@ jobs:
               tar -xvf premake5.tar.gz
               mv premake5 /usr/local/bin/
 
+              PYVER=$(echo "${{ matrix.python-version }}" | tr -d .)
+              PYBIN=/opt/python/cp${PYVER}-cp${PYVER}
               cd PrjBarlib
-              premake5 gmake2 --python-include-path=/opt/python/cp313-cp313/include/python3.13 \
-                --python-version=3.13
+              premake5 gmake2 --python-include-path=${PYBIN}/include/python${{ matrix.python-version }} \
+                --python-version=${{ matrix.python-version }}
 
               cd build
               make config=python Barlib
               echo --DONE--
 
-              bash ../modules/python/make_package.sh Python /opt/python/cp313-cp313/bin/python3
+              bash ../modules/python/make_package.sh Python ${PYBIN}/bin/python${{ matrix.python-version }}
 
               mkdir -p /project/dist
-              /opt/python/cp313-cp313/bin/python3 -m pip install --upgrade auditwheel
+              ${PYBIN}/bin/python${{ matrix.python-version }} -m pip install --upgrade auditwheel
               auditwheel repair --plat manylinux_2_28_x86_64 ./Python/BarcodeProject/dist/*.whl -w /project/dist
-
-              # cp -rf ./Python/BarcodeProject/dist/* /project/dist/
             "
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      # - name: Repair and validate wheel
-      #   run: |
-      #     python -m pip install --upgrade auditwheel
-      #     auditwheel repair --plat manylinux_2_28_x86_64 -w dist dist/*.whl
-      #     ls dist
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
-          name: linux-dist
+          name: linux-dist-${{ matrix.python-version }}
           path: dist
 
   windows-build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -81,32 +69,19 @@ jobs:
           submodules: true
 
       - uses: actions/setup-python@v5
-        id: cp313
+        id: cp
         with:
-          python-version: "3.13"
-
-      - name: Test Python vars
-        run: |
-          echo pythonLocation: ${{ env.pythonLocation }}
-          echo pythonLocation: ${{ steps.cp313.pythonLocation }}
-
-      # Cache the premmake5 binary
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ${{ github.workspace }}\.premake-build
-          key: ${{ runner.os }}-premake5
+          python-version: ${{ matrix.python-version }}
 
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@v2
 
-      # install premmake5
       - uses: Jarod42/install-premake5@v1
 
       - name: Build library
         run: |
           cd PrjBarlib
-          premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=3.13
+          premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=${{ matrix.python-version }}
 
           cd build
           msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj
@@ -114,14 +89,13 @@ jobs:
       - name: Make package
         run: |
           cd PrjBarlib/build
-
-          ../modules/python/make_package.bat Python ${{ steps.cp313.outputs.python-path }}
+          ../modules/python/make_package.bat Python ${{ steps.cp.outputs.python-path }}
           xcopy Python\BarcodeProject\dist ..\..\dist /Q /E /Y /I
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
-          name: windows-dist
+          name: windows-dist-${{ matrix.python-version }}
           path: ${{ github.workspace }}/dist
 
   pypi-publish:
@@ -141,13 +115,13 @@ jobs:
       - name: Retrieve Linux distributions
         uses: actions/download-artifact@v4
         with:
-          name: linux-dist
+          pattern: linux-dist-*
           path: dist
 
       - name: Retrieve Windows distributions
         uses: actions/download-artifact@v4
         with:
-          name: windows-dist
+          pattern: windows-dist-*
           path: dist
 
       - name: Validate wheels
