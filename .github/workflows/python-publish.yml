@@ -23,12 +23,15 @@ jobs:
         with:
           submodules: true
 
+      - name: Set env
+        run: echo "PY_VERSION=$(echo ${{ matrix.python-version }} | tr -d .)" >> $GITHUB_ENV
+
       - name: Build on manylinux
         env:
-          PYVER: '$(echo ${{ matrix.python-version }} | tr -d .)'
-          PYROOT: /opt/python/cp$(echo 3.13 | tr -d .)-cp$(echo 3.13 | tr -d .)'
-          PYBIN: /opt/python/cp$(echo 3.13 | tr -d .)-cp$(echo 3.13 | tr -d .)/bin/python3'
-          PYINCLUDE: '/opt/python/cp$(echo 3.13 | tr -d .)-cp$(echo 3.13 | tr -d .)/include/python${{ matrix.python-version }}'
+          PYVER: ${PY_VERSION}
+          PYROOT: /opt/python/${PY_VERSION}-${PYVER}'
+          PYBIN: /opt/python/${PYVER}-${PYVER}/bin/python3'
+          PYINCLUDE: '/opt/python/${PYVER}-${PYVER}/include/python${{ matrix.python-version }}'
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/project \
