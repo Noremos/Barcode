@@ -15,7 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        # python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -35,14 +36,14 @@ jobs:
               mv premake5 /usr/local/bin/
 
               PYVER=$(echo "${{ matrix.python-version }}" | tr -d .)
-              PYROOT=/opt/python/cp${PYVER}-cp${PYVER}
-              PYBIN=${PYROOT}/bin/python3
-              PYINCLUDE=${PYROOT}/include/python${{ matrix.python-version }}
+              PYROOT="/opt/python/cp${PYVER}-cp${PYVER}
+              PYBIN="${PYROOT}/bin/python3"
+              PYINCLUDE="${PYROOT}/include/python${{ matrix.python-version }}"
 
-              echo --BUILDING for Python ${PYVER}--
-              echo --PYTHON_ROOT=${PYROOT}--
-              echo --PYTHON_BIN=${PYBIN}--
-              echo --PYTHON_INCLUDE=${PYINCLUDE}--
+              echo --BUILDING for Python "${PYVER}"--
+              echo "--PYTHON_ROOT=${PYROOT}--"
+              echo --PYTHON_BIN=${PYBIN}--"
+              echo "--PYTHON_INCLUDE=${PYINCLUDE}--"
 
               cd PrjBarlib
               premake5 gmake2 --python-include-path=${PYINCLUDE} \
@@ -69,7 +70,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        # python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.13"]
 
     steps:
       - uses: actions/checkout@v4
