@@ -23,47 +23,13 @@ jobs:
         with:
           submodules: true
 
-      - name: Set env
-        run: echo "PY_VERSION=$(echo ${{ matrix.python-version }} | tr -d .)" >> $GITHUB_ENV
-
       - name: Build on manylinux
-        env:
-          PYVER: ${PY_VERSION}
-          PYROOT: /opt/python/${PY_VERSION}-${PYVER}'
-          PYBIN: /opt/python/${PYVER}-${PYVER}/bin/python3'
-          PYINCLUDE: '/opt/python/${PYVER}-${PYVER}/include/python${{ matrix.python-version }}'
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/project \
             -w /project \
             quay.io/pypa/manylinux_2_28_x86_64 \
-            bash -c "
-              yum install -y patchelf
-              curl -L -o premake5.tar.gz https://github.com/premake/premake-core/releases/download/v5.0.0-alpha16/premake-5.0.0-alpha16-linux.tar.gz
-              tar -xvf premake5.tar.gz
-              mv premake5 /usr/local/bin/
-
-
-
-              echo '--BUILDING for Python $PYVER--'
-              echo --PYTHON_ROOT='$PYROOT'--
-              echo '--PYTHON_BIN=${PYBIN}--'
-              echo '--PYTHON_INCLUDE=${PYINCLUDE}--'
-
-              cd PrjBarlib
-              premake5 gmake2 --python-include-path='${PYINCLUDE}' \
-                --python-version=${{ matrix.python-version }}
-
-              cd build
-              make config=python Barlib
-              echo --DONE--
-
-              bash ../modules/python/make_package.sh Python ${PYBIN}
-
-              mkdir -p /project/dist
-              ${PYBIN} -m pip install --upgrade auditwheel
-              auditwheel repair --plat manylinux_2_28_x86_64 ./Python/BarcodeProject/dist/*.whl -w /project/dist
-            "
+            bash ./build_manylinux.sh ${{ matrix.python-version }}
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
