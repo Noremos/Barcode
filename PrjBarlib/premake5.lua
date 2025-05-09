@@ -135,6 +135,7 @@ project "Barlib"
 
 	enable_postbuild = false
 	print("Python version: " .. _OPTIONS["python-version"])
+	print("Python include: " .. _OPTIONS["python-include-path"])
 	if _OPTIONS["enable-postbuild"] then
 		print("Enable postbuild")
 		enable_postbuild = true
@@ -213,4 +214,3 @@ project "Barlib"
 	-- 	postbuildcommands {
 	-- 		pythonBin .. srcPythonModules .."correct_types.py " .. outLibraryDir .. "libbarpy.pyi",
 	-- 	}
-

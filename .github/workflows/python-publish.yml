@@ -37,9 +37,15 @@ jobs:
               PYVER=$(echo "${{ matrix.python-version }}" | tr -d .)
               PYROOT=/opt/python/cp${PYVER}-cp${PYVER}
               PYBIN=${PYROOT}/bin/python3
+              PYINCLUDE=${PYROOT}/include/python${{ matrix.python-version }}
+
+              echo --BUILDING for Python ${PYVER}--
+              echo --PYTHON_ROOT=${PYROOT}--
+              echo --PYTHON_BIN=${PYBIN}--
+              echo --PYTHON_INCLUDE=${PYINCLUDE}--
 
               cd PrjBarlib
-              premake5 gmake2 --python-include-path=${PYROOT}/include/python${{ matrix.python-version }} \
+              premake5 gmake2 --python-include-path=${PYINCLUDE} \
                 --python-version=${{ matrix.python-version }}
 
               cd build
