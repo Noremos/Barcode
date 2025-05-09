@@ -6,7 +6,7 @@ PYBIN=${PYROOT}/bin/python3
 PYINCLUDE=${PYROOT}/include/python${PY_DOT_VERSION}
 
 
-echo --BUILDING for Python ${PYVER} (${PY_DOT_VERSION})--
+echo --BUILDING for Python ${PYVER} ${PY_DOT_VERSION}--
 echo --PYTHON_ROOT=${PYROOT}--
 echo --PYTHON_BIN=${PYBIN}--
 echo --PYTHON_INCLUDE=${PYINCLUDE}--
