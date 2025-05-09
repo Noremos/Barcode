@@ -12,9 +12,8 @@ using namespace py;
 
 void bc::barstruct::setMask(bn::array& img, int maskValueId)
 {
-	holder.reset(new bc::BarNdarray(img));
-	mask = holder.get();
-
+	static bc::BarNdarray art(img)
+	mask = &art;
 	this->maskValueId = maskValueId;
 }
 
