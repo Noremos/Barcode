@@ -9,10 +9,11 @@ if [ -z "$PYTHON_BIN" ]; then
 	PYTHON_BIN="python3"
 fi
 
-cp -rf "$SCRIPT_DIR/BarcodeProject" "$BUILD_DIR/BarcodeProject"
-cp "$BUILD_DIR/libbarpy.so" "$OUTPUT_DIR/libbarpy.so"
+cp -rf "$SCRIPT_DIR/BarcodeProject" "${BUILD_DIR}/BarcodeProject"
+cp "$BUILD_DIR/libbarpy.so" "${OUTPUT_DIR}/libbarpy.so"
 
-cd "$OUTPUT_DIR"
+mkdir -p "${OUTPUT_DIR}"
+cd "${OUTPUT_DIR}"
 
 # Create virtual environment
 $PYTHON_BIN -m venv ../../.venv
@@ -30,4 +31,3 @@ python -m build
 
 # Test install
 # pip install dist/ImageTopoDec-*.whl
-

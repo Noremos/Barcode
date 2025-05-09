@@ -8,12 +8,14 @@
 
 #define PY_SILENS
 using namespace py;
-#define VERSION_INFO "1.0.4"
+#define VERSION_INFO "1.0.5"
 
 void bc::barstruct::setMask(bn::array& img, int maskValueId)
 {
-	bc::BarNdarray image(img);
 	holder.reset(new bc::BarNdarray(img);)
+	mask = holder.get();
+
+	this->maskValueId = maskValueId;
 }
 
 PYBIND11_MODULE(libbarpy, m)

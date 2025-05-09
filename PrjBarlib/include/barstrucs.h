@@ -186,7 +186,7 @@ MEXP namespace bc
 		}
 
 #ifdef _PYD
-		std::unique_ptr<bc::BarNdarray> holder;
+		std::unique_ptr<DatagridProvider> holder;
 		void setMask(bn::array& img, int maskValueId);
 
 		void removeMask()
