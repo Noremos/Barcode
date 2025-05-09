@@ -1,7 +1,7 @@
 #ifdef _PYD
 
 #include "barcodeCreator.h"
-#include "BarImg.h"
+#include "barImg.h"
 #include "include_py.h"
 #include <pybind11/stl.h>
 #include <pybind11/operators.h>
