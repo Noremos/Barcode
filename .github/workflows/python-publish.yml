@@ -97,13 +97,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: linux-dist-*
+          merge-multiple: true
           path: dist
+      - run: ls -R dist
 
       - name: Retrieve Windows distributions
         uses: actions/download-artifact@v4
         with:
           pattern: windows-dist-*
+          merge-multiple: true
           path: dist
+      - run: ls -R dist
 
       - name: Validate wheels
         run: |
