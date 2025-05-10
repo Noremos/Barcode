@@ -10,10 +10,12 @@
 using namespace py;
 #define VERSION_INFO "1.0.5"
 
+static std::unique_ptr<bc::BarNdarray> maskImage;
+
 void bc::barstruct::setMask(bn::array& img, int maskValueId)
 {
-	static bc::BarNdarray art(img)
-	mask = &art;
+	maskImage.reset(new bc::BarNdarray(img));
+	mask = maskImage.get();
 	this->maskValueId = maskValueId;
 }
 

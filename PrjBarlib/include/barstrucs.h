@@ -191,7 +191,6 @@ MEXP namespace bc
 		void removeMask()
 		{
 			mask = nullptr;
-			holder.reset();
 		}
 #endif
 	};
