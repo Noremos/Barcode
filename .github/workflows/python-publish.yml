@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # python-version: ["3.11", "3.12", "3.13"]
-        python-version: ["3.13"]
+        python-version: ["3.11", "3.12", "3.13"]
+        # python-version: ["3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -41,8 +41,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        # python-version: ["3.11", "3.12", "3.13"]
-        python-version: ["3.13"]
+        python-version: ["3.11", "3.12", "3.13"]
+        # python-version: ["3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -62,10 +62,10 @@ jobs:
       - name: Build library
         run: |
           cd PrjBarlib
-          # premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=${{ matrix.python-version }}
+          premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=${{ matrix.python-version }}
 
           cd build
-          # msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj
+          msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj
 
       - name: Make package
         run: |
