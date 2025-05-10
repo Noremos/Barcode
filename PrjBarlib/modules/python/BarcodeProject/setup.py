@@ -9,9 +9,11 @@ setup(
     url="https://github.com/Noremos/Barcode",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    license="MIT",
+    license=open("LICENSE").read(),
     classifiers=[
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.11",
         "Operating System :: OS Independent",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux",
@@ -19,7 +21,7 @@ setup(
     ],
     packages=find_packages(),
     include_package_data=True,
-    python_requires="==3.13",
+    python_requires=">=3.11",
     install_requires=[
         "numpy",
         "matplotlib",
