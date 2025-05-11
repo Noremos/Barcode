@@ -1,8 +1,8 @@
-#ifdef _PYD
-
 #include "barcodeCreator.h"
 #include "barImg.h"
 #include "include_py.h"
+#include "../modules/contour.h"
+
 #include <pybind11/stl.h>
 #include <pybind11/operators.h>
 
@@ -115,9 +115,12 @@ PYBIND11_MODULE(libbarpy, m)
 		;
 
 	class_<bc::barline>(m,  "Barline")
+		.def("id", &bc::barline::getId)
+		.def("parentId", &bc::barline::getParentId)
 		.def("start", &bc::barline::getStart)
 		.def("len", &bc::barline::getLength)
 		.def("end", &bc::barline::getEnd)
+		.def("depth", &bc::barline::getDeath)
 		.def("getPoints", &bc::barline::getPoints, (arg("skipChildPoints") = false))
 		.def("getMatrixSize", &bc::barline::getPointsSize)
 		.def("getMatrixValue", &bc::barline::getPoint)
@@ -196,24 +199,34 @@ PYBIND11_MODULE(libbarpy, m)
 		;
 	;
 
+	class_<bc::Mutator>(m,  "PointMutator")
+		.def(py::init<>())
+		.def_readwrite("local", &bc::Mutator::local)
+		.def_readwrite("absolute", &bc::Mutator::global)
+		.def_readwrite("offset", &bc::Mutator::offset)
+		.def("convert", &bc::Mutator::convert)
+		;
+	;
+
 	m.def("create", &bc::BarcodeCreator::pycreate, R"pbdoc(
 			Create a single barcode
-
-			Some other explanation about the add function.
 		)pbdoc");
 
 	m.def("createByMask", &bc::BarcodeCreator::pycreateByMask, R"pbdoc(
 			Create a single barcode but admit only pixels from mask
-
-			Some other explanation about the add function.
 		)pbdoc");
 
 	m.def("createMultiple", &bc::BarcodeCreator::pycreateMultiple, R"pbdoc(
 			Create multiple barcodes from a single image
-
-			Some other explanation about the add function.
 		)pbdoc");
 
+	m.def("find_contour", &bc::findContour, R"pbdoc(
+		Find contour of a barcode line
+	)pbdoc");
+
+	m.def("convert_las_points_to_dict", &bc::convertLasPointsToDict, R"pbdoc(
+		Find contour of a barcode line
+	)pbdoc");
 
 #ifdef VERSION_INFO
 	m.attr("__version__") = VERSION_INFO;
@@ -221,6 +234,3 @@ PYBIND11_MODULE(libbarpy, m)
 	m.attr("__version__") = "dev";
 #endif
 }
-
-
-#endif // _PYD

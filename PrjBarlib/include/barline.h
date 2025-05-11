@@ -322,6 +322,16 @@ MEXP namespace bc
 			return m_end > start ? m_end - start : start - m_end;
 		}
 
+		uint getId() const
+		{
+			return id;
+		}
+
+		uint getParentId() const
+		{
+			return parentId;
+		}
+
 		Barscalar getStart() const
 		{
 			return start;

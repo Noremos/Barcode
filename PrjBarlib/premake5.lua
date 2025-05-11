@@ -155,7 +155,8 @@ project "Barlib"
 		"source/barcodeCreator.cpp",
 		"source/component.cpp",
 		"source/hole.cpp",
-		"extra/Barpy.cpp"
+		"extra/Barpy.cpp",
+		"modules/contour.cpp"
 	}
 
 	-- This part handles additional dependencies

@@ -634,7 +634,6 @@ MEXP namespace bc {
 
 		BarNdarray(bn::array& _mat) : mat(_mat), strides(mat.strides())
 		{
-			std::puts("DEBUG: BarNdarray ctor");
 			const auto mtype = mat.dtype();
 
 			if (mat.ndim() == 3)
@@ -659,15 +658,6 @@ MEXP namespace bc {
 				type = BarType::BYTE8_1;
 			else
 				throw pybind11::type_error("Unsupported numpy type");
-
-			std::cout<< "Size wid: " << mat.shape(1) << std::endl;
-			std::cout<< "Size hei: " << mat.shape(0) << std::endl;
-			std::cout<< "The first value: " << get(0,0).getAvgFloat() << std::endl;
-		}
-
-		~BarNdarray()
-		{
-			std::puts("DEBUG: BarNdarray ~dtro");
 		}
 
 		int wid() const override
