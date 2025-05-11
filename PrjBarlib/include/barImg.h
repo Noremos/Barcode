@@ -69,7 +69,7 @@ MEXP namespace bc {
 
 		void valZerofy()
 		{
-			memset(values, 0, this->length() * TSize);
+			std::fill(values, values + this->length(), Barscalar{0, type});
 		}
 
 		//same pointer
@@ -89,7 +89,10 @@ MEXP namespace bc {
 		Barscalar* valGetDeepCopy() const
 		{
 			Barscalar* newVals = new Barscalar[this->length()];
-			memcpy(newVals, values, this->length() * TSize);
+			for (size_t i = 0; i < this->length(); ++i)
+			{
+				newVals[i] = values[i];
+			}
 			return newVals;
 		}
 
@@ -98,7 +101,10 @@ MEXP namespace bc {
 			valDelete();
 			values = new Barscalar[this->length()];
 			_deleteData = true;
-			memcpy(values, newData, this->length() * TSize);
+			for (size_t i = 0; i < this->length(); ++i)
+			{
+				values[i] = newData[i];
+			}
 		}
 
 		void valDelete()
@@ -623,22 +629,45 @@ MEXP namespace bc {
 	class BarNdarray : public DatagridProvider
 	{
 	public:
+		bn::array& mat;
 		Py_intptr_t const* strides;
 
-		bn::array& mat;
-
-		BarNdarray(bn::array& _mat) : mat(_mat)
+		BarNdarray(bn::array& _mat) : mat(_mat), strides(mat.strides())
 		{
-			strides = _mat.strides();
-			if (mat.ndim() == 1)
+			std::puts("DEBUG: BarNdarray ctor");
+			const auto mtype = mat.dtype();
+
+			if (mat.ndim() == 3)
 			{
-				if (typeSize() == 4)
-					type = BarType::FLOAT32_1;
-				else
-					type = BarType::BYTE8_1;
-			}
-			else
+				if (!mtype.is(pybind11::dtype::of<int8_t>()))
+					throw pybind11::type_error("Unsupported numpy type");
+
 				type = BarType::BYTE8_3;
+				return;
+			}
+
+			if (mat.ndim() != 2)
+			{
+				throw pybind11::type_error("The array should be 2-dimensional");
+			}
+
+			if (mtype.is(pybind11::dtype::of<float>()))
+				type = BarType::FLOAT32_1;
+			else if (mtype.is(pybind11::dtype::of<int32_t>()))
+				type = BarType::INT32_1;
+			else if (mtype.is(pybind11::dtype::of<int8_t>()))
+				type = BarType::BYTE8_1;
+			else
+				throw pybind11::type_error("Unsupported numpy type");
+
+			std::cout<< "Size wid: " << mat.shape(1) << std::endl;
+			std::cout<< "Size hei: " << mat.shape(0) << std::endl;
+			std::cout<< "The first value: " << get(0,0).getAvgFloat() << std::endl;
+		}
+
+		~BarNdarray()
+		{
+			std::puts("DEBUG: BarNdarray ~dtro");
 		}
 
 		int wid() const override
@@ -656,16 +685,28 @@ MEXP namespace bc {
 			return mat.ndim() <= 2 ? 1 : mat.shape(2);
 		}
 
+		template<class T>
+		T readMatValue(int x, int y) const
+		{
+			return *reinterpret_cast<const T*>(mat.data(y, x));
+		}
+
 		Barscalar get(int x, int y) const override
 		{
-			if (type == BarType::BYTE8_1)
+			switch (type)
 			{
-				return Barscalar(*((const char*)mat.data() + y * strides[0] + x * strides[1]), type);
-			}
-			else
+			case BarType::BYTE8_3:
 			{
-				char* off = (char*)mat.data() + y * strides[0] + x * strides[1];
+				const char* off = (const char*)mat.data() + y * strides[0] + x * strides[1];
 				return Barscalar(off[0], off[1], off[2]);
+			}
+			case BarType::BYTE8_1:
+			default:
+				return Barscalar(readMatValue<uchar>(x, y), type);
+			case BarType::INT32_1:
+				return Barscalar(readMatValue<int32_t>(x, y), type);
+			case BarType::FLOAT32_1:
+				return Barscalar(readMatValue<float>(x, y), type);
 			}
 		}
 

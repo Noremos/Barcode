@@ -10,14 +10,6 @@
 using namespace py;
 #define VERSION_INFO "1.0.5"
 
-static std::unique_ptr<bc::BarNdarray> maskImage;
-
-void bc::barstruct::setMask(bn::array& img, int maskValueId)
-{
-	maskImage.reset(new bc::BarNdarray(img));
-	mask = maskImage.get();
-	this->maskValueId = maskValueId;
-}
 
 PYBIND11_MODULE(libbarpy, m)
 {
@@ -194,8 +186,7 @@ PYBIND11_MODULE(libbarpy, m)
 		.def_readwrite("killOnMaxLen", &bc::barstruct::killOnMaxLen)
 		.def_readwrite("colorRange", &bc::barstruct::colorRange)
 		.def_readwrite("trueSort", &bc::barstruct::trueSort)
-		.def("setMask", &bc::barstruct::setMask)
-		.def("removeMask", &bc::barstruct::removeMask)
+		.def_readwrite("maskValueId", &bc::barstruct::maskValueId)
 		.def("setMaxLen", &bc::barstruct::setMaxLen, "val"_a)
 	;
 
@@ -207,6 +198,12 @@ PYBIND11_MODULE(libbarpy, m)
 
 	m.def("create", &bc::BarcodeCreator::pycreate, R"pbdoc(
 			Create a single barcode
+
+			Some other explanation about the add function.
+		)pbdoc");
+
+	m.def("createByMask", &bc::BarcodeCreator::pycreateByMask, R"pbdoc(
+			Create a single barcode but admit only pixels from mask
 
 			Some other explanation about the add function.
 		)pbdoc");

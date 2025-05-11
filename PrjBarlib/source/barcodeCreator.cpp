@@ -475,7 +475,7 @@ float caclHsvDistance(const Barscalar& a, const Barscalar& b)
 	return std::sqrt(dh * dh + ds * ds + dv * dv);
 }
 
-bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, bc::barstruct sets, float maxRadius, size_t& toProcess)
+bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, const bc::barstruct& sets, float maxRadius, size_t& toProcess)
 {
 	int wid = workingImg->wid();
 	int hei = workingImg->hei();
@@ -1554,6 +1554,17 @@ bc::Baritem* bc::BarcodeCreator::pycreate(bn::array& img, const barstruct& struc
 {
 	bc::BarNdarray image(img);
 	return create(image, structure).release();
+}
+
+bc::Baritem* bc::BarcodeCreator::pycreateByMask(bn::array& img, const barstruct& structure, bn::array& mask)
+{
+	bc::BarNdarray image(img);
+	bc::BarNdarray maskWrapper(mask);
+
+	barstruct structureCopy = structure;
+	structureCopy.mask = &maskWrapper;
+
+	return create(image, structureCopy).release();
 }
 #endif
 

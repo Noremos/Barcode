@@ -324,6 +324,8 @@ namespace bc {
 
 		static Barcontainer* pycreateMultiple(bn::array& img, bc::BarConstructor& structure);
 		static Baritem* pycreate(bn::array& img, const barstruct& structure);
+		static Baritem* pycreateByMask(bn::array& img, const barstruct& structure, bn::array& mask);
+
 #endif // _PYD
 
 		///////////GEOMETRY
