@@ -4,4 +4,4 @@ msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj
 call "../modules/python/make_package.bat" Python python.exe
 copy Python\BarcodeProject\dist dist
 
-bash ../modules/python/make_package.sh Python python313
+@REM bash ../modules/python/make_package.sh Python python313
