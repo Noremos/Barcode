@@ -638,7 +638,7 @@ MEXP namespace bc {
 
 			if (mat.ndim() == 3)
 			{
-				if (!mtype.is(pybind11::dtype::of<int8_t>()))
+				if (!mtype.is(pybind11::dtype::of<uint8_t>()))
 					throw pybind11::type_error("Unsupported numpy type");
 
 				type = BarType::BYTE8_3;
@@ -654,7 +654,7 @@ MEXP namespace bc {
 				type = BarType::FLOAT32_1;
 			else if (mtype.is(pybind11::dtype::of<int32_t>()))
 				type = BarType::INT32_1;
-			else if (mtype.is(pybind11::dtype::of<int8_t>()))
+			else if (mtype.is(pybind11::dtype::of<uint8_t>()))
 				type = BarType::BYTE8_1;
 			else
 				throw pybind11::type_error("Unsupported numpy type");
