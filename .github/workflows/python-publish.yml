@@ -41,7 +41,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13","3.14"]
+        python-version: ["3.11", "3.12", "3.13"]
         # python-version: ["3.13"]
 
     steps:
@@ -62,7 +62,7 @@ jobs:
       - name: Build library
         run: |
           cd PrjBarlib
-          premake5 vs2022 --python-include-path=D:\WSpace\Python12/include --python-lib-path=D:\WSpace\Python12/libs --python-version="3.12"
+          premake5 vs2022 --python-include-path=${{ env.pythonLocation }}/include --python-lib-path=${{ env.pythonLocation }}/libs --python-version=${{ matrix.python-version }}
 
           cd build
           msbuild /p:Configuration=python /p:Platform=x64 Barlib.vcxproj
