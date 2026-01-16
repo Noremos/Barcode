@@ -519,10 +519,10 @@ MEXP namespace bc
 			y2 = sqrtf(y2);
 			t = acosf(t / (x2 * y2));
 
-			const float PI = acosf(-1.0f) / 2;
+			const float BAR_PI = acosf(-1.0f) / 2;
 			if (isnan(t))
 				return 1.f;
-			return  abs(roundf(1000.f * (PI - t) / PI) / 1000.f);
+			return  abs(roundf(1000.f * (BAR_PI - t) / BAR_PI) / 1000.f);
 		}
 
 		bc::barvector getEnclusivePoints()
