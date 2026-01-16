@@ -12,6 +12,7 @@
 #include <unordered_set>
 #include <stack>
 #include <limits.h>
+#include <algorithm>
 #endif
 MEXP namespace bc
 {
