@@ -469,7 +469,10 @@ MEXP namespace bc
 		virtual int channels() const = 0;
 
 		virtual void maxAndMin(Barscalar& min, Barscalar& max) const = 0;
-		virtual size_t typeSize() const = 0;
+
+		// Deprecated
+		virtual size_t typeSize() const
+		{ return 1; }
 
 		virtual Barscalar get(int x, int y) const = 0;
 
