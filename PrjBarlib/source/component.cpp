@@ -114,6 +114,7 @@ bool bc::Component::add(const poidex index, const point p, const Barscalar& valu
 	//if (factory->settings.createBinaryMasks)
 	{
 		resline->addCoord(p, value);
+		energy += distance.getAvgFloat();
 	}
 
 	const bool eq = distance.getAvgFloat() == lastDistance.getAvgFloat();
@@ -237,6 +238,7 @@ void bc::Component::addChild(bc::Component* child, const Barscalar& endValue, bo
 	child->kill(endValue);
 	child->parent = this; //! Should by after the kill
 
+	energy += child->energy;
 	if (factory->settings.createGraph)
 	{
 		if (resline->root == nullptr)
@@ -519,7 +521,7 @@ void bc::Component::attach(const barstruct& settings, bc::point p, bc::poidex in
 
 	case AttachMode::firstEatSecond:
 		std::sort(attachList.begin(), attachList.end(), [](const AttachInfo& c1, const AttachInfo& c2) {
-			return c1.comp->startIndex < c2.comp->startIndex;
+			return c1.comp->energy < c2.comp->energy;
 			});// lower is first
 		break;
 	case AttachMode::secondEatFirst:

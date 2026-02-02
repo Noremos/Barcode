@@ -1616,7 +1616,7 @@ static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barsca
 		return nullptr;
 
 	case AttachMode::firstEatSecond:
-		if (first->startIndex > connected->startIndex)
+		if (first->energy > connected->energy)
 		{
 			std::swap(first, connected);
 			std::swap(valueToFirst, valueToSecond);

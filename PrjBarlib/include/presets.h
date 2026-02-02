@@ -4,7 +4,7 @@
 #define MEXP
 // #undef USE_OPENCV
 //#define VDEBUG
-//#define ENABLE_ENERGY
+#define ENABLE_ENERGY
 
 //#define POINTS_ARE_AVAILABLE
 

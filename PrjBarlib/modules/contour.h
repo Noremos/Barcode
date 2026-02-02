@@ -41,4 +41,17 @@ namespace bc
 
 	OutputContour findContour(const bc::barline& line, Mutator x, Mutator y, bool aproximate);
 	py::dict convertLasPointsToDict(const bn::array& x, const bn::array& y, const bn::array& z);
+
+	class ChunkReader
+	{
+	public:
+		using PointHolder = std::unordered_map<unsigned long long, int>;
+
+		void setPoints(const bn::array& x, const bn::array& y, const bn::array& z);
+		py::tuple readChunk(int chunkStartX, int chunkEndX, int chunkStartY, int chunkEndY, int step, float defaultValue);
+
+	private:
+		PointHolder allPoints;
+	};
+
 }

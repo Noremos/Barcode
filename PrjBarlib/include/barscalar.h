@@ -149,6 +149,11 @@ public:
 		type = R.type;
 	}
 
+	static Barscalar grayColor(uint8_t color)
+	{
+		return Barscalar(color, BarType::BYTE8_1);
+	}
+
 	unsigned char getByte8() const
 	{
 		return data.b1;
