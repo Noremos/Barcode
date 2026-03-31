@@ -228,7 +228,12 @@ float bc::Baritem::compareBestRes(const bc::Baritem* bc, bc::CompareStrategy str
 	return tsum / totalsum;
 }
 
-float bc::Baritem::compareFull(const bc::Barbase* bc, bc::CompareStrategy strat) const
+float bc::Baritem::compareFull(const Barbase* bc, bc::CompareStrategy strat) const
+{
+	return compareFull(bc, strat, true);
+}
+
+float bc::Baritem::compareFull(const bc::Barbase* bc, bc::CompareStrategy strat, bool sort) const
 {
 	barlinevector Xbarlines = barlines;
 	barlinevector Ybarlines = dynamic_cast<const Baritem*>(bc)->barlines;
@@ -239,8 +244,12 @@ float bc::Baritem::compareFull(const bc::Barbase* bc, bc::CompareStrategy strat)
 	float totalsum = 0;
 	size_t n = MIN(Xbarlines.size(), Ybarlines.size());
 	size_t nm = MIN(Xbarlines.size(), Ybarlines.size());
-	soirBarlens(Xbarlines);
-	soirBarlens(Ybarlines);
+
+	if (sort)
+	{
+		soirBarlens(Xbarlines);
+		soirBarlens(Ybarlines);
+	}
 
 	float tcoof = 0.f;
 	for (size_t i = 0; i < n; ++i)

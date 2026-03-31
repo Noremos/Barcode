@@ -112,6 +112,7 @@ MEXP namespace bc
 		void removeByThreshold(Barscalar const porog);
 		void preprocessBarcode(Barscalar const& porog, bool normalize);
 		float compareFull(const Barbase* bc, bc::CompareStrategy strat) const;
+		float compareFull(const Barbase* bc, bc::CompareStrategy strat, bool sort) const;
 		float compareBestRes(Baritem const* bc, bc::CompareStrategy strat) const;
 		float compareOccurrence(Baritem const* bc, bc::CompareStrategy strat) const;
 		//    void fullCompite(const barbase *bc, CompireFunction fn, float poroc = 0.5f);
@@ -153,6 +154,11 @@ MEXP namespace bc
 		~Baritem();
 
 		bc::BarRoot* getRootNode()
+		{
+			return rootNode;
+		}
+
+		const bc::BarRoot* getRootNode() const
 		{
 			return rootNode;
 		}
