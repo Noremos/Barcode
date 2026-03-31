@@ -475,11 +475,13 @@ float caclHsvDistance(const Barscalar& a, const Barscalar& b)
 	return std::sqrt(dh * dh + ds * ds + dv * dv);
 }
 
+using DistanceFunc = float(const Barscalar& a, const Barscalar& b);
+
 bc::indexCov* sortPixelsByRadius(const bc::DatagridProvider* workingImg, const bc::barstruct& sets, float maxRadius, size_t& toProcess)
 {
 	int wid = workingImg->wid();
 	int hei = workingImg->hei();
-	std::function<float(const Barscalar& a, const Barscalar& b)> calcDistnace;
+	DistanceFunc* calcDistnace;
 	if (sets.trueSort && workingImg->getType() == BarType::BYTE8_3)
 		calcDistnace = caclHsvDistance;
 	else
@@ -1473,8 +1475,6 @@ void BarcodeCreator::processFULL(const bc::DatagridProvider* img, Barcontainer* 
 
 bc::Barcontainer* BarcodeCreator::createBarcode(const bc::DatagridProvider* img, const BarConstructor& structure)
 {
-	this->settings.createBinaryMasks = true;
-
 	settings.checkCorrect();
 	Barcontainer* cont = new Barcontainer();
 
@@ -1616,11 +1616,20 @@ static CP* radiusAttach(CP* first, Barscalar valueToFirst, CP* connected, Barsca
 		return nullptr;
 
 	case AttachMode::firstEatSecond:
+#ifdef ENABLE_ENERGY
 		if (first->energy > connected->energy)
 		{
 			std::swap(first, connected);
 			std::swap(valueToFirst, valueToSecond);
 		}
+#else
+		if (first->startIndex > connected->startIndex)
+		{
+			std::swap(first, connected);
+			std::swap(valueToFirst, valueToSecond);
+		}
+#endif
+
 		break;
 	case AttachMode::secondEatFirst:
 		if (first->startIndex < connected->startIndex)

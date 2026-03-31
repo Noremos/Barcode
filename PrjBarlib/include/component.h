@@ -37,7 +37,9 @@ namespace bc
 		barline* resline = nullptr;
 		Barscalar lastDistance;
 
+#ifdef ENABLE_ENERGY
 		float energy = 0;
+#endif // ENABLE_ENERGY
 	protected:
 		int cashedSize = 0;
 		//Barscalar avgSr = 0;
